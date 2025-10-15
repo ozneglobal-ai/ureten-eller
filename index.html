@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="meta.title">Giriş • Üreten Eller</title>
   <meta name="description" content="" data-i18n-attr="content:meta.description" />
-  <link rel="icon" href="/assets/icons/favicon-32x32.png" />
   <style>
     :root{
       --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
@@ -117,6 +116,13 @@
     @keyframes shine{0%{background-position:0 0}100%{background-position:300% 0}}
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Üreten Eller: favicon/logo + preload -->
+  <link rel="icon" type="image/png" sizes="32x32" href="üreteneller.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="üreteneller.png">
+  <link rel="apple-touch-icon" href="/assets/icons/favicon.png" />
+  <meta name="theme-color" content="#0b1220">
+  <link rel="preload" as="image" href="üreteneller.png">
+  <link rel="preload" as="audio" href="notify.wav">
 </head>
 <body>
   <div class="wrap">
@@ -355,7 +361,7 @@
     // === Google Identity Services ===
     function parseJwt(token){ try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/')); const uriDecoded = decodeURIComponent(Array.prototype.map.call(json, c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(uriDecoded); }catch(e){ return {}; } }
     function handleGoogleCredential(resp){ const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || ''; const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' }; const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||''); /* TODO: backend login with resp.credential */ }
-    
+    ); google.accounts.id.renderButton(ctn, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320 }); if(fb) fb.style.display='none'; } else { if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>alert('Google butonu yüklenemedi.'); } } }
 
     // === Auth panel ===
     function bindAuthPanel(){
@@ -440,27 +446,30 @@
       document.addEventListener('DOMContentLoaded', boot);
     } else { boot(); }
   </script>
-  
+  <script>
+    try{
+        google.accounts.id.initialize({
+          client_id: CID,
+          callback: function(r){ console.log("GSI", !!(r && r.credential)); },
+          ux_mode: "popup"
+        });
+        // İsterseniz: google.accounts.id.prompt();
+      }catch(e){ console.error("GSI init", e); }
+    }
+    document.addEventListener("DOMContentLoaded", initGoogle);
+  </script>
 <script>
     function initGoogle(){
       var CID=(window.UE_GSI_CLIENT_ID||"").trim();
-      var ctn=document.getElementById('googleBtn');
-      var fb=document.getElementById('googleFallback');
-      if(!window.google || !google.accounts || !google.accounts.id || !CID){
-        if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>alert('Google butonu yüklenemedi.'); }
-        return;
-      }
+      if(!CID||!window.google||!google.accounts||!google.accounts.id){ return; }
       try{
         google.accounts.id.initialize({
           client_id: CID,
-          callback: handleGoogleCredential,
-          ux_mode: 'popup'
+          callback: function(r){ console.log("GSI", !!(r && r.credential)); },
+          ux_mode: "popup"
         });
-        if(ctn){
-          google.accounts.id.renderButton(ctn, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320 });
-        }
-        if(fb){ fb.style.display='none'; }
-      }catch(e){ console.error('GSI init', e); if(fb){ fb.style.display='inline-flex'; } }
+        // İstersen: google.accounts.id.prompt();
+      }catch(e){ console.error("GSI init", e); }
     }
     document.addEventListener("DOMContentLoaded", initGoogle);
   </script>
