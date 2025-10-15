@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
-  <script>window.UE_GSI_CLIENT_ID="PASTE_WEB_OAUTH_CLIENT_ID_HERE";</script>
+  <script>window.UE_GSI_CLIENT_ID="GERÇEK_WEB_OAUTH_CLIENT_ID";</script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="meta.title">Giriş • Üreten Eller</title>
@@ -355,7 +355,7 @@
     // === Google Identity Services ===
     function parseJwt(token){ try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/')); const uriDecoded = decodeURIComponent(Array.prototype.map.call(json, c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(uriDecoded); }catch(e){ return {}; } }
     function handleGoogleCredential(resp){ const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || ''; const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' }; const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||''); /* TODO: backend login with resp.credential */ }
-    function initGoogle(){ const ctn = document.getElementById('googleBtn'); const fb=document.getElementById('googleFallback'); if(!ctn) return; if(window.google && google.accounts && google.accounts.id){ google.accounts.id.initialize({ client_id: 'YOUR_GOOGLE_CLIENT_ID', callback: handleGoogleCredential }); google.accounts.id.renderButton(ctn, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320 }); if(fb) fb.style.display='none'; } else { if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>alert('Google butonu yüklenemedi.'); } } }
+    ); google.accounts.id.renderButton(ctn, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320 }); if(fb) fb.style.display='none'; } else { if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>alert('Google butonu yüklenemedi.'); } } }
 
     // === Auth panel ===
     function bindAuthPanel(){
@@ -441,6 +441,18 @@
     } else { boot(); }
   </script>
   <script>
+    try{
+        google.accounts.id.initialize({
+          client_id: CID,
+          callback: function(r){ console.log("GSI", !!(r && r.credential)); },
+          ux_mode: "popup"
+        });
+        // İsterseniz: google.accounts.id.prompt();
+      }catch(e){ console.error("GSI init", e); }
+    }
+    document.addEventListener("DOMContentLoaded", initGoogle);
+  </script>
+<script>
     function initGoogle(){
       var CID=(window.UE_GSI_CLIENT_ID||"").trim();
       if(!CID||!window.google||!google.accounts||!google.accounts.id){ return; }
@@ -450,7 +462,7 @@
           callback: function(r){ console.log("GSI", !!(r && r.credential)); },
           ux_mode: "popup"
         });
-        // İsterseniz: google.accounts.id.prompt();
+        // İstersen: google.accounts.id.prompt();
       }catch(e){ console.error("GSI init", e); }
     }
     document.addEventListener("DOMContentLoaded", initGoogle);
