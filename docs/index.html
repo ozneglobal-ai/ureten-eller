@@ -18,18 +18,9 @@
     document.addEventListener("DOMContentLoaded", initGoogle);
   </script>
 <script>
-  </script>
-<script>
-    (function(){
-      const UENotify=(function(){
-        let a=null;
-        function init(){ if(a) return; a=new Audio('notify.wav'); a.preload='auto'; }
-        function play(){ if(!a) init(); a.currentTime=0; a.play().catch(()=>{}); }
-        return { init, play };
-      })();
-      document.addEventListener('DOMContentLoaded',()=>{ UENotify.init(); });
-      window.UENotify = UENotify; // gerektiğinde çağırabilmek için
-    })();
+    // Tek Audio instance – gecikmeyi azaltır
+    const UENotify=(function(){let a=null;function init(){if(a) return;a=new Audio('notify.wav');a.preload='auto';}function play(){if(!a) init();a.currentTime=0;a.play().catch(()=>{});}return{init,play}})();
+    document.addEventListener('DOMContentLoaded',()=>{ UENotify.init(); });
   </script>
 </body>
 </html>
