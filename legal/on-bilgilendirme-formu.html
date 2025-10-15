@@ -1,0 +1,60 @@
+
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Ön Bilgilendirme Formu – Üreten Eller</title>
+<style>/* aynı stil */ :root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733;--acc:#22c55e}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}
+</style></head><body>
+<div class="wrap">
+  <div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Ön Bilgilendirme</span></div>
+    <select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select>
+  </div>
+  <div id="view" class="card"></div>
+</div>
+<script>
+const SELLER={owner:"Nejla Koç",brand:"Üreten Eller",taxOffice:"Silivri Vergi Dairesi Müdürlüğü",taxNo:"«VERGI_NO»",email:"«EPOSTA»",phone:"0544 198 38 44",website:"https://www.xn--reteneller-8db.com/"};
+
+const T={
+tr:`<h1>Ön Bilgilendirme Formu</h1>
+<ul>
+<li><strong>Satıcı:</strong> ${SELLER.owner} (${SELLER.brand}) — Vergi Dairesi: ${SELLER.taxOffice} — Vergi No: ${SELLER.taxNo}</li>
+<li><strong>Ürün Nitelikleri ve Fiyat:</strong> Varyant, ölçü/gramaj, kişiselleştirme bilgileri ve vergiler dahil toplam bedel sipariş özetinde yer alır.</li>
+<li><strong>Ödeme:</strong> PayTR/iyzico ile güvenli ödeme alınır. Kart verileri ödeme kuruluşunda (PCI-DSS) işlenir.</li>
+<li><strong>Teslimat:</strong> Yöntem ve süre ödeme sayfasında gösterilir. Adres, teslim alınacak kişi ve randeu bilgileri alıcı sorumluluğundadır.</li>
+<li><strong>Cayma:</strong> Gıda/çabuk bozulabilen, hijyen nedeniyle iadesi uygun olmayan ve kişiye özel ürünlerde cayma yoktur; diğerlerinde 14 gün.</li>
+<li><strong>İade-Şikâyet:</strong> ${SELLER.email} • ${SELLER.phone}</li>
+<li><strong>Kayıt Saklama:</strong> Onay ve sözleşme kayıtları elektronik ortamda saklanır.</li>
+</ul>`,
+en:`<h1>Pre-Information</h1><ul>
+<li><strong>Seller:</strong> ${SELLER.owner} (${SELLER.brand}) — Tax Office: ${SELLER.taxOffice} — Tax ID: ${SELLER.taxNo}</li>
+<li><strong>Features & Price:</strong> Variants, size/weight, personalization and total price incl. taxes at checkout.</li>
+<li><strong>Payment:</strong> Secure via PayTR/iyzico (PCI-DSS). Card data processed by provider.</li>
+<li><strong>Delivery:</strong> Method/timeline at checkout; address & reception are Buyer’s responsibility.</li>
+<li><strong>Withdrawal:</strong> No withdrawal for perishable/hygiene/custom items; otherwise 14 days.</li>
+<li><strong>Returns/Complaints:</strong> ${SELLER.email} • ${SELLER.phone}</li>
+<li><strong>Records:</strong> Electronic retention of confirmations.</li></ul>`,
+ar:`<h1>نموذج المعلومات المسبقة</h1><ul>
+<li><strong>البائع:</strong> ${SELLER.owner} (${SELLER.brand}) — دائرة الضرائب: ${SELLER.taxOffice} — رقم الضريبة: ${SELLER.taxNo}</li>
+<li><strong>الخصائص والسعر:</strong> المواصفات والسعر الإجمالي تُعرض عند الدفع.</li>
+<li><strong>الدفع:</strong> عبر PayTR/iyzico (PCI-DSS). تُعالج بيانات البطاقة لدى المزود.</li>
+<li><strong>التسليم:</strong> الطريقة والمدة عند الدفع؛ العنوان والاستلام مسؤولية المشتري.</li>
+<li><strong>الانسحاب:</strong> لا ينطبق على القابلة للتلف/الصحية/المخصصة؛ غير ذلك 14 يومًا.</li>
+<li><strong>الإرجاع/الشكاوى:</strong> ${SELLER.email} • ${SELLER.phone}</li>
+<li><strong>السجلات:</strong> حفظ إلكتروني للتأكيدات.</li></ul>`,
+de:`<h1>Vorabinformationen</h1><ul>
+<li><strong>Verkäuferin:</strong> ${SELLER.owner} (${SELLER.brand}) — Finanzamt: ${SELLER.taxOffice} — Steuer-ID: ${SELLER.taxNo}</li>
+<li><strong>Merkmale & Preis:</strong> Varianten, Größe/Gewicht, Personalisierung; Gesamtpreis inkl. Steuern an der Kasse.</li>
+<li><strong>Zahlung:</strong> Über PayTR/iyzico (PCI-DSS); Kartendaten beim Zahlungsdienst.</li>
+<li><strong>Lieferung:</strong> Methode/Frist an der Kasse; Adresse/Annahme in Verantwortung der Käufer/innen.</li>
+<li><strong>Widerruf:</strong> Kein Widerruf bei verderblich/Hygiene/personalisiert; sonst 14 Tage.</li>
+<li><strong>Rückgaben/Beschwerden:</strong> ${SELLER.email} • ${SELLER.phone}</li>
+<li><strong>Aufzeichnungen:</strong> Elektronische Speicherung von Bestätigungen.</li></ul>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");
+let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]||T.tr;}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>
