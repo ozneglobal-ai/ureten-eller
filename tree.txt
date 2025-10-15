@@ -1,0 +1,32 @@
+.
+├── CNAME
+├── README.md
+├── docs
+│   ├── .deploy-bump
+│   ├── .nojekyll
+│   ├── 404.html
+│   ├── CNAME
+│   ├── index.html
+│   ├── notify.wav
+│   └── üreteneller.png
+├── home.html
+├── i18n.js
+├── ilan-ver.html
+├── index.html
+├── legal
+│   ├── cerez-politikasi.html
+│   ├── gizlilik-politikasi.html
+│   ├── iletisim-impressum.html
+│   ├── kullanim-sartlari.html
+│   ├── kvkk-aydinlatma.html
+│   ├── mesafeli-satis-sozlesmesi.html
+│   ├── on-bilgilendirme-formu.html
+│   ├── teslimat-iade-iptal.html
+│   ├── topluluk-kurallari.html
+│   └── yasakli-urunler.html
+├── notify.wav
+├── profile.html
+├── tree.txt
+└── üreteneller.png
+
+3 directories, 27 files
