@@ -33,9 +33,15 @@
     .tick{font-weight:800;border:1px solid var(--brd);border-radius:999px;padding:.28rem .6rem;transition:transform .2s ease, filter .2s ease}
 
     .cta{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:.35rem}
-    .btn{padding:.6rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:#0fef;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap}
+    .btn{padding:.6rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap}
     .btn.primary{background:linear-gradient(180deg,var(--c1),#128473);border-color:#0e766e}
     .btn.ghost{background:transparent}
+
+    /* Google white button (fallback) */
+    .gbtn-white{background:#fff!important;color:#111!important;border:1px solid #e5e7eb!important;border-radius:999px;padding:.55rem .9rem;font-weight:800;display:inline-flex;align-items:center;gap:.5rem}
+    #googleBtn{display:flex;justify-content:center}
+    #googleBtn > div{margin:auto}
+    #googleFallback{display:none} /* JS açar kapanır */
 
     .grid{display:grid;gap:1rem;margin:1.25rem auto;grid-template-columns:1fr}
     .grid.two{grid-template-columns:1.1fr .9fr}
@@ -94,8 +100,7 @@
     .card:active{transform:scale(.98)}
 
     #profile{position:fixed; top:-100vh; height:0; overflow:hidden}
-
-    /* --- Testimonials --- */
+      /* --- Testimonials --- */
     .twrap{max-width:1200px;margin:1.25rem auto 0;padding:0 1rem}
     .thead{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.6rem}
     .tgrid{display:grid;gap:.85rem;grid-template-columns:repeat(1,minmax(0,1fr))}
@@ -110,6 +115,7 @@
     .tbadge{display:inline-block;padding:.35rem .75rem;border-radius:999px;font-weight:900;letter-spacing:.2px;background:linear-gradient(90deg,#f59e0b,#ef4444,#8b5cf6,#06b6d4);background-size:300% 100%;animation:shine 5s linear infinite;color:#0b1220;box-shadow:0 0 0 1px #ffffff1a,0 0 30px #06b6d470}
     @keyframes shine{0%{background-position:0 0}100%{background-position:300% 0}}
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="wrap">
@@ -119,7 +125,6 @@
         <span data-i18n="brand">Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <div class="badge" id="topBadge">🎉 <b data-i18n="top.badge">1000+ mutlu kullanıcı</b></div>
       <div class="lang" style="margin-left:.6rem">
         <label for="langSel" class="sr-only" data-i18n="a11y.language">Dil</label>
         <select id="langSel" aria-label="Dil">
@@ -148,7 +153,7 @@
         <span class="mini" id="listCount">(0)</span>
       </div>
       <div class="listGrid" id="listGrid"></div>
-      <div class="mini" style="text-align:center;margin-top:.35rem" data-i18n="list.note">Bu sayfa sadece görünüm içindir.</div>
+      <div class="mini" style="text-align:center;margin-top:.35rem" data-i18n="list.note">Her 30 dakikada bir vitrin yenilenir. Not: Bu bir görünümdür.</div>
     </section>
 
     <div class="grid" id="grid">
@@ -166,6 +171,10 @@
         <form id="loginForm" novalidate>
           <div class="field"><label for="lemail" data-i18n="auth.email">E‑posta</label><input id="lemail" type="email" required /></div>
           <div class="field"><label for="lpass" data-i18n="auth.password">Şifre</label><div class="input"><input id="lpass" type="password" required /><button type="button" class="btn" style="padding:.35rem .6rem" data-toggle="lpass" data-i18n="auth.show">Göster</button></div></div>
+          <div class="row" style="justify-content:center;margin:.5rem 0">
+            <div id="googleBtn"></div>
+            <button type="button" id="googleFallback" class="gbtn-white" style="display:none" data-i18n="auth.google">Google ile giriş</button>
+          </div>
           <div class="row" style="justify-content:space-between">
             <button class="btn primary" id="loginSubmit" type="submit" data-i18n="auth.login">Giriş Yap</button>
             <button class="btn" type="button" id="forgotBtn" data-i18n="auth.forgot">Şifremi Unuttum</button>
@@ -189,7 +198,7 @@
     </div>
   </div>
 
-  <!-- === KULLANICI YORUMLARI (Footer üstü) === -->
+    <!-- === KULLANICI YORUMLARI (Footer üstü) === -->
   <section class="twrap" aria-labelledby="tTitle">
     <div class="thead">
       <h2 id="tTitle" style="margin:0;font-size:clamp(18px,2.4vw,26px)" data-i18n="testimonials.title">Kullanıcı Yorumları</h2>
@@ -230,7 +239,7 @@
   </footer>
 
   <script>
-    // === i18n store ===
+    // === i18n store (clean) ===
     const I18N = {
       tr: {
         meta: { title: "Giriş • Üreten Eller", description: "Üreten Eller'e giriş yapın veya kayıt olun." },
@@ -243,7 +252,7 @@
         auth: {
           tabs: { login: "Giriş Yap", signup: "Kayıt Ol" },
           email: "E‑posta", password: "Şifre", password2: "Şifre (Tekrar)", username: "Kullanıcı Adı", name: "İsim", surname: "Soyisim",
-          show: "Göster", hide: "Gizle", login: "Giriş Yap", signup: "Kayıt Ol", forgot: "Şifremi Unuttum"
+          show: "Göster", hide: "Gizle", login: "Giriş Yap", signup: "Kayıt Ol", forgot: "Şifremi Unuttum", google: "Google ile giriş"
         },
         legal: {
           contact: "İletişim / Impressum", privacy: "Gizlilik Politikası", kvkk: "KVKK Aydınlatma", cookies: "Çerez Politikası",
@@ -268,133 +277,27 @@
           soap:{t:"🧼 Doğal Sabun & Kozmetik",s:["Zeytinyağlı sabun","Bitkisel sabunlar","Katı şampuan","Dudak balmı","Krem/merhem","Banyo tuzu","Lavanta kesesi"]},
           toys:{t:"🧸 Amigurumi & Oyuncak (dekor)",s:["Anahtarlık","Magnet","Koleksiyon figürü","Dekor bebek/karakter"]}
         },
-        slogans:[
-          "El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler","Glutensiz & vegan var","Sıcacık örgüler","Doğal sabun & kozmetik","Yöresel kışlıklar","Taze reçeller","Özenle el işi","Emekle gelen kalite","Her ilmekte sevgi","Evden eve güven","Doğum günü setleri","Şık takılar","Makrome ile şıklık","Kokularla huzur","Bebekler için güvenli","Geleneksel tarifler","Katkısız tatlar","Komşundan sofrana","Ustaların buluşması","Lezzet ve tasarım","Sevgiyle üretildi"
-        ]
+        slogans:["El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler","Glutensiz & vegan var","Sıcacık örgüler","Doğal sabun & kozmetik","Yöresel kışlıklar","Taze reçeller","Özenle el işi","Emekle gelen kalite","Her ilmekte sevgi","Evden eve güven","Doğum günü setleri","Şık takılar","Makrome ile şıklık","Kokularla huzur","Bebekler için güvenli","Geleneksel tarifler","Katkısız tatlar","Komşundan sofrana","Ustaların buluşması","Lezzet ve tasarım","Sevgiyle üretildi"]
       },
       en: {
-        meta: { title: "Sign In • Üreten Eller", description: "Sign in or sign up to Üreten Eller." },
-        brand: "Üreten Eller",
-        a11y: { language: "Language" },
-        top: { badge: "1000+ happy users" },
-        hero: { title: "Welcome to Üreten Eller", subtitle: "Direct, no middleman" },
-        cta: { signup: "Sign up free", loginBtn: "I already have an account" },
-        list: { title: "Latest Listings", note: "This page is for UI preview only." },
-        auth: {
-          tabs: { login: "Log In", signup: "Sign Up" },
-          email: "Email", password: "Password", password2: "Password (Repeat)", username: "Username", name: "Name", surname: "Surname",
-          show: "Show", hide: "Hide", login: "Log In", signup: "Sign Up", forgot: "Forgot password"
-        },
-        legal: {
-          contact: "Contact / Impressum", privacy: "Privacy Policy", kvkk: "KVKK Notice", cookies: "Cookie Policy",
-          terms: "Terms of Use", distance: "Distance Sales Agreement", pref: "Pre‑Information Form", delivery: "Delivery & Returns",
-          rules: "Community Rules", banned: "Prohibited Products", all: "All Legal Texts"
-        },
+        meta: { title: "Sign In • Üreten Eller", description: "Sign in or sign up to Üreten Eller." }, brand: "Üreten Eller",
+        a11y: { language: "Language" }, top: { badge: "1000+ happy users" }, hero: { title: "Welcome to Üreten Eller", subtitle: "Direct, no middleman" },
+        cta: { signup: "Sign up free", loginBtn: "I already have an account" }, list: { title: "Latest Listings", note: "This page is for UI preview only." },
+        auth: { tabs: { login: "Log In", signup: "Sign Up" }, email: "Email", password: "Password", password2: "Password (Repeat)", username: "Username", name: "Name", surname: "Surname", show: "Show", hide: "Hide", login: "Log In", signup: "Sign Up", forgot: "Forgot password", google: "Continue with Google" },
+        legal: { contact: "Contact / Impressum", privacy: "Privacy Policy", kvkk: "KVKK Notice", cookies: "Cookie Policy", terms: "Terms of Use", distance: "Distance Sales Agreement", pref: "Pre‑Information Form", delivery: "Delivery & Returns", rules: "Community Rules", banned: "Prohibited Products", all: "All Legal Texts" },
         testimonials: { title: "User Testimonials", happy: "5000+ happy users" },
-        cats: {
-          order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"],
-          food:{t:"🍲 Meals",s:["Home meals","Börek & pastry","Soup","Olive oil dishes","Rice & pasta","Meat & chicken","Breakfast","Meze","Frozen","Kids meals","Diet/vegan/gf"]},
-          cake:{t:"🎂 Cakes & Desserts",s:["Birthday cake","Cake & cupcake","Cookies","Syrupy","Milk desserts","Cheesecake","Diet dessert","Chocolate/candy","Birthday sets"]},
-          jar:{t:"🫙 Jams • Pickles • Sauces",s:["Jam/marmalade","Molasses","Pickles","Tomato/pepper sauce","Hot sauce","Tomato paste","Vinegar","Canned"]},
-          winter:{t:"🌾 Local / Winter Pantry",s:["Noodles","Tarhana","Yufka","Manti","Dried veg/fruit","Tomato paste","Vinegar","Canned"]},
-          diet:{t:"🥗 Diet / Vegan / Gluten-free",s:["Fit plates","Vegan dishes","GF bakery","Sugar-free dessert","Keto product","Protein snacks"]},
-          jew:{t:"💍 Jewelry",s:["Bracelet","Necklace","Earrings","Ring","Anklet","Brooch","Sets","Personalized","Macrame","Gemstone","Resin","Wire wrap"]},
-          kid:{t:"👶 Baby & Kids",s:["Animal/baby figures","Rattle","Teether crochet","Cloth toy/book","Montessori toy","Sets","Knit booties/beanie","Baby blanket","Bib/burp cloth","Maternity set","Hair accessory","Handmade clothing"]},
-          knit:{t:"🧶 Knit / Crochet",s:["Cardigan","Sweater","Scarf/Beanie","Poncho","Shawl","Socks","Bath set","Baby set","Vest","Cushion/Cover"]},
-          sew:{t:"✂️ Sewing / Tailoring",s:["Hems/repair","Zipper change","Curtain sewing","Duvet/Pillow","Tablecloth","Custom tailoring","Costume"]},
-          mac:{t:"🧵 Macrame & Decor",s:["Wall hanging","Plant hanger","Keychain","Chandelier","Placemat/Runner","Basket","Shelf/Wall decor"]},
-          home:{t:"🏠 Home Decor & Accessories",s:["Felt crafts","Cushion","Door wreath","Tray decoration","Frame","Dream catcher","Painting"]},
-          candle:{t:"🕯️ Candles & Fragrances",s:["Soy/beeswax candle","Aroma stone","Room spray","Incense","Gel candle","Gift set"]},
-          soap:{t:"🧼 Natural Soap & Cosmetics",s:["Olive oil soap","Herbal soaps","Solid shampoo","Lip balm","Cream/ointment","Bath salt","Lavender sachet"]},
-          toys:{t:"🧸 Amigurumi & Toys (decor)",s:["Keychain","Magnet","Collector figure","Decor doll/character"]}
-        },
-        slogans:[
-          "Valuing handicraft","Direct trade","Support local makers","Homemade goodness","Personalized gifts","Gluten‑free & vegan","Cozy knits","Natural soap & cosmetics","Traditional pantry","Fresh jams","Carefully handmade","Quality with effort","Love in every stitch","Home‑to‑home trust","Birthday sets","Elegant jewelry","Style with macramé","Peaceful scents","Safe for babies","Traditional recipes","Additive‑free taste","From neighbor to table","Masters united","Taste & design","Made with love"
-        ]
+        cats: { order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"], food:{t:"🍲 Meals",s:["Home meals","Börek & pastry","Soup","Olive oil dishes","Rice & pasta","Meat & chicken","Breakfast","Meze","Frozen","Kids meals","Diet/vegan/gf"]}, cake:{t:"🎂 Cakes & Desserts",s:["Birthday cake","Cake & cupcake","Cookies","Syrupy","Milk desserts","Cheesecake","Diet dessert","Chocolate/candy","Birthday sets"]}, jar:{t:"🫙 Jams • Pickles • Sauces",s:["Jam/marmalade","Molasses","Pickles","Tomato/pepper sauce","Hot sauce","Tomato paste","Vinegar","Canned"]}, winter:{t:"🌾 Local / Winter Pantry",s:["Noodles","Tarhana","Yufka","Manti","Dried veg/fruit","Tomato paste","Vinegar","Canned"]}, diet:{t:"🥗 Diet / Vegan / Gluten-free",s:["Fit plates","Vegan dishes","GF bakery","Sugar-free dessert","Keto product","Protein snacks"]}, jew:{t:"💍 Jewelry",s:["Bracelet","Necklace","Earrings","Ring","Anklet","Brooch","Sets","Personalized","Macrame","Gemstone","Resin","Wire wrap"]}, kid:{t:"👶 Baby & Kids",s:["Animal/baby figures","Rattle","Teether crochet","Cloth toy/book","Montessori toy","Sets","Knit booties/beanie","Baby blanket","Bib/burp cloth","Maternity set","Hair accessory","Handmade clothing"]}, knit:{t:"🧶 Knit / Crochet",s:["Cardigan","Sweater","Scarf/Beanie","Poncho","Shawl","Socks","Bath set","Baby set","Vest","Cushion/Cover"]}, sew:{t:"✂️ Sewing / Tailoring",s:["Hems/repair","Zipper change","Curtain sewing","Duvet/Pillow","Tablecloth","Custom tailoring","Costume"]}, mac:{t:"🧵 Macrame & Decor",s:["Wall hanging","Plant hanger","Keychain","Chandelier","Placemat/Runner","Basket","Shelf/Wall decor"]}, home:{t:"🏠 Home Decor & Accessories",s:["Felt crafts","Cushion","Door wreath","Tray decoration","Frame","Dream catcher","Painting"]}, candle:{t:"🕯️ Candles & Fragrances",s:["Soy/beeswax candle","Aroma stone","Room spray","Incense","Gel candle","Gift set"]}, soap:{t:"🧼 Natural Soap & Cosmetics",s:["Olive oil soap","Herbal soaps","Solid shampoo","Lip balm","Cream/ointment","Bath salt","Lavender sachet"]}, toys:{t:"🧸 Amigurumi & Toys (decor)",s:["Keychain","Magnet","Collector figure","Decor doll/character"]} },
+        slogans:["Valuing handicraft","Direct trade","Support local makers","Homemade goodness","Personalized gifts","Gluten‑free & vegan","Cozy knits","Natural soap & cosmetics","Traditional pantry","Fresh jams","Carefully handmade","Quality with effort","Love in every stitch","Home‑to‑home trust","Birthday sets","Elegant jewelry","Style with macramé","Peaceful scents","Safe for babies","Traditional recipes","Additive‑free taste","From neighbor to table","Masters united","Taste & design","Made with love"]
       },
       de: {
-        meta: { title: "Anmelden • Üreten Eller", description: "Bei Üreten Eller anmelden oder registrieren." },
-        brand: "Üreten Eller",
-        a11y: { language: "Sprache" },
-        top: { badge: "1000+ zufriedene Nutzer" },
-        hero: { title: "Willkommen bei Üreten Eller", subtitle: "Direkt & ohne Vermittler" },
-        cta: { signup: "Kostenlos registrieren", loginBtn: "Ich habe schon ein Konto" },
-        list: { title: "Neueste Anzeigen", note: "Diese Seite dient nur der UI-Vorschau." },
-        auth: {
-          tabs: { login: "Anmelden", signup: "Registrieren" },
-          email: "E‑Mail", password: "Passwort", password2: "Passwort (Wieder)", username: "Benutzername", name: "Name", surname: "Nachname",
-          show: "Anzeigen", hide: "Verbergen", login: "Anmelden", signup: "Registrieren", forgot: "Passwort vergessen"
-        },
-        legal: {
-          contact: "Kontakt / Impressum", privacy: "Datenschutz", kvkk: "KVKK-Hinweis", cookies: "Cookie-Richtlinie",
-          terms: "Nutzungsbedingungen", distance: "Fernabsatzvertrag", pref: "Vorabinformation", delivery: "Lieferung & Rückgabe",
-          rules: "Community-Regeln", banned: "Verbotene Produkte", all: "Alle Rechtstexte"
-        },
-        testimonials: { title: "Nutzermeinungen", happy: "5000+ zufriedene Nutzer" },
-        cats: {
-          order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"],
-          food:{t:"🍲 Gerichte",s:["Hausmannskost","Börek & Gebäck","Suppe","Olivenölgerichte","Reis & Pasta","Fleisch & Hähnchen","Frühstück","Meze","Tiefkühl","Kindermahlzeiten","Diät/vegan/gf"]},
-          cake:{t:"🎂 Kuchen & Süßes",s:["Torten","Kuchen & Cupcake","Kekse","Sirupgebäck","Milchdesserts","Käsekuchen","Diät‑Dessert","Schokolade/Bonbon","Geburtstags‑Sets"]},
-          jar:{t:"🫙 Marmelade • Pickles • Saucen",s:["Marmelade","Traubensirup","Eingelegtes","Tomaten/Paprika‑Sauce","Scharfe Sauce","Tomatenmark","Essig","Eingewecktes"]},
-          winter:{t:"🌾 Regional / Wintervorrat",s:["Bandnudeln","Tarhana","Yufka","Manti","Getrocknetes Obst/Gemüse","Tomatenmark","Essig","Eingewecktes"]},
-          diet:{t:"🥗 Diät / Vegan / Glutenfrei",s:["Fitness‑Teller","Vegane Speisen","GF Backwaren","Zuckerfreie Desserts","Keto‑Produkt","Protein‑Snacks"]},
-          jew:{t:"💍 Schmuck",s:["Armband","Kette","Ohrringe","Ring","Fußkettchen","Brosche","Sets","Personalisiert","Makramee","Edelstein","Harz","Drahtwicklung"]},
-          kid:{t:"👶 Baby & Kinder",s:["Tier/Baby‑Figuren","Rassel","Beißring häkeln","Stoffspielzeug/Buch","Montessori‑Spielzeug","Sets","Gehäkelte Schühchen/Mütze","Babydecke","Lätzchen/Spucktuch","Wochenbett‑Set","Haar‑Accessoire","Handgemachte Kleidung"]},
-          knit:{t:"🧶 Strick / Häkeln",s:["Cardigan","Pullover","Schal/Mütze","Poncho","Tuch","Socken","Badeset","Babyset","Weste","Kissen/Decke"]},
-          sew:{t:"✂️ Schneiderei",s:["Saum/Reparatur","Reißverschlusswechsel","Vorhangnähen","Bett-/Kissenbezug","Tischdecke","Maßanfertigung","Kostüm"]},
-          mac:{t:"🧵 Makramee & Deko",s:["Wandbehang","Pflanzenhänger","Schlüsselanhänger","Lampe","Platzset/Runner","Korb","Regal/Wanddeko"]},
-          home:{t:"🏠 Wohndeko & Accessoires",s:["Filzarbeiten","Kissen","Türkranz","Tablettdeko","Rahmen","Traumfänger","Bild"]},
-          candle:{t:"🕯️ Kerzen & Düfte",s:["Soja/Bienenwachs‑Kerze","Duftstein","Raumspray","Weihrauch","Gelkerze","Geschenkset"]},
-          soap:{t:"🧼 Natürliche Seife & Kosmetik",s:["Olivenölseife","Kräuterseifen","Festes Shampoo","Lippenbalsam","Creme/Salbe","Badesalz","Lavendelsäckchen"]},
-          toys:{t:"🧸 Amigurumi & Spielzeug (Deko)",s:["Schlüsselanhänger","Magnet","Sammelfigur","Deko‑Puppe/Charakter"]}
-        },
-        slogans:[
-          "Wert fürs Handwerk","Direkter Handel","Lokale Macher unterstützen","Hausgemacht","Personalisierte Geschenke","Glutenfrei & vegan","Kuschelige Stricksachen","Naturseife & Kosmetik","Traditioneller Vorrat","Frische Marmeladen","Sorgfältig handgemacht","Qualität durch Mühe","Liebe in jeder Masche","Vertrauen von Haus zu Haus","Geburtstagssets","Eleganter Schmuck","Stil mit Makramee","Beruhigende Düfte","Sicher für Babys","Traditionelle Rezepte","Ohne Zusatzstoffe","Vom Nachbarn auf den Tisch","Meister vereint","Geschmack & Design","Mit Liebe gemacht"
-        ]
+        meta: { title: "Anmelden • Üreten Eller", description: "Bei Üreten Eller anmelden oder registrieren." }, brand: "Üreten Eller", a11y: { language: "Sprache" }, top: { badge: "1000+ zufriedene Nutzer" }, hero: { title: "Willkommen bei Üreten Eller", subtitle: "Direkt & ohne Vermittler" }, cta: { signup: "Kostenlos registrieren", loginBtn: "Ich habe schon ein Konto" }, list: { title: "Neueste Anzeigen", note: "Diese Seite dient nur der UI-Vorschau." }, auth: { tabs: { login: "Anmelden", signup: "Registrieren" }, email: "E‑Mail", password: "Passwort", password2: "Passwort (Wieder)", username: "Benutzername", name: "Name", surname: "Nachname", show: "Anzeigen", hide: "Verbergen", login: "Anmelden", signup: "Registrieren", forgot: "Passwort vergessen", google: "Mit Google anmelden" }, legal: { contact: "Kontakt / Impressum", privacy: "Datenschutz", kvkk: "KVKK-Hinweis", cookies: "Cookie-Richtlinie", terms: "Nutzungsbedingungen", distance: "Fernabsatzvertrag", pref: "Vorabinformation", delivery: "Lieferung & Rückgabe", rules: "Community-Regeln", banned: "Verbotene Produkte", all: "Alle Rechtstexte" }, testimonials: { title: "Nutzermeinungen", happy: "5000+ zufriedene Nutzer" }, cats: { order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"], food:{t:"🍲 Gerichte",s:["Hausmannskost","Börek & Gebäck","Suppe","Olivenölgerichte","Reis & Pasta","Fleisch & Hähnchen","Frühstück","Meze","Tiefkühl","Kindermahlzeiten","Diät/vegan/gf"]}, cake:{t:"🎂 Kuchen & Süßes",s:["Torten","Kuchen & Cupcake","Kekse","Sirupgebäck","Milchdesserts","Käsekuchen","Diät‑Dessert","Schokolade/Bonbon","Geburtstags‑Sets"]}, jar:{t:"🫙 Marmelade • Pickles • Saucen",s:["Marmelade","Traubensirup","Eingelegtes","Tomaten/Paprika‑Sauce","Scharfe Sauce","Tomatenmark","Essig","Eingewecktes"]}, winter:{t:"🌾 Regional / Wintervorrat",s:["Bandnudeln","Tarhana","Yufka","Manti","Getrocknetes Obst/Gemüse","Tomatenmark","Essig","Eingewecktes"]}, diet:{t:"🥗 Diät / Vegan / Glutenfrei",s:["Fitness‑Teller","Vegane Speisen","GF Backwaren","Zuckerfreie Desserts","Keto‑Produkt","Protein‑Snacks"]}, jew:{t:"💍 Schmuck",s:["Armband","Kette","Ohrringe","Ring","Fußkettchen","Brosche","Sets","Personalisiert","Makramee","Edelstein","Harz","Drahtwicklung"]}, kid:{t:"👶 Baby & Kinder",s:["Tier/Baby‑Figuren","Rassel","Beißring häkeln","Stoffspielzeug/Buch","Montessori‑Spielzeug","Sets","Gehäkelte Schühchen/Mütze","Babydecke","Lätzchen/Spucktuch","Wochenbett‑Set","Haar‑Accessoire","Handgemachte Kleidung"]}, knit:{t:"🧶 Strick / Häkeln",s:["Cardigan","Pullover","Schal/Mütze","Poncho","Tuch","Socken","Badeset","Babyset","Weste","Kissen/Decke"]}, sew:{t:"✂️ Schneiderei",s:["Saum/Reparatur","Reißverschlusswechsel","Vorhangnähen","Bett-/Kissenbezug","Tischdecke","Maßanfertigung","Kostüm"]}, mac:{t:"🧵 Makramee & Deko",s:["Wandbehang","Pflanzenhänger","Schlüsselanhänger","Lampe","Platzset/Runner","Korb","Regal/Wanddeko"]}, home:{t:"🏠 Wohndeko & Accessoires",s:["Filzarbeiten","Kissen","Türkranz","Tablettdeko","Rahmen","Traumfänger","Bild"]}, candle:{t:"🕯️ Kerzen & Düfte",s:["Soja/Bienenwachs‑Kerze","Duftstein","Raumspray","Weihrauch","Gelkerze","Geschenkset"]}, soap:{t:"🧼 Natürliche Seife & Kosmetik",s:["Olivenölseife","Kräuterseifen","Festes Shampoo","Lippenbalsam","Creme/Salbe","Badesalz","Lavendelsäckchen"]}, toys:{t:"🧸 Amigurumi & Spielzeug (Deko)",s:["Schlüsselanhänger","Magnet","Sammelfigur","Deko‑Puppe/Charakter"]} }, slogans:["Wert fürs Handwerk","Direkter Handel","Lokale Macher unterstützen","Hausgemacht","Personalisierte Geschenke","Glutenfrei & vegan","Kuschelige Stricksachen","Naturseife & Kosmetik","Traditioneller Vorrat","Frische Marmeladen","Sorgfältig handgemacht","Qualität durch Mühe","Liebe in jeder Masche","Vertrauen von Haus zu Haus","Geburtstagssets","Eleganter Schmuck","Stil mit Makramee","Beruhigende Düfte","Sicher für Babys","Traditionelle Rezepte","Ohne Zusatzstoffe","Vom Nachbarn auf den Tisch","Meister vereint","Geschmack & Design","Mit Liebe gemacht"]
       },
       ar: {
-        meta: { title: "تسجيل الدخول • Üreten Eller", description: "سجّل الدخول أو أنشئ حسابًا." },
-        brand: "Üreten Eller",
-        a11y: { language: "اللغة" },
-        top: { badge: "+1000 مستخدم سعيد" },
-        hero: { title: "مرحبًا بكم في Üreten Eller", subtitle: "بيع وشراء مباشر" },
-        cta: { signup: "سجّل مجانًا", loginBtn: "لدي حساب" },
-        list: { title: "أحدث العروض", note: "هذه الصفحة للعرض فقط." },
-        auth: {
-          tabs: { login: "تسجيل الدخول", signup: "إنشاء حساب" },
-          email: "البريد الإلكتروني", password: "كلمة المرور", password2: "تأكيد كلمة المرور", username: "اسم المستخدم", name: "الاسم", surname: "الكنية",
-          show: "إظهار", hide: "إخفاء", login: "دخول", signup: "تسجيل", forgot: "نسيت كلمة المرور"
-        },
-        legal: {
-          contact: "اتصال / إمبريسوم", privacy: "سياسة الخصوصية", kvkk: "إشعار KVKK", cookies: "سياسة الكوكيز",
-          terms: "شروط الاستخدام", distance: "عقد البيع عن بُعد", pref: "نموذج المعلومات المسبقة", delivery: "التسليم والإرجاع",
-          rules: "قواعد المجتمع", banned: "منتجات محظورة", all: "جميع النصوص القانونية"
-        },
-        testimonials: { title: "آراء المستخدمين", happy: "+5000 مستخدم سعيد" },
-        cats: {
-          order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"],
-          food:{t:"🍲 أطعمة",s:["أكلات منزلية","فطائر وبوريك","شوربة","أطباق بزيت الزيتون","أرز ومعكرونة","لحم ودجاج","فطور","مقبلات","مجمدات","وجبات للأطفال","حمية/نباتي/خالٍ من الغلوتين"]},
-          cake:{t:"🎂 كيك وحلويات",s:["كيك طازج","كيك وكب كيك","بسكويت","حلويات شرقية","حلويات بالحليب","تشيزكيك","حلويات للحمية","شوكولاتة/حلويات","مجموعات عيد الميلاد"]},
-          jar:{t:"🫙 مربيات • مخللات • صلصات",s:["مربى","دبس","مخللات","صلصة طماطم/فلفل","صلصة حارة","معجون طماطم","خل","معلبات"]},
-          winter:{t:"🌾 مؤن منزلية/شتوية",s:["نودلز (إريشته)","طرخانة","يوفكا","مانتي","خضار/فاكهة مجففة","معجون طماطم","خل","معلبات"]},
-          diet:{t:"🥗 حمية/نباتي/خالٍ من الغلوتين",s:["أطباق صحية","أطعمة نباتية","مخبوزات GF","حلويات بدون سكر","كيتو","وجبات بروتين"]},
-          jew:{t:"💍 مجوهرات",s:["أساور","قلادات","أقراط","خواتم","خلخال","بروش","مجموعات","اسم/مخصص","مكرمية","أحجار طبيعية","ريزين","سلك لف"]},
-          kid:{t:"👶 أطفال",s:["مجسمات حيوانات/رضّع","خشخيشة","عضّاضة كروشيه","دمى/كتب قماش","مونتسوري","مجموعات","حذاء وقبعة","بطانية أطفال","مريلة/فوطة","طقم نفاس","اكسسوار شعر","ملابس يدوية"]},
-          knit:{t:"🧶 حياكة",s:["كارديجان","كنزة","وشاح/قبعة","بونشو","شال","جوارب","طقم حمّام","طقم أطفال","صديري","وسادة/غطاء"]},
-          sew:{t:"✂️ خياطة",s:["ثَني/تصليح","تبديل سحّاب","خياطة ستائر","أغطية/وسائد","مفرش طاولة","تفصيل خاص","زيّ"]},
-          mac:{t:"🧵 مكرمية وديكور",s:["زينة حائط","حامل نبات","ميدالية","ثريا","رانر/طقم","سلّة","رف/زينة حائط"]},
-          home:{t:"🏠 ديكور منزلي",s:["أعمال لباد","وسادة","زينة الباب","تزيين صينية","إطار","صائد أحلام","لوحة"]},
-          candle:{t:"🕯️ شمع وروائح",s:["شموع صويا/عسل","حجر عطري","معطر جو","بخور","شمعة جل","طقم هدايا"]},
-          soap:{t:"🧼 صابون طبيعي وتجميل",s:["صابون زيت الزيتون","صوابين عشبية","شامبو صلب","مرهم شفاه","كريم/مرهم","ملح استحمام","أكياس لافندر"]},
-          toys:{t:"🧸 أميغورومي ولُعب (ديكور)",s:["ميدالية","مغناطيس","مجسّم","دمية/شخصية"]}
-        },
-        slogans:[
-          "قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة","خالٍ من الغلوتين ونباتي","دفء الحياكة","صابون طبيعي وتجميل","مونة تقليدية","مربّى طازج","مصنوع بعناية","جودة مع جهد","حب في كل غرزة","ثقة من منزل لمنزل","أطقم عيد الميلاد","مجوهرات أنيقة","أناقة بالمكرمية","روائح مريحة","آمن للأطفال","وصفات تقليدية","طعم بلا إضافات","من الجار إلى المائدة","اجتماع الحرفيين","طعم وتصميم","مصنوع بالمحبة"
-        ]
+        meta: { title: "تسجيل الدخول • Üreten Eller", description: "سجّل الدخول أو أنشئ حسابًا." }, brand: "Üreten Eller", a11y: { language: "اللغة" }, top: { badge: "+1000 مستخدم سعيد" }, hero: { title: "مرحبًا بكم في Üreten Eller", subtitle: "بيع وشراء مباشر" }, cta: { signup: "سجّل مجانًا", loginBtn: "لدي حساب" }, list: { title: "أحدث العروض", note: "هذه الصفحة للعرض فقط." }, auth: { tabs: { login: "تسجيل الدخول", signup: "إنشاء حساب" }, email: "البريد الإلكتروني", password: "كلمة المرور", password2: "تأكيد كلمة المرور", username: "اسم المستخدم", name: "الاسم", surname: "الكنية", show: "إظهار", hide: "إخفاء", login: "دخول", signup: "تسجيل", forgot: "نسيت كلمة المرور", google: "تسجيل عبر Google" }, legal: { contact: "اتصال / إمبريسوم", privacy: "سياسة الخصوصية", kvkk: "إشعار KVKK", cookies: "سياسة الكوكيز", terms: "شروط الاستخدام", distance: "عقد البيع عن بُعد", pref: "نموذج المعلومات المسبقة", delivery: "التسليم والإرجاع", rules: "قواعد المجتمع", banned: "منتجات محظورة", all: "جميع النصوص القانونية" }, testimonials: { title: "آراء المستخدمين", happy: "+5000 مستخدم سعيد" }, cats: { order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"], food:{t:"🍲 أطعمة",s:["أكلات منزلية","فطائر وبوريك","شوربة","أطباق بزيت الزيتون","أرز ومعكرونة","لحم ودجاج","فطور","مقبلات","مجمدات","وجبات للأطفال","حمية/نباتي/خالٍ من الغلوتين"]}, cake:{t:"🎂 كيك وحلويات",s:["كيك طازج","كيك وكب كيك","بسكويت","حلويات شرقية","حلويات بالحليب","تشيزكيك","حلويات للحمية","شوكولاتة/حلويات","مجموعات عيد الميلاد"]}, jar:{t:"🫙 مربيات • مخللات • صلصات",s:["مربى","دبس","مخللات","صلصة طماطم/فلفل","صلصة حارة","معجون طماطم","خل","معلبات"]}, winter:{t:"🌾 مؤن منزلية/شتوية",s:["نودلز (إريشته)","طرخانة","يوفكا","مانتي","خضار/فاكهة مجففة","معجون طماطم","خل","معلبات"]}, diet:{t:"🥗 حمية/نباتي/خالٍ من الغلوتين",s:["أطباق صحية","أطعمة نباتية","مخبوزات GF","حلويات بدون سكر","كيتو","وجبات بروتين"]}, jew:{t:"💍 مجوهرات",s:["أساور","قلادات","أقراط","خواتم","خلخال","بروش","مجموعات","اسم/مخصص","مكرمية","أحجار طبيعية","ريزين","سلك لف"]}, kid:{t:"👶 أطفال",s:["مجسمات حيوانات/رضّع","خشخيشة","عضّاضة كروشيه","دمى/كتب قماش","مونتسوري","مجموعات","حذاء وقبعة","بطانية أطفال","مريلة/فوطة","طقم نفاس","اكسسوار شعر","ملابس يدوية"]}, knit:{t:"🧶 حياكة",s:["كارديجان","كنزة","وشاح/قبعة","بونشو","شال","جوارب","طقم حمّام","طقم أطفال","صديري","وسادة/غطاء"]}, sew:{t:"✂️ خياطة",s:["ثَني/تصليح","تبديل سحّاب","خياطة ستائر","أغطية/وسائد","مفرش طاولة","تفصيل خاص","زيّ"]}, mac:{t:"🧵 مكرمية وديكور",s:["زينة حائط","حامل نبات","ميدالية","ثريا","رانر/طقم","سلّة","رف/زينة حائط"]}, home:{t:"🏠 ديكور منزلي",s:["أعمال لباد","وسادة","زينة الباب","تزيين صينية","إطار","صائد أحلام","لوحة"]}, candle:{t:"🕯️ شمع وروائح",s:["شموع صويا/عسل","حجر عطري","معطر جو","بخور","شمعة جل","طقم هدايا"]}, soap:{t:"🧼 صابون طبيعي وتجميل",s:["صابون زيت الزيتون","صوابين عشبية","شامبو صلب","مرهم شفاه","كريم/مرهم","ملح استحمام","أكياس لافندر"]}, toys:{t:"🧸 أميغورومي ولُعب (ديكور)",s:["ميدالية","مغناطيس","مجسّم","دمية/شخصية"]} }, slogans:["قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة","خالٍ من الغلوتين ونباتي","دفء الحياكة","صابون طبيعي وتجميل","مونة تقليدية","مربّى طازج","مصنوع بعناية","جودة مع جهد","حب في كل غرزة","ثقة من منزل لمنزل","أطقم عيد الميلاد","مجوهرات أنيقة","أناقة بالمكرمية","روائح مريحة","آمن للأطفال","وصفات تقليدية","طعم بلا إضافات","من الجار إلى المائدة","اجتماع الحرفيين","طعم وتصميم","مصنوع بالمحبة"]
       }
     };
 
-    // === Testimonials (per language) ===
+    // === Testimonials (data) ===
     const TESTIMONIALS = {
       tr: [
         {name:"Ayşe K.", city:"İstanbul", text:"Doğum günü pastası tam istediğim gibiydi. Hızlı ve güvenli."},
@@ -406,8 +309,7 @@
       ],
       en: [
         {name:"Ayşe K.", city:"Istanbul", text:"Birthday cake exactly as I wanted. Fast and safe."},
-        {name:"Mehmet B.", city:"Ankara", text:"No middleman keeps prices fair. Respect for the craft."},
-        {name:"Selin D.", city:"Izmir", text:"Gluten‑free cookies are great. Communication is easy."}
+        {name:"Mehmet B.", city:"Ankara", text:"No middleman keeps prices fair. Respect for the craft."}
       ],
       de: [
         {name:"Ayşe K.", city:"Istanbul", text:"Geburtstagstorte genau wie gewünscht. Schnell & sicher."},
@@ -419,123 +321,123 @@
       ]
     };
 
-    const $=(s)=>document.querySelector(s);
-    const $$=(s)=>Array.from(document.querySelectorAll(s));
+    // === Constants ===
     const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
+    const TESTIMONIAL_ROTATION_MS = 30000; // 30s
+    const TICKER_ROTATION_MS = 5000;       // 5s
+    const CAT_GLOW_MS = 5000;              // 5s
 
     let LANG = localStorage.getItem('ue_lang') || 'tr';
 
+    // === i18n helpers ===
     function setDir(){ const html=document.documentElement; html.lang=LANG; html.dir=(LANG==='ar')?'rtl':'ltr'; }
+    function tget(path){ const seg = path.split('.'); let cur = I18N[LANG] || I18N.tr; for(const k of seg){ cur = (cur||{})[k]; } return (cur==null)?'':String(cur); }
+    function applyText(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = tget(el.getAttribute('data-i18n')); }); document.querySelectorAll('[data-i18n-attr]').forEach(el=>{ const pairs = el.getAttribute('data-i18n-attr').split(','); pairs.forEach(p=>{ const [attr, key] = p.split(':'); if(attr && key){ el.setAttribute(attr.trim(), tget(key.trim())); } }); }); document.title = tget('meta.title') || document.title; document.documentElement.dir=(LANG==='ar')?'rtl':'ltr'; }
 
-    function tget(path){
-      const seg = path.split('.');
-      let cur = I18N[LANG] || I18N.tr; for(const k of seg){ cur = (cur||{})[k]; }
-      return (cur==null)?'':String(cur);
-    }
+    // === Categories ===
+    function renderCats(){ const cfg = (I18N[LANG]||I18N.tr).cats; const order = cfg.order && cfg.order.length? cfg.order : (I18N.tr.cats.order); const grid=document.getElementById('catGrid'); if(!grid) return; grid.innerHTML=''; order.forEach((key,i)=>{ const c=cfg[key] || (I18N.tr.cats[key]||null); if(!c) return; const col=COLORS[i%COLORS.length]; const chips = (c.s||[]).map(s=>`<span class="chip">${s}</span>`).join(''); const el=document.createElement('div'); el.className='card'; el.style.setProperty('--glow', col); el.dataset.baseIndex=String(i%COLORS.length); el.innerHTML=`<div class="halo" style="background:radial-gradient(420px 240px at 20% 0%,${col},transparent)"></div><div class="title">${c.t}</div><div class="chips">${chips}</div>`; grid.appendChild(el); }); }
+    function startCardGlow(intervalMs=CAT_GLOW_MS){ const cards = Array.from(document.querySelectorAll('#catGrid .card')); if(!cards.length) return; let tick = 0; function paint(){ cards.forEach((card,i)=>{ const base=parseInt(card.dataset.baseIndex||i,10)||0; const col=COLORS[(base+tick)%COLORS.length]; card.style.setProperty('--glow',col); const halo=card.querySelector('.halo'); if(halo){ halo.style.background=`radial-gradient(420px 240px at 20% 0%, ${col}, transparent)`; } }); tick=(tick+1)%COLORS.length; } if(window.__catGlowInt) clearInterval(window.__catGlowInt); paint(); window.__catGlowInt=setInterval(paint, intervalMs); }
 
-    function applyText(){
-      document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = tget(el.getAttribute('data-i18n')); });
-      document.querySelectorAll('[data-i18n-attr]').forEach(el=>{
-        const pairs = el.getAttribute('data-i18n-attr').split(',');
-        pairs.forEach(p=>{ const [attr, key] = p.split(':'); if(attr && key){ el.setAttribute(attr.trim(), tget(key.trim())); } });
-      });
-      document.title = tget('meta.title') || document.title;
-      const html=document.documentElement; html.dir=(LANG==='ar')?'rtl':'ltr';
-    }
+    // === Slogans ===
+    function renderSlogans(){ const arr=((I18N[LANG]||I18N.tr).slogans)||(I18N.tr.slogans); const ticker=document.getElementById('ticker'); if(!ticker) return; ticker.innerHTML=''; const isMobile = matchMedia('(max-width: 520px)').matches; const SLOT = isMobile ? 2 : 5; for(let i=0;i<SLOT;i++){ const s=document.createElement('span'); s.className='tick'; ticker.appendChild(s); } let start=0, hue=0; function paint(){ const nodes=[...ticker.children]; nodes.forEach((n,i)=>{ const msg=arr[(start+i)%arr.length]; n.textContent=msg; const c=COLORS[(hue+i)%COLORS.length]; n.style.background=`linear-gradient(180deg,${c},#0b1220)`; n.style.borderColor='transparent'; }); start=(start+SLOT)%arr.length; hue=(hue+1)%COLORS.length; } paint(); clearInterval(window.__slogInt); window.__slogInt=setInterval(paint,TICKER_ROTATION_MS); if(!window.__slogResizeBound){ window.addEventListener('resize', ()=>{ clearTimeout(window.__slogRT); window.__slogRT=setTimeout(renderSlogans,200); }); window.__slogResizeBound=true; } }
 
-    function renderCats(){
-      const cfg = (I18N[LANG]||I18N.tr).cats; const order = cfg.order && cfg.order.length? cfg.order : (I18N.tr.cats.order);
-      const grid=document.getElementById('catGrid'); if(!grid) return; grid.innerHTML='';
-      order.forEach((key,i)=>{ const c=cfg[key] || (I18N.tr.cats[key]||null); if(!c) return; const col=COLORS[i%COLORS.length];
-        const chips = (c.s||[]).map(s=>`<span class="chip">${s}</span>`).join('');
-        const el=document.createElement('div'); el.className='card'; el.style.setProperty('--glow', col); el.dataset.baseIndex=String(i%COLORS.length);
-        el.innerHTML=`<div class="halo" style="background:radial-gradient(420px 240px at 20% 0%,${col},transparent)"></div>
-          <div class="title">${c.t}</div>
-          <div class="chips">${chips}</div>`;
-        grid.appendChild(el);
-      });
-    }
+    // === Listings (placeholder) ===
+    function renderListings(){ const grid=document.getElementById('listGrid'); if(!grid) return; grid.innerHTML=''; const cnt=document.getElementById('listCount'); if(cnt) cnt.textContent='(0)'; }
 
-    function startCardGlow(intervalMs=5000){
-      const cards = Array.from(document.querySelectorAll('#catGrid .card'));
-      if(!cards.length) return;
-      let tick = 0; function paint(){ cards.forEach((card,i)=>{ const base=parseInt(card.dataset.baseIndex||i,10)||0; const col=COLORS[(base+tick)%COLORS.length]; card.style.setProperty('--glow',col); const halo=card.querySelector('.halo'); if(halo){ halo.style.background=`radial-gradient(420px 240px at 20% 0%, ${col}, transparent)`; } }); tick=(tick+1)%COLORS.length; }
-      if(window.__catGlowInt) clearInterval(window.__catGlowInt);
-      paint(); window.__catGlowInt=setInterval(paint, intervalMs);
-    }
+    // === Testimonials ===
+    const PAGE_SIZE = 3; let tPage = 0; let tOffset = 0;
+    function avatarText(name){ return (name||'?').trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase(); }
+    function getTestimonials(){ return TESTIMONIALS[LANG] && TESTIMONIALS[LANG].length ? TESTIMONIALS[LANG] : TESTIMONIALS.tr; }
+    function renderTestimonials(){ const grid=document.getElementById('tGrid'); if(!grid) return; const data=getTestimonials(); const totalPages=Math.ceil(data.length/PAGE_SIZE)||1; const n=Math.min(PAGE_SIZE, data.length)||0; const start = (totalPages>1) ? (tPage*PAGE_SIZE) : tOffset; const items=[]; for(let i=0;i<n;i++){ items.push(data[(start+i)%data.length]); } grid.setAttribute('aria-busy','true'); grid.innerHTML = items.map(x=>`<article class="tcard"><div class="tmeta"><div class="avatar" aria-hidden="true">${avatarText(x.name)}</div><div><div class="tname">${x.name}</div><div class="tcity">${x.city}</div></div></div><div>${x.text}</div></article>`).join(''); const tpi=document.getElementById('tPageInfo'); if(tpi){ const tp=Math.ceil(data.length/PAGE_SIZE)||1; tpi.textContent = tp>1 ? `Sayfa ${Math.min(tPage+1,tp)} / ${tp}` : ''; } grid.setAttribute('aria-busy','false'); }
+    function startTestimonialRotation(){ clearInterval(window.__trot); window.__trot=setInterval(()=>{ const len=getTestimonials().length; const tp=Math.ceil(len/PAGE_SIZE)||1; if(tp>1){ tPage=(tPage+1)%tp; } else if(len>0){ tOffset=(tOffset+1)%len; } renderTestimonials(); }, TESTIMONIAL_ROTATION_MS); }
 
-    function renderSlogans(){
-      const arr=((I18N[LANG]||I18N.tr).slogans)||(I18N.tr.slogans); const ticker=document.getElementById('ticker'); if(!ticker) return; ticker.innerHTML='';
-      const isMobile = matchMedia('(max-width: 520px)').matches; const SLOT = isMobile ? 2 : 5;
-      for(let i=0;i<SLOT;i++){ const s=document.createElement('span'); s.className='tick'; ticker.appendChild(s); }
-      let start=0, hue=0;
-      function paint(){ const nodes=[...ticker.children]; nodes.forEach((n,i)=>{ const msg=arr[(start+i)%arr.length]; n.textContent=msg; const c=COLORS[(hue+i)%COLORS.length]; n.style.background=`linear-gradient(180deg,${c},#0b1220)`; n.style.borderColor='transparent'; }); start=(start+SLOT)%arr.length; hue=(hue+1)%COLORS.length; }
-      paint(); clearInterval(window.__slogInt); window.__slogInt=setInterval(paint,5000);
-      if(!window.__slogResizeBound){ window.addEventListener('resize', ()=>{ clearTimeout(window.__slogRT); window.__slogRT=setTimeout(renderSlogans,200); }); window.__slogResizeBound=true; }
-    }
+    // === Google Identity Services ===
+    function parseJwt(token){ try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/')); const uriDecoded = decodeURIComponent(Array.prototype.map.call(json, c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(uriDecoded); }catch(e){ return {}; } }
+    function handleGoogleCredential(resp){ const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || ''; const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' }; const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||''); /* TODO: backend login with resp.credential */ }
+    function initGoogle(){ const ctn = document.getElementById('googleBtn'); const fb=document.getElementById('googleFallback'); if(!ctn) return; if(window.google && google.accounts && google.accounts.id){ google.accounts.id.initialize({ client_id: 'YOUR_GOOGLE_CLIENT_ID', callback: handleGoogleCredential }); google.accounts.id.renderButton(ctn, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320 }); if(fb) fb.style.display='none'; } else { if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>alert('Google butonu yüklenemedi.'); } } }
 
-    function renderListings(){ const grid=document.getElementById('listGrid'); if(!grid) return; grid.innerHTML=''; document.getElementById('listCount').textContent='(0)'; }
-
+    // === Auth panel ===
     function bindAuthPanel(){
-      const grid=document.getElementById('grid'); const box=document.getElementById('authBox'); const bd=document.getElementById('backdrop');
-      const tabLogin=document.getElementById('tabLogin'); const tabSignup=document.getElementById('tabSignup');
-      const loginForm=document.getElementById('loginForm'); const signupForm=document.getElementById('signupForm');
-      function sel(tab){ const login=tab==='login'; tabLogin.setAttribute('aria-selected',login); tabSignup.setAttribute('aria-selected',!login); loginForm.style.display=login?'block':'none'; signupForm.style.display=login?'none':'block'; }
-      function open(which){ if(bd) bd.style.display='block'; box.style.display='block'; box.setAttribute('aria-hidden','false'); box.classList.add('center'); grid.classList.remove('two'); sel(which); }
-      function close(){ box.style.display='none'; box.classList.remove('center'); box.setAttribute('aria-hidden','true'); if(bd) bd.style.display='none'; }
+      const grid=document.getElementById('grid');
+      const box=document.getElementById('authBox');
+      const bd=document.getElementById('backdrop');
+      const tabLogin=document.getElementById('tabLogin');
+      const tabSignup=document.getElementById('tabSignup');
+      const loginForm=document.getElementById('loginForm');
+      const signupForm=document.getElementById('signupForm');
+
+      function sel(tab){
+        const login = tab==='login';
+        tabLogin.setAttribute('aria-selected', login);
+        tabSignup.setAttribute('aria-selected', !login);
+        loginForm.style.display = login ? 'block' : 'none';
+        signupForm.style.display = login ? 'none' : 'block';
+        if (login) setTimeout(initGoogle,0);
+      }
+      function open(which){
+        if(bd) bd.style.display='block';
+        box.style.display='block';
+        box.setAttribute('aria-hidden','false');
+        box.classList.add('center');
+        if(grid) grid.classList.remove('two');
+        sel(which);
+      }
+      function close(){
+        box.style.display='none';
+        box.classList.remove('center');
+        box.setAttribute('aria-hidden','true');
+        if(bd) bd.style.display='none';
+      }
+
       document.getElementById('openSignup').onclick=()=>open('signup');
       document.getElementById('openLogin').onclick=()=>open('login');
       tabLogin.onclick=()=>sel('login');
       tabSignup.onclick=()=>sel('signup');
-      document.getElementById('closeAuth').onclick=close; if(bd){ bd.onclick=close; }
-      document.addEventListener('keydown',(e)=>{ if(e.key==='Escape' && box.classList.contains('center')) close(); });
-      document.addEventListener('click',(e)=>{ const b=e.target.closest('[data-toggle]'); if(!b) return; const id=b.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return; const isPwd=el.type==='password'; el.type=isPwd?'text':'password'; b.textContent = isPwd ? (tget('auth.hide')||'Gizle') : (tget('auth.show')||'Göster'); });
+      document.getElementById('closeAuth').onclick=close;
+      if(bd){ bd.onclick=close; }
+
+      document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape' && box.classList.contains('center')) close();
+      });
+
+      document.addEventListener('click',(e)=>{
+        const b=e.target.closest('[data-toggle]');
+        if(!b) return;
+        const id=b.getAttribute('data-toggle');
+        const el=document.getElementById(id);
+        if(!el) return;
+        const isPwd = el.type==='password';
+        el.type = isPwd ? 'text' : 'password';
+        b.textContent = isPwd ? (tget('auth.hide')||'Gizle') : (tget('auth.show')||'Göster');
+      });
     }
 
-    // Testimonials helpers (fixed)
-    const PAGE_SIZE = 3; let tPage = 0; let tOffset = 0;
-    const TESTIMONIAL_ROTATION_MS = 30000; // 8 sn
-    const TICKER_ROTATION_MS      = 5000;  // 5 sn
-    const CAT_GLOW_MS             = 5000;  // 5 sn
-
-    function avatarText(name){ return (name||'?').trim().split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase(); }
-    function getTestimonials(){ return TESTIMONIALS[LANG] && TESTIMONIALS[LANG].length ? TESTIMONIALS[LANG] : TESTIMONIALS.tr; }
-
-    function renderTestimonials(){
-      const grid=document.getElementById('tGrid'); if(!grid) return;
-      const data=getTestimonials();
-      const totalPages=Math.ceil(data.length/PAGE_SIZE)||1;
-      const n=Math.min(PAGE_SIZE, data.length)||0;
-      const start = (totalPages>1) ? (tPage*PAGE_SIZE) : tOffset; // tek sayfada kayan pencere
-      const items=[]; for(let i=0;i<n;i++){ items.push(data[(start+i)%data.length]); }
-      grid.setAttribute('aria-busy','true');
-      grid.innerHTML = items.map(x=>`<article class="tcard"><div class="tmeta"><div class="avatar" aria-hidden="true">${avatarText(x.name)}</div><div><div class="tname">${x.name}</div><div class="tcity">${x.city}</div></div></div><div>${x.text}</div></article>`).join('');
-      const tpi=document.getElementById('tPageInfo');
-      if(tpi){ const tp=Math.ceil(data.length/PAGE_SIZE)||1; tpi.textContent = tp>1 ? `Sayfa ${Math.min(tPage+1,tp)} / ${tp}` : ''; }
-      grid.setAttribute('aria-busy','false');
-    }
-
-    function startTestimonialRotation(){
-      clearInterval(window.__trot);
-      window.__trot=setInterval(()=>{
-        const len=getTestimonials().length; const tp=Math.ceil(len/PAGE_SIZE)||1;
-        if(tp>1){ tPage=(tPage+1)%tp; }
-        else if(len>0){ tOffset=(tOffset+1)%len; }
-        renderTestimonials();
-      }, TESTIMONIAL_ROTATION_MS);
-    }
-
+    // === Boot ===
     function applyLang(){
-      setDir(); applyText(); renderCats(); startCardGlow(CAT_GLOW_MS); renderSlogans(); renderListings(); renderTestimonials(); startTestimonialRotation();
-      const y=document.getElementById('yr'); if(y) y.textContent = new Date().getFullYear();
+      setDir();
+      applyText();
+      renderCats();
+      startCardGlow();
+      renderSlogans();
+      renderListings();
+      renderTestimonials();
+      startTestimonialRotation();
+      const y=document.getElementById('yr');
+      if(y) y.textContent = new Date().getFullYear();
     }
-
-    function initLangSelect(){ const sel=document.getElementById('langSel'); if(!sel) return; sel.value=LANG; sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); tPage=0; tOffset=0; applyLang(); }; }
-
-    function boot(){ try{ initLangSelect(); applyLang(); bindAuthPanel(); } catch(e){ console.error(e); } }
-
-    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); }
-    else { boot(); }
+    function initLangSelect(){
+      const sel=document.getElementById('langSel');
+      if(!sel) return;
+      sel.value = LANG;
+      sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); tPage=0; tOffset=0; applyLang(); };
+    }
+    function boot(){
+      try{ initLangSelect(); applyLang(); bindAuthPanel(); }
+      catch(e){ console.error(e); }
+    }
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded', boot);
+    } else { boot(); }
   </script>
 </body>
 </html>
