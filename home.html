@@ -137,13 +137,7 @@
     .highTags{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:.6rem}
     .hichip{font-weight:900;letter-spacing:.2px;border:1px solid var(--brd);border-radius:999px;padding:.35rem .7rem;background:linear-gradient(90deg,var(--c2),var(--c5),var(--c3),var(--c4));background-size:300% 100%;animation:shine 8s linear infinite;color:#0b1220;box-shadow:0 0 0 1px #ffffff1a,0 0 20px #06b6d460}
 
-    /* Form */
-    .form{display:grid;gap:.6rem}
-    .form .row2{display:grid;gap:.6rem;grid-template-columns:1fr 1fr}
-    .form label{font-weight:800;font-size:.9rem}
-    .form input,.form select,.form textarea{width:100%;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem}
-    .form small{color:var(--muted)}
-  </style>
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -173,7 +167,13 @@
     <section class="hero" aria-labelledby="welcomeTitle">
       <h1 id="welcomeTitle" class="welcome">Üreten Ellere Hoş Geldiniz ✨</h1>
       <div id="sloganWrap" class="slogAll" aria-live="polite"></div>
-      <div id="highlights" class="highTags" aria-label="Highlights"></div>
+      <div id="highlights" class="highTags" aria-label="Highlights">
+        <span class="hichip">Gluten‑free & vegan</span>
+        <span class="hichip">Cozy knits</span>
+        <span class="hichip">Natural soap & cosmetics</span>
+        <span class="hichip">Traditional pantry</span>
+        <span class="hichip">Fresh jams</span>
+      </div>
     </section>
 
     <!-- ⭐ Vitrin İlanları -->
@@ -266,46 +266,7 @@
     </div>
   </div>
 
-  <!-- İlan Ver Modal -->
-  <div id="postModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="postTitle" aria-hidden="true">
-    <button class="close" id="postClose" aria-label="Kapat">✕</button>
-    <h2 id="postTitle" style="margin-top:0">📣 İlan Ver</h2>
-    <form id="postForm" class="form">
-      <div>
-        <label for="fSeller">Satıcı Adı</label>
-        <input id="fSeller" name="seller" placeholder="Adınız / Mağaza adı" required />
-      </div>
-      <div>
-        <label for="fTitle">Başlık</label>
-        <input id="fTitle" name="title" placeholder="Ürün adı" required maxlength="80" />
-      </div>
-      <div class="row2">
-        <div>
-          <label for="fPrice">Fiyat (TL)</label>
-          <input id="fPrice" name="price" type="number" min="0" step="1" placeholder="örn. 349" required />
-        </div>
-        <div>
-          <label for="fCat">Kategori</label>
-          <select id="fCat" name="category" required></select>
-        </div>
-      </div>
-      <div>
-        <label for="fImg">Görsel URL</label>
-        <input id="fImg" name="image" type="url" placeholder="https://... (jpg/png)" required />
-        <small>Not: Şimdilik URL ile. Dosya yükleme sonraki adım.</small>
-      </div>
-      <div class="row" style="justify-content:space-between">
-        <label><input id="fVip" type="checkbox" /> ⭐ Vitrin (Premium)</label>
-        <button class="btn ghost" type="button" id="postNeedPremium">Premium Nedir?</button>
-      </div>
-      <div class="row" style="justify-content:flex-end">
-        <button type="button" class="btn" id="postCancel">Vazgeç</button>
-        <button type="submit" class="btn primary">Kaydet</button>
-      </div>
-    </form>
-  </div>
-
-<!-- Kategori Modal -->
+  <!-- Kategori Modal -->
   <div id="catModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cTitle" aria-hidden="true">
     <button class="close" id="cClose" aria-label="Kapat">✕</button>
     <h2 id="cTitle" style="margin-top:0">Kategori</h2>
@@ -351,9 +312,7 @@
       tr:{
         hero:"Üreten Ellere Hoş Geldiniz ✨",
         nav:{home:"Ana Sayfa", msg:"Mesajlar", noti:"Bildirimler"},
-        top:{give:"İlan Ver", profile:"Profil", logout:"Çıkış", premium:"⭐ Premium Ol", langLabel:"Dil"},
-        sections:{vip:"⭐ Vitrin İlanları", std:"📦 Standart İlanlar", cats:"📚 Kategoriler", catsMini:"Keşfet"},
-        high:["Glutensiz & vegan var","Sıcacık örgüler","Doğal sabun & kozmetik","Yöresel kışlıklar","Taze reçeller"],
+        top:{give:"İlan Ver", profile:"Profil", logout:"Çıkış", premium:"⭐ Premium Ol"},
         legal:{title:"Yasal", contact:"İletişim / Impressum", privacy:"Gizlilik Politikası", kvkk:"KVKK Aydınlatma", cookies:"Çerez Politikası", terms:"Kullanım Şartları", distance:"Mesafeli Satış Sözleşmesi", pref:"Ön Bilgilendirme Formu", delivery:"Teslimat & İade", rules:"Topluluk Kuralları", banned:"Yasaklı Ürünler", all:"Tüm Yasal Metinler", brand:"Üreten Eller"},
         slogans:[
           "El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler",
@@ -383,9 +342,7 @@
       en:{
         hero:"Welcome to Üreten Eller ✨",
         nav:{home:"Home", msg:"Messages", noti:"Notifications"},
-        top:{give:"Post Listing", profile:"Profile", logout:"Logout", premium:"⭐ Get Premium", langLabel:"Language"},
-        sections:{vip:"⭐ Featured Listings", std:"📦 Standard Listings", cats:"📚 Categories", catsMini:"Explore"},
-        high:["Gluten‑free & vegan","Cozy knits","Natural soap & cosmetics","Traditional pantry","Fresh jams"],
+        top:{give:"Post Listing", profile:"Profile", logout:"Logout", premium:"⭐ Get Premium"},
         legal:{title:"Legal", contact:"Contact / Impressum", privacy:"Privacy Policy", kvkk:"KVKK Notice", cookies:"Cookie Policy", terms:"Terms of Use", distance:"Distance Sales Agreement", pref:"Pre‑Information Form", delivery:"Delivery & Returns", rules:"Community Rules", banned:"Prohibited Products", all:"All Legal Texts", brand:"Üreten Eller"},
         slogans:["Valuing handicraft","Direct trade","Support local makers","Homemade goodness","Personalized gifts","Gluten‑free & vegan","Cozy knits","Natural soap & cosmetics","Traditional pantry","Fresh jams","Carefully handmade","Quality with effort","Love in every stitch","Home‑to‑home trust","Birthday sets","Elegant jewelry","Style with macramé","Peaceful scents","Safe for babies","Traditional recipes","Additive‑free taste","From neighbor to table","Masters united","Taste & design","Made with love"],
         cats:{
@@ -409,9 +366,7 @@
       de:{
         hero:"Willkommen bei Üreten Eller ✨",
         nav:{home:"Startseite", msg:"Nachrichten", noti:"Benachrichtigungen"},
-        top:{give:"Anzeige aufgeben", profile:"Profil", logout:"Abmelden", premium:"⭐ Premium", langLabel:"Sprache"},
-        sections:{vip:"⭐ Schaufenster‑Anzeigen", std:"📦 Standardanzeigen", cats:"📚 Kategorien", catsMini:"Entdecken"},
-        high:["Glutenfrei & vegan","Kuschelige Stricksachen","Naturseife & Kosmetik","Traditioneller Vorrat","Frische Marmeladen"],
+        top:{give:"Anzeige aufgeben", profile:"Profil", logout:"Abmelden", premium:"⭐ Premium"},
         legal:{title:"Rechtliches", contact:"Kontakt / Impressum", privacy:"Datenschutz", kvkk:"KVKK‑Hinweis", cookies:"Cookie‑Richtlinie", terms:"Nutzungsbedingungen", distance:"Fernabsatzvertrag", pref:"Vorabinformation", delivery:"Lieferung & Rückgabe", rules:"Community‑Regeln", banned:"Verbotene Produkte", all:"Alle Rechtstexte", brand:"Üreten Eller"},
         slogans:["Wert fürs Handwerk","Direkter Handel","Lokale Macher unterstützen","Hausgemacht","Personalisierte Geschenke","Glutenfrei & vegan","Kuschelige Stricksachen","Naturseife & Kosmetik","Traditioneller Vorrat","Frische Marmeladen","Sorgfältig handgemacht","Qualität durch Mühe","Liebe in jeder Masche","Vertrauen von Haus zu Haus","Geburtstagssets","Eleganter Schmuck","Stil mit Makramee","Beruhigende Düfte","Sicher für Babys","Traditionelle Rezepte","Ohne Zusatzstoffe","Vom Nachbarn auf den Tisch","Meister vereint","Geschmack & Design","Mit Liebe gemacht"],
         cats:{
@@ -435,9 +390,7 @@
       ar:{
         hero:"مرحبًا بكم في Üreten Eller ✨",
         nav:{home:"الرئيسية", msg:"الرسائل", noti:"الإشعارات"},
-        top:{give:"أنشئ إعلانًا", profile:"الملف الشخصي", logout:"تسجيل الخروج", premium:"⭐ بريميوم", langLabel:"اللغة"},
-        sections:{vip:"⭐ إعلانات مميزة", std:"📦 إعلانات عادية", cats:"📚 التصنيفات", catsMini:"اكتشف"},
-        high:["خالٍ من الغلوتين ونباتي","دفء الحياكة","صابون طبيعي وتجميل","مونة تقليدية","مربّى طازج"],
+        top:{give:"أنشئ إعلانًا", profile:"الملف الشخصي", logout:"تسجيل الخروج", premium:"⭐ بريميوم"},
         legal:{title:"نصوص قانونية", contact:"اتصال / إمبريسوم", privacy:"سياسة الخصوصية", kvkk:"إشعار KVKK", cookies:"سياسة الكوكيز", terms:"شروط الاستخدام", distance:"عقد البيع عن بُعد", pref:"معلومات مسبقة", delivery:"التسليم والإرجاع", rules:"قواعد المجتمع", banned:"منتجات محظورة", all:"جميع النصوص القانونية", brand:"Üreten Eller"},
         slogans:["قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة","خالٍ من الغلوتين ونباتي","دفء الحياكة","صابون طبيعي وتجميل","مونة تقليدية","مربّى طازج","مصنوع بعناية","جودة مع جهد","حب في كل غرزة","ثقة من منزل لمنزل","أطقم عيد الميلاد","مجوهرات أنيقة","أناقة بالمكرمية","روائح مريحة","آمن للأطفال","وصفات تقليدية","طعم بلا إضافات","من الجار إلى المائدة","اجتماع الحرفيين","طعم وتصميم","مصنوع بالمحبة"],
         cats:{
@@ -458,18 +411,17 @@
           toys:{t:"🧸 أميغورومي ولُعب (ديكور)",s:["ميدالية","مغناطيس","مجسّم","دمية/شخصية"]}
         }
       }
-    };
+};
+let LANG=localStorage.getItem('ue_lang')||'tr';
 
-    let LANG=localStorage.getItem('ue_lang')||'tr';
-    let __currentCat = null;
-
+    // Kategori tıklamaları
     function bindCatClicks(){
       const grid = document.getElementById('catGrid'); if(!grid) return;
       grid.addEventListener('click', (e)=>{
         const card = e.target.closest('.kcard'); if(!card) return;
-        if(e.shiftKey){ e.preventDefault(); cycleCardColor(card); return; }
-        const key = card.dataset.key; if(!key) return;
-        window.location.href = `/kategori/${key}`;
+        // SHIFT+Click: manuel renk değiştir
+        if(e.shiftKey){ cycleCardColor(card); e.preventDefault(); return; }
+        e.preventDefault(); const key = card.dataset.key; openCat(key);
       });
     }
 
@@ -478,6 +430,7 @@
       const col = COLORS[base]; card.style.setProperty('--glow', col); const halo=card.querySelector('.halo'); if(halo){ halo.style.background=`radial-gradient(420px 240px at 20% 0%, ${col}, transparent)`; }
     }
 
+    let __currentCat = null;
     function openCat(key){
       const cfg = (I18N[LANG]||I18N.tr).cats; const c = cfg[key] || (I18N.tr.cats[key]||null); if(!c) return;
       __currentCat = key;
@@ -489,11 +442,12 @@
       document.getElementById('backdrop').style.display='block'; document.getElementById('catModal').style.display='block'; document.getElementById('catModal').setAttribute('aria-hidden','false');
     }
 
+    // === Dil & Slogan & Kategori ===
     function setDir(){ const html=document.documentElement; html.dir=(LANG==='ar')?'rtl':'ltr'; html.lang=LANG; }
-
     function renderSlogans(){
       const cfg = I18N[LANG]||I18N.tr; const wrap=$('#sloganWrap'); if(!wrap) return;
       const h=$('#welcomeTitle'); if(h) h.textContent=cfg.hero;
+      // slotları hazırla (mobil 2, masaüstü 5)
       const isMobile = matchMedia('(max-width: 520px)').matches; const SLOT = isMobile ? 2 : 5;
       const ensure = ()=>{
         while(wrap.children.length < SLOT){ const s=document.createElement('span'); s.className='tag'; wrap.appendChild(s); }
@@ -504,11 +458,10 @@
       function paint(){ const nodes=[...wrap.children]; const arr = cfg.slogans||[]; if(arr.length===0) return; nodes.forEach((n,i)=>{ n.textContent = arr[(start+i)%arr.length]; }); start=(start+SLOT)%arr.length; }
       paint();
       if(window.__slogInt) clearInterval(window.__slogInt);
-      window.__slogInt = setInterval(paint, 5000);
+      window.__slogInt = setInterval(paint, 5000); // 5 sn
       if(!window.__slogResize){ window.addEventListener('resize', ()=>{ clearTimeout(window.__slogRT); window.__slogRT=setTimeout(renderSlogans, 200); }); window.__slogResize=true; }
       setDir();
     }
-
     function renderCats(){
       const grid=document.getElementById('catGrid'); if(!grid) return; grid.innerHTML='';
       const cfg = (I18N[LANG]||I18N.tr).cats; const order = cfg.order && cfg.order.length? cfg.order : (I18N.tr.cats.order);
@@ -520,6 +473,7 @@
           <div class="chips">${chips}</div>`;
         grid.appendChild(el);
       });
+      // Eğer hiç kart oluşmadıysa korumalı yedek
       if(!grid.children.length){
         const fallback=[{t:'🍲 Yemekler'},{t:'🎂 Pasta & Tatlı'},{t:'🧶 Örgü / Triko'},{t:'🧼 Doğal Sabun'}];
         fallback.forEach((c,i)=>{ const col=COLORS[i%COLORS.length]; const el=document.createElement('div'); el.className='kcard'; el.style.setProperty('--glow', col); el.style.borderColor=col; el.innerHTML=`<div class="halo" style="background:radial-gradient(420px 240px at 20% 0%,${col},transparent)"></div><div class="title">${c.t}</div>`; grid.appendChild(el); });
@@ -545,20 +499,23 @@
     }
 
     function bindNav(){
+      // metinler
       const T=(I18N[LANG]||I18N.tr);
       $('#btnGive').textContent=T.top.give; $('#btnProfile').textContent=T.top.profile; $('#btnLogout').textContent=T.top.logout; $('#btnPremium').textContent=T.top.premium;
       $('#navHomeLabel').textContent=T.nav.home; $('#navMsgLabel').textContent=T.nav.msg; $('#navNotiLabel').textContent=T.nav.noti;
-      // İlan Ver butonu modal açar
-      $('#btnGive').onclick=()=>{ openPostModal(); };
+      // click
+      $('#btnGive').onclick=()=>{ window.location.href='/ilan-ver.html'; };
       $('#btnProfile').onclick=()=>{ window.location.href='/profil.html'; };
       $('#btnLogout').onclick=()=>{ window.location.href='/cikis.html'; };
       $('#navHome').onclick=()=>{ window.location.href='/home.html'; };
       $('#navMsg').onclick=()=>{ window.location.href='/mesajlar.html'; };
       $('#navNoti').onclick=()=>{ window.location.href='/bildirimler.html'; };
-      const sel=$('#langSel'); if(sel){ sel.value=LANG; sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); applyLang(); fillCatSelect(); }; }
+      const sel=$('#langSel'); if(sel){ sel.value=LANG; sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); applyLang(); }; }
       const bubble=$('#chatBubble'); if(bubble){ bubble.onclick=()=>{ openChat(); }; }
     }
 
+
+    // === Premium Modal & Canlı Destek ===
     function toast(msg){ const t=$('#toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>{t.style.display='none';},1800); }
 
     function openModal(){ $('#backdrop').style.display='block'; $('#premiumModal').style.display='block'; $('#premiumModal').setAttribute('aria-hidden','false'); }
@@ -568,159 +525,53 @@
       const open=()=>{ $('#backdrop').style.display='block'; $('#premiumModal').style.display='block'; $('#premiumModal').setAttribute('aria-hidden','false'); };
       const close=()=>{ $('#backdrop').style.display='none'; $('#premiumModal').style.display='none'; $('#premiumModal').setAttribute('aria-hidden','true'); };
       $('#btnPremium').onclick=open; $('#pClose').onclick=close; $('#backdrop').onclick=(e)=>{ if(e.target.id==='backdrop') close(); };
+      // Copy buttons
       $$('#premiumModal [data-copy]').forEach(b=>{ b.onclick=()=>{ const sel=b.getAttribute('data-copy'); const el=$(sel); if(!el) return; navigator.clipboard.writeText(el.textContent.trim()).then(()=>toast('Kopyalandı')); }; });
+      // Open live chat from modal
       $('#openLive').onclick=()=>{ close(); openChat(); };
     }
 
+    // === Canlı Destek ===
     function openChat(){ const c=$('#chat'); if(!c) return; c.style.display='block'; }
     function closeChat(){ const c=$('#chat'); if(!c) return; c.style.display='none'; }
-    function minChat(){ const c=$('#chat'); if(!c) return; c.style.display = (c.style.display==='block') ? 'none' : 'block'; }
-
     function bindChat(){
-      $('#chatClose').onclick=closeChat;
-      $('#chatMin').onclick=minChat;
-      $('#chatSend').onclick=sendMsg;
-      $('#chatInput').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ sendMsg(); }});
+      const bubble=$('#chatBubble'); if(bubble){ bubble.onclick=()=>{ const c=$('#chat'); if(!c) return; c.style.display = (c.style.display==='block')?'none':'block'; }; }
+      const body=$('#chatBody'); const input=$('#chatInput'); const send=$('#chatSend');
+      function push(text,me=false){ const m=document.createElement('div'); m.className='chatMsg'+(me?' me':''); m.textContent=text; body.appendChild(m); body.scrollTop=body.scrollHeight; }
+      if(send) send.onclick=()=>{ const v=(input.value||'').trim(); if(!v) return; push(v,true); input.value=''; setTimeout(()=>push('Size en kısa sürede geri döneceğiz.'),600); };
+      if(input) input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); send.click(); } });
     }
 
-    function sendMsg(){
-      const input=$('#chatInput'); if(!input) return; const txt=input.value.trim(); if(!txt) return; input.value='';
-      appendMsg(txt,true);
-      setTimeout(()=>{ appendMsg('Talebinizi aldık, en kısa sürede dönüş yapacağız.'); }, 600);
-    }
-
-    function appendMsg(text, me=false){
-      const box=$('#chatBody'); if(!box) return; const d=document.createElement('div'); d.className='chatMsg'+(me?' me':''); d.textContent=text; box.appendChild(d); box.scrollTop=box.scrollHeight;
-    }
-
-    function renderLegal(){
-      const T=(I18N[LANG]||I18N.tr).legal; $('#legalTitle').textContent=T.title; $('#lContact').textContent=T.contact; $('#lPrivacy').textContent=T.privacy; $('#lKvkk').textContent=T.kvkk; $('#lCookies').textContent=T.cookies; $('#lTerms').textContent=T.terms; $('#lDistance').textContent=T.distance; $('#lPref').textContent=T.pref; $('#lDelivery').textContent=T.delivery; $('#lRules').textContent=T.rules; $('#lBanned').textContent=T.banned; $('#lAll').textContent=T.all; $('#brandName').textContent=T.brand; $('#yr').textContent = new Date().getFullYear();
-    }
-
-    function renderListings(){
-      const all = loadListings().filter(x=>x.isActive!==false);
-      all.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
-      const vip = all.filter(x=>x.vip===true).slice(0,24);
-      const std = all.filter(x=>!x.vip).slice(0,48);
-      fillGrid('#vipGrid', vip, '#vipCount');
-      fillGrid('#stdGrid', std, '#stdCount');
-    }
-
-    function fillGrid(sel, items, countSel){
-      const grid=$(sel); if(!grid) return; grid.innerHTML='';
-      if(!items.length){ grid.innerHTML = '<div class="mini" style="padding:.6rem">Henüz ilan yok.</div>'; const c=$(countSel); if(c) c.textContent='(0)'; return; }
-      items.forEach((it,i)=>{
-        const card=document.createElement('a'); card.href='#'; card.className='card'; card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-        const priceStr = (typeof it.priceTL==='number' ? `${it.priceTL} TL` : (it.p||''));
-        const img = it.image || it.img || '';
-        const title = it.title || it.t || '';
-        card.innerHTML = `
-          <span class="thumb" style="background-image:url('${sanitizeUrl(img)}')"></span>
-          <div class="meta">
-            <div class="row" style="justify-content:space-between;align-items:center">
-              <span class="title">${escapeHtml(title)}</span>
-              ${it.vip?'<span class="badge star">⭐ Vitrin</span>':''}
-            </div>
-            <div class="row" style="justify-content:space-between;align-items:center">
-              <div class="price">${priceStr}</div>
-              <span class="mini">${escapeHtml(it.seller||'')}</span>
-            </div>
-          </div>`;
-        grid.appendChild(card);
-      });
-      const c=$(countSel); if(c) c.textContent = `(${items.length})`;
-    }
-
-    function renderHighlights(){
-      const cfg = I18N[LANG]||I18N.tr; const box = document.getElementById('highlights'); if(!box) return; box.innerHTML='';
-      const items = (cfg.high && cfg.high.length? cfg.high : (cfg.slogans||[])).slice(0,5);
-      items.forEach(t=>{ const s=document.createElement('span'); s.className='hichip'; s.textContent=t; box.appendChild(s); });
-    }
-
-    function renderSectionTitles(){
-      const S=(I18N[LANG]||I18N.tr).sections;
-      const top=(I18N[LANG]||I18N.tr).top;
-      const vip=document.getElementById('vipTitle'); if(vip) vip.textContent=S.vip;
-      const std=document.getElementById('stdTitle'); if(std) std.textContent=S.std;
-      const cat=document.getElementById('catTitle'); if(cat) cat.textContent=S.cats;
-      const mini=document.querySelector('section[aria-labelledby="catTitle"] .head .mini'); if(mini) mini.textContent=S.catsMini;
-      const langLabel=document.querySelector('label[for="langSel"]'); if(langLabel) langLabel.textContent=top.langLabel;
-    }
-
+    // === Dil uygula ===
+    function setDir(){ const html=document.documentElement; html.dir=(LANG==='ar')?'rtl':'ltr'; html.lang=LANG; }
     function applyLang(){
-      setDir();
-      renderSectionTitles();
+      const T=(I18N[LANG]||I18N.tr); setDir();
+      const S=(sel,val)=>{ const el=document.querySelector(sel); if(el) el.textContent=val; };
+      // Üst butonlar + nav
+      S('#btnGive', T.top.give); S('#btnProfile', T.top.profile); S('#btnLogout', T.top.logout); S('#btnPremium', T.top.premium);
+      S('#navHomeLabel', T.nav.home); S('#navMsgLabel', T.nav.msg); S('#navNotiLabel', T.nav.noti);
+      // Legal
+      const L=T.legal; if(L){ S('#legalTitle', L.title); S('#lContact', L.contact); S('#lPrivacy', L.privacy); S('#lKvkk', L.kvkk); S('#lCookies', L.cookies); S('#lTerms', L.terms); S('#lDistance', L.distance); S('#lPref', L.pref); S('#lDelivery', L.delivery); S('#lRules', L.rules); S('#lBanned', L.banned); S('#lAll', L.all); S('#brandName', L.brand); }
+      // Başlık + sloganlar + kategoriler
       renderSlogans();
-      renderHighlights();
       renderCats();
-      renderLegal();
+      startCardGlow();
+    }
+
+    function boot(){
+      const y=document.getElementById('yr'); if(y) y.textContent=new Date().getFullYear();
+      applyLang();
+      startCatRotate();
+      startBarGlow();
       bindNav();
       bindCatClicks();
-      startCardGlow();
-      startCatRotate();
-    }
-
-    document.addEventListener('DOMContentLoaded', ()=>{
-      applyLang();
-      const g=document.getElementById('btnGive'); if(g){ g.onclick=()=>openPostModal(); }
-      startBarGlow();
       bindPremium();
       bindChat();
-      ensureSeedOnce();
-      fillCatSelect();
-      bindPostForm();
-      renderListings();
-    });
-  
-    // === İlan veri katmanı (localStorage) ===
-    const LS_KEY='ue_listings';
-    function loadListings(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
-    function saveListings(arr){ try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }catch(e){ toast('Kaydedilemedi: Depolama dolu olabilir'); } }
-    function addListing(item){ const arr=loadListings(); arr.push(item); saveListings(arr); }
-    function ensureSeedOnce(){ const arr=loadListings(); if(arr && arr.length) return; saveListings([]); }
-
-    // === İlan Ver Modal ===
-    function openPostModal(){ $('#backdrop').style.display='block'; $('#postModal').style.display='block'; $('#postModal').setAttribute('aria-hidden','false'); }
-    function closePostModal(){ $('#backdrop').style.display='none'; $('#postModal').style.display='none'; $('#postModal').setAttribute('aria-hidden','true'); }
-    function closeCatModal(){ $('#catModal').style.display='none'; $('#catModal').setAttribute('aria-hidden','true'); }
-
-    function fillCatSelect(){
-      const sel=$('#fCat'); if(!sel) return; sel.innerHTML='';
-      const cats=(I18N[LANG]||I18N.tr).cats; const order=cats.order||[];
-      order.forEach(k=>{ const c=cats[k]; if(!c) return; const opt=document.createElement('option'); opt.value=k; opt.textContent=c.t.replace(/^\S+\s*/,''); sel.appendChild(opt); });
     }
 
-    function bindPostForm(){
-      const f=$('#postForm'); if(!f) return;
-      $('#postCancel').onclick=closePostModal;
-      $('#postNeedPremium').onclick=()=>{ closePostModal(); openModal(); };
-      $('#postClose').onclick=closePostModal;
-      f.addEventListener('submit',(e)=>{
-        e.preventDefault();
-        const seller=$('#fSeller').value.trim();
-        const title=$('#fTitle').value.trim();
-        const price=parseInt($('#fPrice').value,10);
-        const image=$('#fImg').value.trim();
-        const category=$('#fCat').value;
-        const vip=$('#fVip').checked;
-        if(!seller||!title||!(price>=0)||!isValidUrl(image)){ toast('Lütfen tüm alanları doğru doldurun'); return; }
-        const item={ id:cryptoRandomId(), seller, title, priceTL:price, image, category, vip, createdAt:Date.now(), isActive:true };
-        addListing(item);
-        closePostModal(); toast('İlan kaydedildi');
-        renderListings();
-        f.reset();
-      });
-    }
-
-    // === Güvenlik & yardımcılar ===
-    function escapeHtml(s){
-      return String(s||'').replace(/[&<>"']/g, (c)=>({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'
-      }[c]));
-    }
-    function isValidUrl(u){ try{ const x=new URL(u); return /^https?:/.test(x.protocol); }catch{ return false; } }
-    function sanitizeUrl(u){ return isValidUrl(u)?u:''; }
-    function cryptoRandomId(){ try{ return (crypto.randomUUID&&crypto.randomUUID()) || Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join(''); }catch{ return 'id'+Math.random().toString(36).slice(2); } }
-</script>
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded', boot);
+    } else { boot(); }
+  </script>
 </body>
 </html>
