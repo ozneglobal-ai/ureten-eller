@@ -22,5 +22,7 @@
     const UENotify=(function(){let a=null;function init(){if(a) return;a=new Audio('notify.wav');a.preload='auto';}function play(){if(!a) init();a.currentTime=0;a.play().catch(()=>{});}return{init,play}})();
     document.addEventListener('DOMContentLoaded',()=>{ UENotify.init(); });
   </script>
+<div id="gsiBtn"></div>
+<button id="fbLogin" style="display:none">Google ile giriş</button>
 </body>
 </html>
