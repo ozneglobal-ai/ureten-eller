@@ -641,17 +641,12 @@ async function handleAvatarFile(e){
 
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
-  <script type="module">
-  // Firestore entegrasyonu (Storage kullanmadan)
+  // === Firestore entegrasyonu (Storage yok) ===
+(async () => {
   const { auth, db, onAuthStateChanged } = window.__fb;
-
-  // Firestore fonksiyonları (CDN'den modül olarak import)
-  import {
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  const { doc, getDoc, setDoc, serverTimestamp } = await import(
+    "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js"
+  );
 
   let __uid = null;
 
@@ -728,6 +723,7 @@ async function handleAvatarFile(e){
       try { window.toast("Kayıt hatası"); } catch {}
     }
   };
+})();
 </script>
 
 </body>
