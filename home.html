@@ -466,7 +466,11 @@
       paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000);
     }
 
-    function logout(){
+    async function logout(){
+  // 1) Firebase oturumu kapat (varsa)
+  try{ await window.UE?.firebase?.logout?.(); }catch(_){}
+
+  // 2) Google One Tap / GSI izlerini temizle
   try{
     if (window.google?.accounts?.id){
       google.accounts.id.disableAutoSelect();
@@ -474,12 +478,22 @@
       if (email) try{ google.accounts.id.revoke(email, ()=>{}); }catch(_){}
     }
   }catch(_){}
-  sessionStorage.clear();
+
+  // 3) Tüm Firebase oturum kalıntılarını temizle
   try{
-    const apiKey = window.firebaseConfig?.apiKey || '';
-    localStorage.removeItem(`firebase:authUser:${apiKey}:[DEFAULT]`);
+    sessionStorage.clear();
+    // apiKey’e bağlı kalmadan tüm firebase auth anahtarlarını sil
+    for (let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (k && k.startsWith('firebase:authUser:')){
+        localStorage.removeItem(k);
+        i--; // silince index kaymasın
+      }
+    }
   }catch(_){}
-  location.replace('/index.html'); // Çıkış sonrası gideceği yer
+
+  // 4) Giriş sayfasına dön
+  window.location.href = '/index.html';
 }
 
     function bindNav(){
