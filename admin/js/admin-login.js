@@ -13,7 +13,7 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-/** İsteğe bağlı sabit admin e-posta (bu e-postaya her koşulda izin ver) */
+/** İsteğe bağlı: bu e-posta her koşulda admin kabul edilsin */
 const ADMIN_EMAIL = "ozneglobal@gmail.com";
 
 /* ------- DOM ------- */
@@ -26,38 +26,37 @@ const showBtn = document.getElementById("togglePassword"); // varsa kullanılır
 
 /* ------- Yardımcılar ------- */
 function disable(state){
-  if (submit) submit.disabled = state;
+  if (submit)  submit.disabled  = state;
   if (emailEl) emailEl.disabled = state;
   if (passEl)  passEl.disabled  = state;
 }
 function clearErr(){ if (errEl) errEl.textContent = ""; }
 function showErr(msg){ if (errEl) errEl.textContent = msg || "Giriş başarısız."; }
 function humanize(err){
-  const code = (err?.code || "").toLowerCase();
-  const msg  = (err?.message || "").toLowerCase();
+  const code = String(err?.code || "").toLowerCase();
+  const msg  = String(err?.message || "").toLowerCase();
 
   if (msg.includes("admin-only"))              return "Bu panel sadece admin içindir.";
-  if (code.includes("user-not-found"))         return "E-posta bulunamadı.";
-  if (code.includes("email-not-found"))        return "E-posta bulunamadı.";
+  if (code.includes("user-not-found") || code.includes("email-not-found")) return "E-posta bulunamadı.";
   if (code.includes("wrong-password"))         return "Şifre hatalı.";
   if (code.includes("invalid-credential"))     return "Bilgiler hatalı.";
-  if (code.includes("operation-not-allowed"))  return "Email/Şifre girişi kapalı — Firebase Auth ayarlarından açın.";
-  if (code.includes("unauthorized-domain"))    return "Alan adı yetkili değil — Firebase Auth > Authorized domains'e ekleyin.";
-  if (code.includes("too-many-requests"))      return "Çok sayıda deneme yapıldı. Lütfen daha sonra tekrar deneyin.";
-  if (code.includes("network-request-failed")) return "Ağ hatası. Bağlantınızı kontrol edin.";
+  if (code.includes("operation-not-allowed"))  return "Email/Şifre girişi kapalı — Firebase Auth > Sign-in method'tan açın.";
+  if (code.includes("unauthorized-domain"))    return "Alan adı yetkili değil — Auth > Authorized domains'e ekleyin.";
+  if (code.includes("too-many-requests"))      return "Çok fazla deneme. Biraz bekleyin.";
+  if (code.includes("network-request-failed")) return "Ağ hatası. İnternet bağlantınızı kontrol edin.";
   return "Giriş başarısız.";
 }
 
 async function isAdminUser(user){
   try{
     if (!user) return false;
-    // Sabit e-posta ile admin'e izin ver
+    // 1) Sabit e-posta ile beyaz liste
     if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) return true;
-    // Firestore'da role kontrolü
+    // 2) Firestore 'users/{uid}'.role == 'admin'
     const snap = await getDoc(doc(db, "users", user.uid));
     const role = snap.exists() ? String(snap.data().role || "").toLowerCase() : "";
     return role === "admin";
-  }catch(_){
+  }catch{
     return false;
   }
 }
@@ -65,7 +64,7 @@ async function isAdminUser(user){
 function goPanel(){ location.replace("/admin/panel.html"); }
 
 /* ------- Oturum durumu ------- */
-// Zaten girişli ise: admin ise panele geçir, değilse çıkış
+// Zaten girişliyse: admin ise panele, değilse oturumu kapat
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
   if (await isAdminUser(user)) {
@@ -85,9 +84,13 @@ form?.addEventListener("submit", async (e) => {
   const pass  = passEl?.value || "";
 
   try {
+    // Kalıcı oturum (localStorage)
     await setPersistence(auth, browserLocalPersistence);
+
+    // Giriş
     const cred = await signInWithEmailAndPassword(auth, email, pass);
 
+    // Admin yetkisi kontrolü
     if (!(await isAdminUser(cred.user))) {
       await signOut(auth);
       throw new Error("admin-only");
