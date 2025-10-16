@@ -4,8 +4,13 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin Panel • Üreten Eller</title>
-  <!-- CSS: kökten, tutarlı yol -->
   <link rel="stylesheet" href="/admin/css/admin.css"/>
+  <style>
+    /* Başlangıçta her şeyi gizle */
+    .section{display:none!important}
+    .section.active{display:block!important}
+    .menu a.active{font-weight:700; text-decoration:underline}
+  </style>
 </head>
 <body class="dark">
   <aside class="sidebar">
@@ -14,20 +19,23 @@
       <span>Admin</span>
     </div>
     <nav class="menu">
-      <a href="#dashboard" class="active">Özet</a>
-      <a href="#users">Kullanıcılar</a>
-      <a href="#listings">İlanlar</a>
-      <a href="#orders">Siparişler</a>
-      <a href="#messages">Mesajlar</a>
-      <a href="#notifications">Bildirim</a>
-      <a href="#reports">Raporlar</a>
-      <a href="#settings">Ayarlar</a>
+      <a href="#dashboard" data-target="dashboard">Özet</a>
+      <a href="#users" data-target="users">Kullanıcılar</a>
+      <a href="#listings" data-target="listings">İlanlar</a>
+      <a href="#orders" data-target="orders">Siparişler</a>
+      <a href="#messages" data-target="messages">Mesajlar</a>
+      <a href="#notifications" data-target="notifications">Bildirim</a>
+      <a href="#reports" data-target="reports">Raporlar</a>
+      <a href="#settings" data-target="settings">Ayarlar</a>
     </nav>
     <button id="logoutBtn" class="btn-outline">Çıkış</button>
   </aside>
 
   <main class="content">
-    <section id="dashboard" class="section">
+    <!-- İPUCU: ilk açılışta sadece bu satır görünür -->
+    <p id="emptyHint" class="muted" style="margin:16px 0;">Soldan bir bölüm seçin.</p>
+
+    <section id="dashboard" class="section" data-section="dashboard">
       <h1>Günlük Özet</h1>
       <div class="grid">
         <div class="tile"><div class="t">Aktif Kullanıcı</div><div id="mUsers" class="n">—</div></div>
@@ -37,7 +45,7 @@
       </div>
     </section>
 
-    <section id="users" class="section">
+    <section id="users" class="section" data-section="users">
       <div class="row">
         <h2>Kullanıcı Yönetimi</h2>
         <div class="row-right">
@@ -48,16 +56,14 @@
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-            <tr>
-              <th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th>
-            </tr>
+          <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
           </thead>
           <tbody id="usersBody"></tbody>
         </table>
       </div>
     </section>
 
-    <section id="listings" class="section">
+    <section id="listings" class="section" data-section="listings">
       <div class="row">
         <h2>İlan Yönetimi</h2>
         <div class="row-right">
@@ -73,16 +79,14 @@
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-            <tr>
-              <th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th>
-            </tr>
+          <tr><th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th></tr>
           </thead>
           <tbody id="listingsBody"></tbody>
         </table>
       </div>
     </section>
 
-    <section id="orders" class="section">
+    <section id="orders" class="section" data-section="orders">
       <h2>Siparişler</h2>
       <div class="row">
         <select id="orderFilter" class="input">
@@ -96,12 +100,12 @@
       <div id="ordersList" class="cards"></div>
     </section>
 
-    <section id="messages" class="section">
+    <section id="messages" class="section" data-section="messages">
       <h2>Mesajlar & Canlı Destek</h2>
       <div id="conversations" class="cards"></div>
     </section>
 
-    <section id="notifications" class="section">
+    <section id="notifications" class="section" data-section="notifications">
       <h2>Bildirim Gönder</h2>
       <div class="row">
         <input id="nTitle" class="input" placeholder="Başlık"/>
@@ -117,7 +121,7 @@
       <p id="nInfo" class="muted"></p>
     </section>
 
-    <section id="reports" class="section">
+    <section id="reports" class="section" data-section="reports">
       <h2>Raporlar</h2>
       <div class="grid">
         <div class="tile"><div class="t">En Çok Görüntülenen İlan</div><div id="rTopListing" class="n">—</div></div>
@@ -126,7 +130,7 @@
       </div>
     </section>
 
-    <section id="settings" class="section">
+    <section id="settings" class="section" data-section="settings">
       <h2>Ayarlar</h2>
       <div class="row">
         <button id="btnReindex" class="btn-sm">Arama İndeksi Yenile</button>
@@ -137,11 +141,8 @@
     </section>
   </main>
 
-  <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
-  <!-- Admin guard (rol = admin kontrolü) -->
   <script type="module" src="/admin/js/admin-guard.js"></script>
-  <!-- Panel işlevleri -->
   <script type="module" src="/admin/js/admin-panel.js"></script>
 </body>
 </html>
