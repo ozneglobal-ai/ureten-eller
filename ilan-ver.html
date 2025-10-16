@@ -36,6 +36,17 @@
     .topbar{display:flex; gap:10px; justify-content:space-between; align-items:center; position:relative}
     .lang{display:flex; gap:8px; align-items:center}
     .close{position:absolute; right:0; top:0; transform:translate(8px,-8px); width:32px; height:32px; border-radius:999px; border:1px solid var(--brd); background:#0d1b2a; color:#fff; font-size:18px; line-height:30px; text-align:center; cursor:pointer}
+
+    /* --- EKLENTİ: Önizleme  --- */
+    .previews{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
+    .thumb{position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;background:#0b1326}
+    .thumb img{display:block;width:100%;height:140px;object-fit:cover}
+    .thumb .act{position:absolute;inset:auto 6px 6px auto;display:flex;gap:6px}
+    .thumb button{background:#0d1b2a;border:1px solid var(--brd);padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer}
+    .thumb .cap{position:absolute;left:6px;bottom:6px;font-size:12px;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:8px}
+    .thumb .coverPick{position:absolute;right:6px;top:6px;display:flex;align-items:center;gap:4px;background:#0b1326;border:1px solid var(--brd);padding:2px 6px;border-radius:8px;font-size:12px}
+    .thumb .coverBadge{position:absolute;left:6px;top:6px;background:#10b981;color:#03222a;font-weight:800;padding:2px 6px;border-radius:999px;font-size:12px}
+    .thumb.cover{outline:2px solid #10b981}
   </style>
   <script type="module" src="/firebase-init.js"></script>
 </head>
@@ -113,6 +124,10 @@
           <label id="l_images">Fotoğraflar (en fazla 5)</label>
           <input id="images" type="file" accept="image/*" multiple />
           <div class="hint" id="h_images">JPG/PNG/WebP, en fazla 5 dosya.</div>
+
+          <!-- EKLENTİ: Önizlemeler -->
+          <div id="previews" class="previews"></div>
+
           <div class="progress" style="margin-top:8px"><div id="upBar" class="bar" style="background:var(--accent)"></div></div>
           <div id="upHint" class="hint">—</div>
         </div>
@@ -366,8 +381,89 @@
     ];
 
     // === 81 İl ===
-    const provinces = [["01","Adana"],["02","Adıyaman"],["03","Afyonkarahisar"],["04","Ağrı"],["05","Amasya"],["06","Ankara"],["07","Antalya"],["08","Artvin"],["09","Aydın"],["10","Balıkesir"],["11","Bilecik"],["12","Bingöl"],["13","Bitlis"],["14","Bolu"],["15","Burdur"],["16","Bursa"],["17","Çanakkale"],["18","Çankırı"],["19","Çorum"],["20","Denizli"],["21","Diyarbakır"],["22","Edirne"],["23","Elazığ"],["24","Erzincan"],["25","Erzurum"],["26","Eskişehir"],["27","Gaziantep"],["28","Giresun"],["29","Gümüşhane"],["30","Hakkari"],["31","Hatay"],["32","Isparta"],["33","Mersin"],["34","İstanbul"],["35","İzmir"],["36","Kars"],["37","Kastamonu"],["38","Kayseri"],["39","Kırklareli"],["40","Kırşehir"],["41","Kocaeli"],["42","Konya"],["43","Kütahya"],["44","Malatya"],["45","Manisa"],["46","Kahramanmaraş"],["47","Mardin"],["48","Muğla"],["49","Muş"],["50","Nevşehir"],["51","Niğde"],["52","Ordu"],["53","Rize"],["54","Sakarya"],["55","Samsun"],["56","Siirt"],["57","Sinop"],["58","Sivas"],["59","Tekirdağ"],["60","Tokat"],["61","Trabzon"],["62","Tunceli"],["63","Şanlıurfa"],["64","Uşak"],["65","Van"],["66","Yozgat"],["67","Zonguldak"],["68","Aksaray"],["69","Bayburt"],["70","Karaman"],["71","Kırıkkale"],["72","Batman"],["73","Şırnak"],["74","Bartın"],["75","Ardahan"],["76","Iğdır"],["77","Yalova"],["78","Karabük"],["79","Kilis"],["80","Osmaniye"],["81","Düzce"]];
-
+    const provinces = [
+  ["01","Adana"],
+  ["02","Adıyaman"],
+  ["03","Afyonkarahisar"],
+  ["04","Ağrı"],
+  ["68","Aksaray"],
+  ["05","Amasya"],
+  ["06","Ankara"],
+  ["07","Antalya"],
+  ["75","Ardahan"],
+  ["08","Artvin"],
+  ["09","Aydın"],
+  ["10","Balıkesir"],
+  ["74","Bartın"],
+  ["72","Batman"],
+  ["69","Bayburt"],
+  ["11","Bilecik"],
+  ["12","Bingöl"],
+  ["13","Bitlis"],
+  ["14","Bolu"],
+  ["15","Burdur"],
+  ["16","Bursa"],
+  ["17","Çanakkale"],
+  ["18","Çankırı"],
+  ["19","Çorum"],
+  ["20","Denizli"],
+  ["21","Diyarbakır"],
+  ["81","Düzce"],
+  ["22","Edirne"],
+  ["23","Elazığ"],
+  ["24","Erzincan"],
+  ["25","Erzurum"],
+  ["26","Eskişehir"],
+  ["27","Gaziantep"],
+  ["28","Giresun"],
+  ["29","Gümüşhane"],
+  ["30","Hakkari"],
+  ["31","Hatay"],
+  ["76","Iğdır"],
+  ["32","Isparta"],
+  ["34","İstanbul"],
+  ["35","İzmir"],
+  ["46","Kahramanmaraş"],
+  ["78","Karabük"],
+  ["70","Karaman"],
+  ["36","Kars"],
+  ["37","Kastamonu"],
+  ["38","Kayseri"],
+  ["71","Kırıkkale"],
+  ["39","Kırklareli"],
+  ["40","Kırşehir"],
+  ["79","Kilis"],
+  ["41","Kocaeli"],
+  ["42","Konya"],
+  ["43","Kütahya"],
+  ["44","Malatya"],
+  ["45","Manisa"],
+  ["47","Mardin"],
+  ["33","Mersin"],
+  ["48","Muğla"],
+  ["49","Muş"],
+  ["50","Nevşehir"],
+  ["51","Niğde"],
+  ["52","Ordu"],
+  ["80","Osmaniye"],
+  ["53","Rize"],
+  ["54","Sakarya"],
+  ["55","Samsun"],
+  ["56","Siirt"],
+  ["57","Sinop"],
+  ["58","Sivas"],
+  ["63","Şanlıurfa"],
+  ["73","Şırnak"],
+  ["59","Tekirdağ"],
+  ["60","Tokat"],
+  ["61","Trabzon"],
+  ["62","Tunceli"],
+  ["64","Uşak"],
+  ["65","Van"],
+  ["77","Yalova"],
+  ["66","Yozgat"],
+  ["67","Zonguldak"]
+];
     // === i18n helpers ===
     function setLang(lng){
       const t=i18n[lng]||i18n.tr; document.documentElement.lang=lng; document.documentElement.dir=(lng==='ar')?'rtl':'ltr';
@@ -443,6 +539,65 @@
       const agg = await getCountFromServer(q); return agg.data().count||0;
     }
 
+    // === EKLENTİ: Görsel Önizleme (max 5, sil/değiştir, kapak) ===
+    let __selectedFiles = [];  // File[]
+    let __coverIndex = -1;     // kullanıcı seçmezse ilk
+    function syncInputFromSelected(){
+      const dt = new DataTransfer();
+      __selectedFiles.forEach(f => dt.items.add(f));
+      $('images').files = dt.files;
+    }
+    function renderPreviews(){
+      const box = $('previews'); if(!box) return;
+      box.innerHTML = '';
+      __selectedFiles.forEach((f, idx) => {
+        const url = URL.createObjectURL(f);
+        const div = document.createElement('div');
+        div.className = 'thumb' + (idx===__coverIndex? ' cover':'');
+        div.innerHTML = `
+          <img data-i="${idx}" src="${url}" alt="photo ${idx+1}">
+          <div class="coverPick"><label><input type="radio" name="coverPick" ${idx===__coverIndex?'checked':''} data-act="cover" data-i="${idx}"> Kapak</label></div>
+          ${idx===__coverIndex?'<div class="coverBadge">Kapak</div>':''}
+          <div class="cap">photo ${idx+1}</div>
+          <div class="act">
+            <button type="button" data-act="replace" data-i="${idx}">Değiştir</button>
+            <button type="button" data-act="del" data-i="${idx}">Sil</button>
+          </div>`;
+        const img = div.querySelector('img');
+        img.onload = ()=>{ URL.revokeObjectURL(url); };
+        box.appendChild(div);
+      });
+      box.querySelectorAll('button, input[type="radio"]').forEach(el=>{
+        const i = Number(el.dataset.i);
+        if(el.dataset.act === 'del'){
+          el.onclick = ()=>{
+            __selectedFiles.splice(i,1);
+            if(__coverIndex===i){ __coverIndex = __selectedFiles.length? 0 : -1; }
+            else if(__coverIndex>i){ __coverIndex--; }
+            syncInputFromSelected(); renderPreviews();
+            $('upBar').style.width='0%'; $('upHint').textContent='—';
+          };
+        }else if(el.dataset.act === 'replace'){
+          el.onclick = ()=>{
+            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='image/*';
+            tmp.onchange = ()=>{
+              const nf = tmp.files && tmp.files[0];
+              if(!nf) return; if(!/image\/(jpeg|png|webp)/.test(nf.type)) return alert('Sadece JPG/PNG/WebP');
+              __selectedFiles[i] = nf; syncInputFromSelected(); renderPreviews();
+            }; tmp.click();
+          };
+        }else if(el.dataset.act === 'cover'){
+          el.onchange = ()=>{ __coverIndex = i; renderPreviews(); };
+        }
+      });
+    }
+    $('images').addEventListener('change', ()=>{
+      const incoming = Array.from($('images').files || []);
+      for(const f of incoming){ if(__selectedFiles.length >= 5) break; if(!/image\/(jpeg|png|webp)/.test(f.type)) continue; __selectedFiles.push(f); }
+      if(__coverIndex===-1 && __selectedFiles.length>0){ __coverIndex = 0; }
+      syncInputFromSelected(); renderPreviews(); $('upBar').style.width='0%'; $('upHint').textContent='—';
+    });
+
     // === Auth & boot ===
     onAuthStateChanged(auth, (u)=>{
       const lng=$('langSel').value||'tr'; const t=i18n[lng];
@@ -492,6 +647,8 @@
 
         const msg=$('msg'); msg.className='success'; msg.textContent='Gönderildi. Onay sonrası yayınlanacaktır.';
         await sleep(800); e.target.reset(); $('upBar').style.width='0%'; $('upHint').textContent='—';
+        // önizleme alanını temizle
+        __selectedFiles = []; __coverIndex = -1; renderPreviews();
       }catch(err){ const m=$('msg'); m.className='error'; m.textContent=err.message||String(err); }
     });
 
