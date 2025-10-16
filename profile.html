@@ -406,7 +406,46 @@
       document.getElementById('navNotif').onclick=()=>location.href='/bildirimler.html';
     }
 
-    function handleAvatarFile(e){ const f=e.target.files && e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ $('#edAvatar').style.backgroundImage=`url('${r.result}')`; }; r.readAsDataURL(f); }
+    // --- Cloudinary avatar yükleme ---
+async function uploadToCloudinary(file){
+  if(!file) return null;
+  const cloudName = "dbntnzogo"; // SİZİN cloud name
+  const preset = "yEhMC1YiG-m_m91G1XmHJxdNaz4"; // SİZİN unsigned preset
+
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", preset);
+
+  try {
+    const res = await fetch(url, { method: "POST", body: formData });
+    const data = await res.json();
+    return data.secure_url || null;
+  } catch (e) {
+    console.error("Cloudinary upload error:", e);
+    return null;
+  }
+}
+
+// Yeni handleAvatarFile
+async function handleAvatarFile(e){
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+
+  // anında önizleme
+  const localPreview = URL.createObjectURL(f);
+  $('#edAvatar').style.backgroundImage = `url('${localPreview}')`;
+
+  // Cloudinary'ye yükle
+  const url = await uploadToCloudinary(f);
+  if(url){
+    window.user.avatar = url;
+    $('#avatar').style.backgroundImage = `url('${url}')`;
+    toast("Avatar yüklendi ✅");
+  } else {
+    toast("Yükleme hatası ⚠️");
+  }
+}
 
     function updateShowcaseSummary(){
       const chosen = listings.find(l=>l.showcase===true);
@@ -601,6 +640,86 @@
     }
 
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-  </script>
+
+    <script type="module">
+  // Firestore entegrasyonu (Storage yok)
+  const { auth, db, onAuthStateChanged } = window.__fb;
+  const { doc, getDoc, setDoc, serverTimestamp } = await import(
+    "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js"
+  );
+
+  let __uid = null;
+
+  function applyProfileUI(){
+    const u = window.user || {};
+    const $ = (s)=>document.querySelector(s);
+    $("#uName").textContent = u.name || "—";
+    $("#uCity").textContent = u.city || "—";
+    $("#uPhone").textContent = u.phone || "—";
+    $("#uBio").textContent = u.bio || "—";
+    $("#avatar").style.backgroundImage = `url('${u.avatar || "/assets/img/avatar-default.png"}')`;
+    $("#pRole").textContent = u.isPremium ? "Premium Üye" : "Standart Üye";
+    $("#pPremiumBadge").style.display = u.isPremium ? "inline-flex" : "none";
+    $("#pVerifiedSeller").style.display = u.isVerified ? "inline-flex" : "none";
+    $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
+  }
+
+  // Giriş durumunu dinle → Firestore'dan kullanıcıyı yükle
+  onAuthStateChanged(auth, async (u) => {
+    if (!u) { try{ location.href="/index.html"; }catch{}; return; }
+    __uid = u.uid;
+
+    try {
+      const ref = doc(db, "users", __uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        Object.assign(window.user, snap.data());
+        applyProfileUI();
+      } else {
+        // İlk kez giren kullanıcı için minimal belge oluştur
+        await setDoc(ref, {
+          name: u.displayName || "",
+          email: u.email || "",
+          isPremium: false,
+          isVerified: false,
+          avatar: window.user.avatar || "/assets/img/avatar-default.png",
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      }
+    } catch (e) {
+      console.warn("Profil okuma/oluşturma hatası:", e);
+    }
+  });
+
+  // Mevcut saveEdit'i Firestore yazacak şekilde genişlet
+  const __origSaveEdit = window.saveEdit;
+  window.saveEdit = async function () {
+    try { __origSaveEdit && __origSaveEdit(); } catch(e){ console.warn(e); }
+
+    if (!__uid) { try{ window.toast("Giriş gerekli"); }catch{} return; }
+
+    const payload = {
+      name: document.querySelector("#uName")?.textContent || "",
+      city: window.user.city || "",
+      district: window.user.district || "",
+      phone: window.user.phone || "",
+      bio: window.user.bio || "",
+      isPremium: !!window.user.isPremium,
+      isVerified: !!window.user.isVerified,
+      avatar: window.user.avatar || "/assets/img/avatar-default.png",
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      await setDoc(doc(db, "users", __uid), payload, { merge: true });
+      try{ window.toast("Profil kaydedildi"); }catch{}
+    } catch (e) {
+      console.warn("Profil yazma hatası:", e);
+      try{ window.toast("Kayıt hatası"); }catch{}
+    }
+  };
+</script>
+
 </body>
 </html>
