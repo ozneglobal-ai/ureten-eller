@@ -1,4 +1,4 @@
-<!-- /ilan-ver.html (PROD – Firebase aktif, önizleme/sil/değiştir + kapak seçimi) -->
+<!-- /ilan-olustur.html (PROD – Firebase aktif) -->
 <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
@@ -36,18 +36,8 @@
     .topbar{display:flex; gap:10px; justify-content:space-between; align-items:center; position:relative}
     .lang{display:flex; gap:8px; align-items:center}
     .close{position:absolute; right:0; top:0; transform:translate(8px,-8px); width:32px; height:32px; border-radius:999px; border:1px solid var(--brd); background:#0d1b2a; color:#fff; font-size:18px; line-height:30px; text-align:center; cursor:pointer}
-
-    /* --- Önizleme  --- */
-    .previews{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
-    .thumb{position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;background:#0b1326}
-    .thumb img{display:block;width:100%;height:140px;object-fit:cover}
-    .thumb .act{position:absolute;inset:auto 6px 6px auto;display:flex;gap:6px}
-    .thumb button{background:#0d1b2a;border:1px solid var(--brd);padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer}
-    .thumb .cap{position:absolute;left:6px;bottom:6px;font-size:12px;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:8px}
-    .thumb .coverPick{position:absolute;right:6px;top:6px;display:flex;align-items:center;gap:4px;background:#0b1326;border:1px solid var(--brd);padding:2px 6px;border-radius:8px;font-size:12px}
-    .thumb .coverBadge{position:absolute;left:6px;top:6px;background:#10b981;color:#03222a;font-weight:800;padding:2px 6px;border-radius:999px;font-size:12px}
-    .thumb.cover{outline:2px solid #10b981}
   </style>
+  <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -123,7 +113,6 @@
           <label id="l_images">Fotoğraflar (en fazla 5)</label>
           <input id="images" type="file" accept="image/*" multiple />
           <div class="hint" id="h_images">JPG/PNG/WebP, en fazla 5 dosya.</div>
-          <div id="previews" class="previews"></div>
           <div class="progress" style="margin-top:8px"><div id="upBar" class="bar" style="background:var(--accent)"></div></div>
           <div id="upHint" class="hint">—</div>
         </div>
@@ -147,13 +136,28 @@
 
   <!-- Firebase v10 (PROD) -->
   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+
     const $ = (id)=> document.getElementById(id);
     const trim = (s)=>(s||"").trim();
     const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
-    const IN_IFRAME = (()=>{ try{ return window.self !== window.top; }catch(e){ return true; }})();
 
-    // Firebase holders (will be filled in non-sandbox)
-    let app, auth, db, storage;
+    // === Firebase (Flutter AI Playground) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
+      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
+      projectId: "flutter-ai-playground-38ddf",
+      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
+      messagingSenderId: "4688234885",
+      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // === i18n (TR/EN/AR/DE) ===
     const i18n = {
@@ -217,128 +221,154 @@
 
     // === Kategoriler (tam) ===
     const cats = [
-  {id:'amigurumi', names:{tr:'Amigurumi & Oyuncak (dekor)', en:'Amigurumi & Decorative Toys', de:'Amigurumi & Deko-Spielzeug', ar:'أميجورومي وألعاب ديكورية'}, subs:[
-    ['anahtar2','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
-    ['magnet','Magnet','Magnet','Magnet','مغناطيس'],
-    ['kolek','Koleksiyon figürü','Collectible figure','Sammelfigur','مجسّم مجموعات'],
-    ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko-Puppe/Figur','دمية/شخصية ديكور']
-  ]},
-  {id:'yemek', names:{tr:'Yemekler', en:'Meals', de:'Mahlzeiten', ar:'وجبات'}, subs:[
-    ['evyemek','Ev yemekleri','Home-cooked','Hausmannskost','وجبات منزلية'],
-    ['borek','Börek-çörek','Savory pastries','Herzhaftes Gebäck','فطائر مالحة'],
-    ['corba','Çorba','Soup','Suppe','شوربة'],
-    ['zeytiny','Zeytinyağlı','Olive-oil dishes','Gerichte mit Olivenöl','أطباق بزيت الزيتون'],
-    ['pilav','Pilav-makarna','Rice & pasta','Reis & Pasta','أرز ومعكرونة'],
-    ['et','Et-tavuk','Meat & chicken','Fleisch & Huhn','لحوم ودجاج'],
-    ['kahvalti','Kahvaltılık','Breakfast items','Frühstück','مأكولات الإفطار'],
-    ['meze','Meze','Mezes','Vorspeisen','مقبلات'],
-    ['dondur','Dondurulmuş','Frozen','Tiefgekühlt','مجمد'],
-    ['cocuk','Çocuk öğünleri','Kids meals','Kindergerichte','وجبات الأطفال']
-  ]},
-  {id:'pasta', names:{tr:'Pasta & Tatlı', en:'Cakes & Sweets', de:'Torten & Süßes', ar:'كعك وحلويات'}, subs:[
-    ['yaspasta','Yaş pasta','Fresh cakes','Torten','كيك طازج'],
-    ['kek','Kek-cupcake','Cakes & cupcakes','Kuchen & Cupcakes','كيك وكب كيك'],
-    ['kurabiye','Kurabiye','Cookies','Kekse','بسكويت'],
-    ['serbetli','Şerbetli','Syrupy','Sirupgebäck','حلويات شرقية'],
-    ['sutlu','Sütlü','Milk desserts','Milchdesserts','حلويات بالحليب'],
-    ['cheese','Cheesecake','Cheesecake','Käsekuchen','تشيزكيك']
-  ]},
-  {id:'sos', names:{tr:'Reçel • Turşu • Sos', en:'Jams • Pickles • Sauces', de:'Marmelade • Eingelegtes • Saucen', ar:'مربى • مخللات • صلصات'}, subs:[
-    ['recel','Reçel-marmelat','Jam & marmalade','Marmelade','مربى'],
-    ['pekmez','Pekmez','Molasses','Traubensirup','دبس'],
-    ['tursu','Turşu','Pickles','Eingelegtes','مخلل'],
-    ['dombiber','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika-Sauce','صلصة طماطم/فلفل'],
-    ['acios','Acı sos','Hot sauce','Scharfe Soße','صلصة حارة'],
-    ['salca','Salça','Paste','Tomatenmark','معجون']
-  ]},
-  {id:'yoresel', names:{tr:'Yöresel / Kışlık', en:'Local / Winter Prep', de:'Regional / Wintervorrat', ar:'محلي / مؤونة الشتاء'}, subs:[
-    ['eriste','Erişte','Homemade noodles','Hausgemachte Nudeln','شعيرية منزلية'],
-    ['tarhana','Tarhana','Tarhana','Tarhana','طرخانة'],
-    ['yufka','Yufka','Yufka','Yufka','يوفكا'],
-    ['manti','Mantı','Manti dumplings','Manti-Teigtaschen','مانتي'],
-    ['kurut','Kurutulmuş sebze-meyve','Dried veg/fruit','Getrocknetes Obst/Gemüse','مجففات'],
-    ['salca2','Salça','Paste','Tomatenmark','معجون']
-  ]},
-  {id:'diet', names:{tr:'Diyet / Vegan / Glutensiz', en:'Diet / Vegan / Gluten-Free', de:'Diät / Vegan / Glutenfrei', ar:'حمية / نباتي / خالٍ من الغلوتين'}, subs:[
-    ['fit','Fit tabaklar','Fit plates','Fitness-Teller','أطباق صحية'],
-    ['vegan','Vegan yemekler','Vegan meals','Vegane Gerichte','أطباق نباتية'],
-    ['gf','GF unlu mamuller','GF bakery','Glutenfreie Backwaren','مخبوزات GF'],
-    ['sekersiz','Şekersiz tatlı','Sugar-free dessert','Zuckerfreie Desserts','حلويات بدون سكر'],
-    ['keto','Keto ürün','Keto products','Keto-Produkte','منتجات كيتو'],
-    ['protein','Protein atıştırmalık','Protein snacks','Protein-Snacks','وجبات بروتينية']
-  ]},
-  {id:'taki', names:{tr:'Takı', en:'Jewelry', de:'Schmuck', ar:'إكسسوارات'}, subs:[
-    ['bileklik','Bileklik','Bracelet','Armband','سوار'],
-    ['kolye','Kolye','Necklace','Halskette','عقد'],
-    ['kupe','Küpe','Earrings','Ohrringe','أقراط'],
-    ['yuzuk','Yüzük','Ring','Ring','خاتم'],
-    ['halhal','Halhal','Anklet','Fußkettchen','خلخال'],
-    ['bros','Broş','Brooch','Brosche','بروش']
-  ]},
-  {id:'bebek', names:{tr:'Bebek & Çocuk', en:'Baby & Kids', de:'Baby & Kinder', ar:'رضّع وأطفال'}, subs:[
-    ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby-Figuren','مجسمات'],
-    ['cingirak','Çıngırak','Rattle','Rassel','خشخيشة'],
-    ['dis','Diş kaşıyıcı örgü','Teether crochet','Beißring häkeln','عضاضة محاكة'],
-    ['bezoy','Bez oyuncak/kitap','Cloth toy/book','Stoffspielzeug/Buch','لعبة/كتاب قماشي'],
-    ['montessori','Montessori oyuncak','Montessori toys','Montessori-Spielzeug','ألعاب منتسوري'],
-    ['set2','Setler','Sets','Sets','أطقم']
-  ]},
-  {id:'orgu', names:{tr:'Örgü / Triko', en:'Knitting / Crochet', de:'Strick / Häkeln', ar:'حياكة / كروشيه'}, subs:[
-    ['hirka','Hırka','Cardigan','Strickjacke','كارديغان'],
-    ['kazak','Kazak','Sweater','Pullover','كنزة'],
-    ['atkibere','Atkı-bere','Scarf/beanie','Schal/Mütze','وشاح/قبعة'],
-    ['panco','Panço','Poncho','Poncho','بونشو'],
-    ['sal','Şal','Shawl','Schal','شال'],
-    ['corap','Çorap','Socks','Socken','جوارب']
-  ]},
-  {id:'terzi', names:{tr:'Dikiş / Terzilik', en:'Sewing / Tailoring', de:'Nähen / Schneiderei', ar:'خياطة / تفصيل'}, subs:[
-    ['paca','Paça/onarım','Hem/repair','Saum/Reparatur','ثني/تصليح'],
-    ['fermuar','Fermuar değişimi','Zipper change','Reißverschlusswechsel','تبديل سحاب'],
-    ['perde','Perde dikişi','Curtain sewing','Vorhangnähen','خياطة ستائر'],
-    ['nevresim','Nevresim-yastık','Bedding/pillow','Bettwäsche/Kissen','مفارش/وسادة'],
-    ['masa','Masa örtüsü','Tablecloth','Tischtuch','مفرش طاولة'],
-    ['ozel','Özel dikim','Custom tailoring','Maßanfertigung','تفصيل خاص']
-  ]},
-  {id:'makrome', names:{tr:'Makrome & Dekor', en:'Macramé & Decor', de:'Makramee & Deko', ar:'مكرمية وديكور'}, subs:[
-    ['duvar','Duvar süsü','Wall hanging','Wandbehang','ديكور جداري'],
-    ['saksi','Saksı askısı','Plant hanger','Pflanzenhänger','حامل نباتات'],
-    ['anahtar','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
-    ['avize','Avize','Chandelier','Deckenleuchte','ثريا'],
-    ['runner','Amerikan servis/runner','Placemat/runner','Tischset/Runner','مفرش سفرة'],
-    ['sepet','Sepet','Basket','Korb','سلة']
-  ]},
-  {id:'evdekor', names:{tr:'Ev Dekor & Aksesuar', en:'Home Decor & Accessories', de:'Wohndeko & Accessoires', ar:'ديكور المنزل وإكسسوارات'}, subs:[
-    ['kece','Keçe işleri','Felt crafts','Filzarbeiten','أعمال لباد'],
-    ['kirlent','Kırlent','Cushion','Kissen','وسادة'],
-    ['kapi','Kapı süsü','Door wreath','Türkranz','زينة باب'],
-    ['tepsi','Tepsi süsleme','Tray decoration','Tablettdeko','تزيين صينية'],
-    ['cerceve','Çerçeve','Frame','Rahmen','إطار'],
-    ['ruya','Rüya kapanı','Dreamcatcher','Traumfänger','صائد أحلام']
-  ]},
-  {id:'mum', names:{tr:'Mum & Kokulu Ürünler', en:'Candles & Fragranced', de:'Kerzen & Duft', ar:'شموع ومنتجات عطرية'}, subs:[
-    ['soya','Soya/balmumu mum','Soy/beeswax candle','Soja/Bienenwachs-Kerze','شموع صويا/عسل'],
-    ['tas','Kokulu taş','Aroma stone','Duftstein','حجر عطري'],
-    ['sprey','Oda spreyi','Room spray','Raumspray','معطر جو'],
-    ['tutsu','Tütsü','Incense','Räucherwerk','بخور'],
-    ['jel','Jel mum','Gel candle','Gelkerze','شمعة جل'],
-    ['hediye','Hediye seti','Gift set','Geschenkset','طقم هدايا']
-  ]},
-  {id:'kozmetik', names:{tr:'Doğal Sabun & Kozmetik', en:'Natural Soap & Cosmetics', de:'Natürliche Seife & Kosmetik', ar:'صابون طبيعي ومستحضرات تجميل'}, subs:[
-    ['zeytin','Zeytinyağlı sabun','Olive-oil soap','Olivenölseife','صابون زيت الزيتون'],
-    ['bitkisel','Bitkisel sabunlar','Herbal soaps','Kräuterseifen','صوابين عشبية'],
-    ['sampuan','Katı şampuan','Solid shampoo','Festes Shampoo','شامبو صلب'],
-    ['balm','Dudak balmı','Lip balm','Lippenbalsam','بلسم شفاه'],
-    ['krem','Krem/merhem','Cream/ointment','Creme/Salbe','كريم/مرهم'],
-    ['banyotuzu','Banyo tuzu','Bath salt','Badesalz','ملح الاستحمام']
-  ]}
-];
+      {id:'yemek', names:{tr:'Yemekler', en:'Meals', de:'Mahlzeiten', ar:'وجبات'}, subs:[
+        ['evyemek','Ev yemekleri','Home-cooked','Hausmannskost','وجبات منزلية'],
+        ['borek','Börek-çörek','Savory pastries','Herzhaftes Gebäck','فطائر مالحة'],
+        ['corba','Çorba','Soup','Suppe','شوربة'],
+        ['zeytiny','Zeytinyağlı','Olive-oil dishes','Gerichte mit Olivenöl','أطباق بزيت الزيتون'],
+        ['pilav','Pilav-makarna','Rice & pasta','Reis & Pasta','أرز ومعكرونة'],
+        ['et','Et-tavuk','Meat & chicken','Fleisch & Huhn','لحوم ودجاج'],
+        ['kahvaltı','Kahvaltılık','Breakfast items','Frühstück','مأكولات الإفطار'],
+        ['meze','Meze','Mezes','Vorspeisen','مقبلات'],
+        ['dondur','Dondurulmuş','Frozen','Tiefgekühlt','مجمد'],
+        ['cocuk','Çocuk öğünleri','Kids meals','Kindergerichte','وجبات الأطفال'],
+        ['diyetvegf','Diyet/vegan/gf','Diet/Vegan/GF','Diät/Vegan/GF','حمية/نباتي/خالٍ من الغلوتين']
+      ]},
+      {id:'pasta', names:{tr:'Pasta & Tatlı', en:'Cakes & Sweets', de:'Torten & Süßes', ar:'كعك وحلويات'}, subs:[
+        ['yaspasta','Yaş pasta','Fresh cakes','Torten','كيك طازج'],
+        ['kek','Kek-cupcake','Cakes & cupcakes','Kuchen & Cupcakes','كيك وكب كيك'],
+        ['kurabiye','Kurabiye','Cookies','Kekse','بسكويت'],
+        ['serbetli','Şerbetli','Syrup desserts','Sirup-Desserts','حلويات شرقية'],
+        ['sutlu','Sütlü','Milky desserts','Milchige Desserts','حلويات بالحليب'],
+        ['cheese','Cheesecake','Cheesecake','Käsekuchen','تشيزكيك'],
+        ['diyettet','Diyet tatlı','Diet desserts','Diät-Desserts','حلويات للحمية'],
+        ['cikolata','Çikolata/şekerleme','Chocolate/Candy','Schokolade/Süßwaren','شوكولاتة/حلوى'],
+        ['dogumset','Doğum günü setleri','Birthday sets','Geburtstags-Sets','مجموعات عيد ميلاد']
+      ]},
+      {id:'sos', names:{tr:'Reçel • Turşu • Sos', en:'Jams • Pickles • Sauces', de:'Marmelade • Eingelegtes • Saucen', ar:'مربى • مخللات • صلصات'}, subs:[
+        ['recel','Reçel-marmelat','Jam & marmalade','Marmelade','مربى'],
+        ['pekmez','Pekmez','Molasses','Traubensirup','دبس'],
+        ['tursu','Turşu','Pickles','Eingelegtes','مخلل'],
+        ['dombiber','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika-Sauce','صلصة طماطم/فلفل'],
+        ['acios','Acı sos','Hot sauce','Scharfe Soße','صلصة حارة'],
+        ['salca','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke','Sirke','Vinegar','Essig','خل'],
+        ['konserve','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'yoresel', names:{tr:'Yöresel / Kışlık', en:'Local / Winter Prep', de:'Regional / Wintervorrat', ar:'محلي / مؤونة الشتاء'}, subs:[
+        ['eriste','Erişte','Homemade noodles','Hausgemachte Nudeln','شعيرية منزلية'],
+        ['tarhana','Tarhana','Tarhana','Tarhana','طرخانة'],
+        ['yufka','Yufka','Yufka','Yufka','يوفكا'],
+        ['manti','Mantı','Manti dumplings','Manti-Teigtaschen','مانتي'],
+        ['kurut','Kurutulmuş sebze-meyve','Dried veg & fruit','Getrocknetes Obst/Gemüse','مجففات'],
+        ['salca2','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke2','Sirke','Vinegar','Essig','خل'],
+        ['konserve2','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'diet', names:{tr:'Diyet / Vegan / Glutensiz', en:'Diet / Vegan / Gluten-Free', de:'Diät / Vegan / Glutenfrei', ar:'حمية / نباتي / خالٍ من الغلوتين'}, subs:[
+        ['fit','Fit tabaklar','Fit plates','Fitness-Teller','أطباق صحية'],
+        ['vegan','Vegan yemekler','Vegan meals','Vegane Gerichte','أطباق نباتية'],
+        ['gf','GF unlu mamuller','GF bakery','Glutenfreie Backwaren','مخبوزات خالية من الغلوتين'],
+        ['sekersiz','Şekersiz tatlı','Sugar-free desserts','Zuckerfreie Desserts','حلويات بدون سكر'],
+        ['keto','Keto ürün','Keto products','Keto-Produkte','منتجات كيتو'],
+        ['protein','Protein atıştırmalık','Protein snacks','Protein-Snacks','وجبات بروتينية']
+      ]},
+      {id:'taki', names:{tr:'Takı', en:'Jewelry', de:'Schmuck', ar:'إكسسوارات'}, subs:[
+        ['bileklik','Bileklik','Bracelet','Armband','سوار'],
+        ['kolye','Kolye','Necklace','Halskette','عقد'],
+        ['kupe','Küpe','Earrings','Ohrringe','أقراط'],
+        ['yuzuk','Yüzük','Ring','Ring','خاتم'],
+        ['halhal','Halhal','Anklet','Fußkettchen','خلخال'],
+        ['bros','Broş','Brooch','Brosche','بروش'],
+        ['set','Setler','Sets','Sets','طقم'],
+        ['isimli','İsimli/kişiye özel','Personalized','Personalisierte','مخصص بالاسم'],
+        ['makrome','Makrome','Macrame','Makramee','مكرمية'],
+        ['dogaltas','Doğal taş','Gemstone','Edelstein','أحجار طبيعية'],
+        ['recine','Reçine','Resin','Harz','ريزن'],
+        ['telsarma','Tel sarma','Wire wrap','Drahtwickel','سلك ملتف']
+      ]},
+      {id:'bebek', names:{tr:'Bebek & Çocuk', en:'Baby & Kids', de:'Baby & Kinder', ar:'رضّع وأطفال'}, subs:[
+        ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby-Figuren','مجسمات'],
+        ['cingirak','Çıngırak','Rattle','Rassel','خشخيشة'],
+        ['dis','Diş kaşıyıcı örgü','Teething knit','Beißring-Häkel','عضاضة محاكة'],
+        ['bezoy','Bez oyuncak/kitap','Cloth toy/book','Stoffspielzeug/Buch','لعبة/كتاب قماشي'],
+        ['montessori','Montessori oyuncak','Montessori toys','Montessori-Spielzeug','ألعاب منتسوري'],
+        ['set2','Setler','Sets','Sets','أطقم'],
+        ['patik','Örgü patik-bere','Knit booties-beanie','Gehäkelte Schühchen & Mütze','قبعات وجوارب محاكة'],
+        ['battaniye','Bebek battaniyesi','Baby blanket','Babydecke','بطانية'],
+        ['onluk','Önlük-ağız bezi','Bib/burp cloth','Lätzchen/Spucktuch','مريلة/منديل'],
+        ['lohusa','Lohusa seti','Maternity set','Wochenbett-Set','عدة نفاس'],
+        ['sac','Saç aksesuarı','Hair accessory','Haaraccessoire','اكسسوار شعر'],
+        ['giyim','El emeği kıyafet','Handmade clothing','Handgemachte Kleidung','ملابس يدوية']
+      ]},
+      {id:'orgu', names:{tr:'Örgü / Triko', en:'Knitting / Crochet', de:'Strick / Häkeln', ar:'حياكة / كروشيه'}, subs:[
+        ['hirka','Hırka','Cardigan','Strickjacke','كارديغان'],
+        ['kazak','Kazak','Sweater','Pullover','كنزة'],
+        ['atkibere','Atkı-bere','Scarf & beanie','Schal & Mütze','وشاح وقبعة'],
+        ['panco','Panço','Poncho','Poncho','بونشو'],
+        ['sal','Şal','Shawl','Schal','شال'],
+        ['corap','Çorap','Socks','Socken','جوارب'],
+        ['lif','Lif takımı','Bath set','Badeset','طقم ليف'],
+        ['bebektk','Bebek takımı','Baby set','Baby-Set','طقم أطفال'],
+        ['yelek','Yelek','Vest','Weste','صديري'],
+        ['kirlen','Kırlent-örtü','Cushion/cover','Kissen/Decke','وسادة/غطاء']
+      ]},
+      {id:'terzi', names:{tr:'Dikiş / Terzilik', en:'Sewing / Tailoring', de:'Nähen / Schneiderei', ar:'خياطة / تفصيل'}, subs:[
+        ['paca','Paça/onarım','Hem/repair','Saum/Reparatur','ثني/تصليح'],
+        ['fermuar','Fermuar değişimi','Zipper change','Reißverschluss-Wechsel','تبديل سحاب'],
+        ['perde','Perde dikişi','Curtain sewing','Vorhang-Nähen','خياطة ستائر'],
+        ['nevresim','Nevresim-yastık','Bedding & pillows','Bettwäsche/Kissen','مفارش ووسائد'],
+        ['masa','Masa örtüsü','Tablecloth','Tischtuch','مفرش طاولة'],
+        ['ozel','Özel dikim','Custom tailoring','Maßanfertigung','تفصيل خاص'],
+        ['kostum','Kostüm','Costume','Kostüm','زيّ']
+      ]},
+      {id:'makrome', names:{tr:'Makrome & Dekor', en:'Macramé & Decor', de:'Makramee & Deko', ar:'مكرمية وديكور'}, subs:[
+        ['duvar','Duvar süsü','Wall hanging','Wandbehang','ديكور جداري'],
+        ['saksi','Saksı askısı','Plant hanger','Pflanzenhänger','حامل نباتات'],
+        ['anahtar','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['avize','Avize','Chandelier','Deckenleuchte','ثريا'],
+        ['runner','Amerikan servis/runner','Placemat/runner','Tischset/Runner','مفرش سفرة'],
+        ['sepet','Sepet','Basket','Korb','سلة'],
+        ['raf','Raf/duvar dekoru','Shelf/wall decor','Regal/Wanddeko','رف/ديكور']
+      ]},
+      {id:'evdekor', names:{tr:'Ev Dekor & Aksesuar', en:'Home Decor & Accessories', de:'Wohndeko & Accessoires', ar:'ديكور المنزل وإكسسوارات'}, subs:[
+        ['kece','Keçe işleri','Felt crafts','Filzarbeiten','أعمال لبّاد'],
+        ['kirlent','Kırlent','Cushion','Kissen','وسادة'],
+        ['kapi','Kapı süsü','Door ornament','Türkranz','زينة باب'],
+        ['tepsi','Tepsi süsleme','Tray decoration','Tablett-Deko','تزيين صينية'],
+        ['cerceve','Çerçeve','Frame','Rahmen','إطار'],
+        ['ruya','Rüya kapanı','Dreamcatcher','Traumfänger','صائد أحلام'],
+        ['tablo','Tablo','Tableau','Bild','لوحة']
+      ]},
+      {id:'mum', names:{tr:'Mum & Kokulu Ürünler', en:'Candles & Fragranced', de:'Kerzen & Duft', ar:'شموع ومنتجات عطرية'}, subs:[
+        ['soya','Soya/balmumu mum','Soy/beeswax candle','Soja/Bienenwachs-Kerze','شموع صويا/شمع العسل'],
+        ['tas','Kokulu taş','Scented stone','Duftstein','حجر معطر'],
+        ['sprey','Oda spreyi','Room spray','Raumspray','معطر جو'],
+        ['tutsu','Tütsü','Incense','Räucherwerk','بخور'],
+        ['jel','Jel mum','Gel candle','Gelkerze','شمعة جل'],
+        ['hediye','Hediye seti','Gift set','Geschenkset','طقم هدايا']
+      ]},
+      {id:'kozmetik', names:{tr:'Doğal Sabun & Kozmetik', en:'Natural Soap & Cosmetics', de:'Natürliche Seife & Kosmetik', ar:'صابون طبيعي ومستحضرات تجميل'}, subs:[
+        ['zeytin','Zeytinyağlı sabun','Olive-oil soap','Olivenölseife','صابون زيت زيتون'],
+        ['bitkisel','Bitkisel sabunlar','Herbal soaps','Kräuterseifen','صابون عشبي'],
+        ['sampuan','Katı şampuan','Solid shampoo','Festes Shampoo','شامبو صلب'],
+        ['balm','Dudak balmı','Lip balm','Lippenbalsam','بلسم شفاه'],
+        ['krem','Krem/merhem','Cream/ointment','Creme/Salbe','كريم/مرهم'],
+        ['banyotuzu','Banyo tuzu','Bath salt','Badesalz','ملح الاستحمام'],
+        ['lavanta','Lavanta kesesi','Lavender sachet','Lavendelsäckchen','كيس لافندر']
+      ]},
+      {id:'amigurumi', names:{tr:'Amigurumi & Oyuncak (dekoratif)', en:'Amigurumi & Decorative Toys', de:'Amigurumi & Deko-Spielzeug', ar:'أميجورومي وألعاب ديكورية'}, subs:[
+        ['anahtar2','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['magnet','Magnet','Magnet','Magnet','مغناطيس'],
+        ['kolek','Koleksiyon figürü','Collectible figure','Sammelfigur','مجسّم مجموعات'],
+        ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko-Puppe/Figur','دمية/شخصية ديكور']
+      ]}
+    ];
 
-    // 81 İl — alfabetik (mevcut dokümandaki sabit diziyi koru)
-    const provinces = [
-  ["01","Adana"],["02","Adıyaman"],["03","Afyonkarahisar"],["04","Ağrı"],["68","Aksaray"],["05","Amasya"],["06","Ankara"],["07","Antalya"],["75","Ardahan"],["08","Artvin"],["09","Aydın"],["10","Balıkesir"],["74","Bartın"],["72","Batman"],["69","Bayburt"],["11","Bilecik"],["12","Bingöl"],["13","Bitlis"],["14","Bolu"],["15","Burdur"],["16","Bursa"],["17","Çanakkale"],["18","Çankırı"],["19","Çorum"],["20","Denizli"],["21","Diyarbakır"],["81","Düzce"],["22","Edirne"],["23","Elazığ"],["24","Erzincan"],["25","Erzurum"],["26","Eskişehir"],["27","Gaziantep"],["28","Giresun"],["29","Gümüşhane"],["30","Hakkari"],["31","Hatay"],["76","Iğdır"],["32","Isparta"],["34","İstanbul"],["35","İzmir"],["46","Kahramanmaraş"],["78","Karabük"],["70","Karaman"],["36","Kars"],["37","Kastamonu"],["38","Kayseri"],["71","Kırıkkale"],["39","Kırklareli"],["40","Kırşehir"],["79","Kilis"],["41","Kocaeli"],["42","Konya"],["43","Kütahya"],["44","Malatya"],["45","Manisa"],["47","Mardin"],["33","Mersin"],["48","Muğla"],["49","Muş"],["50","Nevşehir"],["51","Niğde"],["52","Ordu"],["80","Osmaniye"],["53","Rize"],["54","Sakarya"],["55","Samsun"],["63","Şanlıurfa"],["56","Siirt"],["57","Sinop"],["58","Sivas"],["73","Şırnak"],["59","Tekirdağ"],["60","Tokat"],["61","Trabzon"],["62","Tunceli"],["64","Uşak"],["65","Van"],["77","Yalova"],["66","Yozgat"],["67","Zonguldak"]
-];
+    // === 81 İl ===
+    const provinces = [["01","Adana"],["02","Adıyaman"],["03","Afyonkarahisar"],["04","Ağrı"],["05","Amasya"],["06","Ankara"],["07","Antalya"],["08","Artvin"],["09","Aydın"],["10","Balıkesir"],["11","Bilecik"],["12","Bingöl"],["13","Bitlis"],["14","Bolu"],["15","Burdur"],["16","Bursa"],["17","Çanakkale"],["18","Çankırı"],["19","Çorum"],["20","Denizli"],["21","Diyarbakır"],["22","Edirne"],["23","Elazığ"],["24","Erzincan"],["25","Erzurum"],["26","Eskişehir"],["27","Gaziantep"],["28","Giresun"],["29","Gümüşhane"],["30","Hakkari"],["31","Hatay"],["32","Isparta"],["33","Mersin"],["34","İstanbul"],["35","İzmir"],["36","Kars"],["37","Kastamonu"],["38","Kayseri"],["39","Kırklareli"],["40","Kırşehir"],["41","Kocaeli"],["42","Konya"],["43","Kütahya"],["44","Malatya"],["45","Manisa"],["46","Kahramanmaraş"],["47","Mardin"],["48","Muğla"],["49","Muş"],["50","Nevşehir"],["51","Niğde"],["52","Ordu"],["53","Rize"],["54","Sakarya"],["55","Samsun"],["56","Siirt"],["57","Sinop"],["58","Sivas"],["59","Tekirdağ"],["60","Tokat"],["61","Trabzon"],["62","Tunceli"],["63","Şanlıurfa"],["64","Uşak"],["65","Van"],["66","Yozgat"],["67","Zonguldak"],["68","Aksaray"],["69","Bayburt"],["70","Karaman"],["71","Kırıkkale"],["72","Batman"],["73","Şırnak"],["74","Bartın"],["75","Ardahan"],["76","Iğdır"],["77","Yalova"],["78","Karabük"],["79","Kilis"],["80","Osmaniye"],["81","Düzce"]];
 
-    // --- i18n helpers (aynen) ---
+    // === i18n helpers ===
     function setLang(lng){
       const t=i18n[lng]||i18n.tr; document.documentElement.lang=lng; document.documentElement.dir=(lng==='ar')?'rtl':'ltr';
       $('t_title').textContent=t.title; $('t_sub').innerHTML=t.sub; $('t_lang').textContent=t.lang;
@@ -349,20 +379,23 @@
       $('title').placeholder=t.placeholders.title; $('description').placeholder=t.placeholders.desc; $('districtInput').placeholder=t.placeholders.district; $('price').placeholder=t.placeholders.price; $('prep').placeholder=t.placeholders.prep;
       const stock=$('stock'); stock.options[0].textContent=t.stock.var; stock.options[1].textContent=t.stock.yok; window.__t=t; rebuildCategories(lng);
     }
+
     function rebuildCategories(lng){
       const selCat=$('category'); const selSub=$('subcategory');
-      selCat.innerHTML = `<option value="" disabled selected>${lng==='ar'?"اختر":"Seçiniz"}</option>` +
+      selCat.innerHTML = `<option value="" disabled selected>${lng==='ar'?'اختر':'Seçiniz'}</option>` +
         cats.map(c=>`<option value="${c.id}">${c.names[lng]||c.names.tr}</option>`).join('');
-      selSub.disabled = true; selSub.innerHTML = `<option value="" disabled selected>${lng==='ar'?"اختر":"Seçiniz"}</option>`;
+      selSub.disabled = true; selSub.innerHTML = `<option value="" disabled selected>${lng==='ar'?'اختر':'Seçiniz'}</option>`;
       selCat.onchange = ()=>{
         const c=cats.find(x=>x.id===selCat.value);
         selSub.disabled = !c;
-        selSub.innerHTML = `<option value="" disabled selected>${lng==='ar'?"اختر":"Seçiniz"}</option>` +
+        selSub.innerHTML = `<option value="" disabled selected>${lng==='ar'?'اختر':'Seçiniz'}</option>` +
           (c? c.subs.map(s=>`<option value="${s[0]}">${s[{tr:1,en:2,de:3,ar:4}[lng]]}</option>`).join('') : '');
       };
     }
+
     function fillProvinces(){
-      const selProv=$('province'); const lng=$('langSel').value; const choose=(lng==='ar')?'اختر':'Seçiniz';
+      const selProv=$('province'); const lng=$('langSel').value;
+      const choose=(lng==='ar')?'اختر':'Seçiniz';
       selProv.innerHTML = `<option value="" disabled selected>${choose}</option>` + provinces.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join('');
     }
 
@@ -383,152 +416,58 @@
       for(const f of files){ if(!/image\/(jpeg|png|webp)/.test(f.type)) throw new Error(t.errors.filetype); }
     }
 
-    // === Görsel Önizleme (max 5, sil/değiştir, kapak) ===
-    let __selectedFiles = [];  // File[]
-    let __coverIndex = -1;     // kullanıcı seçmezse ilk
-    function syncInputFromSelected(){
-      const dt = new DataTransfer();
-      __selectedFiles.forEach(f => dt.items.add(f));
-      $('images').files = dt.files;
-    }
-    function renderPreviews(){
-      const box = $('previews');
-      box.innerHTML = '';
-      __selectedFiles.forEach((f, idx) => {
-        const url = URL.createObjectURL(f);
-        const div = document.createElement('div');
-        div.className = 'thumb' + (idx===__coverIndex? ' cover':'');
-        div.innerHTML = `
-          <img data-i="${idx}" src="${url}" alt="photo ${idx+1}">
-          <div class="coverPick"><label><input type="radio" name="coverPick" ${idx===__coverIndex?'checked':''} data-act="cover" data-i="${idx}"> Kapak</label></div>
-          ${idx===__coverIndex?'<div class="coverBadge">Kapak</div>':''}
-          <div class="cap">photo ${idx+1}</div>
-          <div class="act">
-            <button type="button" data-act="replace" data-i="${idx}">Değiştir</button>
-            <button type="button" data-act="del" data-i="${idx}">Sil</button>
-          </div>`;
-        const img = div.querySelector('img');
-        img.onload = ()=>{ URL.revokeObjectURL(url); };
-        box.appendChild(div);
-      });
-      box.querySelectorAll('button, input[type="radio"]').forEach(el=>{
-        const i = Number(el.dataset.i);
-        if(el.dataset.act === 'del'){
-          el.onclick = ()=>{
-            __selectedFiles.splice(i,1);
-            if(__coverIndex===i){ __coverIndex = __selectedFiles.length? 0 : -1; }
-            else if(__coverIndex>i){ __coverIndex--; }
-            syncInputFromSelected(); renderPreviews();
-            $('upBar').style.width='0%'; $('upHint').textContent='—';
-          };
-        }else if(el.dataset.act === 'replace'){
-          el.onclick = ()=>{
-            const tmp = document.createElement('input'); tmp.type='file'; tmp.accept='image/*';
-            tmp.onchange = ()=>{
-              const nf = tmp.files && tmp.files[0];
-              if(!nf) return; if(!/image\/(jpeg|png|webp)/.test(nf.type)) return alert('Sadece JPG/PNG/WebP');
-              __selectedFiles[i] = nf; syncInputFromSelected(); renderPreviews();
-            }; tmp.click();
-          };
-        }else if(el.dataset.act === 'cover'){
-          el.onchange = ()=>{ __coverIndex = i; renderPreviews(); };
-        }
-      });
-    }
-    $('images').addEventListener('change', ()=>{
-      const incoming = Array.from($('images').files || []);
-      for(const f of incoming){ if(__selectedFiles.length >= 5) break; if(!/image\/(jpeg|png|webp)/.test(f.type)) continue; __selectedFiles.push(f); }
-      if(__coverIndex===-1 && __selectedFiles.length>0){ __coverIndex = 0; }
-      syncInputFromSelected(); renderPreviews(); $('upBar').style.width='0%'; $('upHint').textContent='—';
-    });
-
-    // === Navigasyon güvenli (iframe'de yönlendirme yapma) ===
-    function navigateHome(){ if(IN_IFRAME){ console.log('[Önizleme] home yönlendirmesi engellendi'); return; } window.location.href='/home.html'; }
-    function navigateLogin(){ if(IN_IFRAME){ console.log('[Önizleme] login yönlendirmesi engellendi'); return; } window.location.href='/login'; }
-
-    // === Upload (sandbox'ta sahte URL döner) ===
+    // === Upload ===
     async function uploadImages(uid, listingId, files){
-      if(!files || files.length===0){ files = __selectedFiles.slice(); }
-      if(__coverIndex>=0 && __coverIndex<files.length){ const cover = files[__coverIndex]; files = [cover, ...files.filter((_,i)=>i!==__coverIndex)]; }
+      if(!files || files.length===0) return [];
       const max=Math.min(files.length,5); const urls=[];
       for(let i=0;i<max;i++){
         const f=files[i];
-        if(IN_IFRAME){
-          // Önizleme: blob URL döndür
-          urls.push(URL.createObjectURL(f));
-          const p = Math.round(((i+1)/max)*100); $('upBar').style.width=p+'%'; $('upHint').textContent=`${p}%`;
-          await sleep(50);
-        }else{
-          // gerçek upload — dinamik importlar aşağıda yüklenecek
-          const { getStorage, ref, uploadBytesResumable, getDownloadURL } = await window.__fb.storage;
-          const r=ref(window.__fb.storageInst,`listings/${uid}/${listingId}/img_${i+1}`);
-          const task=uploadBytesResumable(r,f,{contentType:f.type});
-          await new Promise((res,rej)=>{ task.on('state_changed',(s)=>{ const p=Math.round((s.bytesTransferred/s.totalBytes)*100); $('upBar').style.width=p+'%'; $('upHint').textContent=`${p}%`; },rej,res); });
-          const url=await getDownloadURL(task.snapshot.ref); urls.push(url);
-        }
+        const r=ref(storage,`listings/${uid}/${listingId}/img_${i+1}`);
+        const task=uploadBytesResumable(r,f,{contentType:f.type});
+        await new Promise((res,rej)=>{ task.on('state_changed',(s)=>{ const p=Math.round((s.bytesTransferred/s.totalBytes)*100); $('upBar').style.width=p+'%'; $('upHint').textContent=`${p}%`; },rej,res); });
+        const url=await getDownloadURL(task.snapshot.ref); urls.push(url);
       }
-      $('upHint').textContent='OK'; return urls;
+      $('upHint').textContent='OK';
+      return urls;
     }
 
-    // === Plan & sayım (sandbox'ta stub) ===
-    async function fetchPlan(uid){ if(IN_IFRAME) return { plan:'PREMIUM' }; const { doc, getDoc } = await window.__fb.firestore; const uref = doc(window.__fb.db,'users',uid); const snap = await getDoc(uref); if(!snap.exists()) return { plan:'FREE' }; const d=snap.data(); return { plan: d.plan||'FREE' }; }
-    async function countActive(uid){ if(IN_IFRAME) return 0; const { collection, query, where, getCountFromServer } = await window.__fb.firestore; const q = query(collection(window.__fb.db,'listings'), where('sellerUid','==',uid), where('status','==','active')); const agg = await getCountFromServer(q); return agg.data().count||0; }
+    // === Plan & counters ===
+    async function fetchPlan(uid){
+      const uref = doc(db,'users',uid);
+      const snap = await getDoc(uref);
+      if(!snap.exists()) return { plan:'FREE' };
+      const d=snap.data(); return { plan: d.plan||'FREE' };
+    }
+    async function countActive(uid){
+      const q = query(collection(db,'listings'), where('sellerUid','==',uid), where('status','==','active'));
+      const agg = await getCountFromServer(q); return agg.data().count||0;
+    }
 
     // === Auth & boot ===
-    async function boot(){
-      // Kategoriler ve şehirler — mevcut dokümandaki sabitleri al
-      // (Canvas önizleme için dataset üzerinden doldurmayı tercih ettik)
-
-      if(!IN_IFRAME){
-        // Dinamik Firebase import (canvas ve bazı CSP ortamları için güvenli)
-        window.__fb = {};
-        window.__fb.app = await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js');
-        window.__fb.auth = await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js');
-        window.__fb.firestore = await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js');
-        window.__fb.storage = await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js');
-
-        const firebaseConfig = { apiKey: "AIzaSyCd9GjP6CDA8i4XByhXDHyESy-g_DHVwvQ", authDomain: "ureteneller-ecaac.firebaseapp.com", projectId: "ureteneller-ecaac", storageBucket: "ureteneller-ecaac.firebasestorage.app", messagingSenderId: "368042877151", appId: "1:368042877151:web:ee0879fc4717928079c96a", measurementId: "G-BJHKN8V4RQ" };
-        const { initializeApp } = window.__fb.app; app = initializeApp(firebaseConfig);
-        const { getAuth, onAuthStateChanged } = window.__fb.auth; auth = getAuth(app);
-        const { getFirestore } = window.__fb.firestore; db = getFirestore(app);
-        const { getStorage } = window.__fb.storage; window.__fb.storageInst = getStorage(app);
-
-        onAuthStateChanged(auth, (u)=>{
-          const lng=$('langSel').value||'tr'; const t=i18n[lng];
-          if(!u){ navigateLogin(); return; }
-          const guard=$('guard'); guard.style.display='block';
-          guard.innerHTML = `<div class="row" style="justify-content:space-between; align-items:center"><span>${t.hi}, ${u.email||u.uid}</span><button id="btnOut">Çıkış</button></div>`;
-          $('btnOut').onclick = ()=> window.__fb.auth.signOut(auth);
-          fillProvinces(); rebuildCategories(lng); setLang(lng);
-        });
-      } else {
-        // SANDBOX — sahte kullanıcı ile aç
-        const lng=$('langSel').value||'tr'; const t=i18n[lng];
-        const guard=$('guard'); guard.style.display='block';
-        guard.innerHTML = `<div class="row" style="justify-content:space-between; align-items:center"><span>${t.hi}, demo@preview</span><button id="btnOut">Çıkış</button></div>`;
-        $('btnOut').onclick = ()=> alert('Önizleme: Çıkış');
-        fillProvinces(); rebuildCategories(lng); setLang(lng);
-      }
-    }
+    onAuthStateChanged(auth, (u)=>{
+      const lng=$('langSel').value||'tr'; const t=i18n[lng];
+      if(!u){ window.location.href='/'; return; }
+      const guard=$('guard'); guard.style.display='block';
+      guard.innerHTML = `<div class="row" style="justify-content:space-between; align-items:center"><span>${t.hi}, ${u.email||u.uid}</span><button id="btnOut">Çıkış</button></div>`;
+      $('btnOut').onclick = ()=> signOut(auth);
+      fillProvinces(); rebuildCategories(lng); setLang(lng);
+    });
 
     // === Submit ===
     $('listingForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const t=window.__t||i18n.tr;
-      if(!IN_IFRAME){
-        const u=(auth&&auth.currentUser)||null; if(!u){ $('msg').textContent=t.errors.auth; return; }
-      }
+      const u=auth.currentUser; if(!u){ $('msg').textContent=t.errors.auth; return; }
       $('msg').textContent='';
       try{
         validate();
-        const uid = IN_IFRAME? 'demo' : auth.currentUser.uid;
-        const { plan } = await fetchPlan(uid);
-        const active = await countActive(uid);
+        const { plan } = await fetchPlan(u.uid);
+        const active = await countActive(u.uid);
         const limit = (plan==='PREMIUM')?10:5; if(active>=limit) throw new Error('Plan limitine ulaşıldı.');
         let isShowcase = $('showcase').checked; if(isShowcase && plan!=='PREMIUM'){ isShowcase=false; }
 
         const base = {
-          sellerUid:uid,
+          sellerUid:u.uid,
           title: trim($('title').value),
           description: trim($('description').value),
           categoryId: $('category').value,
@@ -541,41 +480,28 @@
           images: [],
           isShowcase,
           status:'pending',
-          createdAt: new Date(),
+          createdAt: serverTimestamp(),
           approvedAt:null,
           expiresAt: new Date(Date.now()+1000*60*60*24*30),
           views:0, favorites:0
         };
 
-        if(IN_IFRAME){
-          await uploadImages(uid, 'preview', $('images').files);
-          const msg=$('msg'); msg.className='success'; msg.textContent='(Önizleme) Form doğrulandı ve görseller hazırlandı.';
-        }else{
-          const { addDoc, collection, setDoc, doc, serverTimestamp } = window.__fb.firestore;
-          base.createdAt = serverTimestamp();
-          const created = await addDoc(collection(db,'listings'), base);
-          const urls = await uploadImages(uid, created.id, $('images').files);
-          await setDoc(doc(db,'listings',created.id), { images: urls }, { merge:true });
-          const msg=$('msg'); msg.className='success'; msg.textContent='Gönderildi. Onay sonrası yayınlanacaktır.';
-        }
+        const created = await addDoc(collection(db,'listings'), base);
+        const urls = await uploadImages(u.uid, created.id, $('images').files);
+        await setDoc(doc(db,'listings',created.id), { images: urls }, { merge:true });
 
-        __selectedFiles = []; syncInputFromSelected(); renderPreviews();
-        $('upBar').style.width='0%'; $('upHint').textContent='—';
-        await sleep(800); e.target.reset(); __coverIndex = -1;
+        const msg=$('msg'); msg.className='success'; msg.textContent='Gönderildi. Onay sonrası yayınlanacaktır.';
+        await sleep(800); e.target.reset(); $('upBar').style.width='0%'; $('upHint').textContent='—';
       }catch(err){ const m=$('msg'); m.className='error'; m.textContent=err.message||String(err); }
     });
 
     // === UI events ===
     $('langSel').addEventListener('change', ()=> setLang($('langSel').value));
-    $('cancelBtn').addEventListener('click', navigateHome);
-    $('closePanel').addEventListener('click', navigateHome);
+    $('cancelBtn').addEventListener('click', ()=> window.location.href='/');
+    $('closePanel').addEventListener('click', ()=> window.location.href='/');
 
-    // default lang & boot
-    $('langSel').value='tr'; setLang('tr');
-    // cats ve provinces'i mevcut dokümandan almak için data-* kullanacağız
-    // (Bu script replace edildiğinde dataset'ler aşağıda ekleniyor.)
-    boot();
+    // default lang
+    $('langSel').value='tr'; setLang('tr'); fillProvinces();
   </script>
-  <!-- dataset hack kaldırıldı: artık sabitler direkt module script içinde tanımlı -->
 </body>
 </html>

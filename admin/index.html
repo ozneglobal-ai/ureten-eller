@@ -4,12 +4,12 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin Giriş • Üreten Eller</title>
-  <link rel="stylesheet" href="/admin/css/admin.css"/>
+  <link rel="stylesheet" href="/docs/admin/css/admin.css"/>
 </head>
 <body class="dark">
   <main class="auth-wrap">
     <section class="card">
-      <img src="/assets/icons/ureteneller.png" alt="Üreten Eller" class="logo" style="width:96px;opacity:.9"/>
+      <img src="/assets/icons/ureteneller.png" alt="Üreten Eller" class="logo"/>
       <h1>Admin Giriş</h1>
 
       <form id="loginForm" class="form" novalidate>
@@ -27,7 +27,9 @@
     </section>
   </main>
 
+  <!-- Firebase kökten: yeni proje bilgileri firebase-init.js içinde -->
   <script type="module" src="/firebase-init.js"></script>
-  <script type="module" src="/admin/js/admin-login.js"></script>
+  <!-- Admin giriş mantığı -->
+  <script type="module" src="/docs/admi/admin/js/admin-login.js"></script>
 </body>
 </html>
