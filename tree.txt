@@ -1,18 +1,46 @@
 .
 ├── CNAME
 ├── README.md
+├── assets
+│   └── icons
+│       ├── apple-touch-icon.png
+│       ├── favicon-32x32.png
+│       ├── favicon.ico
+│       ├── favicon.png
+│       ├── icon-192.png
+│       ├── icon-512.png
+│       └── ureteneller.png
+├── backups
+│   ├── docs-üreteneller.png.bak
+│   └── üreteneller.png.bak
 ├── docs
 │   ├── .deploy-bump
 │   ├── .nojekyll
 │   ├── 404.html
 │   ├── CNAME
+│   ├── admin
+│   │   ├── css
+│   │   │   └── admin.css
+│   │   ├── index.html
+│   │   ├── js
+│   │   │   ├── admin-auth.js
+│   │   │   ├── admin-guard.js
+│   │   │   ├── admin-panel.js
+│   │   │   └── firebase-init.js
+│   │   └── panel.html
+│   ├── assets
+│   │   └── icons
+│   │       └── favicon.png
+│   ├── firebase-init.js
 │   ├── index.html
 │   ├── notify.wav
 │   └── üreteneller.png
+├── firebase-init.js
 ├── home.html
 ├── i18n.js
 ├── ilan-ver.html
 ├── index.html
+├── index.html.bak
 ├── legal
 │   ├── cerez-politikasi.html
 │   ├── gizlilik-politikasi.html
@@ -29,4 +57,4 @@
 ├── tree.txt
 └── üreteneller.png
 
-3 directories, 27 files
+11 directories, 47 files

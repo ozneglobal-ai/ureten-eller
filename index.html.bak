@@ -556,6 +556,7 @@
       }, TESTIMONIAL_ROTATION_MS);
     }
 
+<<<<<<< Updated upstream
     // === Google Identity Services + Fallback ===
     function parseJwt(token){
       try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/'));
@@ -590,9 +591,11 @@
         if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup(); }
       }
     }
+=======
     // === Google Identity Services ===
     function parseJwt(token){ try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/')); const uriDecoded = decodeURIComponent(Array.prototype.map.call(json, c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(uriDecoded); }catch(e){ return {}; } }
     function handleGoogleCredential(resp){ const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || ''; const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' }; const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||''); /* TODO: backend login with resp.credential */ }
+>>>>>>> Stashed changes
 
     // === Auth panel ===
     function bindAuthPanel(){
@@ -684,6 +687,7 @@
     function boot(){ try{ initLangSelect(); applyLang(); bindAuthPanel(); } catch(e){ console.error(e); } }
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
   </script>
+<<<<<<< Updated upstream
 
   <!-- Firebase (CDN modüler) — Proje kimliğinle entegre -->
 <script type="module">
@@ -827,7 +831,9 @@ setTimeout(() => {
 }); // <= onAuthStateChanged bloğunu KAPATAN parantez ve noktalı virgül
 
 </script>
+=======
 <div id="gsiBtn"></div>
 <button id="fbLogin" style="display:none">Google ile giriş</button>
+>>>>>>> Stashed changes
 </body>
 </html>
