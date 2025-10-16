@@ -232,9 +232,9 @@
       <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
       <span class="mini">Mesajlar</span>
     </button>
-    <button class="bbtn" id="navProfile" aria-current="page">
-      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5z"/></svg>
-      <span class="mini">Profil</span>
+    <button class="bbtn" id="navNotif">
+      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 0 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="mini">Bildirimler</span>
     </button>
   </nav>
 
@@ -401,9 +401,9 @@
       $('#edFile').addEventListener('change',handleAvatarFile);
 
       // alt bar linkleri
-      $('#navHome').onclick=()=>location.href='/home.html';
-      $('#navMsg').onclick=()=>location.href='/mesajlar.html';
-      $('#navProfile').onclick=()=>location.href='/profile.html';
+      document.getElementById('navHome').onclick=()=>location.href='/home.html';
+      document.getElementById('navMsg').onclick=()=>location.href='/mesajlar.html';
+      document.getElementById('navNotif').onclick=()=>location.href='/bildirimler.html';
     }
 
     function handleAvatarFile(e){ const f=e.target.files && e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ $('#edAvatar').style.backgroundImage=`url('${r.result}')`; }; r.readAsDataURL(f); }
