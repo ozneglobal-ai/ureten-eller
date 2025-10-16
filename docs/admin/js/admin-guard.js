@@ -1,4 +1,4 @@
-// docs/admin/js/admin-guard.js
+// admin/js/admin-guard.js
 // Yeni projeyi kullanan firebase-init.js'den import
 import { auth, db } from "/firebase-init.js"; // kökten import (firebase-init.js kökteyse)
 

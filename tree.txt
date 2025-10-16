@@ -1,15 +1,26 @@
 .
 ├── CNAME
 ├── README.md
+├── admin
+│   ├── css
+│   │   └── admin.css
+│   ├── index.html
+│   ├── js
+│   │   ├── admin-guard.js
+│   │   ├── admin-login.js
+│   │   └── admin-panel.js
+│   └── panel.html
 ├── assets
-│   └── icons
-│       ├── apple-touch-icon.png
-│       ├── favicon-32x32.png
-│       ├── favicon.ico
-│       ├── favicon.png
-│       ├── icon-192.png
-│       ├── icon-512.png
-│       └── ureteneller.png
+│   ├── icons
+│   │   ├── apple-touch-icon.png
+│   │   ├── favicon-32x32.png
+│   │   ├── favicon.ico
+│   │   ├── favicon.png
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   └── ureteneller.png
+│   └── img
+│       └── avatar-default.png
 ├── backups
 │   ├── docs-üreteneller.png.bak
 │   └── üreteneller.png.bak
@@ -17,21 +28,13 @@
 │   ├── .deploy-bump
 │   ├── .nojekyll
 │   ├── 404.html
-│   ├── CNAME
-│   ├── admin
-│   │   ├── css
-│   │   │   └── admin.css
-│   │   ├── index.html
-│   │   ├── js
-│   │   │   ├── admin-auth.js
-│   │   │   ├── admin-guard.js
-│   │   │   ├── admin-panel.js
-│   │   │   └── firebase-init.js
-│   │   └── panel.html
 │   ├── assets
-│   │   └── icons
-│   │       └── favicon.png
+│   │   ├── icons
+│   │   │   └── favicon.png
+│   │   └── img
+│   │       └── avatar-default.png
 │   ├── firebase-init.js
+│   ├── ilan-ver.html
 │   ├── index.html
 │   ├── notify.wav
 │   └── üreteneller.png
@@ -57,4 +60,4 @@
 ├── tree.txt
 └── üreteneller.png
 
-11 directories, 47 files
+13 directories, 48 files

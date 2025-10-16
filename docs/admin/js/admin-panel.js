@@ -1,4 +1,4 @@
-// docs/admin/js/admin-panel.js
+// admin/js/admin-panel.js
 
 import { db } from "/firebase-init.js"; // kökten import (firebase-init.js kökteyse)
 import {
