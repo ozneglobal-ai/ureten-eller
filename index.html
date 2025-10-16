@@ -813,15 +813,16 @@
   catch (e) { console.error("user upsert error", e); }
 })();
 
-// küçük bir UI geri bildirimi
+// küçük bir UI geri bildirimi:
 const box = document.getElementById('lmsg');
 if (box) box.textContent = "Giriş başarılı ✔︎";
 
 // 0.5 sn sonra ana sayfaya geç
 setTimeout(() => {
-  window.location.href = "home.html"; // gerekirse yolu kendi host yapına göre değiştir
+  window.location.href = "home.html";
 }, 500);
-</script>
+}); // <= onAuthStateChanged bloğunu KAPATAN parantez ve noktalı virgül
 
+</script>
 </body>
 </html>
