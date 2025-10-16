@@ -466,6 +466,22 @@
       paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000);
     }
 
+    function logout(){
+  try{
+    if (window.google?.accounts?.id){
+      google.accounts.id.disableAutoSelect();
+      const email = window.auth?.currentUser?.email;
+      if (email) try{ google.accounts.id.revoke(email, ()=>{}); }catch(_){}
+    }
+  }catch(_){}
+  sessionStorage.clear();
+  try{
+    const apiKey = window.firebaseConfig?.apiKey || '';
+    localStorage.removeItem(`firebase:authUser:${apiKey}:[DEFAULT]`);
+  }catch(_){}
+  location.replace('/index.html'); // Çıkış sonrası gideceği yer
+}
+
     function bindNav(){
       // metinler
       const T=(I18N[LANG]||I18N.tr);
