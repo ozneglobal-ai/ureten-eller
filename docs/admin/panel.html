@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Panel • Üreten Eller</title>
+  <!-- CSS: kökten, tutarlı yol -->
+  <link rel="stylesheet" href="/docs/admin/css/admin.css"/>
+</head>
+<body class="dark">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/assets/icons/ureteneller.png" class="logo-sm" alt="ÜE"/>
+      <span>Admin</span>
+    </div>
+    <nav class="menu">
+      <a href="#dashboard" class="active">Özet</a>
+      <a href="#users">Kullanıcılar</a>
+      <a href="#listings">İlanlar</a>
+      <a href="#orders">Siparişler</a>
+      <a href="#messages">Mesajlar</a>
+      <a href="#notifications">Bildirim</a>
+      <a href="#reports">Raporlar</a>
+      <a href="#settings">Ayarlar</a>
+    </nav>
+    <button id="logoutBtn" class="btn-outline">Çıkış</button>
+  </aside>
+
+  <main class="content">
+    <section id="dashboard" class="section">
+      <h1>Günlük Özet</h1>
+      <div class="grid">
+        <div class="tile"><div class="t">Aktif Kullanıcı</div><div id="mUsers" class="n">—</div></div>
+        <div class="tile"><div class="t">Aktif İlan</div><div id="mListings" class="n">—</div></div>
+        <div class="tile"><div class="t">Bekleyen Onay</div><div id="mPending" class="n">—</div></div>
+        <div class="tile"><div class="t">Açık Sipariş</div><div id="mOrders" class="n">—</div></div>
+      </div>
+    </section>
+
+    <section id="users" class="section">
+      <div class="row">
+        <h2>Kullanıcı Yönetimi</h2>
+        <div class="row-right">
+          <input id="qUser" class="input" placeholder="Ad / e-posta / şehir"/>
+          <button id="btnReloadUsers" class="btn-sm">Yenile</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="listings" class="section">
+      <div class="row">
+        <h2>İlan Yönetimi</h2>
+        <div class="row-right">
+          <select id="listingFilter" class="input">
+            <option value="pending">Bekleyen</option>
+            <option value="approved">Onaylı</option>
+            <option value="rejected">Red</option>
+            <option value="expired">Süresi Dolan</option>
+          </select>
+          <button id="btnReloadListings" class="btn-sm">Yenile</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="listingsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="orders" class="section">
+      <h2>Siparişler</h2>
+      <div class="row">
+        <select id="orderFilter" class="input">
+          <option value="open">Açık</option>
+          <option value="shipping">Kargoda</option>
+          <option value="delivered">Teslim</option>
+          <option value="refund">İade</option>
+        </select>
+        <button id="btnReloadOrders" class="btn-sm">Yenile</button>
+      </div>
+      <div id="ordersList" class="cards"></div>
+    </section>
+
+    <section id="messages" class="section">
+      <h2>Mesajlar & Canlı Destek</h2>
+      <div id="conversations" class="cards"></div>
+    </section>
+
+    <section id="notifications" class="section">
+      <h2>Bildirim Gönder</h2>
+      <div class="row">
+        <input id="nTitle" class="input" placeholder="Başlık"/>
+        <input id="nBody" class="input" placeholder="Mesaj"/>
+        <select id="nSegment" class="input">
+          <option value="all">Tümü</option>
+          <option value="pro">PRO</option>
+          <option value="seller">Satıcı</option>
+          <option value="customer">Müşteri</option>
+        </select>
+        <button id="btnSendNotif" class="btn-sm">Gönder</button>
+      </div>
+      <p id="nInfo" class="muted"></p>
+    </section>
+
+    <section id="reports" class="section">
+      <h2>Raporlar</h2>
+      <div class="grid">
+        <div class="tile"><div class="t">En Çok Görüntülenen İlan</div><div id="rTopListing" class="n">—</div></div>
+        <div class="tile"><div class="t">En Aktif Satıcı</div><div id="rTopSeller" class="n">—</div></div>
+        <div class="tile"><div class="t">Şikayetli İlanlar</div><div id="rComplaints" class="n">—</div></div>
+      </div>
+    </section>
+
+    <section id="settings" class="section">
+      <h2>Ayarlar</h2>
+      <div class="row">
+        <button id="btnReindex" class="btn-sm">Arama İndeksi Yenile</button>
+        <button id="btnPurge" class="btn-sm">Önbellek Temizle</button>
+        <button id="btnBackup" class="btn-sm">JSON Dışa Aktar</button>
+      </div>
+      <p id="sInfo" class="muted"></p>
+    </section>
+  </main>
+
+  <!-- Firebase init (kökten) -->
+  <script type="module" src="/firebase-init.js"></script>
+  <!-- Admin guard (rol = admin kontrolü) -->
+  <script type="module" src="/docs/admin/js/admin-guard.js"></script>
+  <!-- Panel işlevleri -->
+  <script type="module" src="/docs/admin/js/admin-panel.js"></script>
+</body>
+</html>
