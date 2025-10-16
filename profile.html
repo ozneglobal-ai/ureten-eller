@@ -1,730 +1,155 @@
 <!DOCTYPE html>
-<html lang="tr" dir="ltr">
+<html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Profil • Üreten Eller</title>
-  <link rel="icon" href="/assets/icons/favicon.png" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Panel • Üreten Eller</title>
+  <link rel="stylesheet" href="/admin/css/admin.css"/>
   <style>
-    :root{
-      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
-      --c1:#10b981; --c2:#f59e0b; --c3:#8b5cf6; --c4:#06b6d4; --c5:#ef4444; --c6:#eab308; --c7:#14b8a6; --c8:#f97316; --c9:#a855f7; --c10:#3b82f6;
-      --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
-    a{color:inherit;text-decoration:none}
-
-    .wrap{max-width:1280px;margin:0 auto;padding:1rem 1rem 6.5rem}
-    .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
-    .logo{display:flex;align-items:center;gap:.5rem;font-weight:900;letter-spacing:.2px}
-    .logo img{width:32px;height:32px}
-    .spacer{flex:1}
-
-    .btn{padding:.55rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap}
-    .btn.primary{background:linear-gradient(180deg,var(--c1),#128473);border-color:#0e766e}
-    .btn.ghost{background:transparent}
-    .btn.warn{background:linear-gradient(180deg,var(--c2),#7a5408);border-color:#7a5408}
-    .btn.danger{background:linear-gradient(180deg,var(--c5),#7a1b1b);border-color:#7a1b1b}
-    .btn.block{width:100%;justify-content:center}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-
-    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
-    .head h2{margin:0;font-size:clamp(18px,2.2vw,24px)}
-    .mini{color:var(--muted)}
-
-    .grid{display:grid;gap:.85rem;grid-template-columns:repeat(1,minmax(0,1fr))}
-    @media(min-width:720px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media(min-width:1120px){.grid{grid-template-columns:repeat(3,1fr)}}
-
-    .card{position:relative;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;transition:box-shadow .25s,transform .15s}
-    .card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--glow, #22d3ee),0 0 26px var(--glow, #22d3ee)}
-    .thumb{aspect-ratio:1.6/1;background:#0f172a;display:block;background-size:cover;background-position:center}
-    .meta{padding:.6rem .7rem}
-    .title{font-weight:900}
-    .price{font-weight:900}
-    .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-    .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .5rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
-    .badge.star{background:linear-gradient(90deg,#f59e0b,#ef4444,#8b5cf6,#06b6d4);background-size:300% 100%;animation:shine 6s linear infinite;color:#0b1220;box-shadow:0 0 0 1px #ffffff1a,0 0 24px #06b6d470}
-    .badge.verified{background:#0a162c;border-color:#0e766e}
-    @keyframes shine{0%{background-position:0 0}100%{background-position:300% 0}}
-
-    .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
-    .tab{padding:.45rem .7rem;border:1px solid var(--brd);border-radius:999px;background:#0b1220;font-weight:800;cursor:pointer;color:#fff}
-    .tab[aria-selected="true"]{outline:2px solid var(--accent)}
-
-    .stats{display:grid;gap:.75rem;grid-template-columns:repeat(2,minmax(0,1fr))}
-    @media(min-width:860px){.stats{grid-template-columns:repeat(4,1fr)}}
-    .sBtn{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));padding:.9rem;text-align:left;cursor:pointer}
-    .sBtn:hover{box-shadow:0 0 0 1px var(--accent)}
-    .sNum{font-size:clamp(20px,3.4vw,30px);font-weight:900}
-
-    .side{display:grid;gap:.85rem}
-    @media(min-width:1080px){.page{display:grid;grid-template-columns:2.2fr 1fr;gap:1rem}}
-
-    .keyv{display:grid;gap:.35rem}
-    .kv{display:flex;gap:.5rem;align-items:center}
-    .kv label{width:120px;color:var(--muted)}
-    .kv strong{font-weight:800}
-
-    .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426}
-
-    .toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
-
-    .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,95vw);max-height:85vh;overflow:auto;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(180deg,#0c1426,#0b1220);padding:1rem;z-index:901;display:none;box-shadow:0 20px 80px #0008}
-    .close{position:absolute;right:.6rem;top:.6rem;border:1px solid var(--brd);background:#0b1220;border-radius:10px;padding:.25rem .5rem;cursor:pointer;font-weight:800;color:#fff}
-
-    .bottomBar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,#0a0f1c,#000);border-top:1px solid var(--brd);display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;color:#fff;z-index:100;box-shadow:0 0 0 1px var(--bbglow,#22d3ee),0 0 28px var(--bbglow,#22d3ee)}
-    .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
-    .bbtn[aria-current="page"]{border-color:var(--brd);background:#0b1220}
-    .bicon{width:22px;height:22px;display:block}
-
-    .avatarWrap{display:flex;gap:1rem;align-items:flex-start}
-    .avatar{width:96px;height:96px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center}
-    .changeLink{font-weight:800;cursor:pointer}
-    .bioBox{margin-top:.6rem;border:1px solid var(--brd);border-radius:12px;padding:.6rem;background:linear-gradient(145deg,var(--card),var(--card2))}
-    .bioBox .bioTitle{font-weight:800;margin-bottom:.35rem}
-    .bioBox .bioText{white-space:pre-wrap;line-height:1.45}
-  .legalWrap{max-width:1280px;margin:1.25rem auto 6.25rem;padding:0 1rem}
-    .legalGrid{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))}
-    @media(min-width:760px){.legalGrid{grid-template-columns:repeat(4,1fr)}}
-    .legalGrid a{display:block;color:#d1d5db;word-break:break-word}
-    .legalFoot{border-top:1px solid var(--brd);background:#000;margin-top:1rem}
+    /* Tüm sekmeler başlangıçta gizli */
+    .section{display:none}
+    .section.active{display:block}
+    .menu a.active{font-weight:700; text-decoration:underline}
   </style>
-  <script type="module" src="/firebase-init.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <div class="top">
-      <div class="logo">
-         <img src="/assets/icons/ureteneller.png" alt="logo" />
-        <span>Üreten Eller</span>
-      </div>
-      <div class="spacer"></div>
-      <!-- Üstteki butonlar kaldırıldı -->
+<body class="dark">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/assets/icons/ureteneller.png" class="logo-sm" alt="ÜE"/>
+      <span>Admin</span>
     </div>
+    <nav class="menu">
+      <a href="#dashboard" data-target="dashboard">Özet</a>
+      <a href="#users" data-target="users">Kullanıcılar</a>
+      <a href="#listings" data-target="listings">İlanlar</a>
+      <a href="#orders" data-target="orders">Siparişler</a>
+      <a href="#messages" data-target="messages">Mesajlar</a>
+      <a href="#notifications" data-target="notifications">Bildirim</a>
+      <a href="#reports" data-target="reports">Raporlar</a>
+      <a href="#settings" data-target="settings">Ayarlar</a>
+    </nav>
+    <button id="logoutBtn" class="btn-outline">Çıkış</button>
+  </aside>
 
-    <section class="head" aria-labelledby="pTitle">
-      <div>
-        <h2 id="pTitle">Profil</h2>
-        <div class="row mini" id="pSub">
-          <span id="pRole">Standart Üye</span>
-          <span class="badge" id="pStatus">Doğrulanmamış</span>
-          <span class="badge star" id="pPremiumBadge" style="display:none">⭐ Premium</span>
-          <span class="badge verified" id="pVerifiedSeller" style="display:none">✅ Onaylı Satıcı</span>
-          <span class="mini" id="adminOnlyNote">(Üyelik türü ve doğrulama durumunu yalnızca ureteneller.com değiştirebilir)</span>
-        </div>
+  <main class="content">
+    <!-- İPUCU: İlk yüklemede hiçbir sekme görünmez; menüden tıkla -->
+    <p id="emptyHint" class="muted" style="margin:16px 0;">Bir bölüm açmak için soldan seçim yapın.</p>
+
+    <section id="dashboard" class="section" data-section="dashboard">
+      <h1>Günlük Özet</h1>
+      <div class="grid">
+        <div class="tile"><div class="t">Aktif Kullanıcı</div><div id="mUsers" class="n">—</div></div>
+        <div class="tile"><div class="t">Aktif İlan</div><div id="mListings" class="n">—</div></div>
+        <div class="tile"><div class="t">Bekleyen Onay</div><div id="mPending" class="n">—</div></div>
+        <div class="tile"><div class="t">Açık Sipariş</div><div id="mOrders" class="n">—</div></div>
       </div>
+    </section>
+
+    <section id="users" class="section" data-section="users">
       <div class="row">
-        <button class="btn" id="btnEdit">Profili Düzenle</button>
+        <h2>Kullanıcı Yönetimi</h2>
+        <div class="row-right">
+          <input id="qUser" class="input" placeholder="Ad / e-posta / şehir"/>
+          <button id="btnReloadUsers" class="btn-sm">Yenile</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Avatar + Hesap bilgileri -->
-    <section aria-labelledby="accTitle">
-      <div class="head">
-        <h2 id="accTitle">Hesap</h2>
-      </div>
-      <div class="avatarWrap">
-        <div>
-          <div id="avatar" class="avatar" style="background-image:url('/assets/img/avatar-default.png')"></div>
-          <div class="bioBox">
-            <div class="bioTitle">Biyografi</div>
-            <div id="uBio" class="bioText">—</div>
-            <div class="row" style="margin-top:.4rem"><button class="btn ghost" id="btnEditBio">Biyografiyi Düzenle</button></div>
-          </div>
-        </div>
-        <div class="keyv" aria-label="Hesap Bilgileri">
-          <div class="kv"><label>Ad Soyad</label><strong id="uName">—</strong></div>
-          <div class="kv"><label>Şehir</label><strong id="uCity">—</strong></div>
-          <div class="kv"><label>Telefon</label><strong id="uPhone">—</strong></div>
-          <div class="kv"><label>Kimlik Doğrulama</label><strong id="uKyc">Gerekli</strong></div>
-          <span class="mini">Bu alanı yalnızca admin doğrular. Güven için kimlik ve adres doğrulaması önerilir.</span>
-          <span id="changeAvatar" class="changeLink">Fotoğrafı Değiştir</span>
-        </div>
-      </div>
-    </section>
-
-    <div class="page">
-      <main>
-        <section aria-labelledby="statTitle">
-          <div class="head">
-            <h2 id="statTitle">Özet</h2>
-            <span class="mini" id="monthLabel"></span>
-          </div>
-          <div class="stats">
-            <button class="sBtn" data-goto="all"><div class="mini">Toplam İlan</div><div class="sNum" id="stTotal">0</div></button>
-            <button class="sBtn" data-goto="pending"><div class="mini">Onay Bekleyen</div><div class="sNum" id="stPending">0</div></button>
-            <button class="sBtn" data-goto="approved"><div class="mini">Yayında</div><div class="sNum" id="stApproved">0</div></button>
-            <button class="sBtn" data-goto="expired"><div class="mini">Süresi Dolan</div><div class="sNum" id="stExpired">0</div></button>
-          </div>
-        </section>
-
-        <section style="margin-top:1rem" aria-labelledby="tabTitle">
-          <div class="head">
-            <h2 id="tabTitle">İlanlarım</h2>
-            <div class="tabs" role="tablist" aria-label="İlan sekmeleri">
-              <button class="tab" role="tab" aria-selected="true" data-tab="pending">Onay Bekleyen</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="approved">Onaylı (Yayında)</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="expired">Süresi Dolan</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="rejected">Reddedilen</button>
-            </div>
-          </div>
-          <div id="tabPanels">
-            <div id="panel-pending" role="tabpanel" class="grid" aria-labelledby="pending"></div>
-            <div id="panel-approved" role="tabpanel" hidden class="grid" aria-labelledby="approved"></div>
-            <div id="panel-expired" role="tabpanel" hidden class="grid" aria-labelledby="expired"></div>
-            <div id="panel-rejected" role="tabpanel" hidden class="grid" aria-labelledby="rejected"></div>
-          </div>
-        </section>
-      </main>
-
-      <aside class="side">
-        <section aria-labelledby="quotaTitle">
-          <div class="head"><h2 id="quotaTitle">Kota & Vitrin</h2></div>
-          <div class="sCard">
-            <div class="row" style="justify-content:space-between"><span>Aylık ilan kotası</span><strong id="qQuota">0</strong></div>
-            <div class="row" style="justify-content:space-between"><span>Kalan</span><strong id="qRemain">0</strong></div>
-            <div class="row" style="justify-content:space-between"><span>Seçili vitrin</span><strong id="qShowcase">—</strong></div>
-            <div class="notice mini" id="qNote"></div>
-            <div class="row" style="margin-top:.6rem">
-              <button class="btn" id="btnPickShow">İlanı Vitrine Öner</button>
-              <button class="btn ghost" id="btnPricing">Ücretler</button>
-            </div>
-          </div>
-        </section>
-      </aside>
-    </div>
-
-    <footer class="legalFoot" aria-labelledby="legalTitle">
-      <div class="legalWrap">
-        <h2 id="legalTitle" class="mini" style="margin:.6rem 0">Yasal</h2>
-        <div class="legalGrid">
-          <div>
-            <a href="/legal/cerez-politikasi.html">Çerez Politikası</a>
-            <a href="/legal/gizlilik-politikasi.html">Gizlilik Politikası</a>
-            <a href="/legal/iletisim-impressum.html">İletişim / Impressum</a>
-            <a href="/legal/kullanim-sartlari.html">Kullanım Şartları</a>
-            <a href="/legal/kvkk-aydinlatma.html">KVKK Aydınlatma</a>
-          </div>
-          <div>
-            <a href="/legal/mesafeli-satis-sozlesmesi.html">Mesafeli Satış Sözleşmesi</a>
-            <a href="/legal/on-bilgilendirme-formu.html">Ön Bilgilendirme Formu</a>
-            <a href="/legal/teslimat-iade-iptal.html">Teslimat • İade • İptal</a>
-            <a href="/legal/topluluk-kurallari.html">Topluluk Kuralları</a>
-            <a href="/legal/yasakli-urunler.html">Yasaklı Ürünler</a>
-          </div>
-          <div style="grid-column:span 2">
-            <span class="mini">© <span id="yr"></span> <span id="brandName">Üreten Eller</span></span>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-  </div>
-
-  <nav class="bottomBar" aria-label="Alt gezinme">
-    <button class="bbtn" id="navHome">
-      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l9 8h-3v8h-5v-5H11v5H6v-8H3l9-8z"/></svg>
-      <span class="mini">Ana Sayfa</span>
-    </button>
-    <button class="bbtn" id="navMsg">
-      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
-      <span class="mini">Mesajlar</span>
-    </button>
-    <button class="bbtn" id="navNotif">
-      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 0 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-      <span class="mini">Bildirimler</span>
-    </button>
-  </nav>
-
-  <!-- Ücretler Modal -->
-  <div id="pricingModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="prTitle" aria-hidden="true">
-    <button class="close" id="prClose" aria-label="Kapat">✕</button>
-    <h2 id="prTitle" style="margin-top:0">Ücretler</h2>
-    <div class="sCard">
-      <div class="row" style="justify-content:space-between"><span>Premium üyeler: aylık ücretsiz vitrin</span><strong>1 ilan</strong></div>
-      <div class="row" style="justify-content:space-between"><span>Premium: ekstra vitrin</span><strong id="pricePremiumExtra">199 TL</strong></div>
-      <div class="row" style="justify-content:space-between"><span>Standart: vitrin</span><strong id="priceStandard">249 TL</strong></div>
-      <div class="notice mini">Vitrin başvuruları ureteneller.com ekibi incelemesinden sonra yayına alınır.</div>
-    </div>
-  </div>
-
-  <!-- Vitrine Öner Modal -->
-  <div id="showModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="shTitle" aria-hidden="true">
-    <button class="close" id="shClose" aria-label="Kapat">✕</button>
-    <h2 id="shTitle" style="margin-top:0">Vitrine Öner</h2>
-    <div id="showList" class="grid"></div>
-    <div class="notice mini" style="margin-top:.6rem">Seçiminiz admin onayına gönderilir. Onaylanırsa vitrine çıkar.</div>
-  </div>
-
-  <!-- Profil Düzenle Modal -->
-  <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edTitle" aria-hidden="true">
-    <button class="close" id="edClose" aria-label="Kapat">✕</button>
-    <h2 id="edTitle" style="margin-top:0">Profili Düzenle</h2>
-    <div class="sCard">
-      <div class="row" style="align-items:flex-start;gap:1rem">
-        <div>
-          <div id="edAvatar" class="avatar" style="background-image:url('/assets/img/avatar-default.png')"></div>
-          <input id="edFile" type="file" accept="image/*" style="margin-top:.5rem" />
-        </div>
-        <div style="flex:1">
-          <label class="mini">Şehir (İl)</label>
-          <select id="edCity" style="width:100%;margin:.25rem 0 .6rem;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem">
-            <option value="">Seçiniz…</option>
-            <option>Adana</option><option>Adıyaman</option><option>Afyonkarahisar</option><option>Ağrı</option><option>Aksaray</option><option>Amasya</option><option>Ankara</option><option>Antalya</option><option>Ardahan</option><option>Artvin</option><option>Aydın</option><option>Balıkesir</option><option>Bartın</option><option>Batman</option><option>Bayburt</option><option>Bilecik</option><option>Bingöl</option><option>Bitlis</option><option>Bolu</option><option>Burdur</option><option>Bursa</option><option>Çanakkale</option><option>Çankırı</option><option>Çorum</option><option>Denizli</option><option>Diyarbakır</option><option>Düzce</option><option>Edirne</option><option>Elazığ</option><option>Erzincan</option><option>Erzurum</option><option>Eskişehir</option><option>Gaziantep</option><option>Giresun</option><option>Gümüşhane</option><option>Hakkâri</option><option>Hatay</option><option>Iğdır</option><option>Isparta</option><option>İstanbul</option><option>İzmir</option><option>Kahramanmaraş</option><option>Karabük</option><option>Karaman</option><option>Kars</option><option>Kastamonu</option><option>Kayseri</option><option>Kırıkkale</option><option>Kırklareli</option><option>Kırşehir</option><option>Kilis</option><option>Kocaeli</option><option>Konya</option><option>Kütahya</option><option>Malatya</option><option>Manisa</option><option>Mardin</option><option>Mersin</option><option>Muğla</option><option>Muş</option><option>Nevşehir</option><option>Niğde</option><option>Ordu</option><option>Osmaniye</option><option>Rize</option><option>Sakarya</option><option>Samsun</option><option>Siirt</option><option>Sinop</option><option>Sivas</option><option>Şanlıurfa</option><option>Şırnak</option><option>Tekirdağ</option><option>Tokat</option><option>Trabzon</option><option>Tunceli</option><option>Uşak</option><option>Van</option><option>Yalova</option><option>Yozgat</option><option>Zonguldak</option>
+    <section id="listings" class="section" data-section="listings">
+      <div class="row">
+        <h2>İlan Yönetimi</h2>
+        <div class="row-right">
+          <select id="listingFilter" class="input">
+            <option value="pending">Bekleyen</option>
+            <option value="approved">Onaylı</option>
+            <option value="rejected">Red</option>
+            <option value="expired">Süresi Dolan</option>
           </select>
-          <label class="mini">İlçe</label>
-          <input id="edDistrict" type="text" placeholder="İlçe (manuel yazın)" style="width:100%;margin:.25rem 0;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem" />
+          <button id="btnReloadListings" class="btn-sm">Yenile</button>
         </div>
       </div>
-    </div>
-    <div class="sCard" style="margin-top:.8rem">
-      <div class="row" style="gap:.6rem;flex-wrap:wrap">
-        <div style="flex:1;min-width:240px">
-          <label class="mini">Eski Şifre</label>
-          <input id="edOld" type="password" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:var(--ink)" />
-        </div>
-        <div style="flex:1;min-width:240px">
-          <label class="mini">Yeni Şifre</label>
-          <input id="edNew1" type="password" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:var(--ink)" />
-        </div>
-        <div style="flex:1;min-width:240px">
-          <label class="mini">Yeni Şifre (Tekrar)</label>
-          <input id="edNew2" type="password" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:var(--ink)" />
-        </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="listingsBody"></tbody>
+        </table>
       </div>
-      <div style="margin-top:.8rem">
-        <label class="mini">Biyografi</label>
-        <textarea id="edBio" rows="4" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:var(--ink)"></textarea>
+    </section>
+
+    <section id="orders" class="section" data-section="orders">
+      <h2>Siparişler</h2>
+      <div class="row">
+        <select id="orderFilter" class="input">
+          <option value="open">Açık</option>
+          <option value="shipping">Kargoda</option>
+          <option value="delivered">Teslim</option>
+          <option value="refund">İade</option>
+        </select>
+        <button id="btnReloadOrders" class="btn-sm">Yenile</button>
       </div>
-      <div class="row" style="margin-top:.8rem">
-        <button class="btn primary" id="edSave">Kaydet</button>
-        <button class="btn ghost" id="edCancel">Vazgeç</button>
+      <div id="ordersList" class="cards"></div>
+    </section>
+
+    <section id="messages" class="section" data-section="messages">
+      <h2>Mesajlar & Canlı Destek</h2>
+      <div id="conversations" class="cards"></div>
+    </section>
+
+    <section id="notifications" class="section" data-section="notifications">
+      <h2>Bildirim Gönder</h2>
+      <div class="row">
+        <input id="nTitle" class="input" placeholder="Başlık"/>
+        <input id="nBody" class="input" placeholder="Mesaj"/>
+        <select id="nSegment" class="input">
+          <option value="all">Tümü</option>
+          <option value="pro">PRO</option>
+          <option value="seller">Satıcı</option>
+          <option value="customer">Müşteri</option>
+        </select>
+        <button id="btnSendNotif" class="btn-sm">Gönder</button>
       </div>
-    </div>
-  </div>
+      <p id="nInfo" class="muted"></p>
+    </section>
 
-  <div id="toast" class="toast" role="status"></div>
+    <section id="reports" class="section" data-section="reports">
+      <h2>Raporlar</h2>
+      <div class="grid">
+        <div class="tile"><div class="t">En Çok Görüntülenen İlan</div><div id="rTopListing" class="n">—</div></div>
+        <div class="tile"><div class="t">En Aktif Satıcı</div><div id="rTopSeller" class="n">—</div></div>
+        <div class="tile"><div class="t">Şikayetli İlanlar</div><div id="rComplaints" class="n">—</div></div>
+      </div>
+    </section>
 
-  <script src="/i18n.js"></script>
-  <script type="module">
-    // Firebase config (güncel)
-    window.__FIREBASE_CONFIG = {
-      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
-      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
-      projectId: "flutter-ai-playground-38ddf",
-      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
-      messagingSenderId: "4688234885",
-      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
-    };
-  </script>
-  <script>
-    // --- Sabitler ---
-    const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
-    const PREMIUM_MONTHLY_QUOTA=10;           // Premium aylık ilan kotası
-    const PREMIUM_FREE_SHOWCASE=1;           // Aylık ücretsiz vitrin adedi
-    const PRICE_SHOWCASE_PREMIUM_EXTRA=199;  // Premium ekstra vitrin
-    const PRICE_SHOWCASE_STANDARD=249;       // Standart vitrin
-    const LISTING_LIFETIME_DAYS=30;          // Yayından düşme süresi
+    <section id="settings" class="section" data-section="settings">
+      <h2>Ayarlar</h2>
+      <div class="row">
+        <button id="btnReindex" class="btn-sm">Arama İndeksi Yenile</button>
+        <button id="btnPurge" class="btn-sm">Önbellek Temizle</button>
+        <button id="btnBackup" class="btn-sm">JSON Dışa Aktar</button>
+      </div>
+      <p id="sInfo" class="muted"></p>
+    </section>
+  </main>
 
-    // --- Kullanıcı & ilan ---
-    const user={
-      id:null,
-      name:"",
-      city:"",
-      district:"",
-      phone:"",
-      isPremium:false,
-      isVerified:false,
-      monthlyQuotaUsed:0,
-      monthlyShowcaseUsed:0,
-      avatar:"/assets/img/avatar-default.png",
-      bio:""
-    };
-    const listings=[]; // dış veri ile doldurulacak
-
-    // --- Yardımcılar ---
-    const $ = (s)=>document.querySelector(s);
-    const el=(t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e};
-    const daysFrom=(n)=>{const d=new Date(); d.setDate(d.getDate()+n); return d};
-    const fmtPrice=(v)=> new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v);
-    function toast(msg){const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>{t.style.display='none'},1800)}
-
-    // --- UI Başlat ---
-    function boot(){
-      loadExternalData();
-      const y=document.getElementById('yr'); if(y) y.textContent=new Date().getFullYear();
-
-      // başlık & rozetler
-      $('#pRole').textContent = user.isPremium? 'Premium Üye' : 'Standart Üye';
-      $('#pPremiumBadge').style.display = user.isPremium? 'inline-flex' : 'none';
-      $('#pVerifiedSeller').style.display = user.isPremium? 'inline-flex' : 'none';
-      $('#pStatus').textContent = user.isVerified? 'Doğrulandı' : 'Doğrulanmamış';
-
-      // hesap alanı
-      $('#uName').textContent=user.name||'—';
-      $('#uCity').textContent=user.city||'—';
-      $('#uPhone').textContent=user.phone||'—';
-      $('#uKyc').textContent=user.isVerified? 'Tamamlandı':'Gerekli';
-      $('#uBio').textContent=user.bio||'—';
-      $('#avatar').style.backgroundImage=`url('${user.avatar||'/assets/img/avatar-default.png'}')`;
-
-      $('#monthLabel').textContent = new Date().toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
-
-      // kota
-      const quota = user.isPremium? PREMIUM_MONTHLY_QUOTA : 0;
-      const used = user.monthlyQuotaUsed||0; const remain=Math.max(0, quota - used);
-      $('#qQuota').textContent=quota; $('#qRemain').textContent=remain; updateShowcaseSummary();
-
-      // sekmeler
-      bindTabs();
-      document.querySelectorAll('.sBtn').forEach(b=>b.addEventListener('click',()=>{
-        const k=b.getAttribute('data-goto');
-        if(k==='all'){ document.querySelector('[data-tab="approved"]').click(); return; }
-        const t=document.querySelector(`[data-tab="${k}"]`); if(t) t.click();
-      }));
-
-      // SÜRE DOLU KONTROLÜ + liste boyama
-      autoExpire();
-      paintAllPanels();
-      if(window.__autoExpInt) clearInterval(window.__autoExpInt);
-      window.__autoExpInt = setInterval(autoExpire, 24*60*60*1000);
-
-      // alt bar animasyonu
-      startBarGlow();
-
-      // butonlar
-      $('#btnEdit').onclick=openEdit; $('#edClose').onclick=closeEdit; $('#edCancel').onclick=closeEdit; $('#edSave').onclick=saveEdit;
-      $('#changeAvatar').onclick=()=>{ openEdit(); $('#edFile').click(); };
-      $('#btnEditBio').onclick=()=>{ openEdit(); setTimeout(()=>{ $('#edBio').focus(); }, 50); };
-      $('#edFile').addEventListener('change',handleAvatarFile);
-
-      // alt bar linkleri
-      document.getElementById('navHome').onclick=()=>location.href='/home.html';
-      document.getElementById('navMsg').onclick=()=>location.href='/mesajlar.html';
-      document.getElementById('navNotif').onclick=()=>location.href='/bildirimler.html';
-    }
-
-    // --- Cloudinary avatar yükleme ---
-async function uploadToCloudinary(file){
-  if(!file) return null;
-  const cloudName = "dbntnzogo"; // SİZİN cloud name
-  const preset = "yEhMC1YiG-m_m91G1XmHJxdNaz4"; // SİZİN unsigned preset
-
-  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", preset);
-
-  try {
-    const res = await fetch(url, { method: "POST", body: formData });
-    const data = await res.json();
-    return data.secure_url || null;
-  } catch (e) {
-    console.error("Cloudinary upload error:", e);
-    return null;
-  }
-}
-
-// Yeni handleAvatarFile
-async function handleAvatarFile(e){
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-
-  // anında önizleme
-  const localPreview = URL.createObjectURL(f);
-  $('#edAvatar').style.backgroundImage = `url('${localPreview}')`;
-
-  // Cloudinary'ye yükle
-  const url = await uploadToCloudinary(f);
-  if(url){
-    window.user.avatar = url;
-    $('#avatar').style.backgroundImage = `url('${url}')`;
-    toast("Avatar yüklendi ✅");
-  } else {
-    toast("Yükleme hatası ⚠️");
-  }
-}
-
-    function updateShowcaseSummary(){
-      const chosen = listings.find(l=>l.showcase===true);
-      $('#qShowcase').textContent = chosen? chosen.title : '—';
-      const freeRemain = user.isPremium? Math.max(0, PREMIUM_FREE_SHOWCASE - (user.monthlyShowcaseUsed||0)) : 0;
-      const note = user.isPremium
-        ? (freeRemain>0? `Bu ay ${freeRemain} ücretsiz vitrin hakkınız var.` : `Ücretsiz hakkınız bitti. Ekstra vitrin ${PRICE_SHOWCASE_PREMIUM_EXTRA} TL.`)
-        : `Standart üyeler vitrin için ${PRICE_SHOWCASE_STANDARD} TL öder.`;
-      $('#qNote').textContent = note;
-    }
-
-    function bindTabs(){
-      document.querySelectorAll('.tab').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected','false'));
-          btn.setAttribute('aria-selected','true');
-          const k=btn.dataset.tab; showPanel(k);
-        })
-      });
-    }
-
-    function showPanel(key){
-      ['pending','approved','expired','rejected'].forEach(k=>{
-        const p=$(`#panel-${k}`); if(!p) return; p.hidden = (k!==key);
-      });
-    }
-
-    // --- Otomatik Süre Dolumu: approved -> expired ---
-    function autoExpire(){
-      let changed=false; const now=Date.now();
-      listings.forEach(l=>{
-        if(l && l.status==='approved' && l.expiresAt){
-          const t=new Date(l.expiresAt).getTime();
-          if(!Number.isNaN(t) && t<now){ l.status='expired'; changed=true; }
-        }
-      });
-      if(changed){ paintAllPanels(); }
-    }
-
-    function paintAllPanels(){
-      const pending=listings.filter(l=>l.status==='pending');
-      const approved=listings.filter(l=>l.status==='approved');
-      const expired=listings.filter(l=>l.status==='expired');
-      const rejected=listings.filter(l=>l.status==='rejected');
-
-      $('#stTotal').textContent=listings.length;
-      $('#stPending').textContent=pending.length;
-      $('#stApproved').textContent=approved.length;
-      $('#stExpired').textContent=expired.length;
-
-      paintPanel('pending',pending);
-      paintPanel('approved',approved);
-      paintPanel('expired',expired);
-      paintPanel('rejected',rejected);
-    }
-
-    function paintPanel(key,arr){
-      const host=$(`#panel-${key}`); host.innerHTML='';
-      if(arr.length===0){ const n=el('div','notice mini'); n.textContent='Kayıt yok.'; host.appendChild(n); return; }
-      arr.forEach((l,i)=>{
-        const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-        card.innerHTML=`
-          <a class="thumb" style="background-image:url('${l.photo||''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
-          <div class="meta">
-            <div class="row" style="justify-content:space-between">
-              <div class="title">${l.title||''}</div>
-              <div class="price">${fmtPrice(l.price||0)}</div>
-            </div>
-            <div class="row" style="margin-top:.4rem">
-              ${badgeFor(l)}
-            </div>
-            <div class="row" style="margin-top:.5rem">
-              ${actionsFor(key,l)}
-            </div>
-          </div>`;
-        bindCardActions(card,l,key);
-        host.appendChild(card);
-      });
-    }
-
-    function badgeFor(l){
-      const b=[];
-      if(l.status==='pending') b.push('<span class="badge">Admin onayı bekliyor</span>');
-      if(l.status==='approved'){
-        const left = l.expiresAt? daysLeft(l.expiresAt): LISTING_LIFETIME_DAYS;
-        b.push(`<span class="badge">${left} gün kaldı</span>`);
-        if(l.showcase) b.push('<span class="badge star">⭐ Vitrinde</span>');
-        if(l.showcasePending) b.push('<span class="badge">Vitrin onayı bekliyor</span>');
-      }
-      if(l.status==='expired') b.push('<span class="badge">Süresi doldu</span>');
-      if(l.status==='rejected') b.push(`<span class="badge">Reddedildi</span>`);
-      return b.join('');
-    }
-
-    function actionsFor(key,l){
-      const go = `<button class="btn ghost" data-act="open" data-id="${l.id}">İlana Git</button>`;
-      if(key==='pending'){
-        return go + `<button class="btn danger" data-act="withdraw" data-id="${l.id}">İptal</button>`;
-      }
-      if(key==='approved'){
-        const canRequestShowcase = !l.showcase && !l.showcasePending;
-        return go + `<button class="btn" ${canRequestShowcase? '': 'disabled'} data-act="showcase" data-id="${l.id}">Vitrine Öner</button>` +
-               `<button class="btn ghost" data-act="renew" data-id="${l.id}">Süreyi Yenile</button>`;
-      }
-      if(key==='expired'){
-        return go + `<button class="btn primary" data-act="republish" data-id="${l.id}">Yeniden Yayınla</button>` +
-               `<button class="btn danger" data-act="delete" data-id="${l.id}">Sil</button>`;
-      }
-      if(key==='rejected'){
-        return go + `<button class="btn primary" data-act="fix" data-id="${l.id}">Düzelt & Yeniden Gönder</button>`;
-      }
-      return go;
-    }
-
-    function bindCardActions(card,l,key){
-      card.querySelectorAll('[data-act]').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          const act=btn.getAttribute('data-act');
-          if(act==='open'){ location.href=`/ilan/${l.id}`; return; }
-          if(act==='withdraw'){ l.status='rejected'; toast('İlan çekildi.'); }
-          if(act==='renew'){ l.expiresAt=daysFrom(LISTING_LIFETIME_DAYS); toast('Süre uzatma talebi admin onayına gitti'); }
-          if(act==='republish'){ l.status='pending'; toast('Yeniden onaya gönderildi'); }
-          if(act==='delete'){ const i=listings.findIndex(x=>x.id===l.id); if(i>-1){ listings.splice(i,1); toast('İlan silindi'); } }
-          if(act==='fix'){ l.status='pending'; toast('Düzenlenen ilan tekrar onaya gönderildi'); }
-          if(act==='showcase'){ requestShowcase(l); }
-          paintAllPanels(); updateShowcaseSummary();
-        });
-      });
-    }
-
-    const daysLeft=(date)=>{ const d=new Date(date); const diff=d.getTime()-Date.now(); return Math.max(0, Math.ceil(diff/86400000)); }
-
-    // --- Vitrin Akışı ---
-    function openPricing(){ $('#pricingModal').style.display='block'; $('#pricingModal').setAttribute('aria-hidden','false'); }
-    function closePricing(){ $('#pricingModal').style.display='none'; $('#pricingModal').setAttribute('aria-hidden','true'); }
-
-    function openShowcasePicker(){
-      const host=$('#showList'); host.innerHTML='';
-      const candidates=listings.filter(l=>l.status==='approved' && !l.showcase && !l.showcasePending);
-      if(candidates.length===0){ const n=el('div','notice mini'); n.textContent='Uygun ilan bulunamadı.'; host.appendChild(n); } else {
-        candidates.forEach((l,i)=>{
-          const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-          card.innerHTML=`
-            <a class=\"thumb\" style=\"background-image:url('${l.photo||''}')\"></a>
-            <div class=\"meta\">\n              <div class=\"row\" style=\"justify-content:space-between\"><div class=\"title\">${l.title||''}</div><div class=\"price\">${fmtPrice(l.price||0)}</div></div>\n              <div class=\"row\" style=\"margin-top:.5rem\">\n                <button class=\"btn primary\" data-act=\"pick\" data-id=\"${l.id}\">Vitrine Öner</button>\n              </div>\n            </div>`;
-          card.querySelector('[data-act="pick"]').addEventListener('click',()=>{ requestShowcase(l); closeShowcase(); paintAllPanels(); updateShowcaseSummary(); });
-          host.appendChild(card);
-        });
-      }
-      $('#showModal').style.display='block'; $('#showModal').setAttribute('aria-hidden','false');
-    }
-    function closeShowcase(){ $('#showModal').style.display='none'; $('#showModal').setAttribute('aria-hidden','true'); }
-
-    function requestShowcase(l){
-      const hasFree = user.isPremium && (user.monthlyShowcaseUsed||0) < PREMIUM_FREE_SHOWCASE;
-      const price = user.isPremium? (hasFree? 0 : PRICE_SHOWCASE_PREMIUM_EXTRA) : PRICE_SHOWCASE_STANDARD;
-      toast(price===0? 'Ücretsiz vitrin hakkınız kullanıldı. Onaya gönderildi.' : `Ödeme (${fmtPrice(price)}) sonrası vitrin talebiniz onaya gidecek.`);
-      l.showcasePending=true; // admin onayı bekler
-      if(price===0){ user.monthlyShowcaseUsed=(user.monthlyShowcaseUsed||0)+1; }
-    }
-
-    // --- Profil Düzenle ---
-    function openEdit(){
-      $('#edCity').value=user.city||''; $('#edDistrict').value=user.district||''; $('#edOld').value=''; $('#edNew1').value=''; $('#edNew2').value='';
-      $('#edAvatar').style.backgroundImage=`url('${user.avatar||'/assets/img/avatar-default.png'}')`;
-      $('#edBio').value=user.bio||'';
-      $('#editModal').style.display='block'; $('#editModal').setAttribute('aria-hidden','false');
-    }
-    function closeEdit(){ $('#editModal').style.display='none'; $('#editModal').setAttribute('aria-hidden','true'); }
-    function saveEdit(){
-      const old=$('#edOld').value.trim(); const n1=$('#edNew1').value.trim(); const n2=$('#edNew2').value.trim();
-      if((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
-      if(n1 && n1.length<6){ toast('Yeni şifre en az 6 karakter olmalı'); return; }
-      if(n1!==n2){ toast('Yeni şifreler eşleşmiyor'); return; }
-      user.city=$('#edCity').value; user.district=$('#edDistrict').value; $('#uCity').textContent=user.city||'—';
-      user.bio=$('#edBio').value.trim(); $('#uBio').textContent=user.bio||'—';
-      const bg=$('#edAvatar').style.backgroundImage; if(bg){ const m=bg.match(/url\("?(.*)"?\)/); if(m){ user.avatar=m[1]; $('#avatar').style.backgroundImage=`url('${user.avatar}')`; }}
-      toast('Profil güncellendi'); closeEdit();
-    }
-
-    // --- Alt Bar parıltı ---
-    function startBarGlow(){ const bar=document.querySelector('.bottomBar'); let i=0; function paint(){ bar?.style.setProperty('--bbglow', COLORS[i%COLORS.length]); i=(i+1)%COLORS.length; } paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000); }
-
-    // --- Dış veri yükleme (index kaydı veya Firebase) ---
-    function loadExternalData(){
-      try{
-        if(window.__index){ // ör: SSR ya da preload edilmiş veri
-          Object.assign(user, window.__index.user||{});
-          (window.__index.listings||[]).forEach(x=>listings.push(x));
-        }
-      }catch(e){ console.warn('Veri yükleme hatası:', e); }
-    }
-
-    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-
-  // === Firestore entegrasyonu (Storage yok) ===
-(async () => {
-  const { auth, db, onAuthStateChanged } = window.__fb;
-  const { doc, getDoc, setDoc, serverTimestamp } = await import(
-  "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
-);
-
-  let __uid = null;
-
-  function applyProfileUI(){
-    const u = window.user || {};
-    const $ = (s)=>document.querySelector(s);
-    $("#uName").textContent = u.name || "—";
-    $("#uCity").textContent = u.city || "—";
-    $("#uPhone").textContent = u.phone || "—";
-    $("#uBio").textContent = u.bio || "—";
-    $("#avatar").style.backgroundImage = `url('${u.avatar || "/assets/img/avatar-default.png"}')`;
-    $("#pRole").textContent = u.isPremium ? "Premium Üye" : "Standart Üye";
-    $("#pPremiumBadge").style.display = u.isPremium ? "inline-flex" : "none";
-    $("#pVerifiedSeller").style.display = u.isVerified ? "inline-flex" : "none";
-    $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
-  }
-
-  // Giriş durumunu dinle → Firestore'dan kullanıcıyı yükle/oluştur
-  onAuthStateChanged(auth, async (u) => {
-    if (!u) { try { location.href = "/index.html"; } catch {} return; }
-    __uid = u.uid;
-
-    try {
-      const ref = doc(db, "users", __uid);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        Object.assign(window.user, snap.data());
-        applyProfileUI();
-      } else {
-        // İlk kez giren kullanıcı için minimal belge oluştur
-        const initial = {
-          name: u.displayName || "",
-          email: u.email || "",
-          isPremium: false,
-          isVerified: false,
-          avatar: window.user?.avatar || "/assets/img/avatar-default.png",
-          createdAt: serverTimestamp()
-        };
-        await setDoc(ref, initial, { merge: true });
-        Object.assign(window.user, initial);
-        applyProfileUI();
-      }
-    } catch (e) {
-      console.warn("Profil okuma/oluşturma hatası:", e);
-      try { window.toast("Profil yüklenemedi"); } catch {}
-    }
-  });
-
-  // Mevcut saveEdit'i Firestore yazacak şekilde genişlet
-  const __origSaveEdit = window.saveEdit;
-  window.saveEdit = async function () {
-    try { __origSaveEdit && __origSaveEdit(); } catch(e){ console.warn(e); }
-
-    if (!__uid) { try { window.toast("Giriş gerekli"); } catch {} return; }
-
-    const payload = {
-      name: document.querySelector("#uName") ? document.querySelector("#uName").textContent : "",
-      city: window.user.city || "",
-      district: window.user.district || "",
-      phone: window.user.phone || "",
-      bio: window.user.bio || "",
-      isPremium: !!window.user.isPremium,
-      isVerified: !!window.user.isVerified,
-      avatar: window.user.avatar || "/assets/img/avatar-default.png",
-      updatedAt: serverTimestamp()
-    };
-
-    try {
-      await setDoc(doc(db, "users", __uid), payload, { merge: true });
-      try { window.toast("Profil kaydedildi"); } catch {}
-    } catch (e) {
-      console.warn("Profil yazma hatası:", e);
-      try { window.toast("Kayıt hatası"); } catch {}
-    }
-  };
-})();
-</script>
-
+  <!-- Firebase init (kökten) -->
+  <script type="module" src="/firebase-init.js"></script>
+  <!-- Admin guard (rol = admin kontrolü) -->
+  <script type="module" src="/admin/js/admin-guard.js"></script>
+  <!-- Panel işlevleri (sekme aç-kapa router) -->
+  <script type="module" src="/admin/js/admin-panel.js"></script>
 </body>
 </html>
