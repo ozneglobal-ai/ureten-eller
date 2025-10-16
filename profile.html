@@ -72,7 +72,7 @@
     .toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
 
     .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,95vw);max-height:85vh;overflow:auto;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(180deg,#0c1426,#0b1220);padding:1rem;z-index:901;display:none;box-shadow:0 20px 80px #0008}
-    .close{position:absolute;right:.6rem;top:.6rem;border:1px solid var(--brd);background:#0b1220;border-radius:10px;padding:.25rem .5rem;cursor:pointer;font-weight:800}
+    .close{position:absolute;right:.6rem;top:.6rem;border:1px solid var(--brd);background:#0b1220;border-radius:10px;padding:.25rem .5rem;cursor:pointer;font-weight:800;color:#fff}
 
     .bottomBar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,#0a0f1c,#000);border-top:1px solid var(--brd);display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;color:#fff;z-index:100;box-shadow:0 0 0 1px var(--bbglow,#22d3ee),0 0 28px var(--bbglow,#22d3ee)}
     .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
@@ -101,8 +101,6 @@
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <button class="btn ghost" id="btnHome">Ana Sayfa</button>
-      <button class="btn primary" id="btnNew">+ İlan Ver</button>
     </div>
 
     <section class="head" aria-labelledby="pTitle">
@@ -113,12 +111,11 @@
           <span class="badge" id="pStatus">Doğrulanmamış</span>
           <span class="badge star" id="pPremiumBadge" style="display:none">⭐ Premium</span>
           <span class="badge verified" id="pVerifiedSeller" style="display:none">✅ Onaylı Satıcı</span>
-          <span class="mini" id="adminOnlyNote">(Üyelik türü ve doğrulama durumunu yalnızca admin değiştirebilir)</span>
+          <span class="mini" id="adminOnlyNote">(Üyelik türü ve doğrulama durumunu yalnızca ureteneller.com değiştirebilir)</span>
         </div>
       </div>
       <div class="row">
         <button class="btn" id="btnEdit">Profili Düzenle</button>
-        <button class="btn warn" id="btnPremium">⭐ Premium Başvuru</button>
       </div>
     </section>
 
@@ -234,9 +231,9 @@
       <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
       <span class="mini">Mesajlar</span>
     </button>
-    <button class="bbtn" id="navProfile" aria-current="page">
-      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-5.33 0-8 2.67-8 5v1h16v-1c0-2.33-2.67-5-8-5z"/></svg>
-      <span class="mini">Profil</span>
+    <button class="bbtn" id="navNoti" aria-current="page">
+      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="mini">Bildirimler</span>
     </button>
   </nav>
 
@@ -437,6 +434,8 @@
     // --- UI Başlat ---
     function boot(){
       loadExternalData();
+      hydrateFromAuth();
+      loadExternalData();
       const y=document.getElementById('yr'); if(y) y.textContent=new Date().getFullYear();
 
       // başlık & rozetler
@@ -474,10 +473,16 @@
       // alt bar animasyonu
       startBarGlow();
 
+      // Alt bar yönlendirmeleri (aktif)
+      const nh=$('#navHome'), nm=$('#navMsg'), nn=$('#navNoti');
+      nh && (nh.onclick=()=>location.href='/home.html');
+      nm && (nm.onclick=()=>location.href='/mesajlar.html');
+      nn && (nn.onclick=()=>location.href='/bildirimler.html');
+
       // butonlar
-      $('#btnHome').onclick=()=>location.href='/home.html';
-      $('#btnNew').onclick=()=>toast('İlan oluşturma sayfasına yönlendirin');
-      $('#btnPremium').onclick=()=>toast('Premium başvuru talebi admin onayına gitti');
+      $('#btnHome') && ($('#btnHome').onclick=()=>location.href='/home.html');
+      $('#btnNew') && ($('#btnNew').onclick=()=>toast('İlan oluşturma sayfasına yönlendirin'));
+      $('#btnPremium') && ($('#btnPremium').onclick=()=>toast('Premium başvuru talebi admin onayına gitti'));
       $('#btnPricing').onclick=openPricing; $('#prClose').onclick=closePricing;
       $('#btnPickShow').onclick=openShowcasePicker; $('#shClose').onclick=closeShowcase;
       $('#btnEdit').onclick=openEdit; $('#edClose').onclick=closeEdit; $('#edCancel').onclick=closeEdit; $('#edSave').onclick=saveEdit;
@@ -664,16 +669,29 @@
     // --- Dış veri yükleme (index kaydı veya Firebase) ---
     function loadExternalData(){
       try{
-        // Local storage'dan profil verilerini çek
         const raw = localStorage.getItem('ue_profile_user');
         if(raw){ Object.assign(user, JSON.parse(raw)); }
         if(!user.avatar){ user.avatar = '/assets/img/avatar-default.png'; }
-        // SSR / preload
         if(window.__index){
           Object.assign(user, window.__index.user||{});
           (window.__index.listings||[]).forEach(x=>listings.push(x));
         }
       }catch(e){ console.warn('Veri yükleme hatası:', e); }
+    }
+
+    // Auth/Registration'dan otomatik doldurma
+    function hydrateFromAuth(){
+      try{
+        let gUser = (window.firebase && window.firebase.auth && window.firebase.auth().currentUser) || null;
+        if(!gUser && window.__FIREBASE_USER){ gUser = window.__FIREBASE_USER; }
+        if(!gUser && window.__AUTH_USER){ gUser = window.__AUTH_USER; }
+        const reg = JSON.parse(localStorage.getItem('ue_registration')||'{}');
+        const auth = JSON.parse(localStorage.getItem('ue_auth_user')||'{}');
+        user.name = user.name || auth.name || auth.displayName || (gUser && (gUser.displayName||gUser.name)) || reg.name || user.name;
+        user.phone = user.phone || auth.phone || (gUser && gUser.phoneNumber) || reg.phone || user.phone;
+        user.city = user.city || reg.city || localStorage.getItem('ue_reg_city') || user.city;
+        localStorage.setItem('ue_profile_user', JSON.stringify(user));
+      }catch(e){ console.warn('Auth hydrate hatası:', e); }
     }
 
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
