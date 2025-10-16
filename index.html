@@ -683,37 +683,141 @@
   </script>
 
   <!-- Firebase (CDN modüler) — Proje kimliğinle entegre -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendEmailVerification,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup,updateProfile,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    sendEmailVerification, sendPasswordResetEmail,
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+    browserPopupRedirectResolver,
+    updateProfile, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, serverTimestamp, updateDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Verdiğin proje bilgileri
-    const firebaseConfig = {
-      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
-      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
-      projectId: "flutter-ai-playground-38ddf",
-      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
-      messagingSenderId: "4688234885",
-      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+  // Verdiğin proje bilgileri
+  const firebaseConfig = {
+    apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
+    authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
+    projectId: "flutter-ai-playground-38ddf",
+    storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
+    messagingSenderId: "4688234885",
+    appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const db = getFirestore(app);
+
+  // users/{uid} upsert
+  async function upsertUserProfile(u) {
+    const ref = doc(db, "users", u.uid);
+    const snap = await getDoc(ref);
+
+    const base = {
+      email: u.email || "",
+      displayName: u.displayName || "Kullanıcı",
+      providerIds: (u.providerData || []).map(p => p.providerId),
+      emailVerified: !!u.emailVerified,
+      role: "member",
+      lastLoginAt: serverTimestamp()
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    if (!snap.exists()) {
+      await setDoc(ref, { ...base, createdAt: serverTimestamp() }, { merge: true });
+    } else {
+      await updateDoc(ref, base);
+    }
+  }
 
-    // Window helper
-    window.UE = window.UE || {};
-    window.UE.firebase = {
-      auth,
-      async googlePopup(){ const res = await signInWithPopup(auth, provider); return res.user; },
-      async emailSignup({email, pass, displayName, username}){ const { user } = await createUserWithEmailAndPassword(auth, email, pass); if(displayName){ await updateProfile(user, { displayName }); } return user; },
-      async emailLogin(email, pass){ const { user } = await signInWithEmailAndPassword(auth, email, pass); return user; },
-      async sendVerify(){ if(!auth.currentUser) throw new Error("Kullanıcı oturumu yok."); await sendEmailVerification(auth.currentUser); },
-      async sendReset(email){ await sendPasswordResetEmail(auth, email); },
-      async logout(){ await signOut(auth); }
-    };
+  // Window helper API
+  let __ueGoogleBusy = false;
+  window.UE = window.UE || {};
+  window.UE.firebase = {
+    auth,
 
-    onAuthStateChanged(auth, (u)=>{ console.log("auth state:", u ? {uid:u.uid, email:u.email, emailVerified:u.emailVerified, name:u.displayName} : null); });
-  </script>
+    // Google: popup -> (engellenirse) redirect fallback
+    async googlePopup() {
+      if (__ueGoogleBusy) return;
+      __ueGoogleBusy = true;
+      try {
+        const res = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+        return res.user;
+      } catch (err) {
+        if (err && err.code === "auth/popup-blocked") {
+          await signInWithRedirect(auth, provider);
+          return null; // redirect dönüşünde tamamlanacak
+        }
+        if (err && err.code === "auth/cancelled-popup-request") {
+          return null; // eşzamanlı ikinci istek görmezden
+        }
+        throw err;
+      } finally {
+        __ueGoogleBusy = false;
+      }
+    },
+
+    async emailSignup({ email, pass, displayName, username }) {
+      const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+      if (displayName) { await updateProfile(user, { displayName }); }
+      return user;
+    },
+    async emailLogin(email, pass) {
+      const { user } = await signInWithEmailAndPassword(auth, email, pass);
+      return user;
+    },
+    async sendVerify() {
+      if (!auth.currentUser) throw new Error("Kullanıcı oturumu yok.");
+      await sendEmailVerification(auth.currentUser);
+    },
+    async sendReset(email) { await sendPasswordResetEmail(auth, email); },
+    async logout() { await signOut(auth); }
+  };
+
+  // Redirect dönüşünü yakala (popup engellenirse)
+  getRedirectResult(auth)
+    .then((res) => {
+      if (res && res.user) {
+        console.log("redirect user", { uid: res.user.uid, email: res.user.email });
+      }
+    })
+    .catch((e) => console.error("redirect error", e));
+
+  // Oturum izleme + users/{uid} upsert + basit UI geri bildirimi
+  onAuthStateChanged(auth, (u) => {
+    if (!u) {
+      console.log("auth state: null (çıkışta)");
+      return;
+    }
+    console.log("auth state:", {
+      uid: u.uid,
+      email: u.email,
+      emailVerified: u.emailVerified,
+      displayName: u.displayName,
+      providerIds: u.providerData.map(p => p.providerId)
+    });
+
+    // E-posta/şifre ile doğrulanmamışsa UI'de uyar
+    if (!u.emailVerified && u.providerData.every(p => p.providerId === "password")) {
+      const box = document.getElementById('lmsg') || document.getElementById('smsg');
+      if (box) box.textContent = "E-posta doğrulaması bekleniyor. Lütfen mailinizi kontrol edin.";
+      return;
+    }
+
+    // users/{uid} upsert
+    (async () => {
+      try { await upsertUserProfile(u); }
+      catch (e) { console.error("user upsert error", e); }
+    })();
+
+    // küçük bir UI geri bildirimi
+    const box = document.getElementById('lmsg');
+    if (box) box.textContent = "Giriş başarılı ✔︎";
+  });
+</script>
+
 </body>
 </html>
