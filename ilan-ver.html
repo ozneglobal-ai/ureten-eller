@@ -1,4 +1,4 @@
-<!-- /ilan-olustur.html (PROD – Firebase aktif) -->
+<!-- /ilan-olustur.html (PROD – Firebase aktif, önizleme/sil/değiştir eklendi) -->
 <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
@@ -36,8 +36,14 @@
     .topbar{display:flex; gap:10px; justify-content:space-between; align-items:center; position:relative}
     .lang{display:flex; gap:8px; align-items:center}
     .close{position:absolute; right:0; top:0; transform:translate(8px,-8px); width:32px; height:32px; border-radius:999px; border:1px solid var(--brd); background:#0d1b2a; color:#fff; font-size:18px; line-height:30px; text-align:center; cursor:pointer}
+
+    /* --- Önizleme  --- */
+    .previews{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
+    .thumb{position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;background:#0b1326}
+    .thumb img{display:block;width:100%;height:90px;object-fit:cover}
+    .thumb .act{position:absolute;inset:auto 6px 6px auto;display:flex;gap:6px}
+    .thumb button{background:#0d1b2a;border:1px solid var(--brd);padding:4px 8px;border-radius:8px;font-size:12px}
   </style>
-  <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -113,6 +119,7 @@
           <label id="l_images">Fotoğraflar (en fazla 5)</label>
           <input id="images" type="file" accept="image/*" multiple />
           <div class="hint" id="h_images">JPG/PNG/WebP, en fazla 5 dosya.</div>
+          <div id="previews" class="previews"></div>
           <div class="progress" style="margin-top:8px"><div id="upBar" class="bar" style="background:var(--accent)"></div></div>
           <div id="upHint" class="hint">—</div>
         </div>
@@ -145,14 +152,15 @@
     const trim = (s)=>(s||"").trim();
     const sleep = (ms)=> new Promise(r=>setTimeout(r,ms));
 
-    // === Firebase (Flutter AI Playground) ===
+    // === Firebase (URETEN ELLER – PROD) ===
     const firebaseConfig = {
-      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
-      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
-      projectId: "flutter-ai-playground-38ddf",
-      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
-      messagingSenderId: "4688234885",
-      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+      apiKey: "AIzaSyCd9GjP6CDA8i4XByhXDHyESy-g_DHVwvQ",
+      authDomain: "ureteneller-ecaac.firebaseapp.com",
+      projectId: "ureteneller-ecaac",
+      storageBucket: "ureteneller-ecaac.firebasestorage.app",
+      messagingSenderId: "368042877151",
+      appId: "1:368042877151:web:ee0879fc4717928079c96a",
+      measurementId: "G-BJHKN8V4RQ"
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -281,7 +289,7 @@
         ['halhal','Halhal','Anklet','Fußkettchen','خلخال'],
         ['bros','Broş','Brooch','Brosche','بروش'],
         ['set','Setler','Sets','Sets','طقم'],
-        ['isimli','İsimli/kişiye özel','Personalized','Personalisierte','مخصص بالاسم'],
+        ['isimli','İsimli/kişiye özel','Personalized','Personalisierte','مخصص بالisim'],
         ['makrome','Makrome','Macrame','Makramee','مكرمية'],
         ['dogaltas','Doğal taş','Gemstone','Edelstein','أحجار طبيعية'],
         ['recine','Reçine','Resin','Harz','ريزن'],
@@ -416,6 +424,70 @@
       for(const f of files){ if(!/image\/(jpeg|png|webp)/.test(f.type)) throw new Error(t.errors.filetype); }
     }
 
+    // === Image picker with preview (max 5, delete/replace) ===
+    let __selectedFiles = [];  // File[]
+
+    function syncInputFromSelected(){
+      const dt = new DataTransfer();
+      __selectedFiles.forEach(f => dt.items.add(f));
+      $('images').files = dt.files;
+    }
+
+    function renderPreviews(){
+      const box = $('previews');
+      box.innerHTML = '';
+      __selectedFiles.forEach((f, idx) => {
+        const url = URL.createObjectURL(f);
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `
+          <img src="${url}" alt="photo ${idx+1}">
+          <div class="act">
+            <button type="button" data-act="replace" data-i="${idx}">Değiştir</button>
+            <button type="button" data-act="del" data-i="${idx}">Sil</button>
+          </div>`;
+        box.appendChild(div);
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      });
+
+      box.querySelectorAll('button').forEach(btn=>{
+        const i = Number(btn.dataset.i);
+        if(btn.dataset.act === 'del'){
+          btn.onclick = ()=>{
+            __selectedFiles.splice(i,1);
+            syncInputFromSelected();
+            renderPreviews();
+            $('upBar').style.width='0%'; $('upHint').textContent='—';
+          };
+        }else if(btn.dataset.act === 'replace'){
+          const tmp = document.createElement('input');
+          tmp.type='file'; tmp.accept='image/*';
+          tmp.onchange = ()=>{
+            const nf = tmp.files && tmp.files[0];
+            if(!nf) return;
+            if(!/image\/(jpeg|png|webp)/.test(nf.type)) return alert('Sadece JPG/PNG/WebP');
+            __selectedFiles[i] = nf;
+            syncInputFromSelected();
+            renderPreviews();
+          };
+          tmp.click();
+        }
+      });
+    }
+
+    // inputa yeni dosya ekleme (mevcutların üstüne, max 5)
+    $('images').addEventListener('change', ()=>{
+      const incoming = Array.from($('images').files || []);
+      for(const f of incoming){
+        if(__selectedFiles.length >= 5) break;
+        if(!/image\/(jpeg|png|webp)/.test(f.type)) continue;
+        __selectedFiles.push(f);
+      }
+      syncInputFromSelected();
+      renderPreviews();
+      $('upBar').style.width='0%'; $('upHint').textContent='—';
+    });
+
     // === Upload ===
     async function uploadImages(uid, listingId, files){
       if(!files || files.length===0) return [];
@@ -487,11 +559,16 @@
         };
 
         const created = await addDoc(collection(db,'listings'), base);
-        const urls = await uploadImages(u.uid, created.id, $('images').files);
+
+        // Önizlemeden ya da inputtan gönder
+        const filesToSend = __selectedFiles.length ? __selectedFiles : $('images').files;
+        const urls = await uploadImages(u.uid, created.id, filesToSend);
         await setDoc(doc(db,'listings',created.id), { images: urls }, { merge:true });
 
         const msg=$('msg'); msg.className='success'; msg.textContent='Gönderildi. Onay sonrası yayınlanacaktır.';
-        await sleep(800); e.target.reset(); $('upBar').style.width='0%'; $('upHint').textContent='—';
+        __selectedFiles = []; syncInputFromSelected(); renderPreviews();
+        $('upBar').style.width='0%'; $('upHint').textContent='—';
+        await sleep(800); e.target.reset();
       }catch(err){ const m=$('msg'); m.className='error'; m.textContent=err.message||String(err); }
     });
 
