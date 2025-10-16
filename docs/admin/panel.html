@@ -6,9 +6,9 @@
   <title>Admin Panel • Üreten Eller</title>
   <link rel="stylesheet" href="/admin/css/admin.css"/>
   <style>
-    /* Tüm sekmeler başlangıçta gizli */
-    .section{display:none}
-    .section.active{display:block}
+    /* Başlangıçta her şeyi gizle */
+    .section{display:none!important}
+    .section.active{display:block!important}
     .menu a.active{font-weight:700; text-decoration:underline}
   </style>
 </head>
@@ -32,8 +32,8 @@
   </aside>
 
   <main class="content">
-    <!-- İPUCU: İlk yüklemede hiçbir sekme görünmez; menüden tıkla -->
-    <p id="emptyHint" class="muted" style="margin:16px 0;">Bir bölüm açmak için soldan seçim yapın.</p>
+    <!-- İPUCU: ilk açılışta sadece bu satır görünür -->
+    <p id="emptyHint" class="muted" style="margin:16px 0;">Soldan bir bölüm seçin.</p>
 
     <section id="dashboard" class="section" data-section="dashboard">
       <h1>Günlük Özet</h1>
@@ -56,9 +56,7 @@
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-            <tr>
-              <th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th>
-            </tr>
+          <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
           </thead>
           <tbody id="usersBody"></tbody>
         </table>
@@ -81,9 +79,7 @@
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-            <tr>
-              <th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th>
-            </tr>
+          <tr><th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th></tr>
           </thead>
           <tbody id="listingsBody"></tbody>
         </table>
@@ -145,11 +141,8 @@
     </section>
   </main>
 
-  <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
-  <!-- Admin guard (rol = admin kontrolü) -->
   <script type="module" src="/admin/js/admin-guard.js"></script>
-  <!-- Panel işlevleri (sekme aç-kapa router) -->
   <script type="module" src="/admin/js/admin-panel.js"></script>
 </body>
 </html>
