@@ -81,13 +81,13 @@
     .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
 
     /* Canlı destek */
-    .chat{position:fixed;right:16px;bottom:76px;width:min(380px,92vw);border:1px solid var(--brd);border-radius:16px;background:linear-gradient(180deg,#0c1426,#0b1220);display:none;z-index:902}
+    .chat{position:fixed;right:16px;bottom:76px;width:min(380px,92vw);border:1px solid var(--brd);border-radius:16px;background:#fff;color:#000;display:none;z-index:904}
     .chatHead{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;border-bottom:1px solid var(--brd)}
     .chatBody{max-height:50vh;overflow:auto;padding:.6rem}
-    .chatMsg{border:1px solid var(--brd);border-radius:12px;padding:.45rem .6rem;margin:.3rem 0;max-width:80%}
-    .chatMsg.me{margin-left:auto;background:#0a162c}
+    .chatMsg{border:1px solid var(--brd);border-radius:12px;padding:.45rem .6rem;margin:.3rem 0;max-width:80%;background:var(--c1);color:#fff}
+    .chatMsg.me{margin-left:auto;background:#000;color:#fff}
     .chatFoot{display:flex;gap:.4rem;padding:.6rem;border-top:1px solid var(--brd)}
-    .chatFoot input{flex:1;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:var(--ink)}
+    .chatFoot input{flex:1;background:#fff;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:#000}
 
     @media(max-width:520px){
       .cards{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
@@ -310,9 +310,8 @@
         legal:{title:"Yasal", contact:"İletişim / Impressum", privacy:"Gizlilik Politikası", kvkk:"KVKK Aydınlatma", cookies:"Çerez Politikası", terms:"Kullanım Şartları", distance:"Mesafeli Satış Sözleşmesi", pref:"Ön Bilgilendirme Formu", delivery:"Teslimat & İade", rules:"Topluluk Kuralları", banned:"Yasaklı Ürünler", all:"Tüm Yasal Metinler", brand:"Üreten Eller"},
         slogans:[
           "El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler",
-          "Glutensiz & vegan var","Sıcacık örgüler","Doğal sabun & kozmetik","Yöresel kışlıklar","Taze reçeller",
-          "Özenle el işi","Emekle gelen kalite","Her ilmekte sevgi","Evden eve güven","Doğum günü setleri",
           "Şık takılar","Makrome ile şıklık","Kokularla huzur","Bebekler için güvenli","Geleneksel tarifler",
+          "Özenle el işi","Emekle gelen kalite","Her ilmekte sevgi","Evden eve güven","Doğum günü setleri",
           "Katkısız tatlar","Komşundan sofrana","Ustaların buluşması","Lezzet ve tasarım","Sevgiyle üretildi"
         ],
         cats:{
@@ -373,6 +372,13 @@
         slogans:["قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة","خالٍ من الغلوتين ونباتي","دفء الحياكة","صابون طبيعي وتجميل","مونة تقليدية","مربّى طازج","مصنوع بعناية","جودة مع جهد","حب في كل غرزة","ثقة من منزل لمنزل","أطقم عيد الميلاد","مجوهرات أنيقة","أناقة بالمكرمية","روائح مريحة","آمن للأطفال","وصفات تقليدية","طعم بلا إضافات","من الجار إلى المائدة","اجتماع الحرفيين","طعم وتصميم","مصنوع بالمحبة"],
         cats:{order:["food","cake","jar","winter","diet","jew","kid","knit","sew","mac","home","candle","soap","toys"]}
       }
+    };
+    // Çok dilli canlı destek metinleri
+    const CHAT_TEXT={
+      tr:{welcome1:"Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?",welcome2:"Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Bunların dışında yazabilirsiniz.",transfer:"Tamam, sizi ilgili birime aktarıyorum..."},
+      en:{welcome1:"Welcome to Üreten Eller live support. How can I help you?",welcome2:"Please state your issue... 1=Premium membership 2=Showcase listings 3=Account issue 4=You can also type anything else.",transfer:"Alright, transferring you to the relevant team..."},
+      de:{welcome1:"Willkommen beim Üreten Eller Live‑Support. Wie kann ich helfen?",welcome2:"Bitte schildern Sie Ihr Anliegen... 1=Premium‑Mitgliedschaft 2=Schaufenster‑Anzeigen 3=Mitgliedsproblem 4=Sie können auch frei schreiben.",transfer:"Alles klar, ich leite Sie an das zuständige Team weiter..."},
+      ar:{welcome1:"مرحبًا بكم في دعم Üreten Eller المباشر. كيف يمكنني المساعدة؟",welcome2:"يرجى ذكر مشكلتك... 1=عضوية بريميوم 2=إعلانات الواجهة 3=مشكلة العضوية 4=يمكنك الكتابة بما تشاء.",transfer:"حسنًا، سأحوّلك إلى الفريق المختص..."}
     };
     let LANG=localStorage.getItem('ue_lang')||'tr';
 
@@ -494,13 +500,13 @@
     }
 
     // === Canlı Destek ===
-    function openChat(){ const c=$('#chat'); if(!c) return; c.style.display='block'; }
+    function openChat(){ const c=$('#chat'); if(!c) return; c.style.display='block'; const body=$('#chatBody'); const T=(CHAT_TEXT[LANG]||CHAT_TEXT.tr); if(body && body.children.length===0){ push(T.welcome1,false); push(T.welcome2,false); } }
     function closeChat(){ const c=$('#chat'); if(!c) return; c.style.display='none'; }
     function bindChat(){
       const bubble=$('#chatBubble'); if(bubble){ bubble.onclick=()=>{ const c=$('#chat'); if(!c) return; c.style.display = (c.style.display==='block')?'none':'block'; }; }
       const body=$('#chatBody'); const input=$('#chatInput'); const send=$('#chatSend');
       function push(text,me=false){ const m=document.createElement('div'); m.className='chatMsg'+(me?' me':''); m.textContent=text; body.appendChild(m); body.scrollTop=body.scrollHeight; }
-      if(send) send.onclick=()=>{ const v=(input.value||'').trim(); if(!v) return; push(v,true); input.value=''; setTimeout(()=>push('Size en kısa sürede geri döneceğiz.'),600); };
+      if(send) send.onclick=()=>{ const v=(input.value||'').trim(); if(!v) return; push(v,true); input.value=''; const T=(CHAT_TEXT[LANG]||CHAT_TEXT.tr); setTimeout(()=>push(T.transfer,false),400); };
       if(input) input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); send.click(); } });
       // İSTEK 4: X tuşu tüm mesajları SİLER ve geri gelmez
       const btnClose=$('#chatClose'); if(btnClose){ btnClose.onclick=()=>{ body.innerHTML=''; closeChat(); }; }
