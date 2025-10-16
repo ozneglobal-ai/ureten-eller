@@ -641,7 +641,6 @@ async function handleAvatarFile(e){
 
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
-    <script type="module">
   // Firestore entegrasyonu (Storage yok)
   const { auth, db, onAuthStateChanged } = window.__fb;
   const { doc, getDoc, setDoc, serverTimestamp } = await import(
