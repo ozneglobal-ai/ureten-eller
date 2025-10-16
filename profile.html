@@ -113,6 +113,7 @@
           <span class="badge" id="pStatus">Doğrulanmamış</span>
           <span class="badge star" id="pPremiumBadge" style="display:none">⭐ Premium</span>
           <span class="badge verified" id="pVerifiedSeller" style="display:none">✅ Onaylı Satıcı</span>
+          <span class="mini" id="adminOnlyNote">(Üyelik türü ve doğrulama durumunu yalnızca admin değiştirebilir)</span>
         </div>
       </div>
       <div class="row">
@@ -140,7 +141,7 @@
           <div class="kv"><label>Şehir</label><strong id="uCity">—</strong></div>
           <div class="kv"><label>Telefon</label><strong id="uPhone">—</strong></div>
           <div class="kv"><label>Kimlik Doğrulama</label><strong id="uKyc">Gerekli</strong></div>
-          <span class="mini">Güven için kimlik ve adres doğrulaması önerilir.</span>
+          <span class="mini">Bu alanı yalnızca admin doğrular. Güven için kimlik ve adres doğrulaması önerilir.</span>
           <span id="changeAvatar" class="changeLink">Fotoğrafı Değiştir</span>
         </div>
       </div>
@@ -247,7 +248,7 @@
       <div class="row" style="justify-content:space-between"><span>Premium üyeler: aylık ücretsiz vitrin</span><strong>1 ilan</strong></div>
       <div class="row" style="justify-content:space-between"><span>Premium: ekstra vitrin</span><strong id="pricePremiumExtra">199 TL</strong></div>
       <div class="row" style="justify-content:space-between"><span>Standart: vitrin</span><strong id="priceStandard">249 TL</strong></div>
-      <div class="notice mini">Vitrin başvuruları admin onayıyla yayına alınır.</div>
+      <div class="notice mini">Vitrin başvuruları ureteneller.com ekibi incelemesinden sonra yayına alınır.</div>
     </div>
   </div>
 
@@ -273,21 +274,90 @@
           <label class="mini">Şehir (İl)</label>
           <select id="edCity" style="width:100%;margin:.25rem 0 .6rem;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem">
             <option value="">Seçiniz…</option>
-            <option>İstanbul</option>
+            <option>Adana</option>
+            <option>Adıyaman</option>
+            <option>Afyonkarahisar</option>
+            <option>Ağrı</option>
+            <option>Aksaray</option>
+            <option>Amasya</option>
             <option>Ankara</option>
-            <option>İzmir</option>
-            <option>Bursa</option>
             <option>Antalya</option>
+            <option>Ardahan</option>
+            <option>Artvin</option>
+            <option>Aydın</option>
+            <option>Balıkesir</option>
+            <option>Bartın</option>
+            <option>Batman</option>
+            <option>Bayburt</option>
+            <option>Bilecik</option>
+            <option>Bingöl</option>
+            <option>Bitlis</option>
+            <option>Bolu</option>
+            <option>Burdur</option>
+            <option>Bursa</option>
+            <option>Çanakkale</option>
+            <option>Çankırı</option>
+            <option>Çorum</option>
+            <option>Denizli</option>
+            <option>Diyarbakır</option>
+            <option>Düzce</option>
+            <option>Edirne</option>
+            <option>Elazığ</option>
+            <option>Erzincan</option>
+            <option>Erzurum</option>
+            <option>Eskişehir</option>
+            <option>Gaziantep</option>
+            <option>Giresun</option>
+            <option>Gümüşhane</option>
+            <option>Hakkâri</option>
+            <option>Hatay</option>
+            <option>Iğdır</option>
+            <option>Isparta</option>
+            <option>İstanbul</option>
+            <option>İzmir</option>
+            <option>Kahramanmaraş</option>
+            <option>Karabük</option>
+            <option>Karaman</option>
+            <option>Kars</option>
+            <option>Kastamonu</option>
+            <option>Kayseri</option>
+            <option>Kırıkkale</option>
+            <option>Kırklareli</option>
+            <option>Kırşehir</option>
+            <option>Kilis</option>
+            <option>Kocaeli</option>
+            <option>Konya</option>
+            <option>Kütahya</option>
+            <option>Malatya</option>
+            <option>Manisa</option>
+            <option>Mardin</option>
+            <option>Mersin</option>
+            <option>Muğla</option>
+            <option>Muş</option>
+            <option>Nevşehir</option>
+            <option>Niğde</option>
+            <option>Ordu</option>
+            <option>Osmaniye</option>
+            <option>Rize</option>
+            <option>Sakarya</option>
+            <option>Samsun</option>
+            <option>Siirt</option>
+            <option>Sinop</option>
+            <option>Sivas</option>
+            <option>Şanlıurfa</option>
+            <option>Şırnak</option>
+            <option>Tekirdağ</option>
+            <option>Tokat</option>
+            <option>Trabzon</option>
+            <option>Tunceli</option>
+            <option>Uşak</option>
+            <option>Van</option>
+            <option>Yalova</option>
+            <option>Yozgat</option>
+            <option>Zonguldak</option>
           </select>
           <label class="mini">İlçe</label>
-          <select id="edDistrict" style="width:100%;margin:.25rem 0;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem">
-            <option value="">Seçiniz…</option>
-            <option>Üsküdar</option>
-            <option>Kadıköy</option>
-            <option>Beşiktaş</option>
-            <option>Bağcılar</option>
-            <option>Ümraniye</option>
-          </select>
+          <input id="edDistrict" type="text" placeholder="İlçe (manuel yazın)" style="width:100%;margin:.25rem 0;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem" \/>
         </div>
       </div>
     </div>
@@ -320,6 +390,17 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script src="/i18n.js"></script>
+  <script type="module">
+    // Firebase config (güncel)
+    window.__FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
+      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
+      projectId: "flutter-ai-playground-38ddf",
+      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
+      messagingSenderId: "4688234885",
+      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+    };
+  </script>
   <script>
     // --- Sabitler ---
     const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
@@ -539,12 +620,7 @@
           const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
           card.innerHTML=`
             <a class=\"thumb\" style=\"background-image:url('${l.photo||''}')\"></a>
-            <div class=\"meta\">
-              <div class=\"row\" style=\"justify-content:space-between\"><div class=\"title\">${l.title||''}</div><div class=\"price\">${fmtPrice(l.price||0)}</div></div>
-              <div class=\"row\" style=\"margin-top:.5rem\">
-                <button class=\"btn primary\" data-act=\"pick\" data-id=\"${l.id}\">Vitrine Öner</button>
-              </div>
-            </div>`;
+            <div class=\"meta\">\n              <div class=\"row\" style=\"justify-content:space-between\"><div class=\"title\">${l.title||''}</div><div class=\"price\">${fmtPrice(l.price||0)}</div></div>\n              <div class=\"row\" style=\"margin-top:.5rem\">\n                <button class=\"btn primary\" data-act=\"pick\" data-id=\"${l.id}\">Vitrine Öner</button>\n              </div>\n            </div>`;
           card.querySelector('[data-act="pick"]').addEventListener('click',()=>{ requestShowcase(l); closeShowcase(); paintAllPanels(); updateShowcaseSummary(); });
           host.appendChild(card);
         });
@@ -572,6 +648,7 @@
     function saveEdit(){
       const old=$('#edOld').value.trim(); const n1=$('#edNew1').value.trim(); const n2=$('#edNew2').value.trim();
       if((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
+
       if(n1 && n1.length<6){ toast('Yeni şifre en az 6 karakter olmalı'); return; }
       if(n1!==n2){ toast('Yeni şifreler eşleşmiyor'); return; }
       user.city=$('#edCity').value; user.district=$('#edDistrict').value; $('#uCity').textContent=user.city||'—';
@@ -587,14 +664,15 @@
     // --- Dış veri yükleme (index kaydı veya Firebase) ---
     function loadExternalData(){
       try{
-        if(window.__index){ // ör: SSR ya da preload edilmiş veri
+        // Local storage'dan profil verilerini çek
+        const raw = localStorage.getItem('ue_profile_user');
+        if(raw){ Object.assign(user, JSON.parse(raw)); }
+        if(!user.avatar){ user.avatar = '/assets/img/avatar-default.png'; }
+        // SSR / preload
+        if(window.__index){
           Object.assign(user, window.__index.user||{});
           (window.__index.listings||[]).forEach(x=>listings.push(x));
         }
-        // TODO: Firebase SDK ile doldurma (auth + firestore)
-        // 1) const uid = auth.currentUser.uid
-        // 2) const u = await getDoc(doc(db,'users',uid))
-        // 3) const qs = await getDocs(query(collection(db,'listings'), where('owner','==',uid)))
       }catch(e){ console.warn('Veri yükleme hatası:', e); }
     }
 
