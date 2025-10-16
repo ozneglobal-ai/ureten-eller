@@ -57,6 +57,10 @@ window.UE.firebase = {
 };
 
 // (Opsiyonel debug)
-onAuthStateChanged(auth, (u)=>{
-  // console.log("auth state:", u ? {uid:u.uid, email:u.email, verified:u.emailVerified} : null);
+onAuthStateChanged(auth, (u) => {
+  // console.log("auth state:", u ? { uid: u.uid, email: u.email, verified: u.emailVerified } : null);
 });
+
+// Global kısa yol (profile.html burayı bekliyor)
+window.__fb = { app, auth, db, storage, onAuthStateChanged };
+
