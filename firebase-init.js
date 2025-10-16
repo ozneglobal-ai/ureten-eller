@@ -64,3 +64,53 @@ onAuthStateChanged(auth, (u) => {
 // Global kısa yol (profile.html burayı bekliyor)
 window.__fb = { app, auth, db, storage, onAuthStateChanged };
 
+// === Live Support helpers ===
+import {
+  getFirestore, doc, setDoc, addDoc, collection, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import {
+  getAuth, signInAnonymously
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+export const support = {
+  async ensureConversation(){
+    const auth = getAuth();
+    if (!auth.currentUser) { try{ await signInAnonymously(auth); }catch{} }
+    const u = auth.currentUser; if (!u) return null;
+    const db = getFirestore();
+    const ref = doc(db, "conversations", u.uid);
+    await setDoc(ref, {
+      userId: u.uid,
+      userName: u.displayName || "",
+      userEmail: u.email || "",
+      lastMessage: "",
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return { db, uid: u.uid };
+  },
+  async sendMessage(text){
+    const auth = getAuth(); const db = getFirestore();
+    if (!auth.currentUser) { await signInAnonymously(auth); }
+    const u = auth.currentUser; if (!u) throw new Error("auth-missing");
+    const ref = doc(db, "conversations", u.uid);
+    await addDoc(collection(ref, "messages"), {
+      text: String(text||""),
+      from: u.uid,
+      createdAt: serverTimestamp()
+    });
+    await setDoc(ref, {
+      lastMessage: String(text||""),
+      updatedAt: serverTimestamp(),
+      userId: u.uid,
+      userName: u.displayName || "",
+      userEmail: u.email || ""
+    }, { merge: true });
+    return u.uid;
+  }
+};
+
+// inline scriptler erişsin
+window.UE = window.UE || {};
+window.UE.support = support;
+
+
