@@ -641,11 +641,17 @@ async function handleAvatarFile(e){
 
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
-  // Firestore entegrasyonu (Storage yok)
+  <script type="module">
+  // Firestore entegrasyonu (Storage kullanmadan)
   const { auth, db, onAuthStateChanged } = window.__fb;
-  const { doc, getDoc, setDoc, serverTimestamp } = await import(
-    "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js"
-  );
+
+  // Firestore fonksiyonları (CDN'den modül olarak import)
+  import {
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
   let __uid = null;
 
@@ -663,9 +669,9 @@ async function handleAvatarFile(e){
     $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
   }
 
-  // Giriş durumunu dinle → Firestore'dan kullanıcıyı yükle
+  // Giriş durumunu dinle → Firestore'dan kullanıcıyı yükle/oluştur
   onAuthStateChanged(auth, async (u) => {
-    if (!u) { try{ location.href="/index.html"; }catch{}; return; }
+    if (!u) { try { location.href = "/index.html"; } catch {} return; }
     __uid = u.uid;
 
     try {
@@ -677,17 +683,21 @@ async function handleAvatarFile(e){
         applyProfileUI();
       } else {
         // İlk kez giren kullanıcı için minimal belge oluştur
-        await setDoc(ref, {
+        const initial = {
           name: u.displayName || "",
           email: u.email || "",
           isPremium: false,
           isVerified: false,
-          avatar: window.user.avatar || "/assets/img/avatar-default.png",
+          avatar: window.user?.avatar || "/assets/img/avatar-default.png",
           createdAt: serverTimestamp()
-        }, { merge: true });
+        };
+        await setDoc(ref, initial, { merge: true });
+        Object.assign(window.user, initial);
+        applyProfileUI();
       }
     } catch (e) {
       console.warn("Profil okuma/oluşturma hatası:", e);
+      try { window.toast("Profil yüklenemedi"); } catch {}
     }
   });
 
@@ -696,10 +706,10 @@ async function handleAvatarFile(e){
   window.saveEdit = async function () {
     try { __origSaveEdit && __origSaveEdit(); } catch(e){ console.warn(e); }
 
-    if (!__uid) { try{ window.toast("Giriş gerekli"); }catch{} return; }
+    if (!__uid) { try { window.toast("Giriş gerekli"); } catch {} return; }
 
     const payload = {
-      name: document.querySelector("#uName")?.textContent || "",
+      name: document.querySelector("#uName") ? document.querySelector("#uName").textContent : "",
       city: window.user.city || "",
       district: window.user.district || "",
       phone: window.user.phone || "",
@@ -712,10 +722,10 @@ async function handleAvatarFile(e){
 
     try {
       await setDoc(doc(db, "users", __uid), payload, { merge: true });
-      try{ window.toast("Profil kaydedildi"); }catch{}
+      try { window.toast("Profil kaydedildi"); } catch {}
     } catch (e) {
       console.warn("Profil yazma hatası:", e);
-      try{ window.toast("Kayıt hatası"); }catch{}
+      try { window.toast("Kayıt hatası"); } catch {}
     }
   };
 </script>
