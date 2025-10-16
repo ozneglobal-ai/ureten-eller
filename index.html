@@ -808,15 +808,19 @@
     }
 
     // users/{uid} upsert
-    (async () => {
-      try { await upsertUserProfile(u); }
-      catch (e) { console.error("user upsert error", e); }
-    })();
+(async () => {
+  try { await upsertUserProfile(u); }
+  catch (e) { console.error("user upsert error", e); }
+})();
 
-    // küçük bir UI geri bildirimi
-    const box = document.getElementById('lmsg');
-    if (box) box.textContent = "Giriş başarılı ✔︎";
-  });
+// küçük bir UI geri bildirimi
+const box = document.getElementById('lmsg');
+if (box) box.textContent = "Giriş başarılı ✔︎";
+
+// 0.5 sn sonra ana sayfaya geç
+setTimeout(() => {
+  window.location.href = "home.html"; // gerekirse yolu kendi host yapına göre değiştir
+}, 500);
 </script>
 
 </body>
