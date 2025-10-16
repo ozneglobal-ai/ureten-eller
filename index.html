@@ -1,23 +1,20 @@
 <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
-  <!-- GSI Client ID'nizi buraya girin (yoksa boş bırakın; fallback popup çalışır) -->
+  <!-- İsteğe bağlı: GSI Client ID'nizi ekleyin (eklemezseniz Firebase Google Popup çalışır) -->
   <script>window.UE_GSI_CLIENT_ID="";</script>
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="meta.title">Giriş • Üreten Eller</title>
   <meta name="description" content="" data-i18n-attr="content:meta.description" />
+  <meta name="theme-color" content="#0b1220">
 
   <!-- Icons -->
   <link rel="icon" type="image/png" sizes="32x32"  href="/assets/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
-  <meta name="theme-color" content="#0b1220">
   <link rel="preload" as="image" href="/assets/icons/ureteneller.png">
-
-  <!-- Firebase init (module) -->
-  <script type="module" src="/firebase-init.js"></script>
 
   <style>
     :root{
@@ -58,7 +55,7 @@
     #googleFallback{display:none}
 
     .grid{display:grid;gap:1rem;margin:1.25rem auto;grid-template-columns:1fr}
-    .cards{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+    .cards{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));align-items:stretch}
     .card{position:relative;border:1px solid var(--brd);border-radius:16px;padding:.9rem;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;transition:box-shadow .25s,transform .15s}
     .card .title{font-weight:900}
     .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
@@ -92,9 +89,36 @@
     @media(min-width:760px){.legal{grid-template-columns:repeat(5,1fr)}}
     .legal a{display:block;color:#d1d5db;word-break:break-word}
     .lang select{background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.45rem .6rem}
+
+    /* === Kategori kartları glow davranışı (eski haliyle) === */
+    @media(max-width:520px){
+      .cards{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+      .listGrid{grid-template-columns:1fr}
+      .card{box-shadow:0 0 0 1px var(--glow, #22d3ee),0 0 18px var(--glow, #22d3ee)}
+      .card:hover{transform:none}
+      .card:active{transform:scale(.98)}
+    }
+    .card{box-shadow:0 0 0 1px var(--glow, #22d3ee),0 0 18px var(--glow, #22d3ee)}
+    .card:hover{transform:none}
+    .card:active{transform:scale(.98)}
+
+    /* --- Testimonials --- */
+    .twrap{max-width:1200px;margin:1.25rem auto 0;padding:0 1rem}
+    .thead{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.6rem}
+    .tgrid{display:grid;gap:.85rem;grid-template-columns:repeat(1,minmax(0,1fr))}
+    @media(min-width:600px){.tgrid{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:960px){.tgrid{grid-template-columns:repeat(3,1fr)}}
+    .tcard{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(180deg,#0c1426,#0b1220);padding:.9rem}
+    .tmeta{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem}
+    .avatar{width:36px;height:36px;border-radius:50%;border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;background:#0a162c;font-weight:800}
+    .tname{font-weight:800}
+    .tcity{color:#9ca3af}
+    .tall{margin-top:.5rem;text-align:center}
+    .tbadge{display:inline-block;padding:.35rem .75rem;border-radius:999px;font-weight:900;letter-spacing:.2px;background:linear-gradient(90deg,#f59e0b,#ef4444,#8b5cf6,#06b6d4);background-size:300% 100%;animation:shine 5s linear infinite;color:#0b1220;box-shadow:0 0 0 1px #ffffff1a,0 0 30px #06b6d470}
+    @keyframes shine{0%{background-position:0 0}100%{background-position:300% 0}}
   </style>
 
-  <!-- GSI (tek kaynak) -->
+  <!-- Google Identity Services (GSI) -->
   <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogle()"></script>
 </head>
 <body>
@@ -543,7 +567,7 @@
       const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || '';
       const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' };
       const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||'');
-      // TODO: backend login exchange if needed
+      // Burada backend token exchange yapmak istersen devreye al.
     }
 
     function initGoogle(){
@@ -552,34 +576,18 @@
         const ctn=document.getElementById("googleBtn");
         const fb=document.getElementById("googleFallback");
 
-        // Eğer GSI hazır değilse veya CID yoksa => fallback butonu (Firebase popup)
+        // GSI yoksa veya CID boşsa => Firebase Google Popup fallback
         if(!CID || !window.google || !google.accounts || !google.accounts.id){
-          if(fb){
-            fb.style.display='inline-flex';
-            fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup();
-          }
+          if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup(); }
           return;
         }
-
-        google.accounts.id.initialize({
-          client_id: CID,
-          callback: handleGoogleCredential,
-          ux_mode: "popup",
-          auto_select: false
-        });
-        if(ctn){
-          google.accounts.id.renderButton(ctn, {
-            theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'left', width: 320
-          });
-        }
+        google.accounts.id.initialize({ client_id: CID, callback: handleGoogleCredential, ux_mode: "popup", auto_select: false });
+        if(ctn){ google.accounts.id.renderButton(ctn, { theme:'outline', size:'large', shape:'pill', text:'continue_with', logo_alignment:'left', width:320 }); }
         if(fb) fb.style.display='none';
       }catch(e){
         console.error("GSI init", e);
         const fb=document.getElementById("googleFallback");
-        if(fb){
-          fb.style.display='inline-flex';
-          fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup();
-        }
+        if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup(); }
       }
     }
 
@@ -601,20 +609,8 @@
         signupForm.style.display = login ? 'none' : 'block';
         if (login) setTimeout(initGoogle,0);
       }
-      function open(which){
-        if(bd) bd.style.display='block';
-        box.style.display='block';
-        box.setAttribute('aria-hidden','false');
-        box.classList.add('center');
-        if(grid) grid.classList.remove('two');
-        sel(which);
-      }
-      function close(){
-        box.style.display='none';
-        box.classList.remove('center');
-        box.setAttribute('aria-hidden','true');
-        if(bd) bd.style.display='none';
-      }
+      function open(which){ if(bd) bd.style.display='block'; box.style.display='block'; box.setAttribute('aria-hidden','false'); box.classList.add('center'); if(grid) grid.classList.remove('two'); sel(which); }
+      function close(){ box.style.display='none'; box.classList.remove('center'); box.setAttribute('aria-hidden','true'); if(bd) bd.style.display='none'; }
 
       document.getElementById('openSignup').onclick=()=>open('signup');
       document.getElementById('openLogin').onclick=()=>open('login');
@@ -625,43 +621,31 @@
 
       // Show/Hide password
       document.addEventListener('click',(e)=>{
-        const b=e.target.closest('[data-toggle]');
-        if(!b) return;
-        const id=b.getAttribute('data-toggle');
-        const el=document.getElementById(id);
-        if(!el) return;
-        const isPwd = el.type==='password';
-        el.type = isPwd ? 'text' : 'password';
+        const b=e.target.closest('[data-toggle]'); if(!b) return;
+        const id=b.getAttribute('data-toggle'); const el=document.getElementById(id); if(!el) return;
+        const isPwd = el.type==='password'; el.type = isPwd ? 'text' : 'password';
         b.textContent = isPwd ? (tget('auth.hide')||'Gizle') : (tget('auth.show')||'Göster');
       });
 
-      // Submit handlers
+      // Login submit
       document.getElementById('loginSubmit').onclick=async(e)=>{
         e.preventDefault();
         const email=document.getElementById('lemail').value.trim();
         const pass=document.getElementById('lpass').value;
-        const box=document.getElementById('lmsg');
-        box.textContent='…';
-        try{
-          await window.UE.firebase.emailLogin(email,pass);
-          box.textContent='✔︎';
-        }catch(err){
-          box.textContent=err.message||String(err);
-        }
+        const box=document.getElementById('lmsg'); box.textContent='…';
+        try{ await window.UE.firebase.emailLogin(email,pass); box.textContent='✔︎'; }
+        catch(err){ box.textContent=err.message||String(err); }
       };
 
+      // Forgot password
       document.getElementById('forgotBtn').onclick=async()=>{
         const email=document.getElementById('lemail').value.trim();
-        const box=document.getElementById('lmsg');
-        if(!email){ box.textContent='E-posta giriniz.'; return; }
-        try{
-          await window.UE.firebase.sendReset(email);
-          box.textContent='Sıfırlama e-postası gönderildi.';
-        }catch(err){
-          box.textContent=err.message||String(err);
-        }
+        const box=document.getElementById('lmsg'); if(!email){ box.textContent='E-posta giriniz.'; return; }
+        try{ await window.UE.firebase.sendReset(email); box.textContent='Sıfırlama e-postası gönderildi.'; }
+        catch(err){ box.textContent=err.message||String(err); }
       };
 
+      // Signup submit
       document.getElementById('signupSubmit').onclick=async(e)=>{
         e.preventDefault();
         const email=document.getElementById('semail').value.trim();
@@ -673,38 +657,63 @@
         const kvkk=document.getElementById('ckKvkk').checked;
         const cookies=document.getElementById('ckCookies').checked;
         const box=document.getElementById('smsg');
-
         if(pass!==pass2){ box.textContent='Şifreler eşleşmiyor.'; return; }
         if(!kvkk || !cookies){ box.textContent='KVKK ve Çerez onaylarını işaretleyiniz.'; return; }
-
         box.textContent='…';
         try{
           await window.UE.firebase.emailSignup({email,pass,displayName:`${name} ${surname}`.trim(), username});
           await window.UE.firebase.sendVerify();
           box.textContent='Kayıt başarılı. Lütfen e-posta doğrulamasını tamamlayın.';
-        }catch(err){
-          box.textContent=err.message||String(err);
-        }
+        }catch(err){ box.textContent=err.message||String(err); }
       };
     }
 
     // === Boot ===
     function applyLang(){
-      setDir(); applyText(); renderCats(); startCardGlow();
+      setDir(); applyText(); renderCats(); startCardGlow(5000);
       renderSlogans(); renderListings(); renderTestimonials(); startTestimonialRotation();
       const y=document.getElementById('yr'); if(y) y.textContent = new Date().getFullYear();
     }
     function initLangSelect(){
-      const sel=document.getElementById('langSel');
-      if(!sel) return;
-      sel.value = LANG;
+      const sel=document.getElementById('langSel'); if(!sel) return; sel.value = LANG;
       sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); applyLang(); };
     }
-    function boot(){
-      try{ initLangSelect(); applyLang(); bindAuthPanel(); }
-      catch(e){ console.error(e); }
-    }
+    function boot(){ try{ initLangSelect(); applyLang(); bindAuthPanel(); } catch(e){ console.error(e); } }
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+  </script>
+
+  <!-- Firebase (CDN modüler) — Proje kimliğinle entegre -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendEmailVerification,sendPasswordResetEmail,GoogleAuthProvider,signInWithPopup,updateProfile,signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Verdiğin proje bilgileri
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
+      authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
+      projectId: "flutter-ai-playground-38ddf",
+      storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
+      messagingSenderId: "4688234885",
+      appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // Window helper
+    window.UE = window.UE || {};
+    window.UE.firebase = {
+      auth,
+      async googlePopup(){ const res = await signInWithPopup(auth, provider); return res.user; },
+      async emailSignup({email, pass, displayName, username}){ const { user } = await createUserWithEmailAndPassword(auth, email, pass); if(displayName){ await updateProfile(user, { displayName }); } return user; },
+      async emailLogin(email, pass){ const { user } = await signInWithEmailAndPassword(auth, email, pass); return user; },
+      async sendVerify(){ if(!auth.currentUser) throw new Error("Kullanıcı oturumu yok."); await sendEmailVerification(auth.currentUser); },
+      async sendReset(email){ await sendPasswordResetEmail(auth, email); },
+      async logout(){ await signOut(auth); }
+    };
+
+    onAuthStateChanged(auth, (u)=>{ console.log("auth state:", u ? {uid:u.uid, email:u.email, emailVerified:u.emailVerified, name:u.displayName} : null); });
   </script>
 </body>
 </html>
