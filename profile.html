@@ -525,8 +525,8 @@ if (url) {
       arr.forEach((l,i)=>{
         const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
         card.innerHTML = 
-  <a class="thumb" style="background-image:url('${l.photo || ''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
-  <div class="meta">
+   <a class="thumb" style="background-image:url('${l.photo || ''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
+  <div class="meta"
     <div class="row" style="justify-content:space-between">
       <div class="title">${l.title || ''}</div>
       <div class="price">${fmtPrice(l.price || 0)}</div>
