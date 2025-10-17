@@ -400,21 +400,21 @@
 
   // ======= NAV / ÜST BAR =======
   async function logout(){
-    try{ await window.UE?.firebase?.logout?.(); }catch(_){}
+    try{ await window.UE?.firebase?.logout?.(); }catch(_){/* sessiz */}
     try{
       if (window.google?.accounts?.id){
         google.accounts.id.disableAutoSelect();
         const email = window.__fb?.auth?.currentUser?.email;
-        if (email) try{ google.accounts.id.revoke(email, ()=>{}); }catch(_){}
+        if (email) try{ google.accounts.id.revoke(email, ()=>{}); }catch(_){/* sessiz */}
       }
-    }catch(_){}
+    }catch(_){/* sessiz */}
     try{
       sessionStorage.clear();
       for (let i=0; i<localStorage.length; i++){
         const k=localStorage.key(i);
         if (k && k.startsWith('firebase:authUser:')){ localStorage.removeItem(k); i--; }
       }
-    }catch(_){}
+    }catch(_){/* sessiz */}
     window.location.href='/index.html';
   }
   function bindNav(){
@@ -456,7 +456,7 @@
     });
   }
 
-  // ======= CANLI DESTEK (Güvenli no-op şeması) =======
+  // ======= CANLI DESTEK (Sadece destek API'si; kullanıcı profiline yazmaz) =======
   let CHAT_BACKEND_OK = true;
   function openChat(){
     const c = document.getElementById('chat'); if (!c) return;
@@ -520,7 +520,7 @@
 
     document.getElementById('chatClose')?.addEventListener('click', async ()=>{
       try{ if (CHAT_BACKEND_OK) await window.UE?.support?.deleteConversation?.(); }
-      catch(_){}
+      catch(_){/* sessiz */}
       finally{ const b=document.getElementById('chatBody'); if(b) b.innerHTML=''; closeChat(); }
     });
     document.getElementById('chatMin')?.addEventListener('click', ()=> closeChat());
@@ -528,7 +528,7 @@
     // İlk açılışta arka ucu test et (anonim yetkin yoksa local moda düş)
     Promise.resolve().then(async ()=>{
       try { await window.UE?.support?.ensureConversation?.(); } catch(_) { CHAT_BACKEND_OK=false; }
-      openChat();
+      // Not: openChat() OTOMATİK açmaz, sadece balon tıklanınca açılır
     });
   }
 
