@@ -699,23 +699,47 @@
     }
 
     // --- Profil Düzenle ---
-    function openEdit(){
-      $('#edCity').value=user.city||''; $('#edDistrict').value=user.district||''; $('#edOld').value=''; $('#edNew1').value=''; $('#edNew2').value='';
-      $('#edAvatar').style.backgroundImage=`url('${user.avatar||'/assets/img/avatar-default.png'}')`;
-      $('#edBio').value=user.bio||'';
-      $('#editModal').style.display='block'; $('#editModal').setAttribute('aria-hidden','false');
-    }
-    function closeEdit(){ $('#editModal').style.display='none'; $('#editModal').setAttribute('aria-hidden','true'); }
-    function saveEdit(){
-      const old=$('#edOld').value.trim(); const n1=$('#edNew1').value.trim(); const n2=$('#edNew2').value.trim();
-      if((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
-      if(n1 && n1.length<6){ toast('Yeni şifre en az 6 karakter olmalı'); return; }
-      if(n1!==n2){ toast('Yeni şifreler eşleşmiyor'); return; }
-      user.city=$('#edCity').value; user.district=$('#edDistrict').value; $('#uCity').textContent=user.city||'—';
-      user.bio=$('#edBio').value.trim(); $('#uBio').textContent=user.bio||'—';
-      const bg=$('#edAvatar').style.backgroundImage; if(bg){ const m=bg.match(/url\("?(.*)"?\)/); if(m){ user.avatar=m[1]; $('#avatar').style.backgroundImage=`url('${user.avatar}')`; }}
-      toast('Profil güncellendi'); closeEdit();
-    }
+function openEdit(){
+  $('#edCity').value = user.city || '';
+  $('#edDistrict').value = user.district || '';
+  $('#edOld').value = '';
+  $('#edNew1').value = '';
+  $('#edNew2').value = '';
+  $('#edAvatar').style.backgroundImage = `url('${user.avatar || '/assets/img/avatar-default.png'}')`;
+  $('#edBio').value = user.bio || '';
+  $('#editModal').style.display = 'block';
+  $('#editModal').setAttribute('aria-hidden','false');
+}
+
+function closeEdit(){
+  $('#editModal').style.display = 'none';
+  $('#editModal').setAttribute('aria-hidden','true');
+}
+
+function saveEdit(){
+  const old = $('#edOld').value.trim();
+  const n1  = $('#edNew1').value.trim();
+  const n2  = $('#edNew2').value.trim();
+
+  if ((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
+  if (n1 && n1.length < 6) { toast('Yeni şifre en az 6 karakter olmalı'); return; }
+  if (n1 !== n2) { toast('Yeni şifreler eşleşmiyor'); return; }
+
+  user.city = $('#edCity').value;
+  user.district = $('#edDistrict').value;
+  $('#uCity').textContent = user.city || '—';
+
+  user.bio = $('#edBio').value.trim();
+  $('#uBio').textContent = user.bio || '—';
+
+  // Avatar'a DOKUNMA: handleAvatarFile içinde Cloudinary URL ile güncelleniyor.
+  if (user.avatar) {
+    $('#avatar').style.backgroundImage = `url('${user.avatar}')`;
+  }
+
+  toast('Profil güncellendi');
+  closeEdit();
+}
 
     // --- Alt Bar parıltı ---
     function startBarGlow(){ const bar=document.querySelector('.bottomBar'); let i=0; function paint(){ if(bar) bar.style.setProperty('--bbglow', COLORS[i%COLORS.length]); i=(i+1)%COLORS.length; } paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000); }
