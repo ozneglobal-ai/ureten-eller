@@ -95,8 +95,13 @@
     select.lang{background:#0b1220;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem}
   </style>
   <script type="module" src="/firebase-init.js"></script>
-  <!-- Cloudinary yapılandırmasını burada override edebilirsin: -->
-  <!-- <script>window.__CLOUDINARY={cloudName:'dbntnzogo',uploadPreset:'unsigned_avatars'};</script> -->
+  <!-- Cloudinary yapılandırması: BULUT kullanılıyor -->
+<script>
+  window.__CLOUDINARY = {
+    cloudName: 'dbntnzogo',
+    uploadPreset: 'yEhMC1YiG-m_m91G1XmHJxdNaz4'
+  };
+</script>
 </head>
 <body>
   <div class="wrap">
@@ -382,9 +387,19 @@
 
     async function handleAvatarFile(e){
       const f=e.target.files&&e.target.files[0]; if(!f) return; const localPreview=URL.createObjectURL(f); $('#edAvatar').style.backgroundImage=`url('${localPreview}')`;
+      // Profil avatarında da geçici önizleme göster
+      const avatarEl = document.getElementById('avatar');
+      const prevBg = avatarEl ? avatarEl.style.backgroundImage : '';
+      if(avatarEl){ avatarEl.style.backgroundImage = `url('${localPreview}')`; }
       const url=await uploadToCloudinary(f); if(url){ user.avatar=url; cacheSave(); $('#avatar').style.backgroundImage=`url('${url}')`;
         try{ if(window.__fb?.auth?.currentUser){ const uid=window.__fb.auth.currentUser.uid; const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js'); await setDoc(doc(window.__fb.db,'users',uid),{avatar:url,updatedAt:serverTimestamp()},{merge:true}); } }catch(err){ console.warn('FS avatar',err); }
-        toast('Avatar yüklendi ✅'); }
+        toast('Avatar yüklendi ✅');
+      } else {
+        // Başarısızsa önizlemeyi geri al
+        const avatarEl2 = document.getElementById('avatar');
+        if(avatarEl2){ avatarEl2.style.backgroundImage = prevBg || "url('/assets/img/avatar-default.png')"; }
+        toast('Yükleme hatası: Cloudinary cloudName/preset kontrol et');
+      }
     }
 
     // --- UI çizim ---
