@@ -207,12 +207,16 @@ async function loadFirebaseConfig(){
 }
 await loadFirebaseConfig();
 
-// Firestore yardımcıları (db değildir)
-import {
-  collection, doc, getDocs, setDoc, query, orderBy, limit,
-  serverTimestamp, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-__firestoreLoaded = true;
+// Firestore yardımcıları (db değildir) — Canvas/önizleme dostu dinamik import
+let collection, doc, getDocs, setDoc, query, orderBy, limit, serverTimestamp, onSnapshot;
+try {
+  const ff = await import("https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js");
+  ({ collection, doc, getDocs, setDoc, query, orderBy, limit, serverTimestamp, onSnapshot } = ff);
+  __firestoreLoaded = true;
+} catch (e) {
+  console.warn('Firestore helpers yüklenemedi (önizleme ortamı olabilir):', e);
+  __firestoreLoaded = false;
+}
 
     // === KULLANICILAR ===
     let usersBody = document.getElementById('usersBody');
