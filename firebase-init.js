@@ -27,7 +27,7 @@ export const firebaseConfig = {
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
 
-// === UYGULAMA VE SERVISLER (EXPORT EDİLİYOR) ===
+// === UYGULAMA VE SERVİSLER (EXPORT EDİLİYOR) ===
 export const app     = initializeApp(firebaseConfig);
 export const auth    = getAuth(app);
 export const db      = getFirestore(app);
@@ -41,7 +41,7 @@ window.UE.firebase = {
   async googlePopup(){ const res = await signInWithPopup(auth, provider); return res.user; },
   async emailSignup({email, pass, displayName}){
     const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-    if(displayName){ await updateProfile(user, { displayName }); }
+    if (displayName){ await updateProfile(user, { displayName }); }
     return user;
   },
   async emailLogin(email, pass){
@@ -49,7 +49,7 @@ window.UE.firebase = {
     return user;
   },
   async sendVerify(){
-    if(!auth.currentUser) throw new Error("Kullanıcı oturumu yok.");
+    if (!auth.currentUser) throw new Error("Kullanıcı oturumu yok.");
     await sendEmailVerification(auth.currentUser);
   },
   async sendReset(email){ await sendPasswordResetEmail(auth, email); },
@@ -66,19 +66,22 @@ window.__fb = { app, auth, db, storage, onAuthStateChanged };
 
 // === Live Support helpers ===
 import {
-  getFirestore, doc, setDoc, addDoc, collection, serverTimestamp
+  getFirestore as _getFirestore,
+  doc, setDoc, addDoc, collection, serverTimestamp,
+  getDocs, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import {
-  getAuth, signInAnonymously
+  getAuth as _getAuth, signInAnonymously
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 export const support = {
   async ensureConversation(){
-    const auth = getAuth();
-    if (!auth.currentUser) { try{ await signInAnonymously(auth); }catch{} }
-    const u = auth.currentUser; if (!u) return null;
-    const db = getFirestore();
-    const ref = doc(db, "conversations", u.uid);
+    const a = _getAuth();
+    if (!a.currentUser) { try { await signInAnonymously(a); } catch {} }
+    const u = a.currentUser; if (!u) return null;
+
+    const fdb = _getFirestore();
+    const ref = doc(fdb, "conversations", u.uid);
     await setDoc(ref, {
       userId: u.uid,
       userName: u.displayName || "",
@@ -86,31 +89,52 @@ export const support = {
       lastMessage: "",
       updatedAt: serverTimestamp()
     }, { merge: true });
-    return { db, uid: u.uid };
+    return { db: fdb, uid: u.uid };
   },
+
   async sendMessage(text){
-    const auth = getAuth(); const db = getFirestore();
-    if (!auth.currentUser) { await signInAnonymously(auth); }
-    const u = auth.currentUser; if (!u) throw new Error("auth-missing");
-    const ref = doc(db, "conversations", u.uid);
+    const a = _getAuth(); const fdb = _getFirestore();
+    if (!a.currentUser) { await signInAnonymously(a); }
+    const u = a.currentUser; if (!u) throw new Error("auth-missing");
+
+    const ref = doc(fdb, "conversations", u.uid);
+    // alt koleksiyon: messages/*
     await addDoc(collection(ref, "messages"), {
-      text: String(text||""),
+      text: String(text || ""),
       from: u.uid,
       createdAt: serverTimestamp()
     });
+    // üst konuşma özetini güncelle
     await setDoc(ref, {
-      lastMessage: String(text||""),
+      lastMessage: String(text || ""),
       updatedAt: serverTimestamp(),
       userId: u.uid,
       userName: u.displayName || "",
       userEmail: u.email || ""
     }, { merge: true });
+
     return u.uid;
+  },
+
+  // Tüm konuşmayı (kullanıcı + bot mesajları dahil) KALICI sil
+  async deleteConversation(){
+    const a = _getAuth(); const fdb = _getFirestore();
+    if (!a.currentUser) { await signInAnonymously(a); }
+    const u = a.currentUser; if (!u) throw new Error("auth-missing");
+
+    const convRef = doc(fdb, "conversations", u.uid);
+
+    // alt koleksiyon messages/* sil
+    const msgsSnap = await getDocs(collection(convRef, "messages"));
+    for (const d of msgsSnap.docs){
+      await deleteDoc(d.ref);
+    }
+
+    // üst konuşma dokümanını sil
+    await deleteDoc(convRef);
   }
 };
 
 // inline scriptler erişsin
 window.UE = window.UE || {};
 window.UE.support = support;
-
-
