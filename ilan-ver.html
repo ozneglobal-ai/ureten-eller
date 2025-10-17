@@ -26,6 +26,7 @@
     button{cursor:pointer;border:1px solid var(--brd);background:#0d1b2a;color:var(--ink);padding:8px 12px;border-radius:10px}
     button.primary{background:var(--accent);color:#03222a;border:none;font-weight:700}
     .hint{font-size:12px;color:var(--muted)}
+    .closeX{background:#fff;color:#0b1220;border:none;width:36px;height:36px;border-radius:999px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
   </style>
   <script type="module" src="/firebase-init.js"></script>
 </head>
@@ -46,6 +47,7 @@
             <option value="de">Deutsch</option>
           </select>
         </div>
+        <button id="closeBtn" class="closeX" aria-label="Kapat">×</button>
       </div>
 
       <form id="listingForm" novalidate style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
@@ -94,11 +96,6 @@
           <label id="l_images">Fotoğraflar (en fazla 5)</label>
           <input id="images" type="file" accept="image/*" multiple />
           <div id="previews" class="previews"></div>
-        </div>
-
-        <div class="full" style="display:flex; align-items:center; gap:10px; grid-column:1/-1">
-          <input id="showcase" type="checkbox" />
-          <label id="l_showcase" for="showcase">Vitrin (yalnızca PREMIUM)</label>
         </div>
 
         <div class="full actions" style="grid-column:1/-1">
@@ -328,7 +325,7 @@
       $('l_description').textContent=t.l_description; $('h_description').textContent=t.h_description;
       $('l_category').textContent=t.l_category; $('l_subcategory').textContent=t.l_subcategory;
       $('l_province').textContent=t.l_province; $('l_district').textContent=t.l_district;
-      $('l_price').textContent=t.l_price; $('l_stock').textContent=t.l_stock; $('l_images').textContent=t.l_images; $('l_showcase').textContent=t.l_showcase;
+      $('l_price').textContent=t.l_price; $('l_stock').textContent=t.l_stock; $('l_images').textContent=t.l_images; if($('l_showcase')) $('l_showcase').textContent=t.l_showcase;
       $('b_cancel').textContent=t.btn_cancel; $('b_submit').textContent=t.btn_submit;
       $('title').placeholder=t.placeholders.title; $('description').placeholder=t.placeholders.desc; $('districtInput').placeholder=t.placeholders.district; $('price').placeholder=t.placeholders.price;
       const stock=$('stock'); stock.options[0].textContent=t.stock.var; stock.options[1].textContent=t.stock.yok;
@@ -424,6 +421,8 @@
 
     // Başlangıç dili TR
     const sel=$('langSel'); sel.value='tr'; setLang('tr');
+    // Üstteki X (home.html)
+    const closeBtn = $('closeBtn'); if(closeBtn){ closeBtn.onclick = ()=>{ window.location.href='home.html'; }; }
     sel.addEventListener('change', ()=> setLang(sel.value));
     // İller & kategoriler ilk doldurma
     fillProvinces('tr'); rebuildCategories('tr');
