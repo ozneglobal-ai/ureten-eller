@@ -528,29 +528,29 @@
       $('#openLive').onclick=()=>{ close(); openChat(); };
     }
 
-https://chatgpt.com/c/68f1957e-30c8-8332-ab86-3bd0cecc5219#:~:text=//%20%3D%3D%3D%20Yard%C4%B1mc%C4%B1lar%20%26%20Sabitler%20%3D%3D%3D%0Awindow,ue_lang%27)%7C%7C%27tr%27
+// === Yardımcılar & Sabitler (çakışmasız) ===
+(function (g){
+  if (!('$' in g))   g.$  = (s)=>document.querySelector(s);
+  if (!('$$' in g))  g.$$ = (s)=>Array.from(document.querySelectorAll(s));
 
-// === Yardımcılar & Sabitler ===
-window.$  = window.$  || ((s)=>document.querySelector(s));
-window.$$ = window.$$ || ((s)=>Array.from(document.querySelectorAll(s)));
-const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
-let LANG=localStorage.getItem('ue_lang')||'tr';
+  if (!('COLORS' in g)) g.COLORS = ["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
+  if (!('LANG'   in g)) g.LANG   = (localStorage.getItem('ue_lang')||'tr');
 
-// === i18n (kısaltılmış; uzun I18N varsa bunu kullanma, üstteki uzun sürümü koru) ===
-const I18N = {
-  tr:{ nav:{home:"Ana Sayfa", msg:"Mesajlar", noti:"Bildirimler"}, top:{give:"İlan Ver", profile:"Profil", logout:"Çıkış", premium:"⭐ Premium Ol"}, legal:{title:"Yasal", contact:"İletişim / Impressum", privacy:"Gizlilik Politikası", kvkk:"KVKK Aydınlatma", cookies:"Çerez Politikası", terms:"Kullanım Şartları", distance:"Mesafeli Satış Sözleşmesi", pref:"Ön Bilgilendirme Formu", delivery:"Teslimat & İade", rules:"Topluluk Kuralları", banned:"Yasaklı Ürünler", all:"Tüm Yasal Metinler", brand:"Üreten Eller"}, slogans:["El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler"], cats:{order:["food","cake","jew","home"]}},
-  en:{ nav:{home:"Home", msg:"Messages", noti:"Notifications"}, top:{give:"Post Listing", profile:"Profile", logout:"Logout", premium:"⭐ Get Premium"}, legal:{title:"Legal", contact:"Contact / Impressum", privacy:"Privacy Policy", kvkk:"KVKK Notice", cookies:"Cookie Policy", terms:"Terms of Use", distance:"Distance Sales Agreement", pref:"Pre-Information Form", delivery:"Delivery & Returns", rules:"Community Rules", banned:"Prohibited Products", all:"All Legal Texts", brand:"Üreten Eller"}, slogans:["Valuing handicraft","Direct trade","Support local makers","Homemade goodness","Personalized gifts"], cats:{order:["food","cake","jew","home"]}},
-  de:{ nav:{home:"Startseite", msg:"Nachrichten", noti:"Benachrichtigungen"}, top:{give:"Anzeige aufgeben", profile:"Profil", logout:"Abmelden", premium:"⭐ Premium"}, legal:{title:"Rechtliches", contact:"Kontakt / Impressum", privacy:"Datenschutz", kvkk:"KVKK-Hinweis", cookies:"Cookie-Richtlinie", terms:"Nutzungsbedingungen", distance:"Fernabsatzvertrag", pref:"Vorabinformation", delivery:"Lieferung & Rückgabe", rules:"Community-Regeln", banned:"Verbotene Produkte", all:"Alle Rechtstexte", brand:"Üreten Eller"}, slogans:["Wert fürs Handwerk","Direkter Handel","Lokale Macher unterstützen","Hausgemacht","Personalisierte Geschenke"], cats:{order:["food","cake","jew","home"]}},
-  ar:{ nav:{home:"الرئيسية", msg:"الرسائل", noti:"الإشعارات"}, top:{give:"أنشئ إعلانًا", profile:"الملف الشخصي", logout:"تسجيل الخروج", premium:"⭐ بريميوم"}, legal:{title:"نصوص قانونية", contact:"اتصال / إمبريسوم", privacy:"سياسة الخصوصية", kvkk:"إشعار KVKK", cookies:"سياسة الكوكيز", terms:"شروط الاستخدام", distance:"عقد البيع عن بُعد", pref:"معلومات مسبقة", delivery:"التسليم والإرجاع", rules:"قواعد المجتمع", banned:"منتجات محظورة", all:"جميع النصوص القانونية", brand:"Üreten Eller"}, slogans:["قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة"], cats:{order:["food","cake","jew","home"]}}
-};
+  // Eğer sayfada uzun I18N zaten varsa onu kullan; yoksa bu kısaltılmış seti yükle
+  g.I18N = g.I18N || {
+    tr:{ nav:{home:"Ana Sayfa", msg:"Mesajlar", noti:"Bildirimler"}, top:{give:"İlan Ver", profile:"Profil", logout:"Çıkış", premium:"⭐ Premium Ol"}, legal:{title:"Yasal", contact:"İletişim / Impressum", privacy:"Gizlilik Politikası", kvkk:"KVKK Aydınlatma", cookies:"Çerez Politikası", terms:"Kullanım Şartları", distance:"Mesafeli Satış Sözleşmesi", pref:"Ön Bilgilendirme Formu", delivery:"Teslimat & İade", rules:"Topluluk Kuralları", banned:"Yasaklı Ürünler", all:"Tüm Yasal Metinler", brand:"Üreten Eller"}, slogans:["El emeğine değer!","Aracısız alışveriş","Yerel üreticiye destek","Ev yapımı lezzetler","Kişiye özel hediyeler"], cats:{order:["food","cake","jew","home"]}},
+    en:{ nav:{home:"Home", msg:"Messages", noti:"Notifications"}, top:{give:"Post Listing", profile:"Profile", logout:"Logout", premium:"⭐ Get Premium"}, legal:{title:"Legal", contact:"Contact / Impressum", privacy:"Privacy Policy", kvkk:"KVKK Notice", cookies:"Cookie Policy", terms:"Terms of Use", distance:"Distance Sales Agreement", pref:"Pre-Information Form", delivery:"Delivery & Returns", rules:"Community Rules", banned:"Prohibited Products", all:"All Legal Texts", brand:"Üreten Eller"}, slogans:["Valuing handicraft","Direct trade","Support local makers","Homemade goodness","Personalized gifts"], cats:{order:["food","cake","jew","home"]}},
+    de:{ nav:{home:"Startseite", msg:"Nachrichten", noti:"Benachrichtigungen"}, top:{give:"Anzeige aufgeben", profile:"Profil", logout:"Abmelden", premium:"⭐ Premium"}, legal:{title:"Rechtliches", contact:"Kontakt / Impressum", privacy:"Datenschutz", kvkk:"KVKK-Hinweis", cookies:"Cookie-Richtlinie", terms:"Nutzungsbedingungen", distance:"Fernabsatzvertrag", pref:"Vorabinformation", delivery:"Lieferung & Rückgabe", rules:"Community-Regeln", banned:"Verbotene Produkte", all:"Alle Rechtstexte", brand:"Üreten Eller"}, slogans:["Wert fürs Handwerk","Direkter Handel","Lokale Macher unterstützen","Hausgemacht","Personalisierte Geschenke"], cats:{order:["food","cake","jew","home"]}},
+    ar:{ nav:{home:"الرئيسية", msg:"الرسائل", noti:"الإشعارات"}, top:{give:"أنشئ إعلانًا", profile:"الملف الشخصي", logout:"تسجيل الخروج", premium:"⭐ بريميوم"}, legal:{title:"نصوص قانونية", contact:"اتصال / إمبريسوم", privacy:"سياسة الخصوصية", kvkk:"إشعار KVKK", cookies:"سياسة الكوكيز", terms:"شروط الاستخدام", distance:"عقد البيع عن بُعد", pref:"معلومات مسبقة", delivery:"التسليم والإرجاع", rules:"قواعد المجتمع", banned:"منتجات محظورة", all:"جميع النصوص القانونية", brand:"Üreten Eller"}, slogans:["قيمة لعمل اليد","تجارة مباشرة","ندعم المنتجين المحليين","نكهة منزلية","هدايا مخصّصة"], cats:{order:["food","cake","jew","home"]}}
+  };
 
-// Canlı destek metinleri
-const CHAT_TEXT={
-  tr:{welcome1:"Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?",welcome2:"Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.",transfer:"Tamam, sizi ilgili birime aktarıyorum..."},
-  en:{welcome1:"Welcome to Üreten Eller live support. How can I help you?",welcome2:"Please state your issue... 1=Premium 2=Showcase 3=Account 4=Other.",transfer:"Alright, transferring you to the relevant team..."},
-  de:{welcome1:"Willkommen beim Üreten Eller Live-Support. Wie kann ich helfen?",welcome2:"Bitte Anliegen nennen... 1=Premium 2=Schaufenster 3=Konto 4=Sonstiges.",transfer:"Alles klar, ich leite Sie an das zuständige Team weiter..."},
-  ar:{welcome1:"مرحبًا بكم في دعم Üreten Eller المباشر. كيف يمكنني المساعدة؟",welcome2:"يرجى ذكر مشكلتك... 1=بريميوم 2=إعلانات الواجهة 3=الحساب 4=أخرى.",transfer:"حسنًا، سأحوّلك إلى الفريق المختص..."}
-};
+  g.CHAT_TEXT = g.CHAT_TEXT || {
+    tr:{welcome1:"Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?",welcome2:"Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.",transfer:"Tamam, sizi ilgili birime aktarıyorum..."},
+    en:{welcome1:"Welcome to Üreten Eller live support. How can I help you?",welcome2:"Please state your issue... 1=Premium 2=Showcase 3=Account 4=Other.",transfer:"Alright, transferring you to the relevant team..."},
+    de:{welcome1:"Willkommen beim Üreten Eller Live-Support. Wie kann ich helfen?",welcome2:"Bitte Anliegen nennen... 1=Premium 2=Schaufenster 3=Konto 4=Sonstiges.",transfer:"Alles klar, ich leite Sie an das zuständige Team weiter..."},
+    ar:{welcome1:"مرحبًا بكم في دعم Üreten Eller المباشر. كيف يمكنني المساعدة؟",welcome2:"يرجى ذكر مشكلتك... 1=بريميوم 2=إعلانات الواجهة 3=الحساب 4=أخرى.",transfer:"حسنًا، سأحوّلك إلى الفريق المختص..."}
+  };
+})(window);
 
 // === Global helper: chatPush (openChat & bindChat ortak kullanır) ===
 function chatPush(text, me=false){
@@ -564,10 +564,10 @@ function chatPush(text, me=false){
 }
 
 // === Dil uygulama ===
-function setDir(){ const html=document.documentElement; html.dir=(LANG==='ar')?'rtl':'ltr'; html.lang=LANG; }
+function setDir(){ const html=document.documentElement; html.dir=(window.LANG==='ar')?'rtl':'ltr'; html.lang=window.LANG; }
 function renderSlogans(){
-  const cfg = I18N[LANG]||I18N.tr;
-  const wrap = $('#sloganWrap'); if(!wrap) return;
+  const cfg = window.I18N[window.LANG]||window.I18N.tr;
+  const wrap = window.$('#sloganWrap'); if(!wrap) return;
   const isMobile = matchMedia('(max-width: 520px)').matches;
   const SLOT = isMobile ? 2 : 5;
   while(wrap.children.length < SLOT){ const s=document.createElement('span'); s.className='tag'; wrap.appendChild(s); }
@@ -579,17 +579,18 @@ function renderSlogans(){
   window.__slogInt=setInterval(paint,5000);
 }
 function renderCats(){
-  const grid = $('#catGrid'); if(!grid) return; grid.innerHTML='';
-  const cfg = (I18N[LANG]||I18N.tr).cats; const order = cfg.order||[];
+  const grid = window.$('#catGrid'); if(!grid) return; grid.innerHTML='';
+  const cfg = (window.I18N[window.LANG]||window.I18N.tr).cats; const order = cfg.order||[];
   order.forEach((key,i)=>{
-    const col=COLORS[i%COLORS.length];
-    const el=document.createElement('a'); el.href=`/kategori/${key}`; el.className='kcard'; el.style.setProperty('--glow',col); el.style.borderColor=col; el.dataset.baseIndex=String(i%COLORS.length); el.dataset.key=key;
+    const col=window.COLORS[i%window.COLORS.length];
+    const el=document.createElement('a'); el.href=`/kategori/${key}`; el.className='kcard'; el.style.setProperty('--glow',col); el.style.borderColor=col; el.dataset.baseIndex=String(i%window.COLORS.length); el.dataset.key=key;
     el.innerHTML=`<div class="halo" style="background:radial-gradient(420px 240px at 20% 0%,${col},transparent)"></div>
       <div class="title" style="background:linear-gradient(90deg, ${col}, #ffffff); -webkit-background-clip:text; background-clip:text; color:transparent;">${key}</div>
       <div class="chips"></div>`;
     grid.appendChild(el);
   });
 }
+
 function startCardGlow(ms=5000){
   const cards=[...document.querySelectorAll('#catGrid .kcard')]; if(!cards.length) return;
   let tick=0; function paint(){ cards.forEach((card,i)=>{ const base=parseInt(card.dataset.baseIndex||i,10)||0; const col=COLORS[(base+tick)%COLORS.length]; card.style.setProperty('--glow',col); card.style.borderColor=col; const halo=card.querySelector('.halo'); if(halo){ halo.style.background=`radial-gradient(420px 240px at 20% 0%, ${col}, transparent)`; } }); tick=(tick+1)%COLORS.length; }
