@@ -528,19 +528,141 @@
       $('#openLive').onclick=()=>{ close(); openChat(); };
     }
 
-    // === Canlı Destek ===
-    function openChat(){ const c=$('#chat'); if(!c) return; c.style.display='block'; const body=$('#chatBody'); const T=(CHAT_TEXT[LANG]||CHAT_TEXT.tr); if(body && body.children.length===0){ push(T.welcome1,false); push(T.welcome2,false); } }
-    function closeChat(){ const c=$('#chat'); if(!c) return; c.style.display='none'; }
-    function bindChat(){
-      const bubble=$('#chatBubble'); if(bubble){ bubble.onclick=()=>{ const c=$('#chat'); if(!c) return; c.style.display = (c.style.display==='block')?'none':'block'; }; }
-      const body=$('#chatBody'); const input=$('#chatInput'); const send=$('#chatSend');
-      function push(text,me=false){ const m=document.createElement('div'); m.className='chatMsg'+(me?' me':''); m.textContent=text; body.appendChild(m); body.scrollTop=body.scrollHeight; }
-      if(send) send.onclick=()=>{ const v=(input.value||'').trim(); if(!v) return; push(v,true); input.value=''; const T=(CHAT_TEXT[LANG]||CHAT_TEXT.tr); setTimeout(()=>push(T.transfer,false),400); };
-      if(input) input.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); send.click(); } });
-      // İSTEK 4: X tuşu tüm mesajları SİLER ve geri gelmez
-      const btnClose=$('#chatClose'); if(btnClose){ btnClose.onclick=()=>{ body.innerHTML=''; closeChat(); }; }
-      const btnMin=$('#chatMin'); if(btnMin){ btnMin.onclick=()=>{ closeChat(); }; }
+    <script>
+  // === Canlı Destek ===
+  function openChat(){
+    const c = $('#chat'); if (!c) return;
+    c.style.display = 'block';
+
+    const body = $('#chatBody');
+    const T = (CHAT_TEXT[LANG] || CHAT_TEXT.tr);
+
+    // İlk açılış: karşılama mesajlarını göster + Firestore'a yaz
+    if (body && body.children.length === 0) {
+      push(T.welcome1, false);
+      push(T.welcome2, false);
+      // Firestore konuşmasını garanti altına al ve karşılama metinlerini kaydet
+      void window.UE?.support?.ensureConversation().then(async ()=>{
+        try {
+          await window.UE.support.sendMessage(T.welcome1);
+          await window.UE.support.sendMessage(T.welcome2);
+        } catch(e){ console.error('welcome save fail', e); }
+      });
     }
+  }
+
+  function closeChat(){
+    const c = $('#chat'); if (!c) return;
+    c.style.display = 'none';
+  }
+
+  function bindChat(){
+    const bubble = $('#chatBubble');
+    if (bubble){
+      bubble.onclick = ()=>{
+        const c = $('#chat'); if (!c) return;
+        c.style.display = (c.style.display==='block') ? 'none' : 'block';
+        if (c.style.display === 'block') openChat();
+      };
+    }
+
+    const body  = $('#chatBody');
+    const input = $('#chatInput');
+    const send  = $('#chatSend');
+
+    function push(text, me=false){
+      const m = document.createElement('div');
+      m.className = 'chatMsg' + (me ? ' me' : '');
+      m.textContent = text;
+      body.appendChild(m);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    // Gönder: ekrana bas + Firestore'a yaz + hazır cevap/otomatik
+    if (send) send.onclick = async () => {
+      const v = (input.value || '').trim();
+      if (!v) return;
+
+      // ekranda göster
+      push(v, true);
+      input.value = '';
+
+      // Firestore'a yaz
+      try { await window.UE.support.sendMessage(v); }
+      catch(e){ console.error('chat send fail', e); }
+
+      // 4 dil destekli hazır cevap (1-4) + transfer metni
+      const num = v.trim();
+      const replies = {
+        tr: {
+          "1": "Premium üyelik talebinizi aldım. Ücret/ödeme adımlarını birazdan ileteceğim.",
+          "2": "Vitrin ilan başvurunuzu aldım. Uygunluk ve süre bilgisini paylaşacağım.",
+          "3": "Hesap/üyelik talebiniz alındı. E-posta ve kullanıcı bilgilerinizi kontrol ediyorum.",
+          "4": "Mesajınızı aldım. Kısa süre içinde dönüş yapacağım."
+        },
+        en: {
+          "1": "Got your Premium request. I’ll share pricing/payment steps shortly.",
+          "2": "Received your Showcase request. I’ll share availability and duration.",
+          "3": "Account/membership request noted. Checking your details.",
+          "4": "Message received. I’ll get back to you shortly."
+        },
+        de: {
+          "1": "Premium-Anfrage erhalten. Preise/Zahlungsschritte folgen gleich.",
+          "2": "Schaufenster-Anfrage erhalten. Verfügbarkeit & Dauer folgen.",
+          "3": "Konto/Mitgliedschaft notiert. Ich prüfe Ihre Angaben.",
+          "4": "Nachricht erhalten. Ich melde mich in Kürze."
+        },
+        ar: {
+          "1": "تم استلام طلب بريميوم. سأرسل تفاصيل السعر/الدفع قريبًا.",
+          "2": "تم استلام طلب إعلان الواجهة. سأشارك التوفر والمدة.",
+          "3": "تم تسجيل طلب الحساب/العضوية. أتحقق من بياناتك.",
+          "4": "تم استلام رسالتك. سأتواصل معك قريبًا."
+        }
+      };
+      const lang = replies[LANG] ? LANG : 'tr';
+      const T = (CHAT_TEXT[LANG] || CHAT_TEXT.tr);
+
+      if (["1","2","3","4"].includes(num)) {
+        const msg = replies[lang][num];
+        push(msg, false);
+        try { await window.UE.support.sendMessage(msg); } catch(_){}
+      } else {
+        // serbest metinse kısa transfer bildirimi
+        setTimeout(async ()=>{
+          push(T.transfer, false);
+          try { await window.UE.support.sendMessage(T.transfer); } catch(_){}
+        }, 400);
+      }
+    };
+
+    // Enter ile gönder
+    if (input) input.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); send?.click(); }
+    });
+
+    // X: TÜM MESAJLARI KALICI SİL (kullanıcı + bot/admin) ve sohbeti kapat
+    const btnClose = $('#chatClose');
+    if (btnClose){
+      btnClose.onclick = async ()=>{
+        try{
+          await window.UE.support.deleteConversation(); // Firestore'dan tamamen sil
+        }catch(e){
+          console.error('purge fail', e);
+        }finally{
+          body.innerHTML = '';
+          closeChat();
+        }
+      };
+    }
+
+    // _ : sadece küçült
+    const btnMin = $('#chatMin');
+    if (btnMin){ btnMin.onclick = ()=> closeChat(); }
+
+    // Sohbeti hazırla (anonim giriş gerekiyorsa aç) ve açılışta karşılama bas
+    void window.UE?.support?.ensureConversation().then(()=> openChat());
+  }
+</script>
 
     // === Dil uygula ===
     function setDir(){ const html=document.documentElement; html.dir=(LANG==='ar')?'rtl':'ltr'; html.lang=LANG; }
