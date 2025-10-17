@@ -519,27 +519,47 @@ if (url) {
       paintPanel('rejected',rejected);
     }
 
-    function paintPanel(key,arr){
-      const host=$(`#panel-${key}`); host.innerHTML='';
-      if(arr.length===0){ const n=el('div','notice mini'); n.textContent='Kayıt yok.'; host.appendChild(n); return; }
-      arr.forEach((l,i)=>{
-        const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-        card.innerHTML = 
-   <a class="thumb" style="background-image:url('${l.photo || ''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
-  <div class="meta"
-    <div class="row" style="justify-content:space-between">
-      <div class="title">${l.title || ''}</div>
-      <div class="price">${fmtPrice(l.price || 0)}</div>
-    </div>
-    <div class="row" style="margin-top:.4rem">
-      ${badgeFor(l)}
-    </div>
-    <div class="row" style="margin-top:.5rem">
-      ${actionsFor(key, l)}
-    </div>
-  </div>
-`;
+    function paintPanel(key, arr){
+  const host = $(`#panel-${key}`);
+  host.innerHTML = '';
 
+  if (arr.length === 0){
+    const n = el('div','notice mini');
+    n.textContent = 'Kayıt yok.';
+    host.appendChild(n);
+    return;
+  }
+
+  arr.forEach((l, i) => {
+    const card = el('article','card');
+    card.style.setProperty('--glow', COLORS[i % COLORS.length]);
+
+    card.innerHTML = `
+      <a class="thumb"
+         style="background-image:url('${l.photo || ''}')"
+         href="/ilan/${l.id}"
+         aria-label="İlan görseli"></a>
+
+      <div class="meta">
+        <div class="row" style="justify-content:space-between">
+          <div class="title">${l.title || ''}</div>
+          <div class="price">${fmtPrice(l.price || 0)}</div>
+        </div>
+
+        <div class="row" style="margin-top:.4rem">
+          ${badgeFor(l)}
+        </div>
+
+        <div class="row" style="margin-top:.5rem">
+          ${actionsFor(key, l)}
+        </div>
+      </div>
+    `;
+
+    host.appendChild(card);
+    bindCardActions(card, l, key);
+  });
+}
 
     function badgeFor(l){
       const b=[];
