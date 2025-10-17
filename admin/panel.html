@@ -7,14 +7,10 @@
   <link rel="stylesheet" href="/admin/css/admin.css"/>
   <style>
     :root{ --sbw:260px; --ink:#e5e7eb; --brd:#111; }
-    /* Tam siyah tema, sade */
-    html,body{background:#000;color:var(--ink)}
-    /* Bölüm görünürlük */
+    html,body{background:#000;color:var(--ink);margin:0}
     .section{display:none!important}
     .section.active{display:block!important}
-    /* Menü aktif vurgusu */
     .menu a.active{font-weight:700; text-decoration:underline}
-    /* Basit yardımcılar */
     .muted{color:#9ca3af}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .row-right{display:flex;gap:8px;align-items:center;margin-left:auto}
@@ -28,25 +24,22 @@
     .tile .t{font-size:12px;color:#9ca3af}
     .tile .n{font-size:22px;font-weight:800}
 
-    /* Sidebar: sabit 240px, tam siyah */
+    /* Sidebar fix */
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sbw);min-width:var(--sbw);padding:16px;border-right:1px solid var(--brd);background:#000;display:flex;flex-direction:column;z-index:30}
-    .content{margin-left:var(--sbw);padding:16px;min-width:0}
+    .content{margin-left:var(--sbw);padding:16px;min-width:0;position:relative;overflow-x:hidden}
     .brand{display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:8px}
     .brand span{white-space:nowrap}
     .menu{display:grid;gap:6px;flex:1;max-height:calc(100vh - 120px);overflow:auto;overscroll-behavior:contain;padding-right:4px}
     .menu a{color:var(--ink);text-decoration:none;padding:8px 10px;border-radius:10px;display:block;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:keep-all}
     .menu a:hover{background:#0f0f0f}
     .btn-outline{margin-top:auto;width:100%;background:#000;border:1px solid var(--brd);color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
-  
-    /* ZORLAYICI YERLEŞİM DÜZELTMESİ (ezilmeyi engelle) */
-    .admin-root .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sbw)!important;min-width:var(--sbw)!important;padding:16px;border-right:1px solid var(--brd);background:#000;display:flex;flex-direction:column;z-index:30}
-    .admin-root .content{margin-left:var(--sbw)!important;padding:16px;min-width:0;position:relative;overflow-x:hidden}
+
     .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
     @media (max-width:1200px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
     @media (max-width:700px){ .grid{grid-template-columns:1fr;} }
   </style>
 </head>
-<body class="dark admin-root">
+<body class="dark">
   <aside class="sidebar">
     <div class="brand">
       <img src="/assets/icons/ureteneller.png" class="logo-sm" alt="ÜE"/>
@@ -63,7 +56,7 @@
       <a href="#settings" data-target="settings">Ayarlar</a>
     </nav>
     <button id="logoutBtn" class="btn-outline">Çıkış</button>
-    </aside>
+  </aside>
 
   <main class="content">
     <p id="emptyHint" class="muted" style="margin:16px 0;">Soldan bir bölüm seçin.</p>
@@ -89,7 +82,7 @@
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-          <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
+            <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
           </thead>
           <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
         </table>
@@ -105,14 +98,17 @@
             <option value="approved">Onaylı</option>
             <option value="rejected">Red</option>
             <option value="expired">Süresi Dolan</option>
+            <option value="deleted">Silinen</option>
+            <option value="all">Tümü</option>
           </select>
+          <input id="qListing" class="input" placeholder="Başlık / satıcı / ID"/>
           <button id="btnReloadListings" class="btn-sm">Yenile</button>
         </div>
       </div>
       <div class="table-wrap">
         <table class="tbl">
           <thead>
-          <tr><th>Başlık</th><th>Satıcı</th><th>Durum</th><th>Vitrin</th><th>Oluşturma</th><th>İşlem</th></tr>
+            <tr><th>Başlık</th><th>Satıcı</th><th>Fiyat</th><th>Durum</th><th>Vitrin</th><th>İşlem</th></tr>
           </thead>
           <tbody id="listingsBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
         </table>
@@ -176,7 +172,7 @@
 
   <!-- Firebase (varsa) -->
   <script type="module">
-    // İsteğe bağlı: üretimde /firebase-init.js varsa bu import edilir; yoksa sessizce devam.
+    // Varsa import et; yoksa sessiz geç
     (async()=>{ try{ await import('/firebase-init.js'); }catch(_){} })();
   </script>
 
@@ -185,7 +181,6 @@
     (function(){
       const ready = (fn)=> document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
 
-      // Fallback stub'lar (Firebase yokken veya modüller bulunamazsa boşta kalmasın)
       const Fallback = {
         async users(){
           const tbody = document.getElementById('usersBody');
@@ -211,6 +206,7 @@
           links.forEach(a=>a.classList.remove('active'));
           if (empty) empty.style.display='';
         }
+
         async function show(id){
           hideAll();
           const sec = document.getElementById(id);
@@ -221,23 +217,22 @@
           if (empty) empty.style.display='none';
           history.replaceState(null,'',`#${id}`);
 
-          // Lazy-load: yalnızca ihtiyaç olduğunda yükle
           try{
             if (id==='users' && !window.__usersMounted){
               window.__usersMounted = true;
-              const m = await import('/admin/admin/js/users.js?v='+Date.now());
+              const m = await import('/admin/js/users.js?v='+Date.now());
               if (m?.mountAdminUsers) await m.mountAdminUsers({ container: document.getElementById('users') });
               else await Fallback.users();
             }
             if (id==='listings' && !window.__listingsMounted){
               window.__listingsMounted = true;
-              const m = await import('/admin/admin/js/listings.js?v='+Date.now());
+              const m = await import('/admin/js/listings.js?v='+Date.now());
               if (m?.mountAdminListings) await m.mountAdminListings({ container: document.getElementById('listings') });
               else await Fallback.listings();
             }
             if (id==='messages' && !window.__messagesMounted){
               window.__messagesMounted = true;
-              const m = await import('/admin/admin/js/messages.js?v='+Date.now());
+              const m = await import('/admin/js/messages.js?v='+Date.now());
               if (m?.mountAdminMessages) await m.mountAdminMessages({ container: document.getElementById('messages') });
               else await Fallback.messages();
             }
@@ -259,13 +254,15 @@
         const first = (location.hash || '#dashboard').replace('#','');
         show(first);
 
-        // Çıkış (varsa auth.logout)
+        // Çıkış
         document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
-          try{ const mod = await import('/firebase-init.js'); await (mod?.auth?.signOut?.() || Promise.resolve()); }catch(_){}
+          try{
+            if (window.UE?.firebase?.logout) { await window.UE.firebase.logout(); }
+          }catch(_){}
           location.href = '/index.html';
         });
       });
     })();
   </script>
-  </body>
+</body>
 </html>
