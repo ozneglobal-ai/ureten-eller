@@ -617,7 +617,8 @@ if (url) {
     function openPricing(){ $('#pricingModal').style.display='block'; $('#pricingModal').setAttribute('aria-hidden','false'); }
     function closePricing(){ $('#pricingModal').style.display='none'; $('#pricingModal').setAttribute('aria-hidden','true'); }
 
-    function openShowcasePicker(){
+    // --- Vitrine Öner Seçici ---
+function openShowcasePicker(){
   const host = document.querySelector('#showList');
   host.innerHTML = '';
 
@@ -686,40 +687,81 @@ function requestShowcase(l){
   }
 }
 
-    // --- Profil Düzenle ---
-    function openEdit(){
-      $('#edCity').value=user.city||''; $('#edDistrict').value=user.district||''; $('#edOld').value=''; $('#edNew1').value=''; $('#edNew2').value='';
-      $('#edAvatar').style.backgroundImage=`url('${user.avatar||'/assets/img/avatar-default.png'}')`;
-      $('#edBio').value=user.bio||'';
-      $('#editModal').style.display='block'; $('#editModal').setAttribute('aria-hidden','false');
-    }
-    function closeEdit(){ $('#editModal').style.display='none'; $('#editModal').setAttribute('aria-hidden','true'); }
-    function saveEdit(){
-      const old=$('#edOld').value.trim(); const n1=$('#edNew1').value.trim(); const n2=$('#edNew2').value.trim();
-      if((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
-      if(n1 && n1.length<6){ toast('Yeni şifre en az 6 karakter olmalı'); return; }
-      if(n1!==n2){ toast('Yeni şifreler eşleşmiyor'); return; }
-      user.city=$('#edCity').value; user.district=$('#edDistrict').value; $('#uCity').textContent=user.city||'—';
-      user.bio=$('#edBio').value.trim(); $('#uBio').textContent=user.bio||'—';
-      const bg=$('#edAvatar').style.backgroundImage; if(bg){ const m=bg.match(/url\("?(.*)"?\)/); if(m){ user.avatar=m[1]; $('#avatar').style.backgroundImage=`url('${user.avatar}')`; }}
-      toast('Profil güncellendi'); closeEdit();
-    }
+// --- Profil Düzenle ---
+function openEdit(){
+  $('#edCity').value = user.city || '';
+  $('#edDistrict').value = user.district || '';
+  $('#edOld').value = '';
+  $('#edNew1').value = '';
+  $('#edNew2').value = '';
+  $('#edAvatar').style.backgroundImage = `url('${user.avatar || '/assets/img/avatar-default.png'}')`;
+  $('#edBio').value = user.bio || '';
+  $('#editModal').style.display = 'block';
+  $('#editModal').setAttribute('aria-hidden', 'false');
+}
+function closeEdit(){
+  $('#editModal').style.display = 'none';
+  $('#editModal').setAttribute('aria-hidden', 'true');
+}
+function saveEdit(){
+  const old = $('#edOld').value.trim();
+  const n1  = $('#edNew1').value.trim();
+  const n2  = $('#edNew2').value.trim();
 
-    // --- Alt Bar parıltı ---
-    function startBarGlow(){ const bar=document.querySelector('.bottomBar'); let i=0; function paint(){ bar?.style.setProperty('--bbglow', COLORS[i%COLORS.length]); i=(i+1)%COLORS.length; } paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000); }
+  if ((n1 || n2 || old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
+  if (n1 && n1.length < 6) { toast('Yeni şifre en az 6 karakter olmalı'); return; }
+  if (n1 !== n2) { toast('Yeni şifreler eşleşmiyor'); return; }
 
-    // --- Dış veri yükleme (index kaydı veya Firebase) ---
-    function loadExternalData(){
-      try{
-        if(window.__index){ // ör: SSR ya da preload edilmiş veri
-          Object.assign(user, window.__index.user||{});
-          (window.__index.listings||[]).forEach(x=>listings.push(x));
-        }
-      }catch(e){ console.warn('Veri yükleme hatası:', e); }
+  user.city = $('#edCity').value;
+  user.district = $('#edDistrict').value;
+  $('#uCity').textContent = user.city || '—';
+
+  user.bio = $('#edBio').value.trim();
+  $('#uBio').textContent = user.bio || '—';
+
+  const bg = $('#edAvatar').style.backgroundImage;
+  if (bg) {
+    const m = bg.match(/url\("?(.*)"?\)/);
+    if (m) {
+      user.avatar = m[1];
+      $('#avatar').style.backgroundImage = `url('${user.avatar}')`;
     }
+  }
 
-    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-    // === Firestore entegrasyonu — __fb hazır olana kadar bekle ===
+  toast('Profil güncellendi');
+  closeEdit();
+}
+
+// --- Alt Bar parıltı ---
+function startBarGlow(){
+  const bar = document.querySelector('.bottomBar');
+  let i = 0;
+  function paint(){
+    if (bar) bar.style.setProperty('--bbglow', COLORS[i % COLORS.length]);
+    i = (i + 1) % COLORS.length;
+  }
+  paint();
+  if (window.__barGlowInt) clearInterval(window.__barGlowInt);
+  window.__barGlowInt = setInterval(paint, 2000);
+}
+
+// --- Dış veri yükleme (index kaydı veya Firebase) ---
+function loadExternalData(){
+  try{
+    if (window.__index){
+      Object.assign(user, window.__index.user || {});
+      (window.__index.listings || []).forEach(x => listings.push(x));
+    }
+  }catch(e){ console.warn('Veri yükleme hatası:', e); }
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+// === Firestore entegrasyonu — __fb hazır olana kadar bekle ===
 (function waitForFirebase(){
   if (!window.__fb) { setTimeout(waitForFirebase, 50); return; }
 
@@ -734,12 +776,12 @@ function requestShowcase(l){
     function applyProfileUI(){
       const u = window.user || {};
       const $ = (s)=>document.querySelector(s);
-      $("#uName").textContent = u.name || "—";
-      $("#uCity").textContent = u.city || "—";
-      $("#uPhone").textContent = u.phone || "—";
-      $("#uBio").textContent = u.bio || "—";
+      $("#uName").textContent   = u.name || "—";
+      $("#uCity").textContent   = u.city || "—";
+      $("#uPhone").textContent  = u.phone || "—";
+      $("#uBio").textContent    = u.bio || "—";
       $("#avatar").style.backgroundImage = `url('${u.avatar || "/assets/img/avatar-default.png"}')`;
-      $("#pRole").textContent = u.isPremium ? "Premium Üye" : "Standart Üye";
+      $("#pRole").textContent   = u.isPremium ? "Premium Üye" : "Standart Üye";
       $("#pPremiumBadge").style.display = u.isPremium ? "inline-flex" : "none";
       $("#pVerifiedSeller").style.display = u.isVerified ? "inline-flex" : "none";
       $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
@@ -750,7 +792,7 @@ function requestShowcase(l){
       if (!u) { try { location.href = "/index.html"; } catch {} return; }
       __uid = u.uid;
 
-      // Auth’tan gelenler (Google ile girerse otomatik doldurma)
+      // Auth verisi
       const authData = {
         name:  u.displayName || "",
         email: u.email || "",
@@ -766,9 +808,9 @@ function requestShowcase(l){
 
         if (snap.exists()) {
           const dbUser = snap.data() || {};
-          // Eksikleri Auth verisiyle tamamla (boşsa)
+          // Eksikleri Auth verisiyle tamamla
           const backfill = {};
-          if (!dbUser.name && authData.name)   backfill.name  = authData.name;
+          if (!dbUser.name  && authData.name)  backfill.name  = authData.name;
           if (!dbUser.email && authData.email) backfill.email = authData.email;
           if (!dbUser.phone && authData.phone) backfill.phone = authData.phone;
           if ((!dbUser.avatar || dbUser.avatar === "/assets/img/avatar-default.png") && authData.avatarFromAuth) {
@@ -833,7 +875,6 @@ function requestShowcase(l){
     };
   })();
 })();
-
-      </script>
+  </script>
 </body>
-</html> 
+</html>
