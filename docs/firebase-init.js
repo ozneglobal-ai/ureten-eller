@@ -13,7 +13,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import {
   getFirestore,
@@ -21,7 +23,6 @@ import {
   getDocs, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
-
 
 // --- Config (KENDİ PROJEN) ---
 export const firebaseConfig = {
@@ -34,13 +35,14 @@ export const firebaseConfig = {
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
 
-
 // --- Uygulama & Servisler ---
 export const app     = initializeApp(firebaseConfig);
 export const auth    = getAuth(app);
 export const db      = getFirestore(app);
 export const storage = getStorage(app);
 
+// Kalıcı oturum (refresh sonrası açık kalsın)
+await setPersistence(auth, browserLocalPersistence);
 
 // --- Oturum akışı (anonim fallback) ---
 onAuthStateChanged(auth, async (u) => {
@@ -50,7 +52,6 @@ onAuthStateChanged(auth, async (u) => {
     console.error("Anonim oturum açılamadı:", e);
   }
 });
-
 
 // --- Eski kodla uyumlu global yardımcılar ---
 const provider = new GoogleAuthProvider();
@@ -83,9 +84,8 @@ window.UE.firebase = {
   }
 };
 
-// Global kısa yol (profile.html bekliyor olabilir)
+// Global kısa yol (profile/admin sayfaları bekliyor olabilir)
 window.__fb = { app, auth, db, storage, onAuthStateChanged };
-
 
 // --- Live Support (Canlı Destek) yardımcıları ---
 export const support = {
@@ -159,3 +159,6 @@ export const support = {
 
 // inline scriptler erişsin
 window.UE.support = support;
+
+// (opsiyonel) ESM kullanan sayfalar için export
+export { provider };
