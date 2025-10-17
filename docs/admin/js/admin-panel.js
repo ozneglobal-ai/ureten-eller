@@ -140,15 +140,12 @@
   <!-- SCRIPT -->
   <script type="module">
     // ---- CLICK ÇALIŞIYOR MU? (Firebase olmadan da) ----
-    // Önce global bir stub tanımlıyoruz. Firebase import'u fail olsa bile tıklamalar log verir.
     window.__adminAction = function(event){
       const btn = event?.target?.closest('button[data-action]');
       if (!btn) return;
       const uid = btn.closest('tr[data-uid]')?.dataset?.uid || '(yok)';
       console.log('[stub adminAction]', btn.dataset.action, uid);
-      // Firebase yüklenmemişse sadece bildirim gösterelim ki tıklama çalıştığı belli olsun
       if (!window.__fbReady) {
-        // Sessiz uyarı
         console.warn('Firebase yüklenmediği için işlem yapılmadı.');
         return;
       }
@@ -173,7 +170,6 @@
         if (link) link.classList.add('active');
         if (emptyHint) emptyHint.style.display='none';
         history.replaceState(null, '', `#${id}`);
-        // Açılışta veri yükleme tetiklemeleri
         if (id === 'users' && !usersCache.length) loadUsers();
         if (id === 'messages' && !convInit) initConversations();
       }
@@ -190,21 +186,33 @@
     const first = (location.hash || '#summary').replace('#','');
     show(first);
 
-    // --- FIREBASE ---
-    let __firestoreLoaded = false; window.__fbReady = false;
-    try {
-      var __dbImport = await import('/firebase-init.js');
-      var db = __dbImport.db;
-      window.__fbReady = true;
-    } catch(e) {
-      console.error('firebase-init.js yüklenemedi:', e);
-      window.__fbReady = false;
-    }
-    import {
-      collection, doc, getDocs, setDoc, query, orderBy, limit,
-      serverTimestamp, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-    __firestoreLoaded = true; window.__fbReady = true;
+    // --- FIREBASE (GÜNCEL KORUMALI SÜRÜM) ---
+let __firestoreLoaded = false; window.__fbReady = false;
+let db = null;
+async function loadFirebaseConfig(){
+  const candidates = [
+    '/firebase-init.js',            // kökten servis
+    './firebase-init.js',           // aynı klasör
+    '../firebase-init.js',          // bir üst
+    '/docs/firebase-init.js'        // GitHub Pages gibi
+  ];
+  for (const p of candidates){
+    try{
+      const mod = await import(p + `?v=${Date.now()}`);
+      if (mod?.db){ db = mod.db; window.__fbReady = true; return; }
+    }catch(e){ /* sıradaki yolu dene */ }
+  }
+  console.error('firebase-init.js bulunamadı (tüm yollar denendi)');
+  window.__fbReady = false;
+}
+await loadFirebaseConfig();
+
+// Firestore yardımcıları (db değildir)
+import {
+  collection, doc, getDocs, setDoc, query, orderBy, limit,
+  serverTimestamp, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+__firestoreLoaded = true;
 
     // === KULLANICILAR ===
     let usersBody = document.getElementById('usersBody');
@@ -227,20 +235,29 @@
     }
 
     async function loadUsers(){
-      const qRef = query(collection(db,'users'), orderBy('email'), limit(500));
-      const snap = await getDocs(qRef);
-      usersCache = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-      renderUsers(usersCache);
+      if (!window.__fbReady || !db) {
+        if (usersBody) usersBody.innerHTML = '<tr><td colspan="6" class="muted">Firebase hazır değil</td></tr>';
+        return;
+      }
+      try{
+        const qRef = query(collection(db,'users'), orderBy('email'), limit(500));
+        const snap = await getDocs(qRef);
+        usersCache = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+        renderUsers(usersCache);
+      }catch(err){
+        console.error(err);
+        if (usersBody) usersBody.innerHTML = '<tr><td colspan="6" class="muted">Yüklenemedi</td></tr>';
+      }
     }
 
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[m])); }
 
     function renderUsers(list){
-      usersBody = document.getElementById('usersBody'); // taze referans
+      usersBody = document.getElementById('usersBody');
       if (!usersBody) return;
       usersBody.innerHTML = list.length ? '' : '<tr><td colspan="6" class="muted">Kayıt yok</td></tr>';
       for (const u of list){
-        const name  = u.displayName || '—';
+        const name  = u.displayName || u.name || '—';
         const email = u.email || '—';
         const role  = u.role || '—';
         const city  = u.city || '—';
@@ -272,7 +289,6 @@
       }
     }
 
-    // Arama (isim/e-posta)
     function applyFilter(){
       const q = (qUserInput?.value || '').trim().toLowerCase();
       if (!q) return renderUsers(usersCache);
@@ -287,18 +303,17 @@
     qUserInput?.addEventListener('input', applyFilter);
 
     // İşlemler: PRO 12 ay / PRO iptal / Ban / Unban
-    // Firebase yüklendiyse stub'u gerçek işle ile override edelim
     window.__adminAction = async function(event){
       const btn = event?.target?.closest('button[data-action]');
       if (!btn) return;
       const tr  = btn.closest('tr[data-uid]'); const uid = tr?.dataset.uid;
       if (!uid) return;
       console.log('[adminAction]', btn.dataset.action, uid);
-      if (!window.__fbReady){ console.warn('Firebase hazır değil.'); return; }
+      if (!window.__fbReady || !db){ console.warn('Firebase hazır değil.'); return; }
       btn.disabled = true;
       try{
         if (btn.dataset.action === 'pro12'){
-          const until = Date.now() + 365*24*60*60*1000; // 12 ay
+          const until = Date.now() + 365*24*60*60*1000;
           await setDoc(doc(db,'users',uid), { proUntil: until, updatedAt: serverTimestamp() }, { merge:true });
           const i = usersCache.findIndex(u=>u.id===uid);
           if (i>=0){ usersCache[i].proUntil = until; }
@@ -326,10 +341,9 @@
       }
     };
 
-    // 2) Delegation: belge seviyesinde de dinle (ikisi birden sorun çıkarmaz)
+    // Belge seviyesinde delege
     document.addEventListener('click', (e)=>{
       if (e.target.closest('button[data-action]')) {
-        // Eğer inline onclick çalışmadıysa burası yakalar
         window.__adminAction(e);
       }
     });
@@ -340,10 +354,11 @@
       renderUsers(usersCache);
     }, 60000);
 
-    // === MESAJLAR (home.html’den gelen canlı destek) ===
+    // === MESAJLAR (canlı destek) ===
     let convInit = false;
     function initConversations(){
       if (convInit) return; convInit = true;
+      if (!window.__fbReady || !db) return;
       const convList = document.getElementById('conversations');
       if (!convList) return;
       const convQ = query(collection(db,'conversations'), orderBy('updatedAt','desc'), limit(50));
@@ -365,7 +380,6 @@
         });
       });
     }
-
   </script>
 </body>
 </html>
