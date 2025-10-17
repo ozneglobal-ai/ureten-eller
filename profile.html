@@ -85,7 +85,8 @@
     .bioBox{margin-top:.6rem;border:1px solid var(--brd);border-radius:12px;padding:.6rem;background:linear-gradient(145deg,var(--card),var(--card2))}
     .bioBox .bioTitle{font-weight:800;margin-bottom:.35rem}
     .bioBox .bioText{white-space:pre-wrap;line-height:1.45}
-  .legalWrap{max-width:1280px;margin:1.25rem auto 6.25rem;padding:0 1rem}
+
+    .legalWrap{max-width:1280px;margin:1.25rem auto 6.25rem;padding:0 1rem}
     .legalGrid{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))}
     @media(min-width:760px){.legalGrid{grid-template-columns:repeat(4,1fr)}}
     .legalGrid a{display:block;color:#d1d5db;word-break:break-word}
@@ -101,7 +102,6 @@
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <!-- Üstteki butonlar kaldırıldı -->
     </div>
 
     <section class="head" aria-labelledby="pTitle">
@@ -323,10 +323,10 @@
     // --- Sabitler ---
     const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
     const PREMIUM_MONTHLY_QUOTA=10;           // Premium aylık ilan kotası
-    const PREMIUM_FREE_SHOWCASE=1;           // Aylık ücretsiz vitrin adedi
-    const PRICE_SHOWCASE_PREMIUM_EXTRA=199;  // Premium ekstra vitrin
-    const PRICE_SHOWCASE_STANDARD=249;       // Standart vitrin
-    const LISTING_LIFETIME_DAYS=30;          // Yayından düşme süresi
+    const PREMIUM_FREE_SHOWCASE=1;            // Aylık ücretsiz vitrin adedi
+    const PRICE_SHOWCASE_PREMIUM_EXTRA=199;   // Premium ekstra vitrin
+    const PRICE_SHOWCASE_STANDARD=249;        // Standart vitrin
+    const LISTING_LIFETIME_DAYS=30;           // Yayından düşme süresi
 
     // --- Kullanıcı & ilan ---
     const user={
@@ -400,6 +400,12 @@
       $('#btnEditBio').onclick=()=>{ openEdit(); setTimeout(()=>{ $('#edBio').focus(); }, 50); };
       $('#edFile').addEventListener('change',handleAvatarFile);
 
+      // Vitrin & Ücretler modal butonları
+      $('#btnPickShow').onclick=openShowcasePicker;
+      $('#btnPricing').onclick=openPricing;
+      $('#prClose').onclick=closePricing;
+      $('#shClose').onclick=closeShowcase;
+
       // alt bar linkleri
       document.getElementById('navHome').onclick=()=>location.href='/home.html';
       document.getElementById('navMsg').onclick=()=>location.href='/mesajlar.html';
@@ -407,70 +413,72 @@
     }
 
     // --- Cloudinary avatar yükleme ---
-async function uploadToCloudinary(file){
-  if(!file) return null;
-  const cloudName = "dbntnzogo"; // SİZİN cloud name
-  const preset = "yEhMC1YiG-m_m91G1XmHJxdNaz4"; // SİZİN unsigned preset
+    async function uploadToCloudinary(file){
+      if(!file) return null;
+      const cloudName = "dbntnzogo"; // SİZİN cloud name
+      const preset = "yEhMC1YiG-m_m91G1XmHJxdNaz4"; // SİZİN unsigned preset
 
-  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", preset);
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", preset);
 
-  try {
-    const res = await fetch(url, { method: "POST", body: formData });
-    const data = await res.json();
-    return data.secure_url || null;
-  } catch (e) {
-    console.error("Cloudinary upload error:", e);
-    return null;
-  }
-}
-
-// Yeni handleAvatarFile
-async function handleAvatarFile(e){
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-
-  // anında önizleme
-  const localPreview = URL.createObjectURL(f);
-  $('#edAvatar').style.backgroundImage = `url('${localPreview}')`;
-
-  // Cloudinary'ye yükle
-const url = await uploadToCloudinary(f);
-if (url) {
-  window.user.avatar = url;
-  $('#avatar').style.backgroundImage = `url('${url}')`;
-
-  // -> Firestore'a anında yaz (giriş varsa)
-  try {
-    if (window.__fb?.auth?.currentUser) {
-      const uid = window.__fb.auth.currentUser.uid;
-      const { doc, setDoc, serverTimestamp } = await import(
-        "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
-      );
-      await setDoc(
-        doc(window.__fb.db, "users", uid),
-        { avatar: url, updatedAt: serverTimestamp() },
-        { merge: true }
-      );
+      try {
+        const res = await fetch(url, { method: "POST", body: formData });
+        const data = await res.json();
+        return data.secure_url || null;
+      } catch (e) {
+        console.error("Cloudinary upload error:", e);
+        return null;
+      }
     }
-  } catch (e) {
-    console.warn("Avatar Firestore kaydı hatası:", e);
-  }
 
-  toast("Avatar yüklendi ✅");
-} else {
-  toast("Yükleme hatası ⚠️");
-}
+    // Avatar seçim & yükleme
+    async function handleAvatarFile(e){
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
 
-  function updateShowcaseSummary(){
+      // anında önizleme
+      const localPreview = URL.createObjectURL(f);
+      $('#edAvatar').style.backgroundImage = `url('${localPreview}')`;
+
+      // Cloudinary'ye yükle
+      const url = await uploadToCloudinary(f);
+      if (url) {
+        window.user.avatar = url;
+        $('#avatar').style.backgroundImage = `url('${url}')`;
+
+        // -> Firestore'a anında yaz (giriş varsa)
+        try {
+          if (window.__fb?.auth?.currentUser) {
+            const uid = window.__fb.auth.currentUser.uid;
+            const { doc, setDoc, serverTimestamp } = await import(
+              "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
+            );
+            await setDoc(
+              doc(window.__fb.db, "users", uid),
+              { avatar: url, updatedAt: serverTimestamp() },
+              { merge: true }
+            );
+          }
+        } catch (e) {
+          console.warn("Avatar Firestore kaydı hatası:", e);
+        }
+
+        toast("Avatar yüklendi ✅");
+      } else {
+        toast("Yükleme hatası ⚠️");
+      }
+    }
+
+    // --- Vitrin özetini güncelle ---
+    function updateShowcaseSummary(){
       const chosen = listings.find(l=>l.showcase===true);
-      $('#qShowcase').textContent = chosen? chosen.title : '—';
+      $('#qShowcase').textContent = chosen? (chosen.title || '—') : '—';
       const freeRemain = user.isPremium? Math.max(0, PREMIUM_FREE_SHOWCASE - (user.monthlyShowcaseUsed||0)) : 0;
       const note = user.isPremium
-        ? (freeRemain>0? `Bu ay ${freeRemain} ücretsiz vitrin hakkınız var.` : `Ücretsiz hakkınız bitti. Ekstra vitrin ${PRICE_SHOWCASE_PREMIUM_EXTRA} TL.`)
-        : `Standart üyeler vitrin için ${PRICE_SHOWCASE_STANDARD} TL öder.`;
+        ? (freeRemain>0? `Bu ay ${freeRemain} ücretsiz vitrin hakkınız var.` : `Ücretsiz hakkınız bitti. Ekstra vitrin ${fmtPrice(PRICE_SHOWCASE_PREMIUM_EXTRA)}.`)
+        : `Standart üyeler vitrin için ${fmtPrice(PRICE_SHOWCASE_STANDARD)} öder.`;
       $('#qNote').textContent = note;
     }
 
@@ -520,46 +528,46 @@ if (url) {
     }
 
     function paintPanel(key, arr){
-  const host = $(`#panel-${key}`);
-  host.innerHTML = '';
+      const host = $(`#panel-${key}`);
+      host.innerHTML = '';
 
-  if (arr.length === 0){
-    const n = el('div','notice mini');
-    n.textContent = 'Kayıt yok.';
-    host.appendChild(n);
-    return;
-  }
+      if (arr.length === 0){
+        const n = el('div','notice mini');
+        n.textContent = 'Kayıt yok.';
+        host.appendChild(n);
+        return;
+      }
 
-  arr.forEach((l, i) => {
-    const card = el('article','card');
-    card.style.setProperty('--glow', COLORS[i % COLORS.length]);
+      arr.forEach((l, i) => {
+        const card = el('article','card');
+        card.style.setProperty('--glow', COLORS[i % COLORS.length]);
 
-    card.innerHTML = `
-      <a class="thumb"
-         style="background-image:url('${l.photo || ''}')"
-         href="/ilan/${l.id}"
-         aria-label="İlan görseli"></a>
+        card.innerHTML = `
+          <a class="thumb"
+             style="background-image:url('${l.photo || ''}')"
+             href="/ilan/${l.id}"
+             aria-label="İlan görseli"></a>
 
-      <div class="meta">
-        <div class="row" style="justify-content:space-between">
-          <div class="title">${l.title || ''}</div>
-          <div class="price">${fmtPrice(l.price || 0)}</div>
-        </div>
+          <div class="meta">
+            <div class="row" style="justify-content:space-between">
+              <div class="title">${l.title || ''}</div>
+              <div class="price">${fmtPrice(l.price || 0)}</div>
+            </div>
 
-        <div class="row" style="margin-top:.4rem">
-          ${badgeFor(l)}
-        </div>
+            <div class="row" style="margin-top:.4rem">
+              ${badgeFor(l)}
+            </div>
 
-        <div class="row" style="margin-top:.5rem">
-          ${actionsFor(key, l)}
-        </div>
-      </div>
-    `;
+            <div class="row" style="margin-top:.5rem">
+              ${actionsFor(key, l)}
+            </div>
+          </div>
+        `;
 
-    host.appendChild(card);
-    bindCardActions(card, l, key);
-  });
-}
+        host.appendChild(card);
+        bindCardActions(card, l, key);
+      });
+    }
 
     function badgeFor(l){
       const b=[];
@@ -571,7 +579,7 @@ if (url) {
         if(l.showcasePending) b.push('<span class="badge">Vitrin onayı bekliyor</span>');
       }
       if(l.status==='expired') b.push('<span class="badge">Süresi doldu</span>');
-      if(l.status==='rejected') b.push(`<span class="badge">Reddedildi</span>`);
+      if(l.status==='rejected') b.push('<span class="badge">Reddedildi</span>');
       return b.join('');
     }
 
@@ -618,263 +626,226 @@ if (url) {
     function closePricing(){ $('#pricingModal').style.display='none'; $('#pricingModal').setAttribute('aria-hidden','true'); }
 
     // --- Vitrine Öner Seçici ---
-function openShowcasePicker(){
-  const host = document.querySelector('#showList');
-  host.innerHTML = '';
+    function openShowcasePicker(){
+      const host = document.querySelector('#showList');
+      host.innerHTML = '';
 
-  // Yayında olan ve vitrine çıkmamış ilanlar
-  const candidates = listings.filter(l => l.status === 'approved' && !l.showcase && !l.showcasePending);
+      // Yayında olan ve vitrine çıkmamış ilanlar
+      const candidates = listings.filter(l => l.status === 'approved' && !l.showcase && !l.showcasePending);
 
-  if (candidates.length === 0) {
-    const n = document.createElement('div');
-    n.className = 'notice mini';
-    n.textContent = 'Uygun ilan bulunamadı.';
-    host.appendChild(n);
-  } else {
-    candidates.forEach((l, i) => {
-      const card = document.createElement('article');
-      card.className = 'card';
-      card.style.setProperty('--glow', COLORS[i % COLORS.length]);
+      if (candidates.length === 0) {
+        const n = document.createElement('div');
+        n.className = 'notice mini';
+        n.textContent = 'Uygun ilan bulunamadı.';
+        host.appendChild(n);
+      } else {
+        candidates.forEach((l, i) => {
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.style.setProperty('--glow', COLORS[i % COLORS.length]);
 
-      card.innerHTML = `
-        <a class="thumb" style="background-image:url('${l.photo || ''}')"></a>
-        <div class="meta">
-          <div class="row" style="justify-content:space-between">
-            <div class="title">${l.title || ''}</div>
-            <div class="price">${fmtPrice(l.price || 0)}</div>
-          </div>
-          <div class="row" style="margin-top:.5rem">
-            <button class="btn primary" data-act="pick" data-id="${l.id}">Vitrine Öner</button>
-          </div>
-        </div>
-      `;
+          card.innerHTML = `
+            <a class="thumb" style="background-image:url('${l.photo || ''}')"></a>
+            <div class="meta">
+              <div class="row" style="justify-content:space-between">
+                <div class="title">${l.title || ''}</div>
+                <div class="price">${fmtPrice(l.price || 0)}</div>
+              </div>
+              <div class="row" style="margin-top:.5rem">
+                <button class="btn primary" data-act="pick" data-id="${l.id}">Vitrine Öner</button>
+              </div>
+            </div>
+          `;
 
-      card.querySelector('[data-act="pick"]').addEventListener('click', () => {
-        requestShowcase(l);
-        closeShowcase();
-        paintAllPanels();
-        updateShowcaseSummary();
-      });
-
-      host.appendChild(card);
-    });
-  }
-
-  const modal = document.querySelector('#showModal');
-  modal.style.display = 'block';
-  modal.setAttribute('aria-hidden', 'false');
-}
-
-function closeShowcase(){
-  const modal = document.querySelector('#showModal');
-  modal.style.display = 'none';
-  modal.setAttribute('aria-hidden', 'true');
-}
-
-function requestShowcase(l){
-  const hasFree = user.isPremium && (user.monthlyShowcaseUsed || 0) < PREMIUM_FREE_SHOWCASE;
-  const price = user.isPremium ? (hasFree ? 0 : PRICE_SHOWCASE_PREMIUM_EXTRA) : PRICE_SHOWCASE_STANDARD;
-
-  toast(
-    price === 0
-      ? 'Ücretsiz vitrin hakkınız kullanıldı. Onaya gönderildi.'
-      : `Ödeme (${fmtPrice(price)}) sonrası vitrin talebiniz onaya gidecek.`
-  );
-
-  l.showcasePending = true; // admin onayı bekler
-  if (price === 0) {
-    user.monthlyShowcaseUsed = (user.monthlyShowcaseUsed || 0) + 1;
-  }
-}
-
-// --- Profil Düzenle ---
-function openEdit(){
-  $('#edCity').value = user.city || '';
-  $('#edDistrict').value = user.district || '';
-  $('#edOld').value = '';
-  $('#edNew1').value = '';
-  $('#edNew2').value = '';
-  $('#edAvatar').style.backgroundImage = `url('${user.avatar || '/assets/img/avatar-default.png'}')`;
-  $('#edBio').value = user.bio || '';
-  $('#editModal').style.display = 'block';
-  $('#editModal').setAttribute('aria-hidden', 'false');
-}
-function closeEdit(){
-  $('#editModal').style.display = 'none';
-  $('#editModal').setAttribute('aria-hidden', 'true');
-}
-function saveEdit(){
-  const old = $('#edOld').value.trim();
-  const n1  = $('#edNew1').value.trim();
-  const n2  = $('#edNew2').value.trim();
-
-  if ((n1 || n2 || old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
-  if (n1 && n1.length < 6) { toast('Yeni şifre en az 6 karakter olmalı'); return; }
-  if (n1 !== n2) { toast('Yeni şifreler eşleşmiyor'); return; }
-
-  user.city = $('#edCity').value;
-  user.district = $('#edDistrict').value;
-  $('#uCity').textContent = user.city || '—';
-
-  user.bio = $('#edBio').value.trim();
-  $('#uBio').textContent = user.bio || '—';
-
-  const bg = $('#edAvatar').style.backgroundImage;
-  if (bg) {
-    const m = bg.match(/url\("?(.*)"?\)/);
-    if (m) {
-      user.avatar = m[1];
-      $('#avatar').style.backgroundImage = `url('${user.avatar}')`;
-    }
-  }
-
-  toast('Profil güncellendi');
-  closeEdit();
-}
-
-// --- Alt Bar parıltı ---
-function startBarGlow(){
-  const bar = document.querySelector('.bottomBar');
-  let i = 0;
-  function paint(){
-    if (bar) bar.style.setProperty('--bbglow', COLORS[i % COLORS.length]);
-    i = (i + 1) % COLORS.length;
-  }
-  paint();
-  if (window.__barGlowInt) clearInterval(window.__barGlowInt);
-  window.__barGlowInt = setInterval(paint, 2000);
-}
-
-// --- Dış veri yükleme (index kaydı veya Firebase) ---
-function loadExternalData(){
-  try{
-    if (window.__index){
-      Object.assign(user, window.__index.user || {});
-      (window.__index.listings || []).forEach(x => listings.push(x));
-    }
-  }catch(e){ console.warn('Veri yükleme hatası:', e); }
-}
-
-if (document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
-}
-
-// === Firestore entegrasyonu — __fb hazır olana kadar bekle ===
-(function waitForFirebase(){
-  if (!window.__fb) { setTimeout(waitForFirebase, 50); return; }
-
-  (async () => {
-    const { auth, db, onAuthStateChanged } = window.__fb;
-    const { doc, getDoc, setDoc, serverTimestamp } = await import(
-      "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
-    );
-
-    let __uid = null;
-
-    function applyProfileUI(){
-      const u = window.user || {};
-      const $ = (s)=>document.querySelector(s);
-      $("#uName").textContent   = u.name || "—";
-      $("#uCity").textContent   = u.city || "—";
-      $("#uPhone").textContent  = u.phone || "—";
-      $("#uBio").textContent    = u.bio || "—";
-      $("#avatar").style.backgroundImage = `url('${u.avatar || "/assets/img/avatar-default.png"}')`;
-      $("#pRole").textContent   = u.isPremium ? "Premium Üye" : "Standart Üye";
-      $("#pPremiumBadge").style.display = u.isPremium ? "inline-flex" : "none";
-      $("#pVerifiedSeller").style.display = u.isVerified ? "inline-flex" : "none";
-      $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
-    }
-
-    // Giriş olduysa Firestore'dan profili yükle / yoksa oluştur
-    onAuthStateChanged(auth, async (u) => {
-      if (!u) { try { location.href = "/index.html"; } catch {} return; }
-      __uid = u.uid;
-
-      // Auth verisi
-      const authData = {
-        name:  u.displayName || "",
-        email: u.email || "",
-        phone: u.phoneNumber || "",
-        avatarFromAuth: u.photoURL || ""
-      };
-
-      try {
-        const ref = doc(db, "users", __uid);
-        const snap = await getDoc(ref);
-
-        if (!window.user) window.user = {};
-
-        if (snap.exists()) {
-          const dbUser = snap.data() || {};
-          // Eksikleri Auth verisiyle tamamla
-          const backfill = {};
-          if (!dbUser.name  && authData.name)  backfill.name  = authData.name;
-          if (!dbUser.email && authData.email) backfill.email = authData.email;
-          if (!dbUser.phone && authData.phone) backfill.phone = authData.phone;
-          if ((!dbUser.avatar || dbUser.avatar === "/assets/img/avatar-default.png") && authData.avatarFromAuth) {
-            backfill.avatar = authData.avatarFromAuth;
+          const pickBtn = card.querySelector('[data-act="pick"]');
+          if (pickBtn){
+            pickBtn.addEventListener('click', () => {
+              requestShowcase(l);
+              closeShowcase();
+              paintAllPanels();
+              updateShowcaseSummary();
+            });
           }
 
-          if (Object.keys(backfill).length > 0) {
-            await setDoc(ref, backfill, { merge: true });
-            Object.assign(dbUser, backfill);
-          }
+          host.appendChild(card);
+        });
+      }
 
-          Object.assign(window.user, dbUser);
-          applyProfileUI();
+      const modal = document.querySelector('#showModal');
+      modal.style.display = 'block';
+      modal.setAttribute('aria-hidden', 'false');
+    }
 
-        } else {
-          // İlk girişse belge oluştur
-          const initial = {
-            name: authData.name,
-            email: authData.email,
-            phone: authData.phone,
-            isPremium: false,
-            isVerified: false,
-            avatar: authData.avatarFromAuth || window.user?.avatar || "/assets/img/avatar-default.png",
-            createdAt: serverTimestamp()
-          };
-          await setDoc(ref, initial, { merge: true });
-          Object.assign(window.user, initial);
-          applyProfileUI();
+    function closeShowcase(){
+      const modal = document.querySelector('#showModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function requestShowcase(l){
+      const hasFree = user.isPremium && (user.monthlyShowcaseUsed || 0) < PREMIUM_FREE_SHOWCASE;
+      const price = user.isPremium ? (hasFree ? 0 : PRICE_SHOWCASE_PREMIUM_EXTRA) : PRICE_SHOWCASE_STANDARD;
+
+      toast(
+        price === 0
+          ? 'Ücretsiz vitrin hakkınız kullanıldı. Onaya gönderildi.'
+          : `Ödeme (${fmtPrice(price)}) sonrası vitrin talebiniz onaya gidecek.`
+      );
+
+      l.showcasePending = true; // admin onayı bekler
+      if (price === 0) {
+        user.monthlyShowcaseUsed = (user.monthlyShowcaseUsed || 0) + 1;
+      }
+    }
+
+    // --- Profil Düzenle ---
+    function openEdit(){
+      $('#edCity').value=user.city||''; $('#edDistrict').value=user.district||''; $('#edOld').value=''; $('#edNew1').value=''; $('#edNew2').value='';
+      $('#edAvatar').style.backgroundImage=`url('${user.avatar||'/assets/img/avatar-default.png'}')`;
+      $('#edBio').value=user.bio||'';
+      $('#editModal').style.display='block'; $('#editModal').setAttribute('aria-hidden','false');
+    }
+    function closeEdit(){ $('#editModal').style.display='none'; $('#editModal').setAttribute('aria-hidden','true'); }
+    function saveEdit(){
+      const old=$('#edOld').value.trim(); const n1=$('#edNew1').value.trim(); const n2=$('#edNew2').value.trim();
+      if((n1||n2||old) && (!old || !n1 || !n2)) { toast('Şifre alanlarını eksiksiz doldurun'); return; }
+      if(n1 && n1.length<6){ toast('Yeni şifre en az 6 karakter olmalı'); return; }
+      if(n1!==n2){ toast('Yeni şifreler eşleşmiyor'); return; }
+      user.city=$('#edCity').value; user.district=$('#edDistrict').value; $('#uCity').textContent=user.city||'—';
+      user.bio=$('#edBio').value.trim(); $('#uBio').textContent=user.bio||'—';
+      const bg=$('#edAvatar').style.backgroundImage; if(bg){ const m=bg.match(/url\("?(.*)"?\)/); if(m){ user.avatar=m[1]; $('#avatar').style.backgroundImage=`url('${user.avatar}')`; }}
+      toast('Profil güncellendi'); closeEdit();
+    }
+
+    // --- Alt Bar parıltı ---
+    function startBarGlow(){ const bar=document.querySelector('.bottomBar'); let i=0; function paint(){ if(bar) bar.style.setProperty('--bbglow', COLORS[i%COLORS.length]); i=(i+1)%COLORS.length; } paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000); }
+
+    // --- Dış veri yükleme (index kaydı veya Firebase) ---
+    function loadExternalData(){
+      try{
+        if(window.__index){ // ör: SSR ya da preload edilmiş veri
+          Object.assign(user, window.__index.user||{});
+          (window.__index.listings||[]).forEach(x=>listings.push(x));
         }
-      } catch (e) {
-        console.warn("Profil okuma/oluşturma hatası:", e);
-        try { window.toast("Profil yüklenemedi"); } catch {}
-      }
-    });
+      }catch(e){ console.warn('Veri yükleme hatası:', e); }
+    }
 
-    // Kaydet → Firestore’a yaz
-    const __origSaveEdit = window.saveEdit;
-    window.saveEdit = async function () {
-      try { __origSaveEdit && __origSaveEdit(); } catch(e){ console.warn(e); }
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
-      if (!__uid) { try { window.toast("Giriş gerekli"); } catch {} return; }
+    // === Firestore entegrasyonu — __fb hazır olana kadar bekle ===
+    (function waitForFirebase(){
+      if (!window.__fb) { setTimeout(waitForFirebase, 50); return; }
 
-      const payload = {
-        name: document.querySelector("#uName") ? document.querySelector("#uName").textContent : "",
-        city: window.user.city || "",
-        district: window.user.district || "",
-        phone: window.user.phone || "",
-        bio: window.user.bio || "",
-        isPremium: !!window.user.isPremium,
-        isVerified: !!window.user.isVerified,
-        avatar: window.user.avatar || "/assets/img/avatar-default.png",
-        updatedAt: serverTimestamp()
-      };
+      (async () => {
+        const { auth, db, onAuthStateChanged } = window.__fb;
+        const { doc, getDoc, setDoc, serverTimestamp } = await import(
+          "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
+        );
 
-      try {
-        await setDoc(doc(db, "users", __uid), payload, { merge: true });
-        try { window.toast("Profil kaydedildi"); } catch {}
-      } catch (e) {
-        console.warn("Profil yazma hatası:", e);
-        try { window.toast("Kayıt hatası"); } catch {}
-      }
-    };
-  })();
-})();
+        let __uid = null;
+
+        function applyProfileUI(){
+          const u = window.user || {};
+          const $ = (s)=>document.querySelector(s);
+          $("#uName").textContent = u.name || "—";
+          $("#uCity").textContent = u.city || "—";
+          $("#uPhone").textContent = u.phone || "—";
+          $("#uBio").textContent = u.bio || "—";
+          $("#avatar").style.backgroundImage = `url('${u.avatar || "/assets/img/avatar-default.png"}')`;
+          $("#pRole").textContent = u.isPremium ? "Premium Üye" : "Standart Üye";
+          $("#pPremiumBadge").style.display = u.isPremium ? "inline-flex" : "none";
+          $("#pVerifiedSeller").style.display = u.isVerified ? "inline-flex" : "none";
+          $("#pStatus").textContent = u.isVerified ? "Doğrulandı" : "Doğrulanmamış";
+        }
+
+        // Giriş olduysa Firestore'dan profili yükle / yoksa oluştur
+        onAuthStateChanged(auth, async (u) => {
+          if (!u) { try { location.href = "/index.html"; } catch {} return; }
+          __uid = u.uid;
+
+          // Auth verisi
+          const authData = {
+            name:  u.displayName || "",
+            email: u.email || "",
+            phone: u.phoneNumber || "",
+            avatarFromAuth: u.photoURL || ""
+          };
+
+          try {
+            const ref = doc(db, "users", __uid);
+            const snap = await getDoc(ref);
+
+            if (!window.user) window.user = {};
+
+            if (snap.exists()) {
+              const dbUser = snap.data() || {};
+              // Eksikleri Auth verisiyle tamamla
+              const backfill = {};
+              if (!dbUser.name  && authData.name)  backfill.name  = authData.name;
+              if (!dbUser.email && authData.email) backfill.email = authData.email;
+              if (!dbUser.phone && authData.phone) backfill.phone = authData.phone;
+              if ((!dbUser.avatar || dbUser.avatar === "/assets/img/avatar-default.png") && authData.avatarFromAuth) {
+                backfill.avatar = authData.avatarFromAuth;
+              }
+
+              if (Object.keys(backfill).length > 0) {
+                await setDoc(ref, backfill, { merge: true });
+                Object.assign(dbUser, backfill);
+              }
+
+              Object.assign(window.user, dbUser);
+              applyProfileUI();
+
+            } else {
+              // İlk girişse belge oluştur
+              const initial = {
+                name: authData.name,
+                email: authData.email,
+                phone: authData.phone,
+                isPremium: false,
+                isVerified: false,
+                avatar: authData.avatarFromAuth || window.user?.avatar || "/assets/img/avatar-default.png",
+                createdAt: serverTimestamp()
+              };
+              await setDoc(ref, initial, { merge: true });
+              Object.assign(window.user, initial);
+              applyProfileUI();
+            }
+          } catch (e) {
+            console.warn("Profil okuma/oluşturma hatası:", e);
+            try { window.toast("Profil yüklenemedi"); } catch {}
+          }
+        });
+
+        // Kaydet → Firestore’a yaz
+        const __origSaveEdit = window.saveEdit;
+        window.saveEdit = async function () {
+          try { __origSaveEdit && __origSaveEdit(); } catch(e){ console.warn(e); }
+
+          if (!__uid) { try { window.toast("Giriş gerekli"); } catch {} return; }
+
+          const payload = {
+            name: document.querySelector("#uName") ? document.querySelector("#uName").textContent : "",
+            city: window.user.city || "",
+            district: window.user.district || "",
+            phone: window.user.phone || "",
+            bio: window.user.bio || "",
+            isPremium: !!window.user.isPremium,
+            isVerified: !!window.user.isVerified,
+            avatar: window.user.avatar || "/assets/img/avatar-default.png",
+            updatedAt: serverTimestamp()
+          };
+
+          try {
+            await setDoc(doc(db, "users", __uid), payload, { merge: true });
+            try { window.toast("Profil kaydedildi"); } catch {}
+          } catch (e) {
+            console.warn("Profil yazma hatası:", e);
+            try { window.toast("Kayıt hatası"); } catch {}
+          }
+        };
+      })();
+    })();
   </script>
 </body>
 </html>
