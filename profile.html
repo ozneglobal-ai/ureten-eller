@@ -524,24 +524,22 @@ if (url) {
       if(arr.length===0){ const n=el('div','notice mini'); n.textContent='Kayıt yok.'; host.appendChild(n); return; }
       arr.forEach((l,i)=>{
         const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-        card.innerHTML=`
-          <a class="thumb" style="background-image:url('${l.photo||''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
-          <div class="meta">
-            <div class="row" style="justify-content:space-between">
-              <div class="title">${l.title||''}</div>
-              <div class="price">${fmtPrice(l.price||0)}</div>
-            </div>
-            <div class="row" style="margin-top:.4rem">
-              ${badgeFor(l)}
-            </div>
-            <div class="row" style="margin-top:.5rem">
-              ${actionsFor(key,l)}
-            </div>
-          </div>`;
-        bindCardActions(card,l,key);
-        host.appendChild(card);
-      });
-    }
+        card.innerHTML = 
+  <a class="thumb" style="background-image:url('${l.photo || ''}')" href="/ilan/${l.id}" aria-label="İlan görseli"></a>
+  <div class="meta">
+    <div class="row" style="justify-content:space-between">
+      <div class="title">${l.title || ''}</div>
+      <div class="price">${fmtPrice(l.price || 0)}</div>
+    </div>
+    <div class="row" style="margin-top:.4rem">
+      ${badgeFor(l)}
+    </div>
+    <div class="row" style="margin-top:.5rem">
+      ${actionsFor(key, l)}
+    </div>
+  </div>
+`;
+
 
     function badgeFor(l){
       const b=[];
@@ -600,29 +598,73 @@ if (url) {
     function closePricing(){ $('#pricingModal').style.display='none'; $('#pricingModal').setAttribute('aria-hidden','true'); }
 
     function openShowcasePicker(){
-      const host=$('#showList'); host.innerHTML='';
-      const candidates=listings.filter(l=>l.status==='approved' && !l.showcase && !l.showcasePending);
-      if(candidates.length===0){ const n=el('div','notice mini'); n.textContent='Uygun ilan bulunamadı.'; host.appendChild(n); } else {
-        candidates.forEach((l,i)=>{
-          const card=el('article','card'); card.style.setProperty('--glow', COLORS[i%COLORS.length]);
-          card.innerHTML=`
-            <a class=\"thumb\" style=\"background-image:url('${l.photo||''}')\"></a>
-            <div class=\"meta\">\n              <div class=\"row\" style=\"justify-content:space-between\"><div class=\"title\">${l.title||''}</div><div class=\"price\">${fmtPrice(l.price||0)}</div></div>\n              <div class=\"row\" style=\"margin-top:.5rem\">\n                <button class=\"btn primary\" data-act=\"pick\" data-id=\"${l.id}\">Vitrine Öner</button>\n              </div>\n            </div>`;
-          card.querySelector('[data-act="pick"]').addEventListener('click',()=>{ requestShowcase(l); closeShowcase(); paintAllPanels(); updateShowcaseSummary(); });
-          host.appendChild(card);
-        });
-      }
-      $('#showModal').style.display='block'; $('#showModal').setAttribute('aria-hidden','false');
-    }
-    function closeShowcase(){ $('#showModal').style.display='none'; $('#showModal').setAttribute('aria-hidden','true'); }
+  const host = document.querySelector('#showList');
+  host.innerHTML = '';
 
-    function requestShowcase(l){
-      const hasFree = user.isPremium && (user.monthlyShowcaseUsed||0) < PREMIUM_FREE_SHOWCASE;
-      const price = user.isPremium? (hasFree? 0 : PRICE_SHOWCASE_PREMIUM_EXTRA) : PRICE_SHOWCASE_STANDARD;
-      toast(price===0? 'Ücretsiz vitrin hakkınız kullanıldı. Onaya gönderildi.' : `Ödeme (${fmtPrice(price)}) sonrası vitrin talebiniz onaya gidecek.`);
-      l.showcasePending=true; // admin onayı bekler
-      if(price===0){ user.monthlyShowcaseUsed=(user.monthlyShowcaseUsed||0)+1; }
-    }
+  // Yayında olan ve vitrine çıkmamış ilanlar
+  const candidates = listings.filter(l => l.status === 'approved' && !l.showcase && !l.showcasePending);
+
+  if (candidates.length === 0) {
+    const n = document.createElement('div');
+    n.className = 'notice mini';
+    n.textContent = 'Uygun ilan bulunamadı.';
+    host.appendChild(n);
+  } else {
+    candidates.forEach((l, i) => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.style.setProperty('--glow', COLORS[i % COLORS.length]);
+
+      card.innerHTML = `
+        <a class="thumb" style="background-image:url('${l.photo || ''}')"></a>
+        <div class="meta">
+          <div class="row" style="justify-content:space-between">
+            <div class="title">${l.title || ''}</div>
+            <div class="price">${fmtPrice(l.price || 0)}</div>
+          </div>
+          <div class="row" style="margin-top:.5rem">
+            <button class="btn primary" data-act="pick" data-id="${l.id}">Vitrine Öner</button>
+          </div>
+        </div>
+      `;
+
+      card.querySelector('[data-act="pick"]').addEventListener('click', () => {
+        requestShowcase(l);
+        closeShowcase();
+        paintAllPanels();
+        updateShowcaseSummary();
+      });
+
+      host.appendChild(card);
+    });
+  }
+
+  const modal = document.querySelector('#showModal');
+  modal.style.display = 'block';
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeShowcase(){
+  const modal = document.querySelector('#showModal');
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function requestShowcase(l){
+  const hasFree = user.isPremium && (user.monthlyShowcaseUsed || 0) < PREMIUM_FREE_SHOWCASE;
+  const price = user.isPremium ? (hasFree ? 0 : PRICE_SHOWCASE_PREMIUM_EXTRA) : PRICE_SHOWCASE_STANDARD;
+
+  toast(
+    price === 0
+      ? 'Ücretsiz vitrin hakkınız kullanıldı. Onaya gönderildi.'
+      : `Ödeme (${fmtPrice(price)}) sonrası vitrin talebiniz onaya gidecek.`
+  );
+
+  l.showcasePending = true; // admin onayı bekler
+  if (price === 0) {
+    user.monthlyShowcaseUsed = (user.monthlyShowcaseUsed || 0) + 1;
+  }
+}
 
     // --- Profil Düzenle ---
     function openEdit(){
