@@ -528,9 +528,11 @@
       $('#openLive').onclick=()=>{ close(); openChat(); };
     }
 
+https://chatgpt.com/c/68f1957e-30c8-8332-ab86-3bd0cecc5219#:~:text=//%20%3D%3D%3D%20Yard%C4%B1mc%C4%B1lar%20%26%20Sabitler%20%3D%3D%3D%0Awindow,ue_lang%27)%7C%7C%27tr%27
+
 // === Yardımcılar & Sabitler ===
-const $  = (s)=>document.querySelector(s);
-const $$ = (s)=>Array.from(document.querySelectorAll(s));
+window.$  = window.$  || ((s)=>document.querySelector(s));
+window.$$ = window.$$ || ((s)=>Array.from(document.querySelectorAll(s)));
 const COLORS=["#10b981","#f59e0b","#8b5cf6","#06b6d4","#ef4444","#eab308","#14b8a6","#f97316","#a855f7","#3b82f6"];
 let LANG=localStorage.getItem('ue_lang')||'tr';
 
