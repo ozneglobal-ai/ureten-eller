@@ -1,177 +1,213 @@
-// --- SEKME: sadece tıklanan bölüm görünsün ---
-const sections  = Array.from(document.querySelectorAll('.section'));
-const links     = Array.from(document.querySelectorAll('.menu a'));
-const emptyHint = document.getElementById('emptyHint');
-
-function hideAll(){ sections.forEach(s=>s.classList.remove('active')); links.forEach(a=>a.classList.remove('active')); if(emptyHint) emptyHint.style.display=''; }
-function show(id){
-  hideAll();
-  const target = document.getElementById(id);
-  if (target){
-    target.classList.add('active');
-    const link = links.find(a => (a.dataset.target === id) || a.getAttribute('href') === `#${id}`);
-    if (link) link.classList.add('active');
-    if (emptyHint) emptyHint.style.display = 'none';
-    history.replaceState(null, '', `#${id}`);
-  }
-}
-links.forEach(a => a.addEventListener('click',(e)=>{e.preventDefault(); const id=a.dataset.target||(a.getAttribute('href')||'').replace('#',''); if(id) show(id);}));
-hideAll(); // başlangıç boş
-
-// --- FIREBASE ---
-import { db } from "/firebase-init.js";
-import {
-  collection, doc, getDocs, setDoc, query, orderBy, limit,
-  serverTimestamp, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-
-// === KULLANICILAR ===
-const usersBody      = document.getElementById('usersBody');
-const btnReloadUsers = document.getElementById('btnReloadUsers');
-const qUserInput     = document.getElementById('qUser');
-let usersCache = []; // {id, ...}
-
-function msToDays(ms){ return Math.max(0, Math.floor(ms/86400000)); }
-function isPro(u){
-  const ts = u.proUntil ?? u.premiumUntil;
-  const untilMs = typeof ts==='number' ? ts : (ts?.seconds? ts.seconds*1000 : 0);
-  return untilMs > Date.now();
-}
-function proLeftText(u){
-  const ts = u.proUntil ?? u.premiumUntil;
-  const untilMs = typeof ts==='number' ? ts : (ts?.seconds? ts.seconds*1000 : 0);
-  if (!untilMs || untilMs<=Date.now()) return '—';
-  const d = msToDays(untilMs - Date.now());
-  return d>0 ? `AKTİF (${d}g)` : 'AKTİF (bugün)';
-}
-
-async function loadUsers(){
-  const qRef = query(collection(db,'users'), orderBy('email'), limit(500));
-  const snap = await getDocs(qRef);
-  usersCache = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-  renderUsers(usersCache);
-}
-
-function renderUsers(list){
-  if (!usersBody) return;
-  usersBody.innerHTML = list.length ? '' : '<tr><td colspan="6" class="muted">Kayıt yok</td></tr>';
-  for (const u of list){
-    const name  = u.displayName || '—';
-    const email = u.email || '—';
-    const role  = u.role || '—';
-    const city  = u.city || '—';
-    const proActive = isPro(u);
-    const proTxt = proLeftText(u);
-    const mainBtnLabel = proActive ? 'PRO ÜYE' : 'PRO VER';
-    const mainBtnAction= proActive ? 'proOff' : 'pro12';
-    const banned = !!u.banned;
-
-    usersBody.insertAdjacentHTML('beforeend', `
-      <tr data-uid="${u.id}">
-        <td>
-          <a class="user-link" href="/profile.html?uid=${encodeURIComponent(u.id)}" target="_blank">
-            ${escapeHtml(name)}
-          </a>
-        </td>
-        <td>${escapeHtml(email)}</td>
-        <td>${escapeHtml(role)}</td>
-        <td>${escapeHtml(city)}</td>
-        <td data-proleft>${proTxt}</td>
-        <td class="actions">
-          <button class="btn-xs" data-action="${mainBtnAction}">${mainBtnLabel}</button>
-          ${banned
-            ? `<button class="btn-xs" data-action="unban">Ban Kaldır</button>`
-            : `<button class="btn-xs" data-action="ban">Banla</button>`}
-        </td>
-      </tr>
-    `);
-  }
-}
-
-// Arama (isim/e-posta)
-function applyFilter(){
-  const q = (qUserInput?.value || '').trim().toLowerCase();
-  if (!q) return renderUsers(usersCache);
-  const filtered = usersCache.filter(u =>
-    (u.displayName||'').toLowerCase().includes(q) ||
-    (u.email||'').toLowerCase().includes(q)
-  );
-  renderUsers(filtered);
-}
-
-btnReloadUsers?.addEventListener('click', loadUsers);
-qUserInput?.addEventListener('input', applyFilter);
-
-// İşlemler: PRO 12 ay / PRO iptal / Ban / Unban
-usersBody?.addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button[data-action]');
-  if (!btn) return;
-  const tr  = btn.closest('tr[data-uid]'); const uid = tr?.dataset.uid;
-  if (!uid) return;
-  btn.disabled = true;
-  try{
-    if (btn.dataset.action === 'pro12'){
-      const until = Date.now() + 365*24*60*60*1000; // 12 ay
-      await setDoc(doc(db,'users',uid), { proUntil: until, updatedAt: serverTimestamp() }, { merge:true });
-      // UI güncelle
-      const i = usersCache.findIndex(u=>u.id===uid);
-      if (i>=0){ usersCache[i].proUntil = until; }
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profil • Üreten Eller</title>
+  <meta name="description" content="Üyelik profili" />
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <style>
+    :root{
+      --bg1:#0b1220; --bg2:#0a0f1c; --card:#0e172a; --ink:#e5e7eb; --muted:#9ca3af;
+      --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937
     }
-    else if (btn.dataset.action === 'proOff'){
-      await setDoc(doc(db,'users',uid), { proUntil: 0, updatedAt: serverTimestamp() }, { merge:true });
-      const i = usersCache.findIndex(u=>u.id===uid);
-      if (i>=0){ usersCache[i].proUntil = 0; }
-    }
-    else if (btn.dataset.action === 'ban'){
-      await setDoc(doc(db,'users',uid), { banned: true, updatedAt: serverTimestamp() }, { merge:true });
-      const i = usersCache.findIndex(u=>u.id===uid);
-      if (i>=0){ usersCache[i].banned = true; }
-    }
-    else if (btn.dataset.action === 'unban'){
-      await setDoc(doc(db,'users',uid), { banned: false, updatedAt: serverTimestamp() }, { merge:true });
-      const i = usersCache.findIndex(u=>u.id===uid);
-      if (i>=0){ usersCache[i].banned = false; }
-    }
-    // yeniden çiz (buton etiketi PRO ÜYE ↔ PRO VER)
-    applyFilter();
-  }catch(err){
-    console.error(err); alert('İşlem başarısız.');
-  }finally{
-    btn.disabled = false;
-  }
-});
+    html,body{height:100%}
+    body{margin:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:var(--ink);
+         font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    .container{max-width:960px; margin:64px auto; padding:0 16px}
+    .card{background:var(--card); border:1px solid var(--brd); border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,.25)}
+    .row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .col{flex:1 1 300px}
+    .muted{color:var(--muted)}
+    .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--brd)}
+    .badge.pro{border-color:var(--ok)}
+    .kv{display:grid; grid-template-columns:160px 1fr; gap:8px 16px; margin-top:12px}
+    .kv div.label{color:var(--muted)}
+    .btn{appearance:none; border:none; background:var(--accent); color:#001018; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600}
+    .btn[disabled]{opacity:.6; cursor:default}
+    img.avatar{width:112px; height:112px; border-radius:50%; object-fit:cover; border:2px solid var(--brd); background:#111}
+    header.bar{position:fixed; top:0; left:0; right:0; height:56px; display:flex; align-items:center; padding:0 12px; gap:12px; background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0)); backdrop-filter:blur(6px)}
+    .xbtn{margin-left:auto; width:36px; height:36px; border-radius:999px; border:1px solid rgba(255,255,255,.35); color:#fff; background:transparent; display:inline-grid; place-items:center; cursor:pointer}
+    .xbtn:hover{background:rgba(255,255,255,.08)}
+    a{color:var(--accent); text-decoration:none}
+    .danger{background:var(--err); color:#fff}
+    .grid{display:grid; grid-template-columns:1fr; gap:16px}
+    @media (min-width:860px){ .grid{grid-template-columns:360px 1fr} }
+    .sep{height:1px; background:var(--brd); margin:12px 0}
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <strong>Profil</strong>
+    <button class="xbtn" title="Ana sayfa" onclick="location.href='/home.html'">✕</button>
+  </header>
 
-// "Kullanıcılar" sekmesi ilk açılışta veriyi yüklesin
-document.querySelector('a[data-target="users"]')?.addEventListener('click', () => {
-  if (!usersCache.length) loadUsers();
-});
-
-// PRO kalan günleri otomatik güncelle (dakikada bir)
-setInterval(()=>{ if (!document.getElementById('users')?.classList.contains('active')) return; renderUsers(usersCache); }, 60000);
-
-// HTML escape
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-
-// === MESAJLAR (home.html’den gelen canlı destek) ===
-// Varsayılan şema: conversations/{id} {lastMessage, updatedAt, userId, userName}
-// Mesajlar: conversations/{id}/messages/{auto} {text, from, createdAt}
-const convList = document.getElementById('conversations');
-if (convList){
-  const convQ = query(collection(db,'conversations'), orderBy('updatedAt','desc'), limit(50));
-  onSnapshot(convQ, snap=>{
-    convList.innerHTML = '';
-    snap.forEach(d=>{
-      const c = d.data();
-      convList.insertAdjacentHTML('beforeend', `
-        <div class="card" data-conv="${d.id}">
-          <div class="row">
-            <strong>${escapeHtml(c.userName || c.userId || d.id)}</strong>
-            <span class="muted" style="margin-left:auto">${c.updatedAt?.toDate ? c.updatedAt.toDate().toLocaleString() : ''}</span>
+  <main class="container">
+    <section id="profileCard" class="card">
+      <div class="grid">
+        <div class="row">
+          <img id="avatar" class="avatar" src="" alt="Avatar" />
+          <div class="col">
+            <h2 id="displayName">—</h2>
+            <div>
+              <span id="roleBadge" class="badge">member</span>
+              <span id="proBadge" class="badge pro" style="display:none">PRO</span>
+              <span id="proLeft" class="muted"></span>
+            </div>
+            <div class="muted" id="uidText" style="margin-top:6px"></div>
           </div>
-          <div class="muted">${escapeHtml(c.lastMessage || '')}</div>
-          <a class="btn-sm" href="/admin/chat.html?cid=${encodeURIComponent(d.id)}">Aç</a>
         </div>
-      `);
+
+        <div>
+          <div class="kv">
+            <div class="label">E-posta</div><div id="email">—</div>
+            <div class="label">Şehir</div><div id="city">—</div>
+            <div class="label">Telefon</div><div id="phone">—</div>
+            <div class="label">Hakkında</div><div id="about">—</div>
+          </div>
+          <div class="sep"></div>
+          <div class="row" id="adminRow" style="display:none">
+            <button id="btnProToggle" class="btn">PRO VER (12 ay)</button>
+            <button id="btnBanToggle" class="btn danger">Banla</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { auth, db } from "/firebase-init.js";
+    import {
+      doc, getDoc, setDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    const el = (id)=>document.getElementById(id);
+    const displayName = el('displayName');
+    const email       = el('email');
+    const phone       = el('phone');
+    const city        = el('city');
+    const about       = el('about');
+    const avatar      = el('avatar');
+    const roleBadge   = el('roleBadge');
+    const proBadge    = el('proBadge');
+    const proLeft     = el('proLeft');
+    const uidText     = el('uidText');
+    const adminRow    = el('adminRow');
+    const btnPro      = el('btnProToggle');
+    const btnBan      = el('btnBanToggle');
+
+    const qsUid = new URLSearchParams(location.search).get('uid');
+
+    function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m])); }
+    function msToDays(ms){ return Math.max(0, Math.floor(ms/86400000)); }
+    function tsToMs(ts){
+      if (!ts) return 0;
+      if (typeof ts === 'number') return ts;
+      if (ts.seconds) return ts.seconds*1000;
+      return 0;
+    }
+    function proLeftText(u){
+      const untilMs = tsToMs(u.proUntil ?? u.premiumUntil);
+      if (!untilMs || untilMs<=Date.now()) return '';
+      const d = msToDays(untilMs - Date.now());
+      return d>0 ? ` • AKTİF (${d}g)` : ' • AKTİF (bugün)';
+    }
+
+    async function loadAndRender(targetUid, me){
+      const uSnap = await getDoc(doc(db,'users',targetUid));
+      const u = uSnap.exists() ? uSnap.data() : {};
+
+      // Render
+      displayName.textContent = u.displayName || '—';
+      email.textContent       = u.email || '—';
+      phone.textContent       = u.phone || '—';
+      city.textContent        = u.city || '—';
+      about.textContent       = u.about || '—';
+      avatar.src              = u.photoURL || '/assets/icons/ureteneller.png';
+      roleBadge.textContent   = (u.role || 'member');
+      uidText.textContent     = `UID: ${targetUid}`;
+
+      const proTxt = proLeftText(u);
+      if (proTxt){
+        proBadge.style.display = '';
+        proLeft.textContent = proTxt;
+      }else{
+        proBadge.style.display = 'none';
+        proLeft.textContent = '';
+      }
+
+      // Admin kontrolleri
+      let isAdmin = false;
+      if (me){
+        const meSnap = await getDoc(doc(db,'users',me.uid));
+        isAdmin = meSnap.exists() && meSnap.data().role === 'admin';
+      }
+
+      // Admin ise butonları aç, etiketleri hazırla
+      adminRow.style.display = isAdmin ? '' : 'none';
+      if (isAdmin){
+        const untilMs = tsToMs(u.proUntil ?? u.premiumUntil);
+        btnPro.textContent = (untilMs > Date.now()) ? 'PRO KALDIR' : 'PRO VER (12 ay)';
+        btnPro.dataset.state = (untilMs > Date.now()) ? 'off' : 'on';
+        btnBan.textContent = u.banned ? 'Ban Kaldır' : 'Banla';
+        btnBan.dataset.state = u.banned ? 'off' : 'on';
+
+        btnPro.onclick = async ()=>{
+          btnPro.disabled = true;
+          try{
+            if (btnPro.dataset.state === 'on'){
+              const until = Date.now() + 365*24*60*60*1000;
+              await setDoc(doc(db,'users',targetUid), { proUntil: until, updatedAt: serverTimestamp() }, { merge:true });
+            }else{
+              await setDoc(doc(db,'users',targetUid), { proUntil: 0, updatedAt: serverTimestamp() }, { merge:true });
+            }
+            await loadAndRender(targetUid, me);
+          }catch(e){ alert('PRO işlemi başarısız.'); console.error(e); }
+          finally{ btnPro.disabled = false; }
+        };
+
+        btnBan.onclick = async ()=>{
+          btnBan.disabled = true;
+          try{
+            if (btnBan.dataset.state === 'on'){
+              await setDoc(doc(db,'users',targetUid), { banned:true, updatedAt: serverTimestamp() }, { merge:true });
+            }else{
+              await setDoc(doc(db,'users',targetUid), { banned:false, updatedAt: serverTimestamp() }, { merge:true });
+            }
+            await loadAndRender(targetUid, me);
+          }catch(e){ alert('Ban işlemi başarısız.'); console.error(e); }
+          finally{ btnBan.disabled = false; }
+        };
+      }
+    }
+
+    auth.onAuthStateChanged(async (me)=>{
+      // 1) Hedef UID: URL'deki uid VARSA onu kullan (ÖNEMLİ)
+      let targetUid = qsUid || me?.uid || null;
+
+      // 2) Güvenlik: Admin değilse ve başkasının profiline bakmaya çalışıyorsa engelle
+      if (qsUid && me){
+        const meSnap = await getDoc(doc(db,'users',me.uid));
+        const isAdmin = meSnap.exists() && meSnap.data().role === 'admin';
+        if (!isAdmin && me.uid !== qsUid){
+          location.href = '/index.html'; // veya bir uyarı sayfası
+          return;
+        }
+      }
+
+      if (!targetUid){
+        // oturum yok ve uid yok → girişe yönlendir
+        location.href = '/index.html';
+        return;
+      }
+
+      try{
+        await loadAndRender(targetUid, me || null);
+      }catch(e){
+        console.error(e);
+        alert('Profil yüklenemedi.');
+      }
     });
-  });
-}
+  </script>
+</body>
+</html>
