@@ -434,8 +434,13 @@
       if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
       (function waitForFirebase(){ if(!window.__fb){ setTimeout(waitForFirebase,50); return; } (async()=>{
         const {auth,db,onAuthStateChanged}=window.__fb; const {doc,getDoc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js');
-        onAuthStateChanged(auth, async (u)=>{
-          if(!u){ try{ location.href='/index.html'; }catch{} return; }
+        onAuthStateChanged(auth, async (u) => {
+          // Kullanıcı yoksa SAYFADAN ATMAYALIM — sadece "oturumu kapalı" durumu gösterelim
+          if(!u){
+            try { document.body.setAttribute('data-auth','signed-out'); } catch {}
+            showAdminControlsIfAny();
+            return;
+          }
           const authData={name:u.displayName||'',email:u.email||'',phone:u.phoneNumber||'',avatarFromAuth:u.photoURL||''};
           try{
             const ref=doc(db,'users',u.uid); const snap=await getDoc(ref); if(!window.user) window.user={};
