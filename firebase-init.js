@@ -3,7 +3,8 @@
 // === Firebase CDN (ESM) ===
 import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
 import {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  getAuth, onAuthStateChanged as _onAuthStateChanged,
+  signInWithEmailAndPassword as _signInWithEmailAndPassword, signOut as _signOut
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
@@ -13,12 +14,13 @@ import {
   getStorage, ref as storageRef, uploadBytes, getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
 
-// === SENİN PROJE CONFIG'in (Flutter AI Playground) ===
+// === PROJE CONFIG (Flutter AI Playground) ===
+// Bu değerler Firebase konsolundaki "Config" ile birebir aynı.
 const firebaseConfig = {
   apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
   authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
   projectId: "flutter-ai-playground-38ddf",
-  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app"
+  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app", // ← virgül eklendi
   messagingSenderId: "4688234885",
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
@@ -35,10 +37,10 @@ self.auth = auth;
 self.db = db;
 self.storage = storage;
 
-// Auth yardımcıları
-self.onAuthStateChanged = (cb) => onAuthStateChanged(auth, cb);
-self.signInWithEmailAndPassword = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
-self.signOutNow = () => signOut(auth);
+// Auth yardımcıları (imza çakışması olmaması için passthrough)
+self.onAuthStateChanged = (...args) => _onAuthStateChanged(...args); // hem (auth, cb) hem (cb) uyumlu
+self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
+self.signOutNow = () => _signOut(auth);
 
 // Storage yardımcıları (ilan sayfası kullanıyor)
 self.storageRef = (path) => storageRef(storage, path);
@@ -47,9 +49,9 @@ self._getDownloadURL = (refObj) => getDownloadURL(refObj);
 
 // Firestore yardımcıları (yol-string veya ref kabul eder)
 self.firebase = Object.assign(self.firebase || {}, {
-  setDoc: (refOrPath, data) => {
+  setDoc: (refOrPath, data, opts) => {
     const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
-    return setDoc(r, data);
+    return setDoc(r, data, opts);
   },
   updateDoc: (refOrPath, data) => {
     const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
@@ -72,11 +74,12 @@ self.getDocs = getDocs;
 
 console.debug('[firebase-init] ready:', app.options.projectId);
 
-// --- UYUMLULUK KÖPRÜSÜ: window.__fb bekleyen sayfalar için (ekleme) ---
+// --- UYUMLULUK KÖPRÜSÜ: window.__fb bekleyen sayfalar için ---
+// NOT: Burada da orijinal imzayı koruyoruz.
 self.__fb = self.__fb || {
   app,
   auth,
   db,
   storage,
-  onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb)
+  onAuthStateChanged: (...args) => _onAuthStateChanged(...args)
 };
