@@ -1,6 +1,4 @@
-// admin/js/admin-login.js
-// Module script — admin login flow
-// Bu dosya kökten /admin/js/admin-login.js olarak servis edilmelidir.
+// admin/js/admin-login.js — FIXED (claims + Firestore role kontrolü)
 // <script type="module" src="/admin/js/admin-login.js" defer></script>
 
 // --- Firebase init (kökten import) ---
@@ -9,8 +7,11 @@ import {
   getAuth, setPersistence, browserLocalPersistence,
   signInWithEmailAndPassword, onAuthStateChanged, signOut
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
 const auth = getAuth();
+const db = getFirestore();
+
 const $ = (s)=>document.querySelector(s);
 const form = $('#loginForm');
 const emailEl = $('#email');
@@ -28,9 +29,22 @@ function disableForm(dis){
 onAuthStateChanged(auth, async (u)=>{
   if(!u) return;
   try{
-    const t = await u.getIdTokenResult(true);
     const email = (u.email||'').toLowerCase();
-    const ok = t?.claims?.admin === true || email.endsWith('@ureteneller.com');
+
+    // custom claim + domain kontrolü
+    const t = await u.getIdTokenResult(true);
+    const claimAdmin = t?.claims?.admin === true;
+    const domainAdmin = email.endsWith('@ureteneller.com');
+
+    // Firestore role kontrolü
+    let roleAdmin = false;
+    try{
+      const snap = await getDoc(doc(db, 'users', u.uid));
+      const d = snap.exists() ? snap.data() : null;
+      roleAdmin = (d?.role === 'admin') || (d?.status === 'admin');
+    }catch{ /* doc okunamadıysa roleAdmin false kalır */ }
+
+    const ok = claimAdmin || domainAdmin || roleAdmin;
     if(ok){
       location.replace('/admin/panel.html');
     }else{
@@ -57,7 +71,6 @@ form?.addEventListener('submit', async (e)=>{
     await signInWithEmailAndPassword(auth, email, pass);
     // onAuthStateChanged içinde panel.html'e yönlenecek
   }catch(err){
-    // Hata mesajlarını kullanıcı dostu ver
     const code = err?.code || '';
     if(code.includes('user-not-found'))      showErr('Kullanıcı bulunamadı');
     else if(code.includes('wrong-password')) showErr('Şifre hatalı');
