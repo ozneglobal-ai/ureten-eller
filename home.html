@@ -398,25 +398,43 @@
   function startCatRotate(){ const grid=document.getElementById('catGrid'); if(!grid) return; if(window.__catRotateInt) clearInterval(window.__catRotateInt); window.__catRotateInt=setInterval(()=>{ const f=grid.firstElementChild; if(f){ grid.appendChild(f); } },5000); }
   function startBarGlow(){ const bar=document.querySelector('.bottomBar'); if(!bar) return; let i=0; function paint(){ bar.style.setProperty('--bbglow', COLORS[i%COLORS.length]); i=(i+1)%COLORS.length; } paint(); if(window.__barGlowInt) clearInterval(window.__barGlowInt); window.__barGlowInt=setInterval(paint, 2000); }
 
-  // ======= NAV / ÜST BAR =======
   async function logout(){
-    try{ await window.UE?.firebase?.logout?.(); }catch(_){/* sessiz */}
-    try{
-      if (window.google?.accounts?.id){
-        google.accounts.id.disableAutoSelect();
-        const email = window.__fb?.auth?.currentUser?.email;
-        if (email) try{ google.accounts.id.revoke(email, ()=>{}); }catch(_){/* sessiz */}
-      }
-    }catch(_){/* sessiz */}
-    try{
-      sessionStorage.clear();
-      for (let i=0; i<localStorage.length; i++){
-        const k=localStorage.key(i);
-        if (k && k.startsWith('firebase:authUser:')){ localStorage.removeItem(k); i--; }
-      }
-    }catch(_){/* sessiz */}
-    window.location.href='/index.html';
+  try {
+    // 1) Firebase Auth oturumunu kapat (asıl kritik adım)
+    if (window.__fb?.auth) {
+      const { signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+      await signOut(window.__fb.auth);
+    } else if (window.signOutNow) {
+      await window.signOutNow(); // firebase-init.js içindeki yardımcı
+    }
+  } catch (e) {
+    console.warn('signOut error:', e);
   }
+
+  try {
+    // 2) Google One Tap/Identity varsa otomatik seçimi kapat + hesabı revoke et
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+      const email = window.__fb?.auth?.currentUser?.email; // signOut sonrası çoğu zaman null olur
+      if (email) {
+        try { window.google.accounts.id.revoke(email, ()=>{}); } catch(_) {}
+      }
+    }
+  } catch (_) {}
+
+  try {
+    // 3) Yerel izleri temizle (gerekli değil ama temizlik)
+    sessionStorage.clear();
+    // Firebase bazı tarayıcılarda localStorage anahtarları bırakabilir:
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('firebase:authUser:')) { localStorage.removeItem(k); i--; }
+    }
+  } catch (_) {}
+
+  // 4) Güvenli yönlendirme (geri tuşuyla oturum sayfasına dönülmesin)
+  location.replace('/index.html');
+}
   function bindNav(){
     const T=(window.I18N[window.LANG]||window.I18N.tr);
     const S=(sel,val)=>{ const el=document.querySelector(sel); if(el) el.textContent=val; };
