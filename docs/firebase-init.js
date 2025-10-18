@@ -18,7 +18,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
   authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
   projectId: "flutter-ai-playground-38ddf",
-  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
+  storageBucket: "flutter-ai-playground-38ddf.appspot.com",
   messagingSenderId: "4688234885",
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
