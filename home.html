@@ -758,7 +758,13 @@ async function watchNotiCount(){
       renderList('stdGrid', std.slice(0,50));
       updateCounts(Math.min(50, vip.length), Math.min(50, std.length));
     }catch(e){
-      console.warn('Listings load error:', e);
+      const __msg = String((e && (e.message||e.code))||'');
+      if(__msg.includes('Missing or insufficient permissions')){
+        try{ toast('İzin yok: İlanları görüntüleme yetkisi bulunmuyor.'); }catch(_){/* ui yoksa sessiz */}
+        console.warn('Listings load error (permissions):', e);
+      } else {
+        console.warn('Listings load error:', e);
+      }
       updateCounts(0,0);
     }
   };
