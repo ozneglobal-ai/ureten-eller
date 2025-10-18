@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title data-i18n="orders_title">Siparişler • Üreten Eller</title>
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <style>
+    :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --brd:#1f2937; --card:#0e172a; --card2:#0b1326; }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+
+    .wrap{max-width:1200px;margin:0 auto;padding:1rem}
+    .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
+    .logo img{width:32px;height:32px}
+    .spacer{flex:1}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
+    .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
+    .btn.ghost{background:transparent}
+
+    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem;gap:.75rem}
+    .mini{color:var(--muted)}
+    .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+    .tab{padding:.45rem .7rem;border:1px solid var(--brd);border-radius:999px;background:#0b1220;font-weight:800;cursor:pointer;color:#fff}
+    .tab[aria-selected="true"]{outline:2px solid var(--accent)}
+
+    .grid{display:grid;gap:.8rem;grid-template-columns:1fr}
+    @media(min-width:820px){.grid{grid-template-columns:1fr 1fr}}
+
+    .card{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));padding:.75rem}
+    .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+    .title{font-weight:900}
+    .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .55rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
+    .badge.green{background:#052315;border-color:#0e766e;color:#9ff6dd}
+    .badge.yellow{background:#241a05;border-color:#7a5408;color:#ffe2a3}
+    .badge.red{background:#2a0b0b;border-color:#7a1b1b;color:#ffb4b4}
+    .badge.blue{background:#0a162c;border-color:#0b4a6f;color:#a3daff}
+
+    .meta{display:grid;grid-template-columns:1fr auto;gap:.4rem;margin-top:.5rem}
+    .meta .cell{display:grid;gap:.25rem}
+
+    .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426}
+    .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
+  </style>
+  <script type="module" src="./firebase-init.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">
+        <img src="./üreteneller.png" alt="logo" />
+        <span data-i18n="brand">Üreten Eller</span>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="btnBack" type="button">← <span data-i18n="back_profile">Profile Dön</span></button>
+    </div>
+
+    <section class="head" aria-labelledby="oTitle">
+      <div>
+        <h2 id="oTitle" data-i18n="orders_title">Siparişlerim</h2>
+        <div class="mini" id="oSub">—</div>
+      </div>
+      <div class="row">
+        <span class="badge blue" id="badgeTotal"><span data-i18n="total_orders">Toplam</span>: 0</span>
+        <span class="badge yellow" id="badgePending"><span data-i18n="pending_orders">Bekleyen</span>: 0</span>
+        <span class="badge green" id="badgeApproved"><span data-i18n="approved">Onaylı</span>: 0</span>
+        <span class="badge" id="badgeCompleted"><span data-i18n="completed">Tamamlanan</span>: 0</span>
+      </div>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Sipariş sekmeleri">
+      <button class="tab" id="tab-pending" role="tab" aria-selected="true" data-tab="pending" type="button" data-i18n="pending_orders">Bekleyen</button>
+      <button class="tab" id="tab-approved" role="tab" aria-selected="false" data-tab="approved" type="button" data-i18n="approved">Onaylı</button>
+      <button class="tab" id="tab-completed" role="tab" aria-selected="false" data-tab="completed" type="button" data-i18n="completed">Tamamlanan</button>
+      <button class="tab" id="tab-rejected" role="tab" aria-selected="false" data-tab="rejected" type="button" data-i18n="rejected">Reddedilen</button>
+    </div>
+
+    <main style="margin-top:.8rem">
+      <div id="panel-pending" class="grid" role="tabpanel" aria-labelledby="tab-pending"></div>
+      <div id="panel-approved" class="grid" role="tabpanel" aria-labelledby="tab-approved" hidden></div>
+      <div id="panel-completed" class="grid" role="tabpanel" aria-labelledby="tab-completed" hidden></div>
+      <div id="panel-rejected" class="grid" role="tabpanel" aria-labelledby="tab-rejected" hidden></div>
+      <div class="notice mini" id="emptyBox" style="display:none" data-i18n="no_records">Kayıt yok.</div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <audio id="orderSound" src="./notify.wav" preload="auto"></audio>
+
+  <script>
+    const I18N = {
+      tr:{ brand:'Üreten Eller', back_profile:'Profile Dön', orders_title:'Siparişlerim', total_orders:'Toplam', pending_orders:'Bekleyen', approved:'Onaylı', completed:'Tamamlanan', rejected:'Reddedilen', view:'Görüntüle', approve:'Onayla', reject:'Reddet', message:'Mesaj', buyer:'Alıcı', qty:'Adet', amount:'Tutar', note:'Not', created:'Tarih', contact:'İletişim', open_order:'Siparişi Aç', no_records:'Kayıt yok.' },
+      en:{ brand:'Ureten Eller', back_profile:'Back to Profile', orders_title:'My Orders', total_orders:'Total', pending_orders:'Pending', approved:'Approved', completed:'Completed', rejected:'Rejected', view:'View', approve:'Approve', reject:'Reject', message:'Message', buyer:'Buyer', qty:'Qty', amount:'Amount', note:'Note', created:'Created', contact:'Contact', open_order:'Open Order', no_records:'No records.' },
+      ar:{ brand:'أيادي منتجة', back_profile:'العودة للملف', orders_title:'طلباتي', total_orders:'الإجمالي', pending_orders:'قيد الانتظار', approved:'موافق عليه', completed:'مكتمل', rejected:'مرفوض', view:'عرض', approve:'وافق', reject:'رفض', message:'رسالة', buyer:'المشتري', qty:'الكمية', amount:'المبلغ', note:'ملاحظة', created:'التاريخ', contact:'التواصل', open_order:'افتح الطلب', no_records:'لا توجد سجلات.' },
+      de:{ brand:'Ureten Eller', back_profile:'Zurück zum Profil', orders_title:'Bestellungen', total_orders:'Gesamt', pending_orders:'Ausstehend', approved:'Genehmigt', completed:'Erledigt', rejected:'Abgelehnt', view:'Ansehen', approve:'Genehmigen', reject:'Ablehnen', message:'Nachricht', buyer:'Käufer', qty:'Menge', amount:'Betrag', note:'Notiz', created:'Datum', contact:'Kontakt', open_order:'Bestellung öffnen', no_records:'Keine Einträge.' }
+    };
+    const LANG_KEY='ue_lang_v1';
+    function getLang(){ try{ return localStorage.getItem(LANG_KEY)||'tr'; }catch{ return 'tr'; } }
+    function t(key){ const d=I18N[getLang()]||I18N.tr; return d[key]||key; }
+    function applyI18n(){ document.querySelectorAll('[data-i18n]').forEach(n=>{ const k=n.getAttribute('data-i18n'); const v=t(k); if(v) n.textContent=v; }); document.title = t('orders_title') + ' • ' + t('brand'); }
+
+    const $=(s)=>document.querySelector(s);
+    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
+
+    let __unsub=null; let __uid=null; const sound=$('#orderSound');
+
+    function bindTabs(){ document.querySelectorAll('.tab').forEach(btn=>{ btn.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected','false')); btn.setAttribute('aria-selected','true'); showPanel(btn.dataset.tab); }); }); }
+    function showPanel(key){ ['pending','approved','completed','rejected'].forEach(k=>{ const p=$(`#panel-${k}`); if(p) p.hidden=(k!==key); }); }
+
+    function orderCard(o){
+      const div=document.createElement('article');
+      div.className='card';
+      const buyer = (o.buyerName||'') + (o.buyerCity?` • ${o.buyerCity}`:'');
+      const statusBadge = o.status==='pending'?'<span class="badge yellow">'+t('pending_orders')+'</span>': o.status==='approved'?'<span class="badge green">'+t('approved')+'</span>': o.status==='completed'?'<span class="badge">'+t('completed')+'</span>':'<span class="badge red">'+t('rejected')+'</span>';
+      div.innerHTML = `
+        <div class="row" style="justify-content:space-between">
+          <div class="title">${o.listingTitle||''}</div>
+          <div class="row">${statusBadge}</div>
+        </div>
+        <div class="meta" style="margin-top:.35rem">
+          <div class="cell">
+            <div class="mini">${t('buyer')}</div>
+            <div><strong>${buyer||'—'}</strong></div>
+          </div>
+          <div class="cell">
+            <div class="mini">${t('qty')} • ${t('amount')}</div>
+            <div><strong>${o.qty||1} • ${formatTRY(o.total||0)}</strong></div>
+          </div>
+          <div class="cell">
+            <div class="mini">${t('created')}</div>
+            <div>${formatDate(o.createdAt)}</div>
+          </div>
+          <div class="cell">
+            <div class="mini">${t('note')}</div>
+            <div>${(o.note||'—')}</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:.6rem;justify-content:flex-end">
+          ${o.status==='pending'? `<button class="btn primary" data-act="approve">${t('approve')}</button><button class="btn warn" data-act="reject">${t('reject')}</button>` : ''}
+          ${o.status==='approved'? `<button class="btn" data-act="message">${t('message')}</button>`: ''}
+          <button class="btn ghost" data-act="open">${t('open_order')}</button>
+        </div>
+      `;
+      div.querySelectorAll('[data-act]').forEach(b=>{
+        b.addEventListener('click', async ()=>{
+          const act=b.getAttribute('data-act');
+          if(act==='approve') return approveOrder(o);
+          if(act==='reject') return updateOrder(o.id,{status:'rejected'});
+          if(act==='message') return openMessage(o);
+          if(act==='open') return openOrder(o);
+        });
+      });
+      return div;
+    }
+
+    function formatTRY(v){ try {return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{return v} }
+    function formatDate(ts){ try{ if(!ts) return '—'; const d = ts.toDate? ts.toDate() : new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
+
+    async function updateOrder(id, data){
+      try{
+        const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const ref = doc(window.__fb.db,'orders',id);
+        await updateDoc(ref,{...data, updatedAt:serverTimestamp()});
+        toast('✓');
+      }catch(e){ console.warn('updateOrder',e); toast('Hata'); }
+    }
+
+    async function approveOrder(o){
+      try{
+        const {doc,updateDoc,serverTimestamp,collection,addDoc,setDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        let threadId = o.threadId;
+        if(!threadId){
+          const thRef = await addDoc(collection(window.__fb.db,'messages'),{
+            createdAt: serverTimestamp(),
+            participants: [o.sellerId, o.buyerId],
+            lastText: 'Sipariş onaylandı',
+            lastAt: serverTimestamp(),
+            orderId: o.id
+          });
+          threadId = thRef.id;
+          await addDoc(collection(window.__fb.db,'messages',threadId,'items'),{
+            createdAt: serverTimestamp(),
+            from: o.sellerId,
+            text: 'Sipariş onaylandı',
+            sys: true
+          });
+        }
+        await updateDoc(doc(window.__fb.db,'orders',o.id),{status:'approved', threadId, updatedAt:serverTimestamp()});
+        toast('✓');
+      }catch(e){ console.warn('approveOrder',e); toast('Hata'); }
+    }
+
+    function openMessage(o){
+      const q = new URLSearchParams({ thread: o.threadId||'', order:o.id });
+      location.href = '/mesajlar.html?'+q.toString();
+    }
+    function openOrder(o){
+      const q = new URLSearchParams({ id:o.id });
+      location.href = '/order.html?'+q.toString();
+    }
+
+    async function watchOrders(uid){
+      const {collection,query,where,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const q = query(collection(window.__fb.db,'orders'), where('sellerId','==',uid), orderBy('createdAt','desc'));
+      if(__unsub){ try{__unsub();}catch{} }
+      __unsub = onSnapshot(q,(snap)=>{
+        const all=[]; let pending=0, approved=0, completed=0, rejected=0;
+        snap.forEach(ds=>{ const d=ds.data()||{}; const o={ id: ds.id, ...d }; all.push(o); if(d.status==='pending') pending++; else if(d.status==='approved') approved++; else if(d.status==='completed') completed++; else if(d.status==='rejected') rejected++; });
+        $('#badgeTotal').innerHTML = `${t('total_orders')}: ${all.length}`;
+        $('#badgePending').innerHTML = `${t('pending_orders')}: ${pending}`;
+        $('#badgeApproved').innerHTML = `${t('approved')}: ${approved}`;
+        $('#badgeCompleted').innerHTML = `${t('completed')}: ${completed}`;
+
+        // Panel kırılımı
+        renderPanel('pending', all.filter(x=>x.status==='pending'));
+        renderPanel('approved', all.filter(x=>x.status==='approved'));
+        renderPanel('completed', all.filter(x=>x.status==='completed'));
+        renderPanel('rejected', all.filter(x=>x.status==='rejected'));
+
+        $('#emptyBox').style.display = all.length? 'none':'block';
+
+        // Yeni pending algıla ve ses çal
+        const prev = Number(localStorage.getItem('ue_orders_pending_count')||'0')||0;
+        if(pending>prev){ try{ sound.currentTime=0; sound.play().catch(()=>{}); }catch{} }
+        localStorage.setItem('ue_orders_pending_count', String(pending));
+      },(err)=>{ console.warn('orders snapshot',err); });
+    }
+
+    function renderPanel(key, arr){
+      const host = document.getElementById('panel-'+key);
+      host.innerHTML='';
+      if(arr.length===0){ const n=document.createElement('div'); n.className='notice mini'; n.textContent=t('no_records'); host.appendChild(n); return; }
+      arr.forEach(o=> host.appendChild(orderCard(o)) );
+    }
+
+    function boot(){
+      applyI18n();
+      bindTabs();
+      $('#btnBack').onclick=()=>{ history.length>1? history.back(): location.href='./profile.html'; };
+    }
+
+    (function init(){
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+      (function waitForFirebase(){
+        if(!window.__fb){ setTimeout(waitForFirebase,50); return; }
+        const {auth,onAuthStateChanged} = window.__fb;
+        onAuthStateChanged(auth,(u)=>{
+          if(!u){ location.href='./index.html'; return; }
+          __uid = u.uid; watchOrders(__uid);
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
