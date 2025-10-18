@@ -1,5 +1,9 @@
-<script type="module">
-// Firebase'i yükle
+// admin/js/admin-login.js
+// Module script — admin login flow
+// Bu dosya kökten /admin/js/admin-login.js olarak servis edilmelidir.
+// <script type="module" src="/admin/js/admin-login.js" defer></script>
+
+// --- Firebase init (kökten import) ---
 import '/firebase-init.js';
 import {
   getAuth, setPersistence, browserLocalPersistence,
@@ -14,7 +18,11 @@ const passEl  = $('#password');
 const errEl   = $('#err');
 
 function showErr(msg){ if(errEl){ errEl.textContent = msg || ''; } }
-function disableForm(dis){ if(form){ form.querySelector('button[type="submit"]').disabled = !!dis; } }
+function disableForm(dis){
+  if(!form) return;
+  const btn = form.querySelector('button[type="submit"]');
+  if(btn) btn.disabled = !!dis;
+}
 
 // Zaten girişliyse ve admin ise direkt panele al
 onAuthStateChanged(auth, async (u)=>{
@@ -28,6 +36,7 @@ onAuthStateChanged(auth, async (u)=>{
     }else{
       // login oldu ama admin değilse çıkışa zorla
       await signOut(auth);
+      showErr('Bu hesap için admin izni bulunmuyor.');
     }
   }catch{
     // bir şey olursa sessiz geç
@@ -58,4 +67,8 @@ form?.addEventListener('submit', async (e)=>{
     disableForm(false);
   }
 });
-</script>
+
+// Koruma: HTML öğeleri yoksa uyarı düş (geliştirme için)
+if(!form){
+  console.warn('[admin-login] #loginForm bulunamadı. admin/index.html içinde doğru id değerlerini kullandığınızdan emin olun.');
+}
