@@ -409,6 +409,59 @@ function boot(){ cacheLoad(); const y=document.getElementById('yr'); if(y) y.tex
   window.requestShowcase=function(l){ const hasFree=window.user.isPremium&&((window.user.monthlyShowcaseUsed||0)<(window.PREMIUM_FREE_SHOWCASE||1)); const price=window.user.isPremium?(hasFree?0:(window.PRICE_SHOWCASE_PREMIUM_EXTRA||199)):(window.PRICE_SHOWCASE_STANDARD||249); window.toast&&toast(price===0?'OK':(window.fmtPrice?fmtPrice(price):price)); l.showcasePending=true; if(price===0){ window.user.monthlyShowcaseUsed=(window.user.monthlyShowcaseUsed||0)+1; } window.cacheSave&&cacheSave(); };
 })();
 // ===== /Patch =====
+
+  async function loadMyListings(uid) {
+    try {
+      const { collection, query, where, orderBy, getDocs } =
+        await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js');
+
+      const q = query(
+        collection(window.__fb.db, 'listings'),
+        where('userId', '==', uid),
+        orderBy('createdAt', 'desc')
+      );
+
+      const snap = await getDocs(q);
+
+      const arr = [];
+      snap.forEach(docSnap => {
+        const d = docSnap.data() || {};
+        const photo = d.coverUrl || (Array.isArray(d.photos) ? d.photos[0] : '') || '';
+        let expiresAt = d.expiresAt || null;
+        if (!expiresAt && d.createdAt) {
+          const base = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+          if (!Number.isNaN(base.getTime())) {
+            const add = (window.LISTING_LIFETIME_DAYS || 30);
+            base.setDate(base.getDate() + add);
+            expiresAt = base.toISOString();
+          }
+        }
+
+        arr.push({
+          id: docSnap.id,
+          title: d.title || '',
+          price: d.price || 0,
+          status: d.status || 'pending',
+          showcase: !!d.showcase,
+          showcasePending: !!d.showcasePending,
+          photo,
+          expiresAt
+        });
+      });
+
+      window.listings.length = 0;
+      window.listings.push(...arr);
+      window.paintAllPanels && window.paintAllPanels();
+      window.updateShowcaseSummary && window.updateShowcaseSummary();
+    } catch (e) {
+      console.warn('İlan yükleme hatası:', e);
+      try { toast('İlanlar yüklenemedi'); } catch {}
+    }
+  }
+
+  // onAuthStateChanged içinde çağır:
+  // await loadMyListings(u.uid);
+
 </script>
 </body>
 </html>
