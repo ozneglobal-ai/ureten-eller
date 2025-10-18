@@ -71,3 +71,12 @@ self.firebase = Object.assign(self.firebase || {}, {
 self.getDocs = getDocs;
 
 console.debug('[firebase-init] ready:', app.options.projectId);
+
+// --- UYUMLULUK KÖPRÜSÜ: window.__fb bekleyen sayfalar için (ekleme) ---
+self.__fb = self.__fb || {
+  app,
+  auth,
+  db,
+  storage,
+  onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb)
+};
