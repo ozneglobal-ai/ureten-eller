@@ -9,7 +9,7 @@
 <body class="dark">
   <main class="auth-wrap">
     <section class="card">
-      <!-- LOGO: hem /admin hem /docs/admin altında aynı bağıl yol çalışır -->
+      <!-- LOGO: kökten barındırmada bu bağıl yol çalışır -->
       <img src="../assets/icons/favicon.png" alt="Üreten Eller" class="logo"/>
       <h1>Admin Giriş</h1>
 
@@ -28,10 +28,7 @@
     </section>
   </main>
 
-  <!-- Firebase init: bağıl yol (iki ortamda da doğru dosyaya gider) -->
-  <script type="module" src="../firebase-init.js"></script>
-
-  <!-- Admin giriş mantığı -->
-  <script type="module" src="../admin/js/admin-login.js"></script>
+  <!-- NOT: Firebase init bu sayfada ayrıca çağrılmıyor; admin-login.js içinde import ediliyor. -->
+  <script type="module" src="/admin/js/admin-login.js" defer></script>
 </body>
 </html>
