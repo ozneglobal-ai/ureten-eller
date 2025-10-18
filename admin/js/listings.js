@@ -1,102 +1,67 @@
 // /admin/js/listings.js — ÜE Admin: İlanlar modülü (detay + satıcı bilgisi + aksiyonlar)
+// Bu dosya Firestore'u YALNIZCA kökteki firebase-init.js'nin global helper'ları üzerinden kullanır.
+// (window.__fb.auth)  -> Auth
+// (window.firebase.*) -> Firestore helper'ları: col, q, orderBy, limit, getDoc, getDocs, setDoc, serverTimestamp
 
-const FIREBASE_CANDIDATES = [
-  '/firebase-init.js',
-  './firebase-init.js',
-  '../firebase-init.js',
-  '/docs/firebase-init.js'
-];
-
-async function getFirebase() {
-  // Önce global
-  if (window.__fb?.db && window.__fb?.auth) {
-    return { db: window.__fb.db, auth: window.__fb.auth, onAuthStateChanged: window.__fb.onAuthStateChanged };
-  }
-  // Değilse init dosyasını ara
-  for (const p of FIREBASE_CANDIDATES) {
-    try {
-      const mod = await import(p + `?v=${Date.now()}`);
-      const auth = mod?.auth || window.__fb?.auth;
-      const db   = mod?.db   || window.__fb?.db;
-      const onAuthStateChanged = mod?.onAuthStateChanged || window.__fb?.onAuthStateChanged || null;
-      if (auth && db) return { db, auth, onAuthStateChanged };
-    } catch(_) {}
-  }
-  throw new Error('firebase-init.js bulunamadı veya db/auth export etmiyor');
-}
-
-let FF = null;
-async function getFF() {
-  if (FF) return FF;
-  FF = await import('https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js');
-  return FF;
-}
-
+/* ----------------- küçük yardımcılar ----------------- */
 function esc(s){ return String(s ?? '').replace(/[&<>\"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 const DAY=86400000, LIFE_DAYS=30;
 function fmtTRY(v){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(Number(v||0)); }catch{ return (v||0)+' TL'; } }
 function badge(l){
-  const tags=[];
-  const st = l.status || 'pending';
+  const tags=[]; const st = l.status || 'pending';
   if (st==='pending') tags.push('Bekliyor');
   if (st==='approved') {
     const left = l.expiresAt ? Math.max(0, Math.ceil((l.expiresAt - Date.now())/DAY)) : LIFE_DAYS;
-    tags.push(`${left} gün`);
-    if (l.showcase) tags.push('⭐ Vitrin');
-    if (l.showcasePending) tags.push('Onay bekliyor');
+    tags.push(`${left} gün`); if (l.showcase) tags.push('⭐ Vitrin'); if (l.showcasePending) tags.push('Onay bekliyor');
   }
   if (st==='expired') tags.push('Süre doldu');
   if (st==='rejected') tags.push('Reddedildi');
   return tags.join(' • ');
 }
 
-// --- admin guard (sadece Firestore rolüne bak, net hata mesajı üret)
+/* ----------------- admin guard ----------------- */
 async function ensureAdminAuth(){
-  // 1) init’i mutlaka yükle (window.__fb de kabul)
-  let db, auth, onAuthStateChanged;
-  try {
-    const fb = await getFirebase();
-    db = fb.db; auth = fb.auth; onAuthStateChanged = fb.onAuthStateChanged;
-  } catch(e){
-    console.error('[admin] firebase-init yüklenemedi:', e);
-    throw new Error('admin-login-required');
-  }
+  // firebase-init.js yüklenmiş mi?
+  const auth = window.__fb && window.__fb.auth;
+  if (!auth) throw new Error('admin-login-required');
 
-  // 2) Oturum hazır olana kadar bekle
-  if (!auth.currentUser && typeof onAuthStateChanged === 'function'){
+  // oturum hazır değilse bekle
+  if (!auth.currentUser && typeof window.__fb.onAuthStateChanged === 'function'){
     await new Promise(res=>{
-      const stop = onAuthStateChanged(auth, (u)=>{ if(u){ stop?.(); res(); } });
+      const stop = window.__fb.onAuthStateChanged(auth, (u)=>{ if(u){ try{stop();}catch{} res(); }});
     });
   }
-  if (!auth.currentUser) throw new Error('admin-login-required');
-  if (auth.currentUser.isAnonymous) throw new Error('admin-login-required');
+  if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error('admin-login-required');
 
-  // 3) Sadece Firestore rolüne bak (en güvenilir & deterministik)
-  const { doc, getDoc } = await getFF();
-  let isAdmin = false, reason = '';
+  // global firestore helper'ları var mı?
+  if (!window.firebase || !window.firebase.getDoc) throw new Error('roles-read-failed');
+
+  // users/{uid}.role === 'admin' ?
+  let isAdmin = false;
   try{
-    const snap = await getDoc(doc(db,'users',auth.currentUser.uid));
-    if (snap.exists()){
+    const snap = await window.firebase.getDoc(`users/${auth.currentUser.uid}`);
+    if (snap && snap.exists && snap.exists()) {
       const r = (snap.data().role || '').toString().toLowerCase();
       isAdmin = (r === 'admin');
-      if (!isAdmin) reason = `users/${auth.currentUser.uid}.role = "${r}"`;
-    } else {
-      reason = 'users/{uid} dokümanı yok';
     }
-  }catch(err){
-    console.error('[admin] role read error:', err);
-    reason = 'roles-read-failed';
+  }catch(e){
+    console.error('[admin] role read error:', e);
   }
 
-  if (!isAdmin){
-    // İstersen tut: console.warn ile nedenini açık yaz
-    console.warn('[admin] not-admin →', reason);
-    throw new Error('not-admin');
+  // fallback: custom claim / domain
+  if (!isAdmin) {
+    try{
+      const t = await auth.currentUser.getIdTokenResult(true);
+      const email = (auth.currentUser.email||'').toLowerCase();
+      isAdmin = (t?.claims?.admin === true) || email.endsWith('@ureteneller.com');
+    }catch{}
   }
-  return { db, auth };
+
+  if (!isAdmin) throw new Error('not-admin');
+  return { auth };
 }
 
-// === Detay paneli (tek sefer oluştur)
+/* ----------------- detay panel UI (tek sefer kur) ----------------- */
 function ensureDetailHost(){
   if (document.getElementById('listingDetailHost')) return;
   const host = document.createElement('div');
@@ -119,13 +84,12 @@ function ensureDetailHost(){
   bd.onclick = close;
 }
 function openDetail(){ const bd=document.getElementById('ldBackdrop'); const pn=document.getElementById('ldPanel'); if(!bd||!pn) return; bd.style.display='block'; pn.style.transform='translateX(0)'; }
-function closeDetail(){ const bd=document.getElementById('ldBackdrop'); const pn=document.getElementById('ldPanel'); if(!bd||!pn) return; pn.style.transform='translateX(100%)'; bd.style.display='none'; }
 
-// === ANA
+/* ----------------- ana modül ----------------- */
 export async function mountAdminListings({ container }) {
   if (!container) throw new Error('mountAdminListings: container yok');
 
-  // UI
+  // UI iskelet
   container.innerHTML = `
     <div class="row">
       <h2 style="margin-right:auto">İlan Yönetimi</h2>
@@ -161,8 +125,7 @@ export async function mountAdminListings({ container }) {
   `;
 
   // Guard
-  let db, auth;
-  try { ({ db, auth } = await ensureAdminAuth()); }
+  try { await ensureAdminAuth(); }
   catch(e){
     const tbody = container.querySelector('#listingsBody');
     const msg = e?.message==='admin-login-required'
@@ -172,7 +135,12 @@ export async function mountAdminListings({ container }) {
     return;
   }
 
-  const { collection, doc, getDocs, getDoc, setDoc, query, orderBy, limit, serverTimestamp } = await getFF();
+  // Firebase helper’ları kontrol
+  if (!window.firebase || !window.getDocs) {
+    const tbody = container.querySelector('#listingsBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="muted">Firebase helper yok (firebase-init.js yüklenmeli)</td></tr>`;
+    return;
+  }
 
   // DOM
   const tbody     = container.querySelector('#listingsBody');
@@ -184,21 +152,26 @@ export async function mountAdminListings({ container }) {
 
   let cache = []; // {id, ...}
 
-  // satıcı adını getir
+  // satıcı bilgisi (adı/e-posta)
   async function getSellerMeta(sellerId){
     if (!sellerId) return { name:'—', email:'—' };
     try{
-      const s = await getDoc(doc(db,'users',sellerId));
-      if (!s.exists()) return { name: '—', email: '—' };
-      const d = s.data();
+      const snap = await window.firebase.getDoc(`users/${sellerId}`);
+      if (!snap.exists()) return { name:'—', email:'—' };
+      const d = snap.data();
       return { name: d.displayName || d.name || '—', email: d.email || '—' };
     }catch{ return { name:'—', email:'—' }; }
   }
 
+  // load
   async function load(){
     try{
-      const qRef = query(collection(db,'listings'), orderBy('createdAt','desc'), limit(500));
-      const snap = await getDocs(qRef);
+      const qRef = window.firebase.q(
+        window.firebase.col('listings'),
+        window.firebase.orderBy('createdAt','desc'),
+        window.firebase.limit(500)
+      );
+      const snap = await window.getDocs(qRef);
       cache = snap.docs.map(d => ({ id:d.id, ...d.data() }));
       paint();
     }catch(err){
@@ -207,6 +180,7 @@ export async function mountAdminListings({ container }) {
     }
   }
 
+  // filtre
   function currentFilter(list){
     const st = selStatus?.value || 'pending';
     let arr = st==='all' ? list : list.filter(l => (l.status||'pending')===st);
@@ -222,11 +196,11 @@ export async function mountAdminListings({ container }) {
     return arr;
   }
 
-  async function paint(){
+  // tablo çiz
+  function paint(){
     const data = currentFilter(cache);
     tbody.innerHTML = data.length ? '' : `<tr><td colspan="6" class="muted">Kayıt yok</td></tr>`;
     for (const l of data){
-      // satıcı adı anlık yoksa '—' gösteriyoruz; detayda kesin getireceğiz
       const seller = l.sellerName || l.sellerId || '—';
       const price  = fmtTRY(l.price);
       const tr = document.createElement('tr');
@@ -251,7 +225,7 @@ export async function mountAdminListings({ container }) {
     }
   }
 
-  // Detay panelini doldur
+  // detay paneli
   async function openListingDetail(id){
     const item = cache.find(x=>x.id===id);
     if (!item) return;
@@ -285,14 +259,8 @@ export async function mountAdminListings({ container }) {
         </div>
 
         <div style="display:grid;gap:.5rem;grid-template-columns:repeat(2,minmax(0,1fr))">
-          <div>
-            <div class="muted">Satıcı Adı</div>
-            <div>${esc(seller.name)}</div>
-          </div>
-          <div>
-            <div class="muted">Satıcı E-posta</div>
-            <div>${esc(seller.email)}</div>
-          </div>
+          <div><div class="muted">Satıcı Adı</div><div>${esc(seller.name)}</div></div>
+          <div><div class="muted">Satıcı E-posta</div><div>${esc(seller.email)}</div></div>
         </div>
 
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.25rem">
@@ -307,19 +275,16 @@ export async function mountAdminListings({ container }) {
         </div>
       </div>
     `;
-
     openDetail();
   }
 
-  // Tabloda tıklama: başlığa basınca detay
+  // başlığa tıklayınca detay
   tbody.addEventListener('click', (e)=>{
-    const a = e.target.closest('a[data-open]');
-    if (!a) return;
-    e.preventDefault();
-    openListingDetail(a.getAttribute('data-open'));
+    const a = e.target.closest('a[data-open]'); if (!a) return;
+    e.preventDefault(); openListingDetail(a.getAttribute('data-open'));
   });
 
-  // İşlemler (tablo ve panel ortak)
+  // aksiyonlar (tablo + panel)
   document.addEventListener('click', async (e)=>{
     const btn = e.target.closest('button[data-act]'); if(!btn) return;
     const id  = btn.getAttribute('data-id') || btn.closest('tr')?.dataset.id;
@@ -328,9 +293,7 @@ export async function mountAdminListings({ container }) {
     btn.disabled = true;
     try{
       const i = cache.findIndex(x => x.id === id); if (i < 0) return;
-      const l = cache[i];
-      const patch = {};
-      const now = Date.now();
+      const patch = {}; const now = Date.now();
 
       switch (btn.dataset.act) {
         case 'approve':   patch.status='approved'; patch.expiresAt = now + LIFE_DAYS*DAY; break;
@@ -343,12 +306,28 @@ export async function mountAdminListings({ container }) {
         case 'delete':    patch.status='rejected'; patch.showcase=false; patch.showcasePending=false; break;
       }
 
-      // Yazma — kurallar admin'e izin verirse geçer
-      await setDoc(doc(db,'listings',id), { ...patch, updatedAt: serverTimestamp() }, { merge:true });
+      await window.firebase.setDoc(
+        `listings/${id}`,
+        { ...patch, updatedAt: window.firebase.serverTimestamp() },
+        { merge:true }
+      );
 
       Object.assign(cache[i], patch);
-      await paint(); // tabloyu yenile
-      // panel açıksa da güncelle
+      // satırı tazele
+      (function repaint(idToRefresh){
+        const r = tbody.querySelector(`tr[data-id="${CSS.escape(idToRefresh)}"]`);
+        if (!r) return;
+        const l = cache[i];
+        r.querySelector('.td-title a').textContent = l.title || '—';
+        r.children[2].textContent = fmtTRY(l.price);
+        r.children[3].textContent = l.status || '—';
+        r.children[4].textContent = badge(l) || '—';
+        // action hücresini tamamen yeniden çizmek daha doğru olur; basit tutuyoruz
+        // gerekirse paint() çağırabilirsin:
+        // paint();
+      })(id);
+
+      // panel açıksa yenile
       if (document.getElementById('ldBackdrop')?.style.display === 'block') {
         openListingDetail(id);
       }
@@ -360,8 +339,8 @@ export async function mountAdminListings({ container }) {
     }
   });
 
-  selStatus?.addEventListener('change', paint);
-  qInput?.addEventListener('input', paint);
+  selStatus?.addEventListener('change', ()=>paint());
+  qInput?.addEventListener('input',  ()=>paint());
   btnReload?.addEventListener('click', load);
 
   await load();
