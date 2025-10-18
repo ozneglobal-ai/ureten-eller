@@ -113,6 +113,7 @@
   <!-- Toast -->
   <div id="toast" style="position:fixed;left:50%;top:20px;transform:translateX(-50%) scale(0.95);opacity:0;transition:.25s;z-index:9999;background:#0e172a;border:1px solid #1f2937;color:#e5e7eb;padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);">Yönetici onayından sonra yayınlanacaktır.</div>
 
+  <!-- Mevcut IIFE: i18n + önizleme (aynen korundu) -->
   <script>
 (function(){
 'use strict';
@@ -428,5 +429,178 @@
     fillProvinces('tr'); rebuildCategories('tr');
 })();
 </script>
+
+  <!-- YENİ: Firestore + Storage kayıt (module) -->
+  <script type="module">
+    // firebase-init.js içinde global değişkenler yayınlandıysa kullan
+    const app   = window.app   || window.firebaseApp;
+    const auth  = window.auth  || (window.firebase && window.firebase.auth);
+    const db    = window.db    || (window.firebase && window.firebase.db);
+    const store = window.storage|| (window.firebase && window.firebase.storage);
+
+    // Eğer modülden named import gerekiyorsa (opsiyonel, firebase-init.js export ediyorsa)
+    // import { getAuth, onAuthStateChanged } from 'firebase/auth';
+    // import { getFirestore, doc, collection, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+    // import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+    const $ = (id)=> document.getElementById(id);
+    const form = $('listingForm');
+    const msg  = $('msg');
+    const toast = $('toast');
+
+    function t(){ return (window.__t) || { errors:{}, toast_ok:'Kaydedildi.' }; }
+
+    function showMsg(text, ok=false){
+      msg.style.color = ok ? 'var(--ok)' : 'var(--muted)';
+      msg.textContent = text;
+    }
+
+    function showToast(text){
+      toast.textContent = text || t().toast_ok;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) scale(1)';
+      setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateX(-50%) scale(0.95)'; }, 1800);
+    }
+
+    function getCoverIndex(){
+      const list = Array.from(document.querySelectorAll('#previews .thumb'));
+      const i = list.findIndex(el => el.querySelector('.cover'));
+      return (i >= 0 ? i : (list.length ? 0 : -1));
+    }
+
+    async function uploadAll(uid, docId, files){
+      if(!store || !files.length) return [];
+      const folder = `listings/${uid}/${docId}/`;
+      const urls = [];
+      for(let i=0;i<files.length;i++){
+        const f = files[i];
+        const ext = (f.name.split('.').pop()||'').toLowerCase();
+        const path = folder + `${i}.${ext || 'jpg'}`;
+        const refPath = storeRef(path);
+        await uploadBytes(refPath, f);
+        const url = await getDownloadURL(refPath);
+        urls.push(url);
+      }
+      return urls;
+    }
+
+    // Storage helper'ları (compat + modular farkını köprülemek için)
+    function storeRef(p){
+      if (window.firebase && window.firebase.storageRef) return window.firebase.storageRef(p);
+      // modular
+      return (window.storageRef ? window.storageRef(p) : window.firebase?.storage?.ref?.(p));
+    }
+    async function uploadBytes(r, f){
+      if (r && r.put) { await r.put(f); return; }
+      // modular wrapper bekleniyorsa firebase-init bu fonksiyonu window'a koymuş olabilir
+      if (window._uploadBytes) return window._uploadBytes(r, f);
+      // Son çare: hata
+      throw new Error('Storage yükleme fonksiyonu bulunamadı');
+    }
+    async function getDownloadURL(r){
+      if (r && r.getDownloadURL) return await r.getDownloadURL();
+      if (window._getDownloadURL) return await window._getDownloadURL(r);
+      throw new Error('DownloadURL fonksiyonu yok');
+    }
+
+    // Firestore helper'ları (compat + modular köprüsü)
+    function col(path){ return (window.firebase && window.firebase.col) ? window.firebase.col(path) : path; }
+    function mkDoc(path){ return (window.firebase && window.firebase.mkDoc) ? window.firebase.mkDoc(path) : path; }
+    async function setDocX(docRef, data){
+      if (window.firebase && window.firebase.setDoc) return window.firebase.setDoc(docRef, data);
+      if (window._setDoc) return window._setDoc(docRef, data);
+      throw new Error('setDoc fonksiyonu yok');
+    }
+    async function updateDocX(docRef, data){
+      if (window.firebase && window.firebase.updateDoc) return window.firebase.updateDoc(docRef, data);
+      if (window._updateDoc) return window._updateDoc(docRef, data);
+      throw new Error('updateDoc fonksiyonu yok');
+    }
+    function serverNow(){ return (window.firebase && window.firebase.serverTimestamp) ? window.firebase.serverTimestamp() : new Date(); }
+
+    function getAuthUser(){
+      // auth.currentUser varsa direkt döndür
+      if(auth && auth.currentUser) return auth.currentUser;
+      // firebase-init onAuthStateChanged ile daha sonra doldurabilir; burada sadece kontrol ediyoruz
+      return null;
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const user = getAuthUser();
+      if(!user){ showMsg(t().errors.auth || 'Giriş yapın.'); return; }
+
+      const lang = document.documentElement.lang || 'tr';
+      const title = $('title').value.trim();
+      const description = $('description').value.trim();
+      const category = $('category').value;
+      const subcategory = $('subcategory').value;
+      const province = $('province').value;
+      const district = $('districtInput').value.trim();
+      const price = parseInt(($('price').value||'0'), 10) || 0;
+      const stock = $('stock').value;
+
+      // Basit validasyon (mevcut metinlerle)
+      if(title.length < 6){ showMsg(t().errors.title || 'Başlık kısa.'); return; }
+      if(description.length < 30){ showMsg(t().errors.desc || 'Açıklama kısa.'); return; }
+      if(!category){ showMsg(t().errors.cat || 'Kategori seçin.'); return; }
+      if(!subcategory){ showMsg(t().errors.sub || 'Alt kategori seçin.'); return; }
+      if(!province){ showMsg(t().errors.prov || 'İl seçin.'); return; }
+      if(!district){ showMsg(t().errors.dist || 'İlçe girin.'); return; }
+      if(price < 1){ showMsg(t().errors.price || 'Fiyat en az 1.'); return; }
+
+      const files = Array.from(($('images').files||[])).slice(0,5);
+      if(files.length > 5){ showMsg(t().errors.files || 'En fazla 5 foto.'); return; }
+      for(const f of files){
+        const ok = /image\/(jpeg|png|webp)/i.test(f.type);
+        if(!ok){ showMsg(t().errors.filetype || 'Sadece JPG/PNG/WebP.'); return; }
+      }
+
+      const submitBtn = $('b_submit');
+      submitBtn.disabled = true; submitBtn.textContent = 'Kaydediliyor…';
+      showMsg('');
+
+      try{
+        // doc id oluştur
+        const autoId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+        const docPath = `listings/${autoId}`;
+
+        // Fotoğraflar
+        let photoURLs = [];
+        try{
+          photoURLs = await uploadAll(user.uid, autoId, files);
+        }catch(upErr){ console.warn('upload fail', upErr); }
+
+        const coverIndex = (getCoverIndex());
+        const coverUrl = (photoURLs[coverIndex] || photoURLs[0] || '');
+
+        const payload = {
+          title, description, category, subcategory,
+          province, district, price, stock,
+          status: 'pending',
+          showcase: false, showcasePending: false,
+          photos: photoURLs,
+          coverIndex: (coverIndex>=0?coverIndex:0),
+          coverUrl: coverUrl,
+          userId: user.uid,
+          locale: lang,
+          createdAt: serverNow(),
+          updatedAt: serverNow()
+        };
+
+        await setDocX(docPath, payload);
+
+        showToast(t().toast_ok || 'Kaydedildi.');
+        // Temizle ve profile yönlendir
+        form.reset();
+        setTimeout(()=>{ window.location.href = 'profile.html'; }, 900);
+      }catch(err){
+        console.error(err);
+        showMsg('Kaydetme hatası: '+ (err && err.message ? err.message : err));
+      }finally{
+        submitBtn.disabled = false; submitBtn.textContent = (window.__t?.btn_submit) || 'Kaydet';
+      }
+    });
+  </script>
 </body>
 </html>
