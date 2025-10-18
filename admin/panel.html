@@ -48,6 +48,7 @@
   <script type="module">
     // Firebase init (root’taki dosya)
     import '/firebase-init.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
     // Basit loading overlay
     const gate = document.createElement('div');
@@ -56,8 +57,6 @@
     gate.textContent = 'Admin kontrol ediliyor…';
     document.body.appendChild(gate);
 
-    // Auth kontrolü
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
     const auth = window.__fb?.auth || getAuth();
 
     function deny(){
@@ -71,10 +70,14 @@
         const token = await u.getIdTokenResult(true);
         const email = (u.email||'').toLowerCase();
         const ok = token?.claims?.admin === true || email.endsWith('@ureteneller.com');
-        if (!ok) return deny();
+        if (!ok) {
+          try { await signOut(auth); } catch {}
+          return deny();
+        }
         document.documentElement.setAttribute('data-auth','ok');
         gate.remove();
       }catch{
+        try { await signOut(auth); } catch {}
         deny();
       }
     });
@@ -124,7 +127,7 @@
           <thead>
             <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
           </thead>
-        <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
+          <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -209,11 +212,6 @@
       <p id="sInfo" class="muted"></p>
     </section>
   </main>
-
-  <!-- Firebase (vardıysa) sessizce import -->
-  <script type="module">
-    (async()=>{ try{ await import('/firebase-init.js'); }catch(_){} })();
-  </script>
 
   <!-- Admin Kabuk: Navigasyon + Lazy Load + Çıkış -->
   <script type="module">
