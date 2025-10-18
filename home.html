@@ -572,6 +572,60 @@
     bindChat();
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-  </script>
+  <script type="module">
+  // Firestore import
+  const { getFirestore, collection, query, where, orderBy, limit, getDocs, Timestamp } =
+    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+  // firebase-init.js içinde window.__fb varsa onu kullan
+  const db = window.__fb?.db || getFirestore();
+
+  const now = Timestamp.fromDate(new Date());
+  const vipGrid = document.getElementById('vipGrid');
+  const stdGrid = document.getElementById('stdGrid');
+  const vipCount = document.getElementById('vipCount');
+  const stdCount = document.getElementById('stdCount');
+
+  const cardHTML = (d,id) => `
+    <a class="card" href="/ilan/${id}">
+      <span class="thumb" style="background-image:url('${(d.photos?.[0]||'/assets/icons/ureteneller.png')}')"></span>
+      <div class="meta">
+        <div class="title">${d.title || 'İlan'}</div>
+        <div class="row" style="justify-content:space-between;margin-top:.35rem">
+          <span class="mini">${d.city || ''}${d.district ? ' • '+d.district : ''}</span>
+          <span class="price">${(d.price!=null? d.price+' TL' : '')}</span>
+        </div>
+      </div>
+    </a>`;
+
+  async function load() {
+    // Aktif + süresi dolmamış ilanlar
+    const baseQ = query(
+      collection(db, 'listings'),
+      where('status', '==', 'active'),
+      where('expiresAt', '>=', now),
+      orderBy('expiresAt', 'desc'),
+      limit(40)
+    );
+
+    const snap = await getDocs(baseQ);
+    const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const vip = all.filter(x => x.featured === true).slice(0, 8);
+    const std = all.filter(x => x.featured !== true).slice(0, 28);
+
+    vipGrid.innerHTML = vip.map(x => cardHTML(x, x.id)).join('') || '<div class="mini">Vitrin boş</div>';
+    stdGrid.innerHTML = std.map(x => cardHTML(x, x.id)).join('') || '<div class="mini">Henüz ilan yok</div>';
+
+    if (vipCount) vipCount.textContent = vip.length ? `(${vip.length})` : '';
+    if (stdCount) stdCount.textContent = std.length ? `(${std.length})` : '';
+  }
+
+  try { await load(); } catch (e) {
+    console.error('İlan yükleme hatası:', e);
+    stdGrid.innerHTML = '<div class="mini">İlanlar yüklenemedi.</div>';
+  }
+    
+</script>
 </body>
 </html>
