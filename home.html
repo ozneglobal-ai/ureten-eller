@@ -746,8 +746,6 @@ async function watchNotiCount(){
       const vip=[], std=[];
       snap.forEach(doc=>{
         const d = doc.data() || {};
-        const approved = (d.approved===true) || d.status==='active';
-        if(!approved) return;
         (isVipDoc(d, now) ? vip : std).push({id:doc.id, data:d});
       });
 
