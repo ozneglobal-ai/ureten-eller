@@ -50,32 +50,49 @@ function badge(l){
   return tags.join(' • ');
 }
 
-// --- admin guard
+// --- admin guard (sadece Firestore rolüne bak, net hata mesajı üret)
 async function ensureAdminAuth(){
-  const { db, auth, onAuthStateChanged } = await getFirebase();
+  // 1) init’i mutlaka yükle (window.__fb de kabul)
+  let db, auth, onAuthStateChanged;
+  try {
+    const fb = await getFirebase();
+    db = fb.db; auth = fb.auth; onAuthStateChanged = fb.onAuthStateChanged;
+  } catch(e){
+    console.error('[admin] firebase-init yüklenemedi:', e);
+    throw new Error('admin-login-required');
+  }
+
+  // 2) Oturum hazır olana kadar bekle
   if (!auth.currentUser && typeof onAuthStateChanged === 'function'){
     await new Promise(res=>{
-      const stop = onAuthStateChanged(auth, (u)=>{ if(u){ stop?.(); res(); }});
+      const stop = onAuthStateChanged(auth, (u)=>{ if(u){ stop?.(); res(); } });
     });
   }
   if (!auth.currentUser) throw new Error('admin-login-required');
   if (auth.currentUser.isAnonymous) throw new Error('admin-login-required');
 
-  // role veya claim kontrolü
-  let isAdmin = false;
+  // 3) Sadece Firestore rolüne bak (en güvenilir & deterministik)
+  const { doc, getDoc } = await getFF();
+  let isAdmin = false, reason = '';
   try{
-    const { doc, getDoc } = await getFF();
     const snap = await getDoc(doc(db,'users',auth.currentUser.uid));
-    isAdmin = snap.exists() && (snap.data().role === 'admin' || snap.data().status === 'admin');
-  }catch{}
-  if (!isAdmin){
-    try{
-      const t = await auth.currentUser.getIdTokenResult(true);
-      const email = (auth.currentUser.email||'').toLowerCase();
-      isAdmin = (t?.claims?.admin === true) || email.endsWith('@ureteneller.com');
-    }catch{}
+    if (snap.exists()){
+      const r = (snap.data().role || '').toString().toLowerCase();
+      isAdmin = (r === 'admin');
+      if (!isAdmin) reason = `users/${auth.currentUser.uid}.role = "${r}"`;
+    } else {
+      reason = 'users/{uid} dokümanı yok';
+    }
+  }catch(err){
+    console.error('[admin] role read error:', err);
+    reason = 'roles-read-failed';
   }
-  if (!isAdmin) throw new Error('not-admin');
+
+  if (!isAdmin){
+    // İstersen tut: console.warn ile nedenini açık yaz
+    console.warn('[admin] not-admin →', reason);
+    throw new Error('not-admin');
+  }
   return { db, auth };
 }
 
