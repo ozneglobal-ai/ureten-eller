@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin Panel • Üreten Eller</title>
   <link rel="stylesheet" href="/admin/css/admin.css"/>
+
+  <!-- GUARD: auth doğrulanana kadar UI'yi gizle -->
   <style>
     :root{ --sbw:260px; --ink:#e5e7eb; --brd:#111; }
     html,body{background:#000;color:var(--ink);margin:0}
+    [data-auth!="ok"] .sidebar,
+    [data-auth!="ok"] .content { display:none !important; }
     .section{display:none!important}
     .section.active{display:block!important}
     .menu a.active{font-weight:700; text-decoration:underline}
@@ -24,7 +28,7 @@
     .tile .t{font-size:12px;color:#9ca3af}
     .tile .n{font-size:22px;font-weight:800}
 
-    /* Sidebar fix */
+    /* Sidebar */
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sbw);min-width:var(--sbw);padding:16px;border-right:1px solid var(--brd);background:#000;display:flex;flex-direction:column;z-index:30}
     .content{margin-left:var(--sbw);padding:16px;min-width:0;position:relative;overflow-x:hidden}
     .brand{display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:8px}
@@ -40,6 +44,42 @@
   </style>
 </head>
 <body class="dark">
+  <!-- ADMIN GUARD: Firebase + admin kontrolü -->
+  <script type="module">
+    // Firebase init (root’taki dosya)
+    import '/firebase-init.js';
+
+    // Basit loading overlay
+    const gate = document.createElement('div');
+    gate.id = 'admin-gate';
+    gate.style.cssText = 'position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#e5e7eb;z-index:9999';
+    gate.textContent = 'Admin kontrol ediliyor…';
+    document.body.appendChild(gate);
+
+    // Auth kontrolü
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    const auth = window.__fb?.auth || getAuth();
+
+    function deny(){
+      // Login sayfasına gönder (geri tuşunda panele dönülmesin)
+      location.replace('/admin/index.html');
+    }
+
+    onAuthStateChanged(auth, async (u) => {
+      if (!u) return deny();
+      try{
+        const token = await u.getIdTokenResult(true);
+        const email = (u.email||'').toLowerCase();
+        const ok = token?.claims?.admin === true || email.endsWith('@ureteneller.com');
+        if (!ok) return deny();
+        document.documentElement.setAttribute('data-auth','ok');
+        gate.remove();
+      }catch{
+        deny();
+      }
+    });
+  </script>
+
   <aside class="sidebar">
     <div class="brand">
       <img src="/assets/icons/ureteneller.png" class="logo-sm" alt="ÜE"/>
@@ -84,7 +124,7 @@
           <thead>
             <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
           </thead>
-          <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
+        <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -170,13 +210,12 @@
     </section>
   </main>
 
-  <!-- Firebase (varsa) -->
+  <!-- Firebase (vardıysa) sessizce import -->
   <script type="module">
-    // Varsa import et; yoksa sessiz geç
     (async()=>{ try{ await import('/firebase-init.js'); }catch(_){} })();
   </script>
 
-  <!-- Admin Kabuk: Navigasyon + Lazy Load -->
+  <!-- Admin Kabuk: Navigasyon + Lazy Load + Çıkış -->
   <script type="module">
     (function(){
       const ready = (fn)=> document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
@@ -254,12 +293,14 @@
         const first = (location.hash || '#dashboard').replace('#','');
         show(first);
 
-        // Çıkış
+        // Çıkış – admin/index.html'e yönlendir (history temiz)
         document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
           try{
-            if (window.UE?.firebase?.logout) { await window.UE.firebase.logout(); }
+            const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+            const auth = window.__fb?.auth || getAuth();
+            await signOut(auth);
           }catch(_){}
-          location.href = '/index.html';
+          location.replace('/admin/index.html');
         });
       });
     })();
