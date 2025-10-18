@@ -572,7 +572,7 @@
     bindChat();
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-  <script type="module">
+
   // Firestore import
   const { getFirestore, collection, query, where, orderBy, limit, getDocs, Timestamp } =
     await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
