@@ -44,12 +44,15 @@
   </style>
 </head>
 <body class="dark">
-  <!-- ADMIN GUARD: Firebase + admin kontrolü (CLAIM + DOMAIN + FIRESTORE ROLE) -->
+  <!-- ADMIN GUARD: Firebase + admin kontrolü (CLAIM + DOMAIN + FIRESTORE ROLE + WHITELIST) -->
   <script type="module">
     // Firebase init (root’taki dosya)
     import '/firebase-init.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
     import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+    // --- WHITELIST: TEK EKLEME ---
+    const ALLOW_UIDS = ['t4R6bdEQ3QdEGDskPxe9XAun']; // ← Senin UID
 
     // Basit loading overlay
     const gate = document.createElement('div');
@@ -58,41 +61,40 @@
     gate.textContent = 'Admin kontrol ediliyor…';
     document.body.appendChild(gate);
 
-    const auth = window.__fb?.auth || getAuth();
-    const db = getFirestore();
+    const auth = getAuth();
+    const db   = getFirestore();
 
-    function deny(){
-      // Login sayfasına gönder (geri tuşunda panele dönülmesin)
-      location.replace('/admin/index.html');
-    }
+    function allow(){ document.documentElement.setAttribute('data-auth','ok'); gate.remove(); }
+    function deny(){ location.replace('/admin/index.html'); }
 
     onAuthStateChanged(auth, async (u) => {
       if (!u) return deny();
+
+      // 1) Whitelist: UID eşleşirse direkt içeri
+      if (ALLOW_UIDS.includes(u.uid)) { allow(); return; }
+
       try{
-        // CLAIM + DOMAIN
-        const t = await u.getIdTokenResult(true);
+        // 2) Claim + Domain
+        const tok = await u.getIdTokenResult(true);
         const email = (u.email||'').toLowerCase();
-        const claimAdmin  = t?.claims?.admin === true;
+        const claimAdmin  = tok?.claims?.admin === true;
         const domainAdmin = email.endsWith('@ureteneller.com');
 
-        // FIRESTORE ROLE
+        // 3) Firestore role
         let roleAdmin = false;
         try{
           const snap = await getDoc(doc(db, 'users', u.uid));
           const d = snap.exists() ? snap.data() : null;
           roleAdmin = (d?.role === 'admin') || (d?.status === 'admin');
-        }catch(_){}
+        }catch(_){ /* sessiz */ }
 
+        // Hepsinden biri true ise izin ver
         const ok = claimAdmin || domainAdmin || roleAdmin;
-
         if (!ok) {
           try { await signOut(auth); } catch {}
           return deny();
         }
-
-        // Yetki OK → UI’yi aç
-        document.documentElement.setAttribute('data-auth','ok');
-        gate.remove();
+        allow();
       }catch(_){
         try { await signOut(auth); } catch {}
         deny();
@@ -312,7 +314,7 @@
         document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
           try{
             const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-            const auth = window.__fb?.auth || getAuth();
+            const auth = getAuth();
             await signOut(auth);
           }catch(_){}
           location.replace('/admin/index.html');
