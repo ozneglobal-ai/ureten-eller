@@ -1,164 +1,73 @@
-// /firebase-init.js  — Firebase v10 (CDN, modüler)
+// firebase-init.js (ESM CDN, idempotent init + global exports + helperlar)
 
-// --- SDK'lar ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+// === Firebase CDN (ESM) ===
+import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
 import {
-  getAuth,
-  onAuthStateChanged,
-  signInAnonymously,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  GoogleAuthProvider,
-  signInWithPopup,
-  updateProfile,
-  signOut,
-  setPersistence,
-  browserLocalPersistence,
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
-  getFirestore,
-  doc, setDoc, addDoc, collection, serverTimestamp,
-  getDocs, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+  getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
+  setDoc, updateDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
 
-// --- Config (KENDİ PROJEN) ---
-export const firebaseConfig = {
+// === SENİN PROJE CONFIG'in (Flutter AI Playground) ===
+const firebaseConfig = {
   apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
   authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
   projectId: "flutter-ai-playground-38ddf",
-  // Storage bucket doğru format: {project}.appspot.com
-  storageBucket: "flutter-ai-playground-38ddf.appspot.com",
+  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.app",
   messagingSenderId: "4688234885",
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
 
-// --- Uygulama & Servisler ---
-export const app     = initializeApp(firebaseConfig);
-export const auth    = getAuth(app);
-export const db      = getFirestore(app);
-export const storage = getStorage(app);
+// === Idempotent init (aynı sayfada iki kez init olmaz) ===
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-// Kalıcı oturum (refresh sonrası açık kalsın)
-await setPersistence(auth, browserLocalPersistence);
+// === Global exportlar (window/self) ===
+self.app = app;
+self.auth = auth;
+self.db = db;
+self.storage = storage;
 
-// --- Oturum akışı (anonim fallback) ---
-onAuthStateChanged(auth, async (u) => {
-  try {
-    if (!u) { await signInAnonymously(auth); }
-  } catch (e) {
-    console.error("Anonim oturum açılamadı:", e);
-  }
+// Auth yardımcıları
+self.onAuthStateChanged = (cb) => onAuthStateChanged(auth, cb);
+self.signInWithEmailAndPassword = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
+self.signOutNow = () => signOut(auth);
+
+// Storage yardımcıları (ilan sayfası kullanıyor)
+self.storageRef = (path) => storageRef(storage, path);
+self._uploadBytes = (refObj, file) => uploadBytes(refObj, file);
+self._getDownloadURL = (refObj) => getDownloadURL(refObj);
+
+// Firestore yardımcıları (yol-string veya ref kabul eder)
+self.firebase = Object.assign(self.firebase || {}, {
+  setDoc: (refOrPath, data) => {
+    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
+    return setDoc(r, data);
+  },
+  updateDoc: (refOrPath, data) => {
+    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
+    return updateDoc(r, data);
+  },
+  getDoc: (refOrPath) => {
+    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
+    return getDoc(r);
+  },
+  serverTimestamp: () => serverTimestamp(),
+  col: (path) => collection(db, ...path.split('/')),
+  q: (...args) => query(...args),
+  where,
+  orderBy,
+  limit,
 });
 
-// --- Eski kodla uyumlu global yardımcılar ---
-const provider = new GoogleAuthProvider();
+// (İsteğe bağlı) getDocs’u da globale veriyorum; bazı sayfalarda işine yarar
+self.getDocs = getDocs;
 
-window.UE = window.UE || {};
-window.UE.firebase = {
-  auth,
-  async googlePopup(){
-    const res = await signInWithPopup(auth, provider);
-    return res.user;
-  },
-  async emailSignup({email, pass, displayName}){
-    const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-    if (displayName){ await updateProfile(user, { displayName }); }
-    return user;
-  },
-  async emailLogin(email, pass){
-    const { user } = await signInWithEmailAndPassword(auth, email, pass);
-    return user;
-  },
-  async sendVerify(){
-    if (!auth.currentUser) throw new Error("Kullanıcı oturumu yok.");
-    await sendEmailVerification(auth.currentUser);
-  },
-  async sendReset(email){
-    await sendPasswordResetEmail(auth, email);
-  },
-  async logout(){
-    await signOut(auth);
-  }
-};
-
-// Global kısa yol (profile/admin sayfaları bekliyor olabilir)
-window.__fb = { app, auth, db, storage, onAuthStateChanged };
-
-// --- Live Support (Canlı Destek) yardımcıları ---
-export const support = {
-  // Kullanıcı için konuşma dokümanı hazırla / güncelle
-  async ensureConversation(){
-    if (!auth.currentUser) {
-      try { await signInAnonymously(auth); } catch {}
-    }
-    const u = auth.currentUser;
-    if (!u) return null;
-
-    const ref = doc(db, "conversations", u.uid);
-    await setDoc(ref, {
-      userId: u.uid,
-      userName: u.displayName || "",
-      userEmail: u.email || "",
-      lastMessage: "",
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-
-    return { uid: u.uid };
-  },
-
-  // Mesaj gönder: /conversations/{uid}/messages/*
-  async sendMessage(text){
-    if (!auth.currentUser) {
-      await signInAnonymously(auth);
-    }
-    const u = auth.currentUser;
-    if (!u) throw new Error("auth-missing");
-
-    const convRef = doc(db, "conversations", u.uid);
-
-    await addDoc(collection(convRef, "messages"), {
-      text: String(text || ""),
-      from: u.uid,
-      createdAt: serverTimestamp()
-    });
-
-    await setDoc(convRef, {
-      lastMessage: String(text || ""),
-      updatedAt: serverTimestamp(),
-      userId: u.uid,
-      userName: u.displayName || "",
-      userEmail: u.email || ""
-    }, { merge: true });
-
-    return u.uid;
-  },
-
-  // Konuşmayı tamamen sil
-  async deleteConversation(){
-    if (!auth.currentUser) {
-      await signInAnonymously(auth);
-    }
-    const u = auth.currentUser;
-    if (!u) throw new Error("auth-missing");
-
-    const convRef = doc(db, "conversations", u.uid);
-
-    // Alt koleksiyondaki tüm mesajları sil
-    const msgsSnap = await getDocs(collection(convRef, "messages"));
-    for (const d of msgsSnap.docs){
-      await deleteDoc(d.ref);
-    }
-
-    // Üst dokümanı da sil
-    await deleteDoc(convRef);
-  }
-};
-
-// inline scriptler erişsin
-window.UE.support = support;
-
-// (opsiyonel) ESM kullanan sayfalar için export
-export { provider };
+console.debug('[firebase-init] ready:', app.options.projectId);
