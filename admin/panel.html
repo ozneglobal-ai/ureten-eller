@@ -44,11 +44,12 @@
   </style>
 </head>
 <body class="dark">
-  <!-- ADMIN GUARD: Firebase + admin kontrolü -->
+  <!-- ADMIN GUARD: Firebase + admin kontrolü (CLAIM + DOMAIN + FIRESTORE ROLE) -->
   <script type="module">
     // Firebase init (root’taki dosya)
     import '/firebase-init.js';
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
     // Basit loading overlay
     const gate = document.createElement('div');
@@ -58,6 +59,7 @@
     document.body.appendChild(gate);
 
     const auth = window.__fb?.auth || getAuth();
+    const db = getFirestore();
 
     function deny(){
       // Login sayfasına gönder (geri tuşunda panele dönülmesin)
@@ -67,16 +69,31 @@
     onAuthStateChanged(auth, async (u) => {
       if (!u) return deny();
       try{
-        const token = await u.getIdTokenResult(true);
+        // CLAIM + DOMAIN
+        const t = await u.getIdTokenResult(true);
         const email = (u.email||'').toLowerCase();
-        const ok = token?.claims?.admin === true || email.endsWith('@ureteneller.com');
+        const claimAdmin  = t?.claims?.admin === true;
+        const domainAdmin = email.endsWith('@ureteneller.com');
+
+        // FIRESTORE ROLE
+        let roleAdmin = false;
+        try{
+          const snap = await getDoc(doc(db, 'users', u.uid));
+          const d = snap.exists() ? snap.data() : null;
+          roleAdmin = (d?.role === 'admin') || (d?.status === 'admin');
+        }catch(_){}
+
+        const ok = claimAdmin || domainAdmin || roleAdmin;
+
         if (!ok) {
           try { await signOut(auth); } catch {}
           return deny();
         }
+
+        // Yetki OK → UI’yi aç
         document.documentElement.setAttribute('data-auth','ok');
         gate.remove();
-      }catch{
+      }catch(_){
         try { await signOut(auth); } catch {}
         deny();
       }
