@@ -28,6 +28,7 @@
     .hint{font-size:12px;color:var(--muted)}
     .closeX{background:#fff;color:#0b1220;border:none;width:36px;height:36px;border-radius:999px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
   </style>
+  <!-- Firestore için global yardımcıları sağlayan dosya -->
   <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
@@ -36,7 +37,7 @@
       <div class="topbar">
         <div>
           <h1 id="t_title">İlan Oluştur</h1>
-          <p class="hint" id="t_sub">PREMIUM: <strong>10 ilan</strong> + <strong>1 vitrin</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.</p>
+          <p class="hint" id="t_sub">PREMIUM: <strong>10 ilan</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.</p>
         </div>
         <div class="lang">
           <label id="t_lang" for="langSel">Dil</label>
@@ -113,51 +114,51 @@
   <!-- Toast -->
   <div id="toast" style="position:fixed;left:50%;top:20px;transform:translateX(-50%) scale(0.95);opacity:0;transition:.25s;z-index:9999;background:#0e172a;border:1px solid #1f2937;color:#e5e7eb;padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);">Yönetici onayından sonra yayınlanacaktır.</div>
 
-  <!-- Mevcut IIFE: i18n + önizleme (aynen korundu) -->
+  <!-- i18n + önizleme -->
   <script>
-(function(){
-'use strict';
+  (function(){
+    'use strict';
 
     // === i18n (TR/EN/AR/DE) ===
     const i18n = {
-      tr:{ title:"İlan Oluştur", sub:"PREMIUM: <strong>10 ilan</strong> + <strong>1 vitrin</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.", lang:"Dil",
+      tr:{ title:"İlan Oluştur", sub:"PREMIUM: <strong>10 ilan</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.", lang:"Dil",
         l_title:"Başlık", h_title:"6–80 karakter",
         l_description:"Açıklama", h_description:"30–3000 karakter, uygunsuz içerik reddedilir.",
         l_category:"Kategori", l_subcategory:"Alt Kategori", l_province:"İl", l_district:"İlçe",
-        l_price:"Fiyat (TL)", l_stock:"Stok", l_images:"Fotoğraflar (en fazla 5)", l_showcase:"Vitrin (yalnızca PREMIUM)",
+        l_price:"Fiyat (TL)", l_stock:"Stok", l_images:"Fotoğraflar (en fazla 5)",
         btn_cancel:"İptal", btn_submit:"İlana Gönder (Onaya)", toast_ok:"Yönetici onayından sonra yayınlanacaktır.",
         placeholders:{ title:"Örn: El yapımı örgü bebek", desc:"Ürünü detaylı anlatın", district:"İlçenizi yazın", price:"Örn: 350" },
         stock:{var:"Var", yok:"Yok"},
         errors:{ title:"Başlık en az 6 karakter olmalı.", desc:"Açıklama en az 30 karakter olmalı.", cat:"Kategori seçiniz.", sub:"Alt kategori seçiniz.", prov:"İl seçiniz.", dist:"İlçe yazınız.", price:"Fiyat 1 TL ve üzeri olmalı.", files:"En fazla 5 fotoğraf yükleyebilirsiniz.", filetype:"Sadece JPG/PNG/WebP kabul edilir.", auth:"Oturum bulunamadı. Lütfen giriş yapın." },
         cover:"Kapak", coverMake:"Kapak Yap", del:"Sil", choose:"Seçiniz"
       },
-      en:{ title:"Create Listing", sub:"PREMIUM: <strong>10 listings</strong> + <strong>1 showcase</strong>. FREE: <strong>5 listings</strong>. All listings stay live for <strong>30 days</strong>.", lang:"Language",
+      en:{ title:"Create Listing", sub:"PREMIUM: <strong>10 listings</strong>. FREE: <strong>5 listings</strong>. All listings stay live for <strong>30 days</strong>.", lang:"Language",
         l_title:"Title", h_title:"6–80 characters",
         l_description:"Description", h_description:"30–3000 characters; inappropriate content is rejected.",
         l_category:"Category", l_subcategory:"Subcategory", l_province:"Province", l_district:"District",
-        l_price:"Price (TRY)", l_stock:"Stock", l_images:"Photos (up to 5)", l_showcase:"Showcase (PREMIUM only)",
+        l_price:"Price (TRY)", l_stock:"Stock", l_images:"Photos (up to 5)",
         btn_cancel:"Cancel", btn_submit:"Submit for Review", toast_ok:"Will be published after admin approval.",
         placeholders:{ title:"e.g., Hand‑knitted doll", desc:"Describe your product in detail", district:"Type your district", price:"e.g., 350" },
         stock:{var:"In stock", yok:"Out of stock"},
         errors:{ title:"Title must be at least 6 characters.", desc:"Description must be at least 30 characters.", cat:"Select a category.", sub:"Select a subcategory.", prov:"Select a province.", dist:"Enter a district.", price:"Price must be ≥ 1.", files:"You can upload up to 5 photos.", filetype:"Only JPG/PNG/WebP accepted.", auth:"No session. Please sign in." },
         cover:"Cover", coverMake:"Make Cover", del:"Delete", choose:"Select"
       },
-      ar:{ title:"إنشاء إعلان", sub:"المميز: <strong>10 إعلانات</strong> + <strong>1 واجهة</strong>. المجاني: <strong>5 إعلانات</strong>. كل إعلان يبقى <strong>30 يوماً</strong>.", lang:"اللغة",
+      ar:{ title:"إنشاء إعلان", sub:"المميز: <strong>10 إعلانات</strong>. المجاني: <strong>5 إعلانات</strong>. كل إعلان يبقى <strong>30 يوماً</strong>.", lang:"اللغة",
         l_title:"العنوان", h_title:"6–80 حرفاً",
         l_description:"الوصف", h_description:"30–3000 حرفاً؛ يتم رفض المحتوى غير الملائم.",
         l_category:"الفئة", l_subcategory:"الفئة الفرعية", l_province:"الولاية", l_district:"القضاء",
-        l_price:"السعر (ليرة)", l_stock:"التوفّر", l_images:"صور (حتى 5)", l_showcase:"واجهة (للمميز فقط)",
+        l_price:"السعر (ليرة)", l_stock:"التوفّر", l_images:"صور (حتى 5)",
         btn_cancel:"إلغاء", btn_submit:"إرسال للمراجعة", toast_ok:"سيُنشر بعد موافقة الإدارة.",
         placeholders:{ title:"مثال: دمية محاكة", desc:"صف المنتج بالتفصيل", district:"اكتب اسم القضاء", price:"مثال: 350" },
         stock:{var:"متوفر", yok:"غير متوفر"},
         errors:{ title:"يجب أن يكون العنوان 6 أحرف على الأقل.", desc:"الوصف يجب أن يكون 30 حرفاً على الأقل.", cat:"اختر فئة.", sub:"اختر فئة فرعية.", prov:"اختر ولاية.", dist:"أدخل القضاء.", price:"السعر يجب أن يكون ≥ 1.", files:"يمكنك رفع حتى 5 صور.", filetype:"يُقبل فقط JPG/PNG/WebP.", auth:"لا توجد جلسة. يرجى تسجيل الدخول." },
         cover:"غلاف", coverMake:"اجعله غلافاً", del:"حذف", choose:"اختر"
       },
-      de:{ title:"Anzeige erstellen", sub:"PREMIUM: <strong>10 Anzeigen</strong> + <strong>1 Schaufenster</strong>. FREE: <strong>5 Anzeigen</strong>. Jede Anzeige bleibt <strong>30 Tage</strong> online.", lang:"Sprache",
+      de:{ title:"Anzeige erstellen", sub:"PREMIUM: <strong>10 Anzeigen</strong>. FREE: <strong>5 Anzeigen</strong>. Jede Anzeige bleibt <strong>30 Tage</strong> online.", lang:"Sprache",
         l_title:"Titel", h_title:"6–80 Zeichen",
         l_description:"Beschreibung", h_description:"30–3000 Zeichen; unzulässiger Inhalt wird abgelehnt.",
         l_category:"Kategorie", l_subcategory:"Unterkategorie", l_province:"Provinz", l_district:"Bezirk",
-        l_price:"Preis (TRY)", l_stock:"Bestand", l_images:"Fotos (bis zu 5)", l_showcase:"Schaufenster (nur PREMIUM)",
+        l_price:"Preis (TRY)", l_stock:"Bestand", l_images:"Fotos (bis zu 5)",
         btn_cancel:"Abbrechen", btn_submit:"Zur Prüfung einreichen", toast_ok:"Wird nach Admin‑Freigabe veröffentlicht.",
         placeholders:{ title:"z. B. Handgestrickte Puppe", desc:"Beschreiben Sie Ihr Produkt", district:"Bezirk eingeben", price:"z. B. 350" },
         stock:{var:"Auf Lager", yok:"Nicht vorrätig"},
@@ -166,7 +167,7 @@
       }
     };
 
-    // === Kategoriler çok dilli (TR/EN/DE/AR) ===
+    // === Kategoriler === (kısaltılmış; gerekirse genişletilebilir)
     const cats = [
       {id:'yemek', names:{tr:'🍲 Yemekler', en:'🍲 Meals', de:'🍲 Mahlzeiten', ar:'🍲 وجبات'}, subs:[
         ['evyemek','Ev yemekleri','Home-cooked','Hausmannskost','وجبات منزلية'],
@@ -313,9 +314,7 @@
       ]}
     ];
 
-    const PROVINCES = [
-      "Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"
-    ].sort((a,b)=>a.localeCompare(b,'tr'));
+    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
 
     // === Helpers ===
     window.$ = (id)=> document.getElementById(id);
@@ -326,15 +325,12 @@
       $('l_description').textContent=t.l_description; $('h_description').textContent=t.h_description;
       $('l_category').textContent=t.l_category; $('l_subcategory').textContent=t.l_subcategory;
       $('l_province').textContent=t.l_province; $('l_district').textContent=t.l_district;
-      $('l_price').textContent=t.l_price; $('l_stock').textContent=t.l_stock; $('l_images').textContent=t.l_images; if($('l_showcase')) $('l_showcase').textContent=t.l_showcase;
+      $('l_price').textContent=t.l_price; $('l_stock').textContent=t.l_stock; $('l_images').textContent=t.l_images;
       $('b_cancel').textContent=t.btn_cancel; $('b_submit').textContent=t.btn_submit;
       $('title').placeholder=t.placeholders.title; $('description').placeholder=t.placeholders.desc; $('districtInput').placeholder=t.placeholders.district; $('price').placeholder=t.placeholders.price;
       const stock=$('stock'); stock.options[0].textContent=t.stock.var; stock.options[1].textContent=t.stock.yok;
       rebuildCategories(lng); fillProvinces(lng);
-      // buton/metinler önizleme
-      window.__t = t;
-      // toast örnek metni güncelle
-      $('toast').textContent = t.toast_ok;
+      window.__t = t; $('toast').textContent = t.toast_ok;
     }
 
     function rebuildCategories(lng){
@@ -351,13 +347,9 @@
     }
 
     function fillProvinces(lng){
-      const selProv=$('province'); const choose=i18n[lng].choose;
+      const selProv=$('province'); const choose=i18n[lng].choose || 'Seçiniz';
       selProv.innerHTML = `<option value="" disabled selected>${choose}</option>` + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join('');
     }
-    // export helpers to global for module scripts
-    window.setLang = setLang;
-    window.rebuildCategories = rebuildCategories;
-    window.fillProvinces = fillProvinces;
 
     // === Fotoğraf Önizleme + Kapak + Sil ===
     const inputEl = $('images');
@@ -420,109 +412,81 @@
       if(files.length===0){ previewsEl.innerHTML=''; __coverIndex=-1; }
     });
 
-    // Başlangıç dili TR
+    // Başlangıç dili TR ve kapatma
     const sel=$('langSel'); sel.value='tr'; setLang('tr');
-    // Üstteki X (home.html)
     const closeBtn = $('closeBtn'); if(closeBtn){ closeBtn.onclick = ()=>{ window.location.href='home.html'; }; }
     sel.addEventListener('change', ()=> setLang(sel.value));
-    // İller & kategoriler ilk doldurma
     fillProvinces('tr'); rebuildCategories('tr');
-})();
-</script>
 
-  <!-- YENİ: Firestore + Storage kayıt (module) -->
+  })();
+  </script>
+
+  <!-- Firestore + BULUT (Cloudinary) yükleme -->
   <script type="module">
-    // firebase-init.js içinde global değişkenler yayınlandıysa kullan
+    // ==== Bulut AYARLARI (yalnızca bu 3 sabiti kendi hesabına göre düzenle) ====
+    const CLOUD_NAME    = 'dbntnzogo';           // Bulut adınız (ör: dbntnzogo)
+    const UPLOAD_PRESET = 'unsigned_listings';   // İmzalanmamış preset (tarayıcıdan güvenli yükleme için)
+    const API_KEY       = '321492881526576';     // İsteğe bağlı; unsigned için şart değil
+    // GÜVENLİK: API SECRET asla tarayıcıya koyulmaz.
+
+    // ==== firebase-init.js içinden gelmesi beklenen yardımcılar ====
     const app   = window.app   || window.firebaseApp;
     const auth  = window.auth  || (window.firebase && window.firebase.auth);
     const db    = window.db    || (window.firebase && window.firebase.db);
-    const store = window.storage|| (window.firebase && window.firebase.storage);
 
-    // Eğer modülden named import gerekiyorsa (opsiyonel, firebase-init.js export ediyorsa)
-    // import { getAuth, onAuthStateChanged } from 'firebase/auth';
-    // import { getFirestore, doc, collection, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-    // import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+    // Firestore köprüleri (compat/modular)
+    function serverNow(){ return (window.firebase && window.firebase.serverTimestamp) ? window.firebase.serverTimestamp() : new Date(); }
+    async function setDocX(path, data){
+      if (window.firebase && window.firebase.setDoc) return window.firebase.setDoc(path, data);
+      if (window._setDoc) return window._setDoc(path, data);
+      throw new Error('setDoc fonksiyonu yok (firebase-init.js kontrol edin)');
+    }
 
+    function getAuthUser(){ return (auth && auth.currentUser) ? auth.currentUser : null; }
+
+    // === Cloudinary'ye çoklu foto yükleme (unsigned) ===
+    async function uploadAllToCloud(uid, docId, files){
+      const urls = [];
+      if(!files || !files.length) return urls;
+      const folder = `listings/${uid}/${docId}`; // Medya klasörü
+      for (let i=0;i<files.length;i++){
+        const f = files[i];
+        const form = new FormData();
+        form.append('file', f);
+        form.append('upload_preset', UPLOAD_PRESET);
+        form.append('folder', folder);
+        // form.append('api_key', API_KEY); // unsigned için gerekmez
+        // form.append('context', `alt=${encodeURIComponent(f.name)}`);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: 'POST', body: form
+        });
+        if(!res.ok){
+          const txt = await res.text();
+          throw new Error('Buluta yükleme hatası: '+txt);
+        }
+        const json = await res.json();
+        urls.push(json.secure_url || json.url);
+      }
+      return urls;
+    }
+
+    // === Form işlemleri ===
     const $ = (id)=> document.getElementById(id);
     const form = $('listingForm');
     const msg  = $('msg');
     const toast = $('toast');
 
     function t(){ return (window.__t) || { errors:{}, toast_ok:'Kaydedildi.' }; }
-
-    function showMsg(text, ok=false){
-      msg.style.color = ok ? 'var(--ok)' : 'var(--muted)';
-      msg.textContent = text;
-    }
-
+    function showMsg(text, ok=false){ msg.style.color = ok ? 'var(--ok)' : 'var(--muted)'; msg.textContent = text; }
     function showToast(text){
-      toast.textContent = text || t().toast_ok;
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(-50%) scale(1)';
+      toast.textContent = text || t().toast_ok; toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) scale(1)';
       setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateX(-50%) scale(0.95)'; }, 1800);
     }
-
     function getCoverIndex(){
       const list = Array.from(document.querySelectorAll('#previews .thumb'));
       const i = list.findIndex(el => el.querySelector('.cover'));
       return (i >= 0 ? i : (list.length ? 0 : -1));
-    }
-
-    async function uploadAll(uid, docId, files){
-      if(!store || !files.length) return [];
-      const folder = `listings/${uid}/${docId}/`;
-      const urls = [];
-      for(let i=0;i<files.length;i++){
-        const f = files[i];
-        const ext = (f.name.split('.').pop()||'').toLowerCase();
-        const path = folder + `${i}.${ext || 'jpg'}`;
-        const refPath = storeRef(path);
-        await uploadBytes(refPath, f);
-        const url = await getDownloadURL(refPath);
-        urls.push(url);
-      }
-      return urls;
-    }
-
-    // Storage helper'ları (compat + modular farkını köprülemek için)
-    function storeRef(p){
-      if (window.firebase && window.firebase.storageRef) return window.firebase.storageRef(p);
-      // modular
-      return (window.storageRef ? window.storageRef(p) : window.firebase?.storage?.ref?.(p));
-    }
-    async function uploadBytes(r, f){
-      if (r && r.put) { await r.put(f); return; }
-      // modular wrapper bekleniyorsa firebase-init bu fonksiyonu window'a koymuş olabilir
-      if (window._uploadBytes) return window._uploadBytes(r, f);
-      // Son çare: hata
-      throw new Error('Storage yükleme fonksiyonu bulunamadı');
-    }
-    async function getDownloadURL(r){
-      if (r && r.getDownloadURL) return await r.getDownloadURL();
-      if (window._getDownloadURL) return await window._getDownloadURL(r);
-      throw new Error('DownloadURL fonksiyonu yok');
-    }
-
-    // Firestore helper'ları (compat + modular köprüsü)
-    function col(path){ return (window.firebase && window.firebase.col) ? window.firebase.col(path) : path; }
-    function mkDoc(path){ return (window.firebase && window.firebase.mkDoc) ? window.firebase.mkDoc(path) : path; }
-    async function setDocX(docRef, data){
-      if (window.firebase && window.firebase.setDoc) return window.firebase.setDoc(docRef, data);
-      if (window._setDoc) return window._setDoc(docRef, data);
-      throw new Error('setDoc fonksiyonu yok');
-    }
-    async function updateDocX(docRef, data){
-      if (window.firebase && window.firebase.updateDoc) return window.firebase.updateDoc(docRef, data);
-      if (window._updateDoc) return window._updateDoc(docRef, data);
-      throw new Error('updateDoc fonksiyonu yok');
-    }
-    function serverNow(){ return (window.firebase && window.firebase.serverTimestamp) ? window.firebase.serverTimestamp() : new Date(); }
-
-    function getAuthUser(){
-      // auth.currentUser varsa direkt döndür
-      if(auth && auth.currentUser) return auth.currentUser;
-      // firebase-init onAuthStateChanged ile daha sonra doldurabilir; burada sadece kontrol ediyoruz
-      return null;
     }
 
     form.addEventListener('submit', async (e)=>{
@@ -540,7 +504,6 @@
       const price = parseInt(($('price').value||'0'), 10) || 0;
       const stock = $('stock').value;
 
-      // Basit validasyon (mevcut metinlerle)
       if(title.length < 6){ showMsg(t().errors.title || 'Başlık kısa.'); return; }
       if(description.length < 30){ showMsg(t().errors.desc || 'Açıklama kısa.'); return; }
       if(!category){ showMsg(t().errors.cat || 'Kategori seçin.'); return; }
@@ -551,10 +514,7 @@
 
       const files = Array.from(($('images').files||[])).slice(0,5);
       if(files.length > 5){ showMsg(t().errors.files || 'En fazla 5 foto.'); return; }
-      for(const f of files){
-        const ok = /image\/(jpeg|png|webp)/i.test(f.type);
-        if(!ok){ showMsg(t().errors.filetype || 'Sadece JPG/PNG/WebP.'); return; }
-      }
+      for(const f of files){ if(!/image\/(jpeg|png|webp)/i.test(f.type)){ showMsg(t().errors.filetype || 'Sadece JPG/PNG/WebP.'); return; } }
 
       const submitBtn = $('b_submit');
       submitBtn.disabled = true; submitBtn.textContent = 'Kaydediliyor…';
@@ -565,15 +525,15 @@
         const autoId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8));
         const docPath = `listings/${autoId}`;
 
-        // Fotoğraflar
+        // 1) FOTOĞRAFLARI BULUTA YÜKLE
         let photoURLs = [];
-        try{
-          photoURLs = await uploadAll(user.uid, autoId, files);
-        }catch(upErr){ console.warn('upload fail', upErr); }
+        try{ photoURLs = await uploadAllToCloud(user.uid, autoId, files); }
+        catch(upErr){ console.warn('upload fail', upErr); showMsg('Fotoğraf yükleme hatası: '+upErr.message); }
 
         const coverIndex = (getCoverIndex());
         const coverUrl = (photoURLs[coverIndex] || photoURLs[0] || '');
 
+        // 2) VERİLERİ FIRESTORE'A KAYDET
         const payload = {
           title, description, category, subcategory,
           province, district, price, stock,
@@ -587,11 +547,9 @@
           createdAt: serverNow(),
           updatedAt: serverNow()
         };
-
         await setDocX(docPath, payload);
 
         showToast(t().toast_ok || 'Kaydedildi.');
-        // Temizle ve profile yönlendir
         form.reset();
         setTimeout(()=>{ window.location.href = 'profile.html'; }, 900);
       }catch(err){
