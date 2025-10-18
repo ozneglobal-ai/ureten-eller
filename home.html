@@ -737,8 +737,11 @@ async function watchNotiCount(){
       const { collection, query, where, orderBy, limit, getDocs } = fs;
 
       const col = collection(db, 'listings');
-      const qAll = query(col, where('status','==','active'), orderBy('createdAt','desc'), limit(200));
-      const snap = await getDocs(qAll);
+      const qAll = query(col, orderBy('createdAt','desc'), limit(200));
+      let snap; try { snap = await getDocs(qAll); } catch(e){ if(String(e&&e.message||'').includes('requires an index')){ // fallback: no orderBy
+        const qLite = query(col, limit(200));
+        snap = await getDocs(qLite);
+      } else { throw e; } }
       const now = Date.now();
       const vip=[], std=[];
       snap.forEach(doc=>{
@@ -748,6 +751,9 @@ async function watchNotiCount(){
         (isVipDoc(d, now) ? vip : std).push({id:doc.id, data:d});
       });
 
+      // createdAt'a göre yerel sırala (fallback sorguda sırasız gelebilir)
+      const sortByCreated = (arr)=>arr.sort((a,b)=> toMillis(b.data.createdAt) - toMillis(a.data.createdAt));
+      sortByCreated(vip); sortByCreated(std);
       renderList('vipGrid', vip.slice(0,50));
       renderList('stdGrid', std.slice(0,50));
       updateCounts(Math.min(50, vip.length), Math.min(50, std.length));
