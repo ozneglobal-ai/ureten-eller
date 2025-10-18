@@ -1,18 +1,26 @@
 // /admin/js/listings.js — ÜE Admin: İlanlar modülü (detay + satıcı bilgisi + aksiyonlar)
-// Bu dosya Firestore'u YALNIZCA kökteki firebase-init.js'nin global helper'ları üzerinden kullanır.
-// (window.__fb.auth)  -> Auth
-// (window.firebase.*) -> Firestore helper'ları: col, q, orderBy, limit, getDoc, getDocs, setDoc, serverTimestamp
+// Bu dosya yalnıza kökteki firebase-init.js'nin global helper'larını kullanır.
+// window.__fb.auth -> Auth, window.firebase -> Firestore yardımcıları (col, q, orderBy, limit, getDoc, getDocs, setDoc, serverTimestamp)
 
-/* ----------------- küçük yardımcılar ----------------- */
 function esc(s){ return String(s ?? '').replace(/[&<>\"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 const DAY=86400000, LIFE_DAYS=30;
-function fmtTRY(v){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(Number(v||0)); }catch{ return (v||0)+' TL'; } }
+
+function fmtTRY(v){
+  try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(Number(v||0)); }
+  catch{ return (v||0)+' TL'; }
+}
+
+// Süre etiketi: expiresAt varsa gün hesaplar, yoksa sadece durum rozetini yazar.
 function badge(l){
   const tags=[]; const st = l.status || 'pending';
   if (st==='pending') tags.push('Bekliyor');
   if (st==='approved') {
-    const left = l.expiresAt ? Math.max(0, Math.ceil((l.expiresAt - Date.now())/DAY)) : LIFE_DAYS;
-    tags.push(`${left} gün`); if (l.showcase) tags.push('⭐ Vitrin'); if (l.showcasePending) tags.push('Onay bekliyor');
+    if (typeof l.expiresAt === 'number') {
+      const left = Math.max(0, Math.ceil((l.expiresAt - Date.now())/DAY));
+      tags.push(`${left} gün`);
+    }
+    if (l.showcase) tags.push('⭐ Vitrin');
+    if (l.showcasePending) tags.push('Onay bekliyor');
   }
   if (st==='expired') tags.push('Süre doldu');
   if (st==='rejected') tags.push('Reddedildi');
@@ -21,11 +29,9 @@ function badge(l){
 
 /* ----------------- admin guard ----------------- */
 async function ensureAdminAuth(){
-  // firebase-init.js yüklenmiş mi?
   const auth = window.__fb && window.__fb.auth;
   if (!auth) throw new Error('admin-login-required');
 
-  // oturum hazır değilse bekle
   if (!auth.currentUser && typeof window.__fb.onAuthStateChanged === 'function'){
     await new Promise(res=>{
       const stop = window.__fb.onAuthStateChanged(auth, (u)=>{ if(u){ try{stop();}catch{} res(); }});
@@ -33,22 +39,17 @@ async function ensureAdminAuth(){
   }
   if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error('admin-login-required');
 
-  // global firestore helper'ları var mı?
   if (!window.firebase || !window.firebase.getDoc) throw new Error('roles-read-failed');
 
-  // users/{uid}.role === 'admin' ?
   let isAdmin = false;
   try{
     const snap = await window.firebase.getDoc(`users/${auth.currentUser.uid}`);
-    if (snap && snap.exists && snap.exists()) {
+    if (snap?.exists && snap.exists()) {
       const r = (snap.data().role || '').toString().toLowerCase();
       isAdmin = (r === 'admin');
     }
-  }catch(e){
-    console.error('[admin] role read error:', e);
-  }
+  }catch(e){ console.error('[admin] role read error:', e); }
 
-  // fallback: custom claim / domain
   if (!isAdmin) {
     try{
       const t = await auth.currentUser.getIdTokenResult(true);
@@ -89,7 +90,7 @@ function openDetail(){ const bd=document.getElementById('ldBackdrop'); const pn=
 export async function mountAdminListings({ container }) {
   if (!container) throw new Error('mountAdminListings: container yok');
 
-  // UI iskelet
+  // UI
   container.innerHTML = `
     <div class="row">
       <h2 style="margin-right:auto">İlan Yönetimi</h2>
@@ -135,7 +136,7 @@ export async function mountAdminListings({ container }) {
     return;
   }
 
-  // Firebase helper’ları kontrol
+  // Helper’lar hazır mı?
   if (!window.firebase || !window.getDocs) {
     const tbody = container.querySelector('#listingsBody');
     if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="muted">Firebase helper yok (firebase-init.js yüklenmeli)</td></tr>`;
@@ -293,17 +294,37 @@ export async function mountAdminListings({ container }) {
     btn.disabled = true;
     try{
       const i = cache.findIndex(x => x.id === id); if (i < 0) return;
-      const patch = {}; const now = Date.now();
+      const l = cache[i];
+      const patch = {};
+      // NOT: Güvenlik kuralları 'expiresAt' update'ine izin vermiyor. Bu yüzden yazmıyoruz.
+      // Kurallara 'expiresAt' eklersen şunları aç:
+      //   patch.expiresAt = Date.now() + LIFE_DAYS*DAY;
 
       switch (btn.dataset.act) {
-        case 'approve':   patch.status='approved'; patch.expiresAt = now + LIFE_DAYS*DAY; break;
-        case 'reject':    patch.status='rejected'; patch.showcase=false; patch.showcasePending=false; break;
-        case 'renew':     patch.expiresAt = now + LIFE_DAYS*DAY; break;
+        case 'approve':
+          patch.status='approved';
+          break;
+        case 'reject':
+          patch.status='rejected';
+          patch.showcase=false; patch.showcasePending=false;
+          break;
+        case 'renew':
+          // patch.expiresAt = Date.now() + LIFE_DAYS*DAY; // (kurallara eklediğinde aç)
+          // Şimdilik sadece dokümanı dokundurup updatedAt güncelliyoruz:
+          break;
         case 'republish':
-        case 'fix':       patch.status='pending'; break;
-        case 'showcase':  patch.showcasePending=true; break;
-        case 'unshowcase':patch.showcase=false; patch.showcasePending=false; break;
-        case 'delete':    patch.status='rejected'; patch.showcase=false; patch.showcasePending=false; break;
+        case 'fix':
+          patch.status='pending';
+          break;
+        case 'showcase':
+          patch.showcasePending=true;
+          break;
+        case 'unshowcase':
+          patch.showcase=false; patch.showcasePending=false;
+          break;
+        case 'delete':
+          patch.status='rejected'; patch.showcase=false; patch.showcasePending=false;
+          break;
       }
 
       await window.firebase.setDoc(
@@ -313,18 +334,16 @@ export async function mountAdminListings({ container }) {
       );
 
       Object.assign(cache[i], patch);
+
       // satırı tazele
       (function repaint(idToRefresh){
         const r = tbody.querySelector(`tr[data-id="${CSS.escape(idToRefresh)}"]`);
         if (!r) return;
-        const l = cache[i];
-        r.querySelector('.td-title a').textContent = l.title || '—';
-        r.children[2].textContent = fmtTRY(l.price);
-        r.children[3].textContent = l.status || '—';
-        r.children[4].textContent = badge(l) || '—';
-        // action hücresini tamamen yeniden çizmek daha doğru olur; basit tutuyoruz
-        // gerekirse paint() çağırabilirsin:
-        // paint();
+        const nl = cache[i];
+        r.querySelector('.td-title a').textContent = nl.title || '—';
+        r.children[2].textContent = fmtTRY(nl.price);
+        r.children[3].textContent = nl.status || '—';
+        r.children[4].textContent = badge(nl) || '—';
       })(id);
 
       // panel açıksa yenile
