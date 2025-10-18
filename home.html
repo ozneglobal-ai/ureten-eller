@@ -70,6 +70,14 @@
     .chip{font-size:.75rem;border:1px solid var(--brd);border-radius:999px;padding:.18rem .5rem;background:#0a162c}
     .halo{position:absolute;inset:-25%;filter:blur(34px);opacity:.2;z-index:-1}
 
+    /* Legal geniş alan */
+    .legalFoot{margin-top:1.2rem}
+    .legalWrap{max-width:1280px;margin:0 auto;padding:1rem}
+    .legalGrid{display:grid;gap:.75rem;grid-template-columns:repeat(3,minmax(220px,1fr));align-items:start}
+    .legalGrid a{display:inline-block;margin:.12rem .6rem .12rem 0;white-space:nowrap}
+    @media(max-width:960px){.legalGrid{grid-template-columns:repeat(2,minmax(200px,1fr))}}
+    @media(max-width:640px){.legalGrid{grid-template-columns:repeat(1,minmax(0,1fr))}}
+
     /* Alt bar */
     .bottomBar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,#0a0f1c,#000);border-top:1px solid var(--brd);display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;z-index:100;color:#fff;box-shadow:0 0 0 1px var(--bbglow,#22d3ee),0 0 28px var(--bbglow,#22d3ee)}
     .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer;transition:transform .15s, box-shadow .2s}
@@ -379,13 +387,70 @@
   function renderCats(){
     const grid = document.getElementById('catGrid'); if(!grid) return; grid.innerHTML='';
     const cfg = (window.I18N[window.LANG]||window.I18N.tr).cats; const order = (cfg.order && cfg.order.length) ? cfg.order : (window.I18N.tr.cats.order||[]);
+    const LBL={
+      en:{food:"🍲 Foods",cake:"🎂 Cakes & Desserts",jar:"🫙 Jam • Pickle • Sauce",winter:"🌾 Local / Pantry",diet:"🥗 Diet / Vegan / GF",jew:"💍 Jewelry",kid:"👶 Baby & Kids",knit:"🧶 Knitwear",sew:"✂️ Tailoring",mac:"🧵 Macramé & Decor",home:"🏠 Home Decor & Accessories",candle:"🕯️ Candles & Fragrances",soap:"🧼 Natural Soap & Cosmetics",toys:"🧸 Amigurumi & Toys (decor)"},
+      de:{food:"🍲 Gerichte",cake:"🎂 Kuchen & Süßes",jar:"🫙 Marmelade • Pickles • Soßen",winter:"🌾 Regional / Vorrat",diet:"🥗 Diät / Vegan / GF",jew:"💍 Schmuck",kid:"👶 Baby & Kinder",knit:"🧶 Strick",sew:"✂️ Schneiderei",mac:"🧵 Makramee & Deko",home:"🏠 Wohndeko & Accessoires",candle:"🕯️ Kerzen & Düfte",soap:"🧼 Naturseife & Kosmetik",toys:"🧸 Amigurumi & Spielzeug (Deko)"},
+      ar:{food:"🍲 أطعمة",cake:"🎂 كيك وحلويات",jar:"🫙 مربى • مخللات • صلصات",winter:"🌾 منتجات محلية / مؤونة",diet:"🥗 حمية / نباتي / خالٍ من الغلوتين",jew:"💍 مجوهرات",kid:"👶 أطفال ورضّع",knit:"🧶 حياكة",sew:"✂️ خياطة",mac:"🧵 مكرمية وديكور",home:"🏠 ديكور المنزل وإكسسوارات",candle:"🕯️ شموع وروائح",soap:"🧼 صابون طبيعي وتجميلي",toys:"🧸 أميغورومي وألعاب (ديكور)"}
+    };
     order.forEach((key,i)=>{
       const def = (cfg[key] || window.I18N.tr.cats[key] || {t:key.toUpperCase(), s:[]});
       const col=window.COLORS[i%window.COLORS.length];
-      const chips = (def.s||[]).slice(0,6).map(s=>`<span class="chip">${s}</span>`).join('');
+      const titleText=(LBL[window.LANG]&&LBL[window.LANG][key]) ? LBL[window.LANG][key] : ((cfg[key]&&cfg[key].t) || (window.I18N.tr.cats[key]&&window.I18N.tr.cats[key].t) || key.toUpperCase());
+      const SUB = {
+        en:{
+          food:["Home-style meals","Pastry","Soup","Olive-oil dishes","Rice & pasta","Meat & chicken","Breakfast","Meze","Frozen","Kids meals","Diet/Vegan/GF"],
+          cake:["Cakes","Cupcake","Cookies","Syrupy","Milk desserts","Cheesecake","Diet dessert","Chocolate/Candy","Birthday sets"],
+          jar:["Jam/Marmalade","Molasses","Pickles","Tomato/pepper sauce","Hot sauce","Paste","Vinegar","Canned"],
+          winter:["Noodles","Tarhana","Phyllo","Manti","Dried veg/fruit","Paste","Vinegar","Canned"],
+          diet:["Fit plates","Vegan meals","GF bakery","Sugar‑free desserts","Keto","Protein snacks"],
+          jew:["Bracelet","Necklace","Earrings","Ring","Anklet","Brooch","Sets","Personalized","Macramé","Natural stone","Resin","Wire wrap"],
+          kid:["Animal/baby figures","Rattle","Teether knit","Cloth toy/book","Montessori toy","Sets","Booties/beanie","Baby blanket","Bib","Maternity set","Hair accessory","Handmade outfit"],
+          knit:["Cardigan","Sweater","Scarf/beanie","Poncho","Shawl","Socks","Bath set","Baby set","Vest","Cushion/cover"],
+          sew:["Hemming/repair","Zipper change","Curtain sew","Duvet/Pillow","Tablecloth","Custom tailoring","Costume"],
+          mac:["Wall decor","Plant hanger","Keychain","Chandelier","Placemat/runner","Basket","Shelf/wall decor"],
+          home:["Felt craft","Cushion","Door wreath","Tray decor","Frame","Dreamcatcher","Painting"],
+          candle:["Soy/beeswax candle","Scented stone","Room spray","Incense","Gel candle","Gift set"],
+          soap:["Olive oil soap","Herbal soaps","Solid shampoo","Lip balm","Cream/ointment","Bath salt","Lavender sachet"],
+          toys:["Keychain","Magnet","Collectible figure","Decor doll/character"]
+        },
+        de:{
+          food:["Hausmannskost","Gebäck","Suppe","Gerichte mit Olivenöl","Reis & Pasta","Fleisch & Huhn","Frühstück","Meze","Tiefgekühlt","Kindermahlzeiten","Diät/Vegan/GF"],
+          cake:["Torten","Cupcake","Kekse","Sirupdesserts","Milchdesserts","Käsekuchen","Diät-Dessert","Schoko/Bonbon","Geburtstagssets"],
+          jar:["Marmelade","Pekmez","Eingelegtes","Tomaten/Paprika-Soße","Scharfe Soße","Paste","Essig","Konserve"],
+          winter:["Bandnudeln","Tarhana","Yufka","Manti","Getr. Obst/Gemüse","Paste","Essig","Konserve"],
+          diet:["Fit-Teller","Vegane Gerichte","GF Backwaren","Zuckerfrei","Keto","Protein-Snacks"],
+          jew:["Armband","Kette","Ohrringe","Ring","Fußkettchen","Brosche","Sets","Personalisiert","Makramee","Naturstein","Harz","Drahtwicklung"],
+          kid:["Tier/Babyfiguren","Rassel","Beißring-Strick","Stoffspielzeug/Buch","Montessori-Spielzeug","Sets","Booties/Mütze","Babydecke","Lätzchen","Wochenbett-Set","Haar-Accessoire","Handgemachte Kleidung"],
+          knit:["Cardigan","Pullover","Schal/Mütze","Poncho","Schal","Socken","Badeset","Babyset","Weste","Kissen/Decke"],
+          sew:["Saum/Reparatur","Reißverschluss","Gardine nähen","Bettwäsche/Kissen","Tischdecke","Maßschneiderei","Kostüm"],
+          mac:["Wanddeko","Pflanzenhänger","Schlüsselanhänger","Lampe","Tischset/Runner","Korb","Regal/Wanddeko"],
+          home:["Filzarbeiten","Kissen","Türkranz","Tablettdeko","Rahmen","Traumfänger","Bild"],
+          candle:["Soja/Bienenwachs-Kerze","Duftstein","Raumspray","Weihrauch","Gelkerze","Geschenkset"],
+          soap:["Olivenölseife","Kräuterseifen","Festes Shampoo","Lippenbalsam","Creme/Salbe","Badesalz","Lavendelsäckchen"],
+          toys:["Schlüsselanhänger","Magnet","Sammlerfigur","Deko-Puppe/Charakter"]
+        },
+        ar:{
+          food:["وجبات منزلية","معجنات","شوربة","أطباق بزيت الزيتون","أرز ومعكرونة","لحم ودجاج","فطور","مقبلات","مجمد","وجبات للأطفال","حمية/نباتي/خالٍ من الغلوتين"],
+          cake:["كعكات","كب كيك","بسكويت","حلويات بالقطر","حلويات بالحليب","تشيزكيك","حلويات حمية","شوكولاتة/حلوى","مجموعات عيد الميلاد"],
+          jar:["مربى/مربى قوام","دبس","مخللات","صلصة طماطم/فلفل","صلصة حارة","معجون","خل","معلبات"],
+          winter:["نودلز","طرحنة","عجين يوفكا","مانتي","خضار/فاكهة مجففة","معجون","خل","معلبات"],
+          diet:["أطباق صحية","أطباق نباتية","مخبوزات خالية من الغلوتين","حلويات بدون سكر","كيتو","وجبات بروتين"],
+          jew:["سوار","قلادة","حلق","خاتم","خلخال","بروش","مجموعات","مخصص بالأسماء","مكرمية","حجر طبيعي","راتنج","سلك لف"],
+          kid:["مجسمات حيوانات/رضّع","خشخيشة","حلقة تسنين محبوكة","دمية/كتاب قماشي","لعبة منتسوري","مجموعات","حذاء/قبعة محبوكة","بطانية طفل","مريلة","طقم نفاس","اكسسوار شعر","ملابس يدوية"],
+          knit:["كارديغان","كنزة","وشاح/قبعة","بونشو","شال","جوارب","طقم حمام","طقم أطفال","صديري","وسادة/غطاء"],
+          sew:["ثني/تصليح","تبديل سحاب","خياطة ستارة","أغطية/وسادة","مفرش طاولة","تفصيل خاص","زي"],
+          mac:["زينة حائط","حامل أصيص","ميدالية","ثُريّا","مفرش/رانر","سلّة","رف/ديكور"],
+          home:["أعمال لباد","وسادة","زينة باب","تزيين صينية","إطار","صائد أحلام","لوحة"],
+          candle:["شموع صويا/شمع","حجر معطر","معطر جو","بخور","شموع هلام","طقم هدايا"],
+          soap:["صابون بزيت الزيتون","صوابين عشبية","شامبو صلب","بلسم شفاه","كريم/مرهم","ملح حمام","أكياس لافندر"],
+          toys:["ميدالية","مغناطيس","مجسم تجميعي","دمية/شخصية ديكور"]
+        }
+      };
+      const chipsArr = (SUB[window.LANG] && SUB[window.LANG][key]) || def.s || (window.I18N.tr.cats[key] && window.I18N.tr.cats[key].s) || [];
+      const chips = chipsArr.slice(0,6).map(s=>`<span class="chip">${s}</span>`).join('');
       const el=document.createElement('a'); el.href=`/kategori/${key}`; el.className='kcard'; el.style.setProperty('--glow',col); el.style.borderColor=col; el.dataset.baseIndex=String(i%window.COLORS.length); el.dataset.key=key;
       el.innerHTML=`<div class="halo" style="background:radial-gradient(420px 240px at 20% 0%,${col},transparent)"></div>
-        <div class="title" style="background:linear-gradient(90deg, ${col}, #ffffff); -webkit-background-clip:text; background-clip:text; color:transparent;">${def.t}</div>
+        <div class="title" style="background:linear-gradient(90deg, ${col}, #ffffff); -webkit-background-clip:text; background-clip:text; color:transparent;">${titleText}</div>
         <div class="chips">${chips}</div>`;
       grid.appendChild(el);
     });
@@ -444,9 +509,9 @@
     document.getElementById('btnGive')?.addEventListener('click', ()=>location.href='/ilan-ver.html');
     document.getElementById('btnProfile')?.addEventListener('click', ()=>location.href='/profile.html');
     document.getElementById('btnLogout')?.addEventListener('click', logout);
-    document.getElementById('navHome')?.addEventListener('click', ()=>location.href='/home.html');
-    document.getElementById('navMsg')?.addEventListener('click', ()=>location.href='/mesajlar.html');
-    document.getElementById('navNoti')?.addEventListener('click', ()=>location.href='/bildirimler.html');
+    document.getElementById('navHome')?.addEventListener('click', ()=>location.href='home.html');
+    document.getElementById('navMsg')?.addEventListener('click', ()=>location.href='docs/mesajlar.html');
+    document.getElementById('navNoti')?.addEventListener('click', ()=>location.href='docs/bildirimler.html');
 
     const sel=document.getElementById('langSel'); if(sel){ sel.value=window.LANG; sel.onchange=()=>{ window.LANG=sel.value; localStorage.setItem('ue_lang',window.LANG); applyLang(); }; }
     document.getElementById('chatBubble')?.addEventListener('click', ()=>{ const c=document.getElementById('chat'); if(!c) return; c.style.display=(c.style.display==='block')?'none':'block'; if(c.style.display==='block') openChat(); });
@@ -570,8 +635,137 @@
     bindCatClicks();
     bindPremium();
     bindChat();
+    watchNotiCount();
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+
+// ======= Bildirim Sayacı (GERÇEK) =======
+function ensureNotiBadge(){
+  const lbl = document.getElementById('navNotiLabel'); if(!lbl) return null;
+  let b = document.getElementById('navNotiBadge');
+  if(!b){ b=document.createElement('span'); b.id='navNotiBadge'; b.className='mini'; b.style.marginLeft='.25rem'; lbl.after(b); }
+  return b;
+}
+function setNotiCount(n){
+  const b=ensureNotiBadge(); if(!b) return; b.textContent = (typeof n==='number' && n>0) ? `(${n})` : '';
+}
+async function watchNotiCount(){
+  try{
+    const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const db = (window.__fb && window.__fb.db) ? window.__fb.db : fs.getFirestore();
+    const auth = (window.__fb && window.__fb.auth) ? window.__fb.auth : getAuth();
+
+    onAuthStateChanged(auth, (user)=>{
+      if(!user){ setNotiCount(0); return; }
+      try{
+        const { collection, query, where, onSnapshot } = fs;
+        const col = collection(db,'notifications');
+        const q = query(col, where('to','==', user.uid));
+        onSnapshot(q, (snap)=>{
+          let count=0; snap.forEach(doc=>{ const d=doc.data()||{}; const read = (d.read===true) || (d.isRead===true) || (d.status==='read'); if(!read) count++; });
+          setNotiCount(count);
+        }, ()=>{ setNotiCount(0); });
+      }catch(_){ setNotiCount(0); }
+    });
+  }catch(_){ setNotiCount(0); }
+}
+
+// ======= İLANLAR: 50 Vitrin + 50 Standart (onaylı/aktif) =======
+(function(){
+  const vipGrid = document.getElementById('vipGrid');
+  const stdGrid = document.getElementById('stdGrid');
+  if(!vipGrid || !stdGrid) return;
+
+  const paintSkeletons = (grid)=>{ if(grid) grid.innerHTML=''; };
+
+  const fmtPrice = (v, cur) => {
+    if(v == null || v === '') return '';
+    try { return new Intl.NumberFormat(window.LANG==='tr'?'tr-TR':'en-US',{style:'currency',currency:(cur||'TRY')}).format(Number(v)); } catch(_) { return v+ ' ' + (cur||'TL'); }
+  };
+
+  const toMillis = (x) => {
+    if(!x) return 0; if (typeof x === 'number') return x; if (x.seconds) return x.seconds*1000; if (x.toMillis) try{ return x.toMillis(); }catch(_){}; return Date.parse(x)||0;
+  };
+
+  const isVipDoc = (d, nowMs) => {
+    const until = toMillis(d.featuredUntil || d.vitrinUntil || d.showcaseUntil);
+    const flag  = d.featured === true || d.vitrin === true || d.isShowcase === true;
+    return flag || (until && until > nowMs);
+  };
+
+  const cardHTML = (d,id) => {
+    const img = (d.images && d.images[0]) || d.cover || d.photo || '/assets/icons/ureteneller.png';
+    const title = (d.title || d.name || 'İlan');
+    const price = fmtPrice(d.price, d.currency||d.cur||'TRY');
+    const city = d.city || d.il || '';
+    const badge = isVipDoc(d, Date.now()) ? '<span class="badge star">⭐ Vitrin</span>' : '';
+    const href = `/ilan/${id}`;
+    return `<a class="card" href="${href}" style="--glow:#22d3ee">
+      <span class="thumb" style="background-image:url('${img.replace(/\"/g,'')}')"></span>
+      <div class="meta">
+        <div class="row" style="justify-content:space-between">
+          <div class="title">${title}</div>
+          ${badge}
+        </div>
+        <div class="row" style="justify-content:space-between;margin-top:.3rem">
+          <div class="mini">${city}</div>
+          <div class="price">${price}</div>
+        </div>
+      </div>
+    </a>`;
+  };
+
+  const renderList = (gridId, arr) => {
+    const grid = document.getElementById(gridId); if(!grid) return; grid.innerHTML='';
+    const frag = document.createDocumentFragment();
+    arr.forEach(({id, data}) => { const div = document.createElement('div'); div.innerHTML = cardHTML(data,id); frag.appendChild(div.firstElementChild); });
+    grid.appendChild(frag);
+  };
+
+  const updateCounts = (vipN, stdN) => {
+    const vipC = document.getElementById('vipCount'); if(vipC) vipC.textContent = vipN ? `(${vipN})` : '';
+    const stdC = document.getElementById('stdCount'); if(stdC) stdC.textContent = stdN ? `(${stdN})` : '';
+  };
+
+  const fetchAndPaint = async () => {
+    try{
+      paintSkeletons(vipGrid, 6); paintSkeletons(stdGrid, 6);
+      let fs = null; let db = window.__fb && window.__fb.db ? window.__fb.db : null;
+      if(!db){ fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); db = fs.getFirestore(); }
+      if(!fs) fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const { collection, query, where, orderBy, limit, getDocs } = fs;
+
+      const col = collection(db, 'listings');
+      const qAll = query(col, where('status','==','active'), orderBy('createdAt','desc'), limit(200));
+      const snap = await getDocs(qAll);
+      const now = Date.now();
+      const vip=[], std=[];
+      snap.forEach(doc=>{
+        const d = doc.data() || {};
+        const approved = (d.approved===true) || d.status==='active';
+        if(!approved) return;
+        (isVipDoc(d, now) ? vip : std).push({id:doc.id, data:d});
+      });
+
+      renderList('vipGrid', vip.slice(0,50));
+      renderList('stdGrid', std.slice(0,50));
+      updateCounts(Math.min(50, vip.length), Math.min(50, std.length));
+    }catch(e){
+      console.warn('Listings load error:', e);
+      updateCounts(0,0);
+    }
+  };
+
+  document.getElementById('langSel')?.addEventListener('change', ()=>{
+  });
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', fetchAndPaint, { once:true });
+  } else {
+    fetchAndPaint();
+  }
+})();
 
 </script>
 </body>
