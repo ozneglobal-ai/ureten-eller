@@ -868,7 +868,8 @@ async function watchNotiCount(){
     if(hit) openInspect(hit.id, hit.data);
   }
 });
-
+};
+  
   const updateCounts = (vipN, stdN) => {
     const vipC = document.getElementById('vipCount'); if(vipC) vipC.textContent = vipN ? `(${vipN})` : '';
     const stdC = document.getElementById('stdCount'); if(stdC) stdC.textContent = stdN ? `(${stdN})` : '';
@@ -940,7 +941,7 @@ async function watchNotiCount(){
       const desc  = safe(data.description, '');
 
       const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-const sellerHTML =
+      const sellerHTML =
   '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
     + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
     + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
