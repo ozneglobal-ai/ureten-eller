@@ -1110,9 +1110,8 @@ async function watchNotiCount(){
 
       const docRef = await addDoc(collection(db,'orders'), payload);
       __orderId = docRef.id;
-
-      try{
-        // YENİ (kurallarla uyumlu)
+      
+// YENİ (kurallarla uyumlu)
 async function bindOrderChat(){
   if (!__orderId) return;
   const { fs, db, auth } = await ensureFSAuth();
@@ -1123,9 +1122,9 @@ async function bindOrderChat(){
 
   const q = query(collection(db, 'orders', __orderId, 'messages'), orderBy('createdAt','asc'));
   if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-  __orderUnsub = onSnapshot(q, function(snap){
+  __orderUnsub = onSnapshot(q, (snap)=>{
     if (body){ body.innerHTML=''; }
-    snap.forEach(function(doc){
+    snap.forEach((doc)=>{
       const m = doc.data() || {};
       const div = document.createElement('div');
       div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
@@ -1167,23 +1166,8 @@ async function bindOrderChat(){
       toast('Gönderilemedi (izin/ağ)');
     }
   };
-} // <-- bindOrderChat burada biter
+}
 
-document.addEventListener('click', function(e){
-  const t = e.target;
-  if (!t) return;
-  if (t.id === 'iOrder'){ e.preventDefault(); openOrder(); }
-  else if (t.id === 'iClose' || t.id === 'iCancel'){ e.preventDefault(); closeInspect(); }
-  else if (t.id === 'oClose' || t.id === 'oCancel'){ e.preventDefault(); closeOrder(); }
-});
-
-document.addEventListener('DOMContentLoaded', function(){
-  const btn = document.getElementById('oConfirm');
-  if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
-});
-
-window.openInspect = openInspect;
-})(); // IIFE kapanışı
 
   // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
   function startListings(){
