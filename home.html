@@ -1029,55 +1029,6 @@ async function watchNotiCount(){
       };
       try{ m.focus && m.focus(); }catch(_){}
 
-      // Satıcı profili
-      if (sellerId){
-        try{
-          const { _getDocWrap } = ensureFirebaseReady();
-          const snap = await _getDocWrap(`users/${sellerId}`);
-          if (snap.exists()){
-            const u = snap.data() || {};
-            const name = u.name || u.displayName || 'Satıcı';
-            const cityU = u.city || u.district || '';
-            const avatar = u.avatar || u.photoURL || '';
-            const verified = (u.isVerified===true) || (u.role==='verified') || (u.verified===true);
-            const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
-            const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
-            const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
-            const badge = document.getElementById('sellerBadge'); if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
-          }
-        }catch(_){}
-      }
-    }
-
-    async function ensureFSAuth(){
-      const { db } = ensureFirebaseReady();
-      const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const { auth } = self.__fb;
-      return { fs, db, auth };
-    }
-
-    function closeInspect(){
-      const m = document.getElementById('inspectModal'); if(!m) return;
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden','true');
-      document.getElementById('backdrop').style.display = 'none';
-    }
-
-    function openOrder(){
-      const m = document.getElementById('orderModal'); if(!m) return;
-      m.style.display = 'block';
-      m.setAttribute('aria-hidden','false');
-      document.getElementById('backdrop').style.display = 'block';
-    }
-
-    function closeOrder(){
-      const m = document.getElementById('orderModal'); if(!m) return;
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden','true');
-      document.getElementById('backdrop').style.display = 'none';
-      if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-    }
-
      // Satıcı profili
       if (sellerId){
         try{
