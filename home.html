@@ -821,13 +821,14 @@ async function watchNotiCount(){
     }
   };
 
-/* ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary) ======= */
+<!-- ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary) ======= -->
+<script>
 (function(){
   const vipGrid = document.getElementById('vipGrid');
   const stdGrid = document.getElementById('stdGrid');
   if(!vipGrid || !stdGrid) return;
 
-  // Cloudinary cloud name’ini buraya koyun (tam URL geliyorsa boş bırakabilirsiniz)
+  // Cloudinary cloud name (public_id kullanıyorsan doldur; tam URL geliyorsa boş bırak)
   const CLOUD_NAME = window.CLOUDINARY_CLOUD || ''; // ör: 'ureteneller'
   const CLD_BASE = CLOUD_NAME ? ('https://res.cloudinary.com/'+CLOUD_NAME+'/image/upload/') : '';
 
@@ -848,20 +849,18 @@ async function watchNotiCount(){
     return flag || (until && until > nowMs);
   };
 
-  // Cloudinary URL çözücü (tam https URL, data: URL, veya public_id destekler)
+  // Cloudinary URL helper (tam https/data URL veya public_id destekler)
   function cldUrl(x, w=600, h=600){
     if(!x) return '';
     const s = String(x);
     if (/^https?:\/\//i.test(s) || /^data:image\//i.test(s)) return s;
     if (!CLOUD_NAME) return s; // cloud adı yoksa olduğu gibi bırak
-    // örn: folders/file, public_id, vs. -> otomatik dönüştür
-    const safeId = s.replace(/^cld:\/\//,'').replace(/^cloudinary:\/\//,'').replace(/^\/+/,'');
+    const safeId = s.replace(/^cld:\/\//,'').replace(/^cloudinary:\/\//,'').replace(/^\/+/, '');
     const tr = `c_fill,q_auto,f_auto,w_${w},h_${h}`;
     return CLD_BASE + tr + '/' + safeId;
   }
 
   function pickPhotos(d){
-    // Öncelik: coverUrl -> photos[] -> images[]
     if (d.coverUrl) return [d.coverUrl];
     if (Array.isArray(d.photos) && d.photos.length) return d.photos;
     if (Array.isArray(d.images) && d.images.length){
@@ -903,6 +902,8 @@ async function watchNotiCount(){
       frag.appendChild(div.firstElementChild);
     });
     grid.appendChild(frag);
+
+    // İncele
     grid.addEventListener('click', (e)=>{
       const btn = e.target.closest('[data-inspect]');
       if(btn){ e.preventDefault();
@@ -958,15 +959,12 @@ async function watchNotiCount(){
   };
 
   // Sayfa yüklenince ilanları çek
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', fetchAndPaint);
-} else {
-  fetchAndPaint();
-}
-
-})(); // <<< İLANLAR IIFE’Yİ KAPATIYOR
-
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchAndPaint);
+  } else {
+    fetchAndPaint();
+  }
+})(); 
 </script>
-
 </body>
 </html>
