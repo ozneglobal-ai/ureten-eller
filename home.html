@@ -933,25 +933,24 @@ async function watchNotiCount(){
       if (!m || !b) return;
 
       // Fotoğraflar
-let photos = [];
-if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
-else if (Array.isArray(data.images) && data.images.length)
-  photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
-else if (data.coverUrl) photos = [data.coverUrl];
-if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
-photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
+      let photos = [];
+      if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
+      else if (Array.isArray(data.images) && data.images.length)
+        photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
+      else if (data.coverUrl) photos = [data.coverUrl];
+      if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
+      photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
 
-// 💡 Tam buraya ekle
-const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
-__sellerId = sellerId;
+      const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
+      __sellerId = sellerId;
 
-const priceText = (data.price != null && data.price !== '') ? (data.price + ' TL') : '';
-const city = data.city || data.province || data.il || '';
-const title = safe(data.title || data.name, 'İlan');
-const desc  = safe(data.description, '');
+      const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
+      const city = data.city || data.province || data.il || '';
+      const title = safe(data.title || data.name, 'İlan');
+      const desc  = safe(data.description, '');
 
-const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-const sellerHTML =
+      const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
+      const sellerHTML = 
   '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
     + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
     + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
