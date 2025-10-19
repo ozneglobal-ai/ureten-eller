@@ -53,7 +53,7 @@
     .card{position:relative;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;transition:box-shadow .25s,transform .15s}
     .card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--glow, #22d3ee),0 0 26px var(--glow, #22d3ee)}
     .thumb{aspect-ratio:1.2/1;background:#0f172a;display:block;background-size:cover;background-position:center}
-    .meta{padding:.6rem .7rem}
+    .meta{padding:.6rem .7rem 2.2rem}
     .title{font-weight:900}
     .price{font-weight:900}
     .badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .5rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
@@ -856,14 +856,18 @@ async function watchNotiCount(){
       div.innerHTML = cardHTML(data,id);
       frag.appendChild(div.firstElementChild);
     });
-    grid.appendChild(frag);
-    setTimeout(()=> resolveAllThumbs(arr), 0);
+   grid.addEventListener('click', (e)=>{
+  const btn=e.target.closest('[data-inspect]');
+  if(btn){ e.preventDefault(); const lid=btn.getAttribute('data-inspect'); const hit=arr.find(x=>x.id===lid); if(hit) openInspect(hit.id, hit.data); return; }
 
-    grid.addEventListener('click', (e)=>{
-      const btn=e.target.closest('[data-inspect]');
-      if(btn){ e.preventDefault(); const lid=btn.getAttribute('data-inspect'); const hit=arr.find(x=>x.id===lid); if(hit) openInspect(hit.id, hit.data); }
-    });
-  };
+  const card=e.target.closest('.card');
+  if(card){
+    e.preventDefault();
+    const lid=card.getAttribute('data-id');
+    const hit=arr.find(x=>x.id===lid);
+    if(hit) openInspect(hit.id, hit.data);
+  }
+});
 
   const updateCounts = (vipN, stdN) => {
     const vipC = document.getElementById('vipCount'); if(vipC) vipC.textContent = vipN ? `(${vipN})` : '';
@@ -936,19 +940,19 @@ async function watchNotiCount(){
       const desc  = safe(data.description, '');
 
       const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-      const sellerHTML =
-        '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
-          + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
-          + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
-            + '<img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">'
-            + '<div style="flex:1;min-width:160px">'
-              + '<div id="sellerName" class="mini">Profil</div>'
-              + '<div id="sellerCity" class="mini"></div>'
-              + '<div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>'
-            + '</div>'
-            + '<a id="sellerLink" class="btn" href="'+profileHref+'" '+(sellerId?'':'aria-disabled="true"')+'>Profili Gör</a>'
-          + '</div>'
-        + '</div>';
+const sellerHTML =
+  '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
+    + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
+    + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
+      + '<img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">'
+      + '<div style="flex:1;min-width:160px">'
+        + '<div id="sellerName" class="mini">Profil</div>'
+        + '<div id="sellerCity" class="mini"></div>'
+        + '<div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>'
+      + '</div>'
+      + '<a id="sellerLink" class="btn" href="'+profileHref+'" '+(sellerId?'':'aria-disabled="true"')+'>Profili Gör</a>'
+    + '</div>'
+  + '</div>';
 
       // !!! DÜZELTME: style attribute'larındaki gereksiz ) parantezleri kaldırıldı
       var html = ''
@@ -967,11 +971,7 @@ async function watchNotiCount(){
             + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem">'+priceText+'</div>'
             + '<div style="white-space:pre-line; line-height:1.4">'+desc+'</div>'
             + sellerHTML
-            + '<div class="row" style="margin-top:.8rem; gap:.5rem">'
-              + '<button class="btn primary" id="iOrder">Sipariş Ver</button>'
-              + '<button class="btn ghost" id="iCancel">Kapat</button>'
             + '</div>'
-          + '</div>'
         + '</div>';
 
       b.innerHTML = html;
