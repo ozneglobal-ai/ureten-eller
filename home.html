@@ -957,13 +957,15 @@ async function watchNotiCount(){
     }
   };
 
-  // Sayfa yüklenince ilanları çek (IIFE içinde tetik)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fetchAndPaint);
-  } else {
-    fetchAndPaint();
-  }
-})();
+  // Sayfa yüklenince ilanları çek
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', fetchAndPaint);
+} else {
+  fetchAndPaint();
+}
+
+})(); // <<< İLANLAR IIFE’Yİ KAPATIYOR
+
 </script>
 
 </body>
