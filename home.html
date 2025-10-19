@@ -849,25 +849,35 @@ async function watchNotiCount(){
   };
 
   const renderList = (gridId, arr) => {
-    const grid = document.getElementById(gridId); if(!grid) return; grid.innerHTML='';
-    const frag = document.createDocumentFragment();
-    arr.forEach(({id, data}) => {
-      const div = document.createElement('div');
-      div.innerHTML = cardHTML(data,id);
-      frag.appendChild(div.firstElementChild);
-    });
-   grid.addEventListener('click', (e)=>{
-  const btn=e.target.closest('[data-inspect]');
-  if(btn){ e.preventDefault(); const lid=btn.getAttribute('data-inspect'); const hit=arr.find(x=>x.id===lid); if(hit) openInspect(hit.id, hit.data); return; }
+  const grid = document.getElementById(gridId); if(!grid) return; 
+  grid.innerHTML='';
+  const frag = document.createDocumentFragment();
+  arr.forEach(({id, data}) => {
+    const div = document.createElement('div');
+    div.innerHTML = cardHTML(data,id);
+    frag.appendChild(div.firstElementChild);
+  });
+  grid.appendChild(frag);
+  setTimeout(()=> resolveAllThumbs(arr), 0);
 
-  const card=e.target.closest('.card');
-  if(card){
-    e.preventDefault();
-    const lid=card.getAttribute('data-id');
-    const hit=arr.find(x=>x.id===lid);
-    if(hit) openInspect(hit.id, hit.data);
-  }
-});
+  // Kart veya "İncele" tıklandığında modal aç
+  grid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-inspect]');
+    if (btn){
+      e.preventDefault();
+      const lid = btn.getAttribute('data-inspect');
+      const hit = arr.find(x=>x.id===lid);
+      if (hit) openInspect(hit.id, hit.data);
+      return;
+    }
+    const card = e.target.closest('.card');
+    if (card){
+      e.preventDefault();
+      const lid = card.getAttribute('data-id');
+      const hit = arr.find(x=>x.id===lid);
+      if (hit) openInspect(hit.id, hit.data);
+    }
+  });
 };
   
   const updateCounts = (vipN, stdN) => {
