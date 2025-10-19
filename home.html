@@ -1057,21 +1057,7 @@ async function openInspect(id, data){
     } catch (_) {}
   }
 
-  // Butonlar
-  const btnOrder = document.getElementById('iOrder');
-  if (btnOrder) btnOrder.onclick = () => {
-    closeInspect();
-    openOrder();
-    bindOrderChat();
-  };
-
-  const btnCancel = document.getElementById('iCancel');
-  if (btnCancel) btnCancel.onclick = () => closeInspect();
-
-  const btnClose = document.getElementById('iClose');
-  if (btnClose) btnClose.onclick = () => closeInspect();
-}
-
+  // === Modallar ===
 function closeInspect(){
   const m = document.getElementById('inspectModal');
   if(!m) return;
@@ -1084,10 +1070,29 @@ function closeInspect(){
 function openOrder(){
   const m = document.getElementById('orderModal');
   if(!m) return;
+
+  // Aç
   m.style.display = 'block';
   m.setAttribute('aria-hidden','false');
   const backdrop = document.getElementById('backdrop');
   if (backdrop) backdrop.style.display = 'block';
+
+  // Butonları tek sefer bağla
+  const btnConfirm = document.getElementById('oConfirm');
+  if (btnConfirm && !btnConfirm.__bound){
+    btnConfirm.addEventListener('click', confirmOrder);
+    btnConfirm.__bound = true;
+  }
+  const btnCancel = document.getElementById('oCancel');
+  if (btnCancel && !btnCancel.__bound){
+    btnCancel.addEventListener('click', closeOrder);
+    btnCancel.__bound = true;
+  }
+  const btnClose = document.getElementById('oClose');
+  if (btnClose && !btnClose.__bound){
+    btnClose.addEventListener('click', closeOrder);
+    btnClose.__bound = true;
+  }
 }
 
 function closeOrder(){
@@ -1100,6 +1105,7 @@ function closeOrder(){
   if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
 }
 
+// === Firebase yardımcı ===
 async function ensureFSAuth(){
   const { db } = ensureFirebaseReady();
   const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
@@ -1107,6 +1113,7 @@ async function ensureFSAuth(){
   return { fs, db, auth };
 }
 
+// === Sipariş oluştur ===
 async function confirmOrder(){
   const name  = (document.getElementById('oName')?.value||'').trim();
   const city  = (document.getElementById('oCity')?.value||'').trim();
@@ -1143,18 +1150,24 @@ async function confirmOrder(){
     title: d.title || d.name || 'İlan'
   };
 
-  const docRef = await addDoc(collection(db, 'orders'), payload);
-  __orderId = docRef.id;
+  try{
+    const docRef = await addDoc(collection(db, 'orders'), payload);
+    __orderId = docRef.id;
 
-  // Sipariş açıldıysa sohbet bölümünü görünür yap (orderModal içinde)
-  const oc = document.getElementById('orderChat');
-  if (oc) oc.style.display = 'block';
-  await bindOrderChat();
+    // Sohbet alanını aç ve bağla
+    const chatBox = document.getElementById('orderChat');
+    if (chatBox) chatBox.style.display = 'block';
+    bindOrderChat(); // mesaj dinleyicilerini başlat
+    if (typeof toast==='function') toast('Sipariş oluşturuldu. Mesaj yazabilirsiniz.');
+  }catch(e){
+    console.error(e);
+    if (typeof toast==='function') toast('Sipariş oluşturulamadı');
+  }
 }
 
+// === Sipariş sohbeti (mesaj başına 60 kelime) ===
 async function bindOrderChat(){
   if (!__orderId) return;
-
   const { fs, db, auth } = await ensureFSAuth();
   const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
 
@@ -1170,45 +1183,66 @@ async function bindOrderChat(){
       const div = document.createElement('div');
       div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
       div.textContent = m.text || '';
-      if (body) body.appendChild(div);
+      body && body.appendChild(div);
     });
     if (body) body.scrollTop = body.scrollHeight;
   });
 
+  // Gönder butonu (kelime sınırı: 60)
   const btn = document.getElementById('orderChatSend');
-  if (btn) btn.onclick = async function(){
-    const inp = document.getElementById('orderChatInput');
-    const v = (inp?.value||'').trim();
-    if (!v){
-      if (typeof toast==='function') toast('Mesajınızı yazın');
-      return;
-    }
+  if (btn && !btn.__bound){
+    btn.addEventListener('click', async ()=>{
+      const inp = document.getElementById('orderChatInput');
+      const v = (inp?.value||'').trim();
+      if (!v){ toast('Mesajınızı yazın'); return; }
 
-    try{
-      await addDoc(collection(db,'orders', __orderId, 'messages'), {
-        text: v,
-        from: auth.currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-
-      if (__sellerId && __sellerId !== auth.currentUser.uid) {
-        await addDoc(collection(db,'notifications'), {
-          to: __sellerId,
-          type: 'order_message',
-          orderId: __orderId,
-          text: v,
-          createdAt: serverTimestamp(),
-          read: false
-        });
+      // 60 kelime sınırı
+      const words = v.split(/\s+/).filter(Boolean);
+      if (words.length > 60){
+        toast('Mesaj en fazla 60 kelime olabilir');
+        return;
       }
 
-      if (typeof toast==='function') toast('Mesaj gönderildi');
-    }catch(err){
-      console.error('Msg send failed:', err);
-      if (typeof toast==='function') toast('Gönderilemedi (izin/ağ)');
-    }
-  };
+      try{
+        await addDoc(collection(db,'orders', __orderId, 'messages'), {
+          text: v,
+          from: auth.currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        if (__sellerId && __sellerId !== auth.currentUser.uid) {
+          await addDoc(collection(db,'notifications'), {
+            to: __sellerId,
+            type: 'order_message',
+            orderId: __orderId,
+            text: v,
+            createdAt: serverTimestamp(),
+            read: false
+          });
+        }
+
+        inp.value = '';
+      }catch(err){
+        console.error('Msg send failed:', err);
+        toast('Gönderilemedi (izin/ağ)');
+      }
+    });
+    btn.__bound = true;
+  }
 }
+
+// === İncele modalindeki butonlar (siparişe açar) ===
+const btnOrder = document.getElementById('iOrder');
+if (btnOrder) btnOrder.onclick = () => {
+  closeInspect();
+  openOrder(); // sohbeti burada BAĞLAMA; siparişten sonra bağlanıyor
+};
+
+const btnCancel = document.getElementById('iCancel');
+if (btnCancel) btnCancel.onclick = () => closeInspect();
+
+const btnClose = document.getElementById('iClose');
+if (btnClose) btnClose.onclick = () => closeInspect();
 
     // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
 function startListings() {
