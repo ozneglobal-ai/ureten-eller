@@ -712,56 +712,44 @@ async function watchNotiCount(){
   }catch(_){ setNotiCount(0); }
 }
 
-// ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary + firebase-init.js ile uyumlu) =======
+<!-- ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary + firebase-init.js ile uyumlu) ======= -->
+<script>
 (function(){
   const vipGrid = document.getElementById('vipGrid');
   const stdGrid = document.getElementById('stdGrid');
   if(!vipGrid || !stdGrid) return;
 
-  // --- firebase-init.js yüklenmiş mi? (YENİ init YOK)
+  // --- firebase-init.js yüklenmiş mi?
   function ensureFirebaseReady(){
     if (!self.__fb || !self.__fb.db || !self.firebase || !self.getDocs){
-      throw new Error(
-        'Firebase hazır değil. Lütfen <script type="module" src="./firebase-init.js"> etiketini bu bloktan ÖNCE yükleyin.'
-      );
+      throw new Error('Firebase hazır değil. Lütfen <script type="module" src="./firebase-init.js"> etiketini bu bloktan ÖNCE yükleyin.');
     }
     const { db, auth, storage } = self.__fb;
-    const { col, q, where, orderBy, limit, getDoc: _getDocWrap } = self.firebase; // köprü
-    const { getDocs } = self; // global getDocs
+    const { col, q, where, orderBy, limit, getDoc: _getDocWrap } = self.firebase;
+    const { getDocs } = self;
     return { db, auth, storage, col, q, where, orderBy, limit, getDocs, _getDocWrap };
   }
 
-  // --- Cloudinary helpers (cloud adınızı verin)
+  // --- Cloudinary helpers
   const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'YOUR_CLOUD_NAME';
   function isHttpUrl(x){ return /^https?:\/\//i.test(x||''); }
   function isCloudinaryPublicId(x){
     if(!x || isHttpUrl(x)) return false;
-    // public_id formatlarının çoğunu yakalayacak gevşek kontrol
     return /[\/_.-]/.test(String(x));
   }
   function toCloudinaryURL(publicId, {w, h, crop='fill', fmt='auto', q='auto'} = {}){
     if(!CLOUDINARY_CLOUD || !publicId) return '';
-    const tr = [
-      q ? `q_${q}` : '',
-      fmt ? `f_${fmt}` : '',
-      w ? `w_${w}` : '',
-      h ? `h_${h}` : '',
-      crop ? `c_${crop}` : ''
-    ].filter(Boolean).join(',');
+    const tr = [q&&`q_${q}`, fmt&&`f_${fmt}`, w&&`w_${w}`, h&&`h_${h}`, crop&&`c_${crop}`].filter(Boolean).join(',');
     const pid = String(publicId).replace(/^image\/upload\//,'');
     return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/${tr?tr+'/':''}${pid}`;
   }
 
   const paintSkeletons = (grid)=>{ if(grid) grid.innerHTML=''; };
-
   const fmtPrice = (v, cur) => {
     if(v == null || v === '') return '';
-    try {
-      return new Intl.NumberFormat(window.LANG==='tr'?'tr-TR':'en-US',{style:'currency',currency:(cur||'TRY')})
-        .format(Number(v));
-    } catch(_) { return v+ ' ' + (cur||'TL'); }
+    try { return new Intl.NumberFormat(window.LANG==='tr'?'tr-TR':'en-US',{style:'currency',currency:(cur||'TRY')}).format(Number(v)); }
+    catch(_) { return v+ ' ' + (cur||'TL'); }
   };
-
   const toMillis = (x) => {
     if(!x) return 0;
     if (typeof x === 'number') return x;
@@ -769,14 +757,13 @@ async function watchNotiCount(){
     if (x.toMillis) { try{ return x.toMillis(); }catch(_){} }
     return Date.parse(x)||0;
   };
-
   const isVipDoc = (d, nowMs) => {
     const until = toMillis(d.featuredUntil || d.vitrinUntil || d.showcaseUntil);
     const flag  = d.featured === true || d.vitrin === true || d.isShowcase === true;
     return flag || (until && until > nowMs);
   };
 
-  // === Görsel çözümleyici: Cloudinary + (opsiyonel) Firebase Storage fallback ===
+  // === Görsel çözümleyici
   function pickCandidates(d){
     const arr = [];
     if (d.cover)    arr.push(d.cover);
@@ -809,11 +796,10 @@ async function watchNotiCount(){
     if(!raw) return '';
     if (isHttpUrl(raw)) return raw;
     if (isCloudinaryPublicId(raw)) return toCloudinaryURL(raw, opts);
-
-    // Firebase Storage fallback (firebase-init.js helper’ları ile)
+    // Firebase Storage fallback
     try{
-      if (self.storage && self.storageRef && self._getDownloadURL){
-        const r = self.storageRef(raw); // path -> ref
+      if (self.storageRef && self._getDownloadURL){
+        const r = self.storageRef(raw);
         return await self._getDownloadURL(r);
       }
     }catch(_){}
@@ -887,25 +873,16 @@ async function watchNotiCount(){
     const stdC = document.getElementById('stdCount'); if(stdC) stdC.textContent = stdN ? `(${stdN})` : '';
   };
 
-  // Firestore modül fonksiyonlarına ihtiyaç duyduğumuz yerlerde dinamik import (DB hazır; sadece fonksiyonları alıyoruz)
-  async function getFS(){
-    const { db } = ensureFirebaseReady();
-    const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-    return { db, fs };
-  }
-
   const fetchAndPaint = async () => {
     try{
       paintSkeletons(vipGrid); paintSkeletons(stdGrid);
-
-      // firebase-init hazır + köprüler
-      const { db, col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
-
+      const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
       const colRef = col('listings');
+
       let snap;
-      try { // index varsa
+      try {
         snap = await getDocs(q(colRef, orderBy('createdAt','desc'), limit(200)));
-      } catch (e) { // index yoksa hafif sorgu
+      } catch (e) {
         snap = await getDocs(q(colRef, limit(200)));
       }
 
@@ -944,7 +921,7 @@ async function watchNotiCount(){
       const b = document.getElementById('iBody');
       if (!m || !b) return;
 
-      // Fotoğraflar (Cloudinary public_id veya URL -> gerçek URL’ler)
+      // Fotoğraflar
       let photos = [];
       if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
       else if (Array.isArray(data.images) && data.images.length)
@@ -976,6 +953,7 @@ async function watchNotiCount(){
           + '</div>'
         + '</div>';
 
+      // !!! DÜZELTME: style attribute'larındaki gereksiz ) parantezleri kaldırıldı
       var html = ''
         + '<div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">'
           + '<div style="flex:1 1 360px; min-width:300px">'
@@ -987,10 +965,10 @@ async function watchNotiCount(){
             + '<div id="galThumbs" class="row" style="margin-top:.5rem; gap:.4rem; overflow:auto; padding-bottom:.2rem"></div>'
           + '</div>'
           + '<div style="flex:1 1 320px; min-width:280px">'
-            + '<div class="title" style="font-size:20px; margin-bottom:.25rem)">'+title+'</div>'
-            + '<div class="mini" style="margin:.15rem 0 .4rem)">'+city+'</div>'
-            + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem)">'+priceText+'</div>'
-            + '<div style="white-space:pre-line; line-height:1.4)">'+desc+'</div>'
+            + '<div class="title" style="font-size:20px; margin-bottom:.25rem">'+title+'</div>'
+            + '<div class="mini" style="margin:.15rem 0 .4rem">'+city+'</div>'
+            + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem">'+priceText+'</div>'
+            + '<div style="white-space:pre-line; line-height:1.4">'+desc+'</div>'
             + sellerHTML
             + '<div class="row" style="margin-top:.8rem; gap:.5rem">'
               + '<button class="btn primary" id="iOrder">Sipariş Ver</button>'
@@ -1043,7 +1021,7 @@ async function watchNotiCount(){
       };
       try{ m.focus && m.focus(); }catch(_){}
 
-      // Satıcı profili (firebase-init köprüsü ile)
+      // Satıcı profili
       if (sellerId){
         try{
           const { _getDocWrap } = ensureFirebaseReady();
@@ -1187,9 +1165,18 @@ async function watchNotiCount(){
     window.openInspect = openInspect;
   })();
 
-  // İlk yükleme
-  fetchAndPaint();
-})(); // — İLANLAR BLOĞU SONU
+  // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
+  function startListings(){
+    if (window.__fbReady) { fetchAndPaint(); }
+    else { document.addEventListener('fb-ready', fetchAndPaint, { once:true }); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startListings);
+  } else {
+    startListings();
+  }
+})();
 </script>
+
 </body> 
 </html>
