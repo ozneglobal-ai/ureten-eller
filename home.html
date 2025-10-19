@@ -1088,6 +1088,8 @@ async function bindOrderChat(){
 }
 
 <!-- Event bağları (incele/sipariş kapat-aç) -->
+<script>
+// Bu kısım IIFE'nin İÇİNDE olmalı. Ardından IIFE'yi kapatacağız.
 document.addEventListener('click', function(e){
   if (e.target && e.target.id === 'iOrder') {
     e.preventDefault();
@@ -1111,8 +1113,9 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 });
-    
+
+// === IIFE KAPANIŞI ===
+})();
 </script>
 </body>
 </html>
-
