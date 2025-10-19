@@ -951,7 +951,7 @@ const title = safe(data.title || data.name, 'İlan');
 const desc  = safe(data.description, '');
 
 const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-const sellerHTML = ...
+const sellerHTML =
   '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
     + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
     + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
