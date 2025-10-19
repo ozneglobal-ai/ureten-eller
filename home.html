@@ -740,7 +740,12 @@ async function watchNotiCount(){
   async function ensureStorage(){ if(__storage) return __storageAPI; const st = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js'); const { getStorage } = st; __storageAPI = st; __storage = getStorage(); return st; }
   function pickCandidates(d){ const arr = []; if(Array.isArray(d.images)){ d.images.forEach(it=>{ if(!it) return; if(typeof it==='string') arr.push(it); else if(it.url) arr.push(it.url); else if(it.path) arr.push(it.path); else if(it.src) arr.push(it.src); }); } if(d.cover) arr.unshift(d.cover); if(d.photo) arr.unshift(d.photo); return arr.filter(Boolean); }
   async function resolveURL(raw){ if(!raw) return ''; if(/^https?:\/\//i.test(raw)) return raw; await ensureStorage(); try{ const { ref, getDownloadURL } = __storageAPI; const r = ref(__storage, raw); return await getDownloadURL(r); }catch(_){ return raw; } }
-  async function resolveCover(d){ const list = pickCandidates(d); for(const r of list){ const url = await resolveURL(r); if(url) return url; } return '/assets/icons/ureteneller.png'; }
+  async function resolveCover(d){
+  if (d.coverUrl) return d.coverUrl;
+  if (Array.isArray(d.photos) && d.photos.length) return d.photos[0];
+  if (d.images && Array.isArray(d.images) && d.images.length) return d.images[0];
+  return '/assets/icons/ureteneller.png';
+}
   async function resolveCoverBatch(arr){ await ensureStorage(); await Promise.all(arr.map(async (x)=>{ x.data.__cover = await resolveCover(x.data); })); }
   function resolveAllThumbs(arr){ arr.forEach(x=>{ const el=document.getElementById('thumb-'+x.id); if(el){ const url = x.data.__cover || '/assets/icons/ureteneller.png'; el.style.backgroundImage = `url('${url.replace(/"/g,'')}')`; el.classList.add('thumb'); }}); }
 
