@@ -1099,10 +1099,12 @@ async function watchNotiCount(){
       __orderId = docRef.id;
 
       try{
-        await addDoc(collection(db,'notifications'), {
-          to: sellerId, type:'order', orderId: __orderId, listingId: __inspect.id,
-          createdAt: serverTimestamp(), read:false
-        });
+        // YENİ (kurallarla uyumlu)
+await addDoc(collection(db, 'orders', __orderId, 'messages'), {
+  text: v,
+  from: auth.currentUser.uid,
+  createdAt: serverTimestamp()
+});
       }catch(_){}
       try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
       document.getElementById('orderChat').style.display = 'block';
