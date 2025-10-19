@@ -1087,7 +1087,7 @@ async function bindOrderChat(){
   };
 }
 
-// Event bağları (incele/sipariş kapat-aç)
+<!-- Event bağları (incele/sipariş kapat-aç) -->
 document.addEventListener('click', (e)=>{
   if (e.target?.id === 'iOrder') { e.preventDefault(); openOrder(); }
   if (e.target && (e.target.id === 'iClose' || e.target.id === 'iCancel')) { e.preventDefault(); closeInspect(); }
@@ -1099,9 +1099,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     try { confirmOrder(); } catch (_) {}
   });
 });
-
-// 
-})();
 </script>
 </body>
 </html>
