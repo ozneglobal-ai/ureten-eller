@@ -1175,11 +1175,10 @@ async function bindOrderChat(){
     if (window.__fbReady) { fetchAndPaint(); }
     else { document.addEventListener('fb-ready', fetchAndPaint, { once:true }); }
   }
-  if (document.readyState === 'loading') {
+    if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startListings);
   } else {
     startListings();
-  }
   }
 })();
 </script>
