@@ -933,24 +933,25 @@ async function watchNotiCount(){
       if (!m || !b) return;
 
       // Fotoğraflar
-      let photos = [];
-      if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
-      else if (Array.isArray(data.images) && data.images.length)
-        photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
-      else if (data.coverUrl) photos = [data.coverUrl];
-      if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
-      photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
+let photos = [];
+if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
+else if (Array.isArray(data.images) && data.images.length)
+  photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
+else if (data.coverUrl) photos = [data.coverUrl];
+if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
+photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
 
-      const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
-      __sellerId = sellerId;
+// 💡 Tam buraya ekle
+const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
+__sellerId = sellerId;
 
-      const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
-      const city = data.city || data.province || data.il || '';
-      const title = safe(data.title || data.name, 'İlan');
-      const desc  = safe(data.description, '');
+const priceText = (data.price != null && data.price !== '') ? (data.price + ' TL') : '';
+const city = data.city || data.province || data.il || '';
+const title = safe(data.title || data.name, 'İlan');
+const desc  = safe(data.description, '');
 
-      const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-      const sellerHTML =
+const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
+const sellerHTML = ...
   '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
     + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
     + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
@@ -1028,25 +1029,37 @@ async function watchNotiCount(){
       };
       try{ m.focus && m.focus(); }catch(_){}
 
-     // Satıcı profili
-      if (sellerId){
-        try{
-          const { _getDocWrap } = ensureFirebaseReady();
-          const snap = await _getDocWrap(`users/${sellerId}`);
-          if (snap.exists()){
-            const u = snap.data() || {};
-            const name = u.name || u.displayName || 'Satıcı';
-            const cityU = u.city || u.district || '';
-            const avatar = u.avatar || u.photoURL || '';
-            const verified = (u.isVerified===true) || (u.role==='verified') || (u.verified===true);
-            const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
-            const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
-            const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
-            const badge = document.getElementById('sellerBadge'); if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
-          }
-        }catch(_){}
-      }
+    // Satıcı profili
+if (sellerId) {
+  try {
+    const { _getDocWrap } = ensureFirebaseReady();
+    const snap = await _getDocWrap(`users/${sellerId}`);
+    if (snap.exists()) {
+      const u = snap.data() || {};
+      const name = u.name || u.displayName || 'Satıcı';
+      const cityU = u.city || u.district || '';
+      const avatar = u.avatar || u.photoURL || '';
+      const verified = (u.isVerified === true) || (u.role === 'verified') || (u.verified === true);
+
+      const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
+      const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
+      const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
+      const badge = document.getElementById('sellerBadge');
+      if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
     }
+  } catch (_) {}
+}
+
+// === Buton olaylarını bağla ===
+const btnOrder = document.getElementById('iOrder');
+if (btnOrder) btnOrder.onclick = () => {
+  closeInspect();
+  openOrder();
+  bindOrderChat();
+};
+
+const btnCancel = document.getElementById('iCancel');
+if (btnCancel) btnCancel.onclick = () => closeInspect();
 
     async function ensureFSAuth(){
       const { db } = ensureFirebaseReady();
