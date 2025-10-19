@@ -821,36 +821,41 @@ async function watchNotiCount(){
     }
   };
 
-  // ==== İncele / Sipariş / Sohbet ====
-  let __inspect = null; let __orderId = null; let __orderUnsub = null; let __sellerId = null;
-  function openInspect(id, data){
-  __inspect = {id, data};
+// ==== İncele: Tüm fotoğraflar + detaylar ====
+function openInspect(id, data){
+  __inspect = { id, data };
   const m = $('#inspectModal');
   const b = $('#iBody');
   if (!m || !b) return;
 
+  // Fotoğraf kaynakları (Cloudinary öncelikli)
   let photos = [];
   if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
   else if (Array.isArray(data.images) && data.images.length) photos = data.images;
   else if (data.coverUrl) photos = [data.coverUrl];
 
-  const imgs = photos.map(u=>`<img src="${u}" style="width:100%;border-radius:12px;margin-bottom:.6rem;object-fit:cover" loading="lazy"/>`).join('');
+  // Görselleri listele
+  const imgs = photos
+    .map(u => `<img src="${u}" alt="" style="width:100%;border-radius:12px;margin-bottom:.6rem;object-fit:cover;display:block" loading="lazy">`)
+    .join('');
 
+  // İçerik
   b.innerHTML = `
     <div style="width:100%">
       ${imgs}
       <div style="margin-top:.4rem">
         <div class="title" style="font-size:20px">${data.title || 'İlan'}</div>
         <div class="mini" style="margin:.25rem 0">${data.city || data.province || ''}</div>
-        <div style="font-weight:900;margin-bottom:.6rem">${data.price ? data.price + ' TL' : ''}</div>
+        <div style="font-weight:900;margin-bottom:.6rem">${(data.price != null && data.price !== '') ? (data.price + ' TL') : ''}</div>
         <div style="white-space:pre-line">${data.description || ''}</div>
       </div>
     </div>
   `;
 
+  // Modal aç
   $('#backdrop').style.display = 'block';
   m.style.display = 'block';
-  m.setAttribute('aria-hidden','false');
+  m.setAttribute('aria-hidden', 'false');
 }
     <div style=\"flex:1;min-width:220px\">
       <div class=\"title\" style=\"font-size:18px\">${data.title||data.name||'İlan'}</div>
