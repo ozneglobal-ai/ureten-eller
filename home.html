@@ -918,214 +918,243 @@ async function watchNotiCount(){
     }
   };
 
-    // ==== İncele / Sipariş / Sohbet ====
-    let __inspect = null;
-    let __orderId = null;
-    let __orderUnsub = null;
-    let __sellerId = null;
+    <!-- ==== İncele / Sipariş / Sohbet ==== -->
+let __inspect = null;
+let __orderId = null;
+let __orderUnsub = null;
+let __sellerId = null;
 
-    const safe = (v, fb='') => (v == null ? fb : String(v));
+const safe = (v, fb='') => (v == null ? fb : String(v));
 
-    async function openInspect(id, data){
-      __inspect = { id, data };
-      const m = document.getElementById('inspectModal');
-      const b = document.getElementById('iBody');
-      if (!m || !b) return;
+async function openInspect(id, data){
+  __inspect = { id, data };
+  const m = document.getElementById('inspectModal');
+  const b = document.getElementById('iBody');
+  if (!m || !b) return;
 
-      // Fotoğraflar
-      let photos = [];
-      if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
-      else if (Array.isArray(data.images) && data.images.length)
-        photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
-      else if (data.coverUrl) photos = [data.coverUrl];
-      if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
-      photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
+  // Fotoğraflar
+  let photos = [];
+  if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
+  else if (Array.isArray(data.images) && data.images.length)
+    photos = data.images
+      .map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')))
+      .filter(Boolean);
+  else if (data.coverUrl) photos = [data.coverUrl];
+  if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
+  photos = await Promise.all(
+    photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' }))
+  );
 
-      const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
-      __sellerId = sellerId;
+  const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
+  __sellerId = sellerId;
 
-      const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
-      const city = data.city || data.province || data.il || '';
-      const title = safe(data.title || data.name, 'İlan');
-      const desc  = safe(data.description, '');
+  const priceText = (data.price != null && data.price !== '') ? (data.price + ' TL') : '';
+  const city = data.city || data.province || data.il || '';
+  const title = safe(data.title || data.name, 'İlan');
+  const desc  = safe(data.description, '');
 
-      const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-      const sellerHTML = 
-  '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
-    + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
-    + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
-      + '<img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">'
-      + '<div style="flex:1;min-width:160px">'
-        + '<div id="sellerName" class="mini">Profil</div>'
-        + '<div id="sellerCity" class="mini"></div>'
-        + '<div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>'
-      + '</div>'
-      + '<a id="sellerLink" class="btn" href="' + profileHref + '"' + (sellerId ? '' : ' aria-disabled="true"') + '>Profili Gör</a>'
-    + '</div>'
-  + '</div>';
+  const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
 
-      // !!! DÜZELTME: style attribute'larındaki gereksiz ) parantezleri kaldırıldı
-      var html = ''
-        + '<div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">'
-          + '<div style="flex:1 1 360px; min-width:300px">'
-            + '<div id="galWrap" style="position:relative; border:1px solid var(--brd); border-radius:12px; overflow:hidden; background:#0f172a; aspect-ratio:1/1">'
-              + '<img id="galMain" src="'+photos[0]+'" alt="" style="width:100%; height:100%; object-fit:contain; display:block">'
-              + '<button id="galPrev" aria-label="Önceki" style="position:absolute; left:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">‹</button>'
-              + '<button id="galNext" aria-label="Sonraki" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">›</button>'
-            + '</div>'
-            + '<div id="galThumbs" class="row" style="margin-top:.5rem; gap:.4rem; overflow:auto; padding-bottom:.2rem"></div>'
-          + '</div>'
-          + '<div style="flex:1 1 320px; min-width:280px">'
-            + '<div class="title" style="font-size:20px; margin-bottom:.25rem">'+title+'</div>'
-            + '<div class="mini" style="margin:.15rem 0 .4rem">'+city+'</div>'
-            + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem">'+priceText+'</div>'
-            + '<div style="white-space:pre-line; line-height:1.4">'+desc+'</div>'
-            + sellerHTML
-            + '</div>'
-        + '</div>';
+  const sellerHTML = `
+  <div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">
+    <div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>
+    <div id="sellerCard" class="row" style="align-items:center;gap:.6rem">
+      <img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">
+      <div style="flex:1;min-width:160px">
+        <div id="sellerName" class="mini">Profil</div>
+        <div id="sellerCity" class="mini"></div>
+        <div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>
+      </div>
+      <a id="sellerLink" class="btn" href="${profileHref}" ${sellerId ? '' : 'aria-disabled="true"'}>Profili Gör</a>
+    </div>
+  </div>`;
 
-      b.innerHTML = html;
+  const html = `
+    <div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">
+      <div style="flex:1 1 360px; min-width:300px">
+        <div id="galWrap" style="position:relative; border:1px solid var(--brd); border-radius:12px; overflow:hidden; background:#0f172a; aspect-ratio:1/1">
+          <img id="galMain" src="${photos[0]}" alt="" style="width:100%; height:100%; object-fit:contain; display:block">
+          <button id="galPrev" aria-label="Önceki" style="position:absolute; left:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">‹</button>
+          <button id="galNext" aria-label="Sonraki" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">›</button>
+        </div>
+        <div id="galThumbs" class="row" style="margin-top:.5rem; gap:.4rem; overflow:auto; padding-bottom:.2rem"></div>
+      </div>
+      <div style="flex:1 1 320px; min-width:280px">
+        <div class="title" style="font-size:20px; margin-bottom:.25rem">${title}</div>
+        <div class="mini" style="margin:.15rem 0 .4rem">${city}</div>
+        <div style="font-weight:900; font-size:18px; margin-bottom:.6rem">${priceText}</div>
+        <div style="white-space:pre-line; line-height:1.4">${desc}</div>
+        ${sellerHTML}
+      </div>
+    </div>`;
 
-      document.getElementById('backdrop').style.display = 'block';
-      m.style.display = 'block';
-      m.setAttribute('aria-hidden','false');
+  b.innerHTML = html;
 
-      const thumbs = document.getElementById('galThumbs');
-      if (thumbs){
-        let t = '';
-        for (let i=0;i<photos.length;i++){
-          t += '<img data-idx="'+i+'" src="'+photos[i]+'" alt="" '
-            + 'style="width:64px;height:64px;border-radius:8px;border:2px solid '+(i===0?'#22d3ee':'var(--brd)')+';object-fit:cover;cursor:pointer">';
-        }
-        thumbs.innerHTML = t;
-      }
+  // Modalı aç
+  const backdrop = document.getElementById('backdrop');
+  if (backdrop) backdrop.style.display = 'block';
+  m.style.display = 'block';
+  m.setAttribute('aria-hidden','false');
 
-      let idx = 0;
-      const main = document.getElementById('galMain');
-      function setIdx(i){
-        if (!photos.length) return;
-        idx = (i+photos.length) % photos.length;
-        if (main) main.src = photos[idx];
-        document.querySelectorAll('#galThumbs img').forEach(function(el,j){
-          el.style.borderColor = (j===idx) ? '#22d3ee' : 'var(--brd)';
-          if (j===idx){ try{ el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }catch(_){ } }
-        });
-      }
-      const prevBtn = document.getElementById('galPrev');
-      const nextBtn = document.getElementById('galNext');
-      if (prevBtn) prevBtn.addEventListener('click', function(){ setIdx(idx-1); });
-      if (nextBtn) nextBtn.addEventListener('click', function(){ setIdx(idx+1); });
-      if (thumbs) thumbs.addEventListener('click', function(e){
-        const im = e.target && e.target.closest('img[data-idx]');
-        if (!im) return;
-        const i = Number(im.getAttribute('data-idx')||'0')|0;
-        setIdx(i);
-      });
-
-      m.onkeydown = function(e){
-        if (e.key === 'ArrowLeft'){ e.preventDefault(); setIdx(idx-1); }
-        if (e.key === 'ArrowRight'){ e.preventDefault(); setIdx(idx+1); }
-      };
-      try{ m.focus && m.focus(); }catch(_){}
-
-    // Satıcı profili
-if (sellerId) {
-  try {
-    const { _getDocWrap } = ensureFirebaseReady();
-    const snap = await _getDocWrap(`users/${sellerId}`);
-    if (snap.exists()) {
-      const u = snap.data() || {};
-      const name = u.name || u.displayName || 'Satıcı';
-      const cityU = u.city || u.district || '';
-      const avatar = u.avatar || u.photoURL || '';
-      const verified = (u.isVerified === true) || (u.role === 'verified') || (u.verified === true);
-
-      const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
-      const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
-      const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
-      const badge = document.getElementById('sellerBadge');
-      if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
+  // Galeri küçük resimler
+  const thumbs = document.getElementById('galThumbs');
+  if (thumbs){
+    let t = '';
+    for (let i=0;i<photos.length;i++){
+      t += `<img data-idx="${i}" src="${photos[i]}" alt=""
+            style="width:64px;height:64px;border-radius:8px;border:2px solid ${i===0?'#22d3ee':'var(--brd)'};object-fit:cover;cursor:pointer">`;
     }
-  } catch (_) {}
+    thumbs.innerHTML = t;
+  }
+
+  // Galeri ileri/geri
+  let idx = 0;
+  const main = document.getElementById('galMain');
+  function setIdx(i){
+    if (!photos.length) return;
+    idx = (i+photos.length) % photos.length;
+    if (main) main.src = photos[idx];
+    document.querySelectorAll('#galThumbs img').forEach((el,j)=>{
+      el.style.borderColor = (j===idx) ? '#22d3ee' : 'var(--brd)';
+      if (j===idx){ try{ el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }catch(_){ } }
+    });
+  }
+  const prevBtn = document.getElementById('galPrev');
+  const nextBtn = document.getElementById('galNext');
+  if (prevBtn) prevBtn.addEventListener('click', ()=> setIdx(idx-1));
+  if (nextBtn) nextBtn.addEventListener('click', ()=> setIdx(idx+1));
+  if (thumbs) thumbs.addEventListener('click', (e)=>{
+    const im = e.target && e.target.closest('img[data-idx]');
+    if (!im) return;
+    const i = Number(im.getAttribute('data-idx')||'0')|0;
+    setIdx(i);
+  });
+
+  m.onkeydown = (e)=>{
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); setIdx(idx-1); }
+    if (e.key === 'ArrowRight'){ e.preventDefault(); setIdx(idx+1); }
+  };
+  try{ m.focus && m.focus(); }catch(_){}
+
+  // Satıcı profili bilgileri
+  if (sellerId) {
+    try {
+      const { _getDocWrap } = ensureFirebaseReady();
+      const snap = await _getDocWrap(`users/${sellerId}`);
+      if (snap.exists()) {
+        const u = snap.data() || {};
+        const name = u.name || u.displayName || 'Satıcı';
+        const cityU = u.city || u.district || '';
+        const avatar = u.avatar || u.photoURL || '';
+        const verified = (u.isVerified === true) || (u.role === 'verified') || (u.verified === true);
+
+        const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
+        const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
+        const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
+        const badge = document.getElementById('sellerBadge');
+        if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
+      }
+    } catch (_) {}
+  }
+
+  // Butonlar
+  const btnOrder = document.getElementById('iOrder');
+  if (btnOrder) btnOrder.onclick = () => {
+    closeInspect();
+    openOrder();
+    bindOrderChat();
+  };
+
+  const btnCancel = document.getElementById('iCancel');
+  if (btnCancel) btnCancel.onclick = () => closeInspect();
+
+  const btnClose = document.getElementById('iClose');
+  if (btnClose) btnClose.onclick = () => closeInspect();
 }
 
-// === Buton olaylarını bağla ===
-const btnOrder = document.getElementById('iOrder');
-if (btnOrder) btnOrder.onclick = () => {
-  closeInspect();
-  openOrder();
-  bindOrderChat();
-};
+function closeInspect(){
+  const m = document.getElementById('inspectModal');
+  if(!m) return;
+  m.style.display = 'none';
+  m.setAttribute('aria-hidden','true');
+  const backdrop = document.getElementById('backdrop');
+  if (backdrop) backdrop.style.display = 'none';
+}
 
-const btnCancel = document.getElementById('iCancel');
-if (btnCancel) btnCancel.onclick = () => closeInspect();
+function openOrder(){
+  const m = document.getElementById('orderModal');
+  if(!m) return;
+  m.style.display = 'block';
+  m.setAttribute('aria-hidden','false');
+  const backdrop = document.getElementById('backdrop');
+  if (backdrop) backdrop.style.display = 'block';
+}
 
-    async function ensureFSAuth(){
-      const { db } = ensureFirebaseReady();
-      const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const { auth } = self.__fb;
-      return { fs, db, auth };
-    }
+function closeOrder(){
+  const m = document.getElementById('orderModal');
+  if(!m) return;
+  m.style.display = 'none';
+  m.setAttribute('aria-hidden','true');
+  const backdrop = document.getElementById('backdrop');
+  if (backdrop) backdrop.style.display = 'none';
+  if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
+}
 
-    function closeInspect(){
-      const m = document.getElementById('inspectModal'); if(!m) return;
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden','true');
-      document.getElementById('backdrop').style.display = 'none';
-    }
+async function ensureFSAuth(){
+  const { db } = ensureFirebaseReady();
+  const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+  const { auth } = self.__fb;
+  return { fs, db, auth };
+}
 
-    function openOrder(){
-      const m = document.getElementById('orderModal'); if(!m) return;
-      m.style.display = 'block';
-      m.setAttribute('aria-hidden','false');
-      document.getElementById('backdrop').style.display = 'block';
-    }
+async function confirmOrder(){
+  const name  = (document.getElementById('oName')?.value||'').trim();
+  const city  = (document.getElementById('oCity')?.value||'').trim();
+  const phone = (document.getElementById('oPhone')?.value||'').trim();
+  if (!__inspect) return;
+  if (!name || !city || !phone){
+    if (typeof toast==='function') toast('Lütfen tüm alanları doldurun');
+    return;
+  }
 
-    function closeOrder(){
-      const m = document.getElementById('orderModal'); if(!m) return;
-      m.style.display = 'none';
-      m.setAttribute('aria-hidden','true');
-      document.getElementById('backdrop').style.display = 'none';
-      if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-    }
+  const { fs, db, auth } = await ensureFSAuth();
+  const { addDoc, collection, serverTimestamp } = fs;
+  const buyer = auth.currentUser;
+  if (!buyer){
+    if (typeof toast==='function') toast('Devam için giriş yapın');
+    return;
+  }
 
-    async function confirmOrder(){
-      const name  = (document.getElementById('oName')?.value||'').trim();
-      const city  = (document.getElementById('oCity')?.value||'').trim();
-      const phone = (document.getElementById('oPhone')?.value||'').trim();
-      if (!__inspect) return;
-      if (!name || !city || !phone){ if (typeof toast==='function') toast('Lütfen tüm alanları doldurun'); return; }
+  const d = __inspect.data;
+  const sellerId = d.sellerId || d.userId || d.ownerId || d.uid || d.createdBy || null;
+  __sellerId = sellerId;
 
-      const { fs, db, auth } = await ensureFSAuth();
-      const { addDoc, collection, serverTimestamp } = fs;
-      const buyer = auth.currentUser;
-      if (!buyer){ if (typeof toast==='function') toast('Devam için giriş yapın'); return; }
+  const payload = {
+    listingId: __inspect.id,
+    sellerId,
+    buyerId: buyer.uid,
+    buyerName: name,
+    buyerCity: city,
+    buyerPhone: phone,
+    status: 'new',
+    createdAt: serverTimestamp(),
+    price: d.price || null,
+    currency: d.currency || d.cur || 'TRY',
+    title: d.title || d.name || 'İlan'
+  };
 
-      const d = __inspect.data;
-      const sellerId = d.sellerId || d.userId || d.ownerId || d.uid || d.createdBy || null;
-      __sellerId = sellerId;
+  const docRef = await addDoc(collection(db, 'orders'), payload);
+  __orderId = docRef.id;
 
-      const payload = {
-        listingId: __inspect.id,
-        sellerId,
-        buyerId: buyer.uid,
-        buyerName: name,
-        buyerCity: city,
-        buyerPhone: phone,
-        status: 'new',
-        createdAt: serverTimestamp(),
-        price: d.price || null,
-        currency: d.currency || d.cur || 'TRY',
-        title: d.title || d.name || 'İlan'
-      };
+  // Sipariş açıldıysa sohbet bölümünü görünür yap (orderModal içinde)
+  const oc = document.getElementById('orderChat');
+  if (oc) oc.style.display = 'block';
+  await bindOrderChat();
+}
 
-     const docRef = await addDoc(collection(db, 'orders'), payload);
-__orderId = docRef.id;
-} // confirmOrder sonu
-
-// YENİ (kurallarla uyumlu)
 async function bindOrderChat(){
   if (!__orderId) return;
+
   const { fs, db, auth } = await ensureFSAuth();
   const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
 
@@ -1141,7 +1170,7 @@ async function bindOrderChat(){
       const div = document.createElement('div');
       div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
       div.textContent = m.text || '';
-      body && body.appendChild(div);
+      if (body) body.appendChild(div);
     });
     if (body) body.scrollTop = body.scrollHeight;
   });
@@ -1150,7 +1179,10 @@ async function bindOrderChat(){
   if (btn) btn.onclick = async function(){
     const inp = document.getElementById('orderChatInput');
     const v = (inp?.value||'').trim();
-    if (!v){ toast('Mesajınızı yazın'); return; }
+    if (!v){
+      if (typeof toast==='function') toast('Mesajınızı yazın');
+      return;
+    }
 
     try{
       await addDoc(collection(db,'orders', __orderId, 'messages'), {
@@ -1170,12 +1202,10 @@ async function bindOrderChat(){
         });
       }
 
-      toast('Siparişiniz satıcıya iletildi');
-      closeOrder();
-      closeInspect();
+      if (typeof toast==='function') toast('Mesaj gönderildi');
     }catch(err){
       console.error('Msg send failed:', err);
-      toast('Gönderilemedi (izin/ağ)');
+      if (typeof toast==='function') toast('Gönderilemedi (izin/ağ)');
     }
   };
 }
