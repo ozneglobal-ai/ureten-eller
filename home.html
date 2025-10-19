@@ -712,21 +712,53 @@ async function watchNotiCount(){
   }catch(_){ setNotiCount(0); }
 }
 
-// ======= İLANLAR: 50 Vitrin + 50 Standart (geliştirilmiş) =======
+// ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary uyumlu) =======
 (function(){
   const vipGrid = document.getElementById('vipGrid');
   const stdGrid = document.getElementById('stdGrid');
   if(!vipGrid || !stdGrid) return;
 
+  // --- Cloudinary helpers (cloud adınızı yazın) ---
+  const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'YOUR_CLOUD_NAME';
+  function isHttpUrl(x){ return /^https?:\/\//i.test(x||''); }
+  function isCloudinaryPublicId(x){
+    if(!x) return false;
+    if(isHttpUrl(x)) return false;
+    // folder/name[.ext] veya image/upload/... vb.
+    return /^(image\/upload\/|video\/upload\/|raw\/upload\/|[^/]+\/[^/]+|[^/]+\.[a-z0-9]{2,5})/i.test(String(x));
+  }
+  function toCloudinaryURL(publicId, {w, h, crop='fill', fmt='auto', q='auto'} = {}){
+    const cloud = CLOUDINARY_CLOUD;
+    if(!cloud || !publicId) return '';
+    const tr = [
+      q ? `q_${q}` : '',
+      fmt ? `f_${fmt}` : '',
+      w ? `w_${w}` : '',
+      h ? `h_${h}` : '',
+      crop ? `c_${crop}` : ''
+    ].filter(Boolean).join(',');
+    const hasUploadPrefix = publicId.startsWith('image/upload/');
+    const pid = publicId.replace(/^image\/upload\//,'');
+    // Dönüşüm dizesi varsa ekle
+    return `https://res.cloudinary.com/${cloud}/image/upload/${tr ? tr+'/' : ''}${hasUploadPrefix ? pid : pid}`;
+  }
+
   const paintSkeletons = (grid)=>{ if(grid) grid.innerHTML=''; };
 
   const fmtPrice = (v, cur) => {
     if(v == null || v === '') return '';
-    try { return new Intl.NumberFormat(window.LANG==='tr'?'tr-TR':'en-US',{style:'currency',currency:(cur||'TRY')}).format(Number(v)); } catch(_) { return v+ ' ' + (cur||'TL'); }
+    try {
+      return new Intl.NumberFormat(window.LANG==='tr'?'tr-TR':'en-US',{style:'currency',currency:(cur||'TRY')})
+        .format(Number(v));
+    } catch(_) { return v+ ' ' + (cur||'TL'); }
   };
 
   const toMillis = (x) => {
-    if(!x) return 0; if (typeof x === 'number') return x; if (x.seconds) return x.seconds*1000; if (x.toMillis) try{ return x.toMillis(); }catch(_){}; return Date.parse(x)||0;
+    if(!x) return 0;
+    if (typeof x === 'number') return x;
+    if (x.seconds) return x.seconds*1000;
+    if (x.toMillis) { try{ return x.toMillis(); }catch(_){} }
+    return Date.parse(x)||0;
   };
 
   const isVipDoc = (d, nowMs) => {
@@ -735,19 +767,91 @@ async function watchNotiCount(){
     return flag || (until && until > nowMs);
   };
 
-  // === Görsel çözümleyici: Storage/gs:// -> HTTP ===
+  // === Görsel çözümleyici: Cloudinary + (gerekirse) Firebase Storage ===
   let __storage = null; let __storageAPI = null;
-  async function ensureStorage(){ if(__storage) return __storageAPI; const st = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js'); const { getStorage } = st; __storageAPI = st; __storage = getStorage(); return st; }
-  function pickCandidates(d){ const arr = []; if(Array.isArray(d.images)){ d.images.forEach(it=>{ if(!it) return; if(typeof it==='string') arr.push(it); else if(it.url) arr.push(it.url); else if(it.path) arr.push(it.path); else if(it.src) arr.push(it.src); }); } if(d.cover) arr.unshift(d.cover); if(d.photo) arr.unshift(d.photo); return arr.filter(Boolean); }
-  async function resolveURL(raw){ if(!raw) return ''; if(/^https?:\/\//i.test(raw)) return raw; await ensureStorage(); try{ const { ref, getDownloadURL } = __storageAPI; const r = ref(__storage, raw); return await getDownloadURL(r); }catch(_){ return raw; } }
+  async function ensureStorage(){
+    if(__storage) return __storageAPI;
+    const st = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js');
+    const { getStorage } = st; __storageAPI = st; __storage = getStorage(); return st;
+  }
+
+  function pickCandidates(d){
+    const arr = [];
+    // Tekil alanlar
+    if (d.cover)    arr.push(d.cover);
+    if (d.coverUrl) arr.push(d.coverUrl);
+    if (d.photo)    arr.push(d.photo);
+
+    // Diziler
+    if (Array.isArray(d.photos)) arr.push(...d.photos);
+    if (Array.isArray(d.images)){
+      d.images.forEach(it=>{
+        if (!it) return;
+        if (typeof it==='string') arr.push(it);
+        else if (it.secure_url)   arr.push(it.secure_url);
+        else if (it.url)          arr.push(it.url);
+        else if (it.src)          arr.push(it.src);
+        else if (it.path)         arr.push(it.path);
+        else if (it.public_id)    arr.push(it.public_id);
+      });
+    }
+
+    // Tek nesne altında cloudinary gelebilir
+    if (d.cloudinary){
+      if (typeof d.cloudinary==='string') arr.push(d.cloudinary);
+      else {
+        if (d.cloudinary.secure_url) arr.push(d.cloudinary.secure_url);
+        if (d.cloudinary.url)        arr.push(d.cloudinary.url);
+        if (d.cloudinary.public_id)  arr.push(d.cloudinary.public_id);
+      }
+    }
+    return arr.filter(Boolean);
+  }
+
+  async function resolveURL(raw, opts={}){
+    if(!raw) return '';
+    // http(s) ise direkt kullan
+    if (isHttpUrl(raw)) return raw;
+
+    // Cloudinary public_id ise dönüştür
+    if (isCloudinaryPublicId(raw)) {
+      return toCloudinaryURL(raw, opts);
+    }
+
+    // Kalanlar için Firebase Storage fallback
+    try{
+      await ensureStorage();
+      const { ref, getDownloadURL } = __storageAPI;
+      const r = ref(__storage, raw);
+      return await getDownloadURL(r);
+    }catch(_){
+      return raw;
+    }
+  }
+
   async function resolveCover(d){
-  if (d.coverUrl) return d.coverUrl;
-  if (Array.isArray(d.photos) && d.photos.length) return d.photos[0];
-  if (d.images && Array.isArray(d.images) && d.images.length) return d.images[0];
-  return '/assets/icons/ureteneller.png';
-}
-  async function resolveCoverBatch(arr){ await ensureStorage(); await Promise.all(arr.map(async (x)=>{ x.data.__cover = await resolveCover(x.data); })); }
-  function resolveAllThumbs(arr){ arr.forEach(x=>{ const el=document.getElementById('thumb-'+x.id); if(el){ const url = x.data.__cover || '/assets/icons/ureteneller.png'; el.style.backgroundImage = `url('${url.replace(/"/g,'')}')`; el.classList.add('thumb'); }}); }
+    const cands = pickCandidates(d);
+    for (const c of cands){
+      const url = await resolveURL(String(c), { w: 600, h: 450, crop: 'fill', fmt: 'auto', q: 'auto' });
+      if (url) return url;
+    }
+    return '/assets/icons/ureteneller.png';
+  }
+
+  async function resolveCoverBatch(arr){
+    await Promise.all(arr.map(async (x)=>{ x.data.__cover = await resolveCover(x.data); }));
+  }
+
+  function resolveAllThumbs(arr){
+    arr.forEach(x=>{
+      const el=document.getElementById('thumb-'+x.id);
+      if(el){
+        const url = x.data.__cover || '/assets/icons/ureteneller.png';
+        el.style.backgroundImage = `url('${String(url).replace(/"/g,'')}')`;
+        el.classList.add('thumb');
+      }
+    });
+  }
 
   // Kart HTML (İncele butonu + görseli sonradan basılır)
   const cardHTML = (d,id) => {
@@ -774,7 +878,11 @@ async function watchNotiCount(){
   const renderList = (gridId, arr) => {
     const grid = document.getElementById(gridId); if(!grid) return; grid.innerHTML='';
     const frag = document.createDocumentFragment();
-    arr.forEach(({id, data}) => { const div = document.createElement('div'); div.innerHTML = cardHTML(data,id); frag.appendChild(div.firstElementChild); });
+    arr.forEach(({id, data}) => {
+      const div = document.createElement('div');
+      div.innerHTML = cardHTML(data,id);
+      frag.appendChild(div.firstElementChild);
+    });
     grid.appendChild(frag);
     setTimeout(()=> resolveAllThumbs(arr), 0);
 
@@ -785,7 +893,10 @@ async function watchNotiCount(){
     });
   };
 
-  const updateCounts = (vipN, stdN) => { const vipC = document.getElementById('vipCount'); if(vipC) vipC.textContent = vipN ? `(${vipN})` : ''; const stdC = document.getElementById('stdCount'); if(stdC) stdC.textContent = stdN ? `(${stdN})` : ''; };
+  const updateCounts = (vipN, stdN) => {
+    const vipC = document.getElementById('vipCount'); if(vipC) vipC.textContent = vipN ? `(${vipN})` : '';
+    const stdC = document.getElementById('stdCount'); if(stdC) stdC.textContent = stdN ? `(${stdN})` : '';
+  };
 
   const fetchAndPaint = async () => {
     try{
@@ -797,15 +908,27 @@ async function watchNotiCount(){
 
       const col = collection(db, 'listings');
       const qAll = query(col, orderBy('createdAt','desc'), limit(200));
-      let snap; try { snap = await getDocs(qAll); } catch(e){ if(String(e&&e.message||'').includes('requires an index')){ const qLite = query(col, limit(200)); snap = await getDocs(qLite); } else { throw e; } }
+      let snap;
+      try { snap = await getDocs(qAll); }
+      catch(e){
+        if(String(e&&e.message||'').includes('requires an index')){
+          const qLite = query(col, limit(200));
+          snap = await getDocs(qLite);
+        } else { throw e; }
+      }
+
       const now = Date.now();
       const vip=[], std=[];
-      snap.forEach(doc=>{ const d = doc.data() || {}; (isVipDoc(d, now) ? vip : std).push({id:doc.id, data:d}); });
+      snap.forEach(doc=>{
+        const d = doc.data() || {};
+        (isVipDoc(d, now) ? vip : std).push({id:doc.id, data:d});
+      });
 
       await Promise.all([resolveCoverBatch(vip), resolveCoverBatch(std)]);
 
       const sortByCreated = (arr)=>arr.sort((a,b)=> toMillis(b.data.createdAt) - toMillis(a.data.createdAt));
       sortByCreated(vip); sortByCreated(std);
+
       renderList('vipGrid', vip.slice(0,50));
       renderList('stdGrid', std.slice(0,50));
       updateCounts(Math.min(50, vip.length), Math.min(50, std.length));
@@ -821,276 +944,283 @@ async function watchNotiCount(){
     }
   };
 
-(function(){
-  // ==== İncele / Sipariş / Sohbet ====
-  let __inspect = null;
-  let __orderId = null;
-  let __orderUnsub = null;
-  let __sellerId = null;
+  (function(){
+    // ==== İncele / Sipariş / Sohbet ====
+    let __inspect = null;
+    let __orderId = null;
+    let __orderUnsub = null;
+    let __sellerId = null;
 
-  const safe = (v, fb='') => (v == null ? fb : String(v));
+    const safe = (v, fb='') => (v == null ? fb : String(v));
 
-  async function openInspect(id, data){
-    __inspect = { id, data };
-    const m = document.getElementById('inspectModal');
-    const b = document.getElementById('iBody');
-    if (!m || !b) return;
+    async function openInspect(id, data){
+      __inspect = { id, data };
+      const m = document.getElementById('inspectModal');
+      const b = document.getElementById('iBody');
+      if (!m || !b) return;
 
-    // Fotoğraflar
-    let photos = [];
-    if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
-    else if (Array.isArray(data.images) && data.images.length) photos = data.images.map(x => (typeof x==='string' ? x : (x.url||x.src||x.path||''))).filter(Boolean);
-    else if (data.coverUrl) photos = [data.coverUrl];
-    if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
+      // Fotoğraflar (ham adaylar)
+      let photos = [];
+      if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
+      else if (Array.isArray(data.images) && data.images.length) photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
+      else if (data.coverUrl) photos = [data.coverUrl];
+      if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
 
-    // Satıcı id
-    const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
-    __sellerId = sellerId;
+      // Cloudinary/public_id -> URL dönüşümü
+      photos = await Promise.all(
+        photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' }))
+      );
 
-    // Sağ panel verileri
-    const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
-    const city = data.city || data.province || data.il || '';
-    const title = safe(data.title || data.name, 'İlan');
-    const desc  = safe(data.description, '');
+      // Satıcı id
+      const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
+      __sellerId = sellerId;
 
-    // Satıcı kartı
-    const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
-    const sellerHTML =
-      '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
-        + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
-        + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
-          + '<img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">'
-          + '<div style="flex:1;min-width:160px">'
-            + '<div id="sellerName" class="mini">Profil</div>'
-            + '<div id="sellerCity" class="mini"></div>'
-            + '<div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>'
+      // Sağ panel verileri
+      const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
+      const city = data.city || data.province || data.il || '';
+      const title = safe(data.title || data.name, 'İlan');
+      const desc  = safe(data.description, '');
+
+      // Satıcı kartı
+      const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
+      const sellerHTML =
+        '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
+          + '<div class="title" style="font-size:16px;margin-bottom:.35rem">Satıcı</div>'
+          + '<div id="sellerCard" class="row" style="align-items:center;gap:.6rem">'
+            + '<img id="sellerAvatar" src="/assets/icons/ureteneller.png" alt="" style="width:42px;height:42px;border-radius:50%;border:1px solid var(--brd);object-fit:cover">'
+            + '<div style="flex:1;min-width:160px">'
+              + '<div id="sellerName" class="mini">Profil</div>'
+              + '<div id="sellerCity" class="mini"></div>'
+              + '<div id="sellerBadge" class="mini" style="margin-top:.2rem"></div>'
+            + '</div>'
+            + '<a id="sellerLink" class="btn" href="'+profileHref+'" '+(sellerId?'':'aria-disabled="true"')+'>Profili Gör</a>'
           + '</div>'
-          + '<a id="sellerLink" class="btn" href="'+profileHref+'" '+(sellerId?'':'aria-disabled="true"')+'>Profili Gör</a>'
-        + '</div>'
-      + '</div>';
+        + '</div>';
 
-    // Modal içeriği
-    var html = ''
-      + '<div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">'
-        + '<div style="flex:1 1 360px; min-width:300px">'
-          + '<div id="galWrap" style="position:relative; border:1px solid var(--brd); border-radius:12px; overflow:hidden; background:#0f172a; aspect-ratio:1/1">'
-            + '<img id="galMain" src="'+photos[0]+'" alt="" style="width:100%; height:100%; object-fit:contain; display:block">'
-            + '<button id="galPrev" aria-label="Önceki" style="position:absolute; left:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">‹</button>'
-            + '<button id="galNext" aria-label="Sonraki" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">›</button>'
+      // Modal içeriği
+      var html = ''
+        + '<div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">'
+          + '<div style="flex:1 1 360px; min-width:300px">'
+            + '<div id="galWrap" style="position:relative; border:1px solid var(--brd); border-radius:12px; overflow:hidden; background:#0f172a; aspect-ratio:1/1">'
+              + '<img id="galMain" src="'+photos[0]+'" alt="" style="width:100%; height:100%; object-fit:contain; display:block">'
+              + '<button id="galPrev" aria-label="Önceki" style="position:absolute; left:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">‹</button>'
+              + '<button id="galNext" aria-label="Sonraki" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); border:1px solid var(--brd); border-radius:10px; background:#0b1220aa; color:#fff; font-weight:800; padding:.25rem .5rem; cursor:pointer">›</button>'
+            + '</div>'
+            + '<div id="galThumbs" class="row" style="margin-top:.5rem; gap:.4rem; overflow:auto; padding-bottom:.2rem"></div>'
           + '</div>'
-          + '<div id="galThumbs" class="row" style="margin-top:.5rem; gap:.4rem; overflow:auto; padding-bottom:.2rem"></div>'
-        + '</div>'
-        + '<div style="flex:1 1 320px; min-width:280px">'
-          + '<div class="title" style="font-size:20px; margin-bottom:.25rem">'+title+'</div>'
-          + '<div class="mini" style="margin:.15rem 0 .4rem">'+city+'</div>'
-          + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem">'+priceText+'</div>'
-          + '<div style="white-space:pre-line; line-height:1.4">'+desc+'</div>'
-          + sellerHTML
-          + '<div class="row" style="margin-top:.8rem; gap:.5rem">'
-            + '<button class="btn primary" id="iOrder">Sipariş Ver</button>'
-            + '<button class="btn ghost" id="iCancel">Kapat</button>'
+          + '<div style="flex:1 1 320px; min-width:280px">'
+            + '<div class="title" style="font-size:20px; margin-bottom:.25rem">'+title+'</div>'
+            + '<div class="mini" style="margin:.15rem 0 .4rem">'+city+'</div>'
+            + '<div style="font-weight:900; font-size:18px; margin-bottom:.6rem">'+priceText+'</div>'
+            + '<div style="white-space:pre-line; line-height:1.4">'+desc+'</div>'
+            + sellerHTML
+            + '<div class="row" style="margin-top:.8rem; gap:.5rem">'
+              + '<button class="btn primary" id="iOrder">Sipariş Ver</button>'
+              + '<button class="btn ghost" id="iCancel">Kapat</button>'
+            + '</div>'
           + '</div>'
-        + '</div>'
-      + '</div>';
+        + '</div>';
 
-    b.innerHTML = html;
+      b.innerHTML = html;
 
-    // Modal aç
-    document.getElementById('backdrop').style.display = 'block';
-    m.style.display = 'block';
-    m.setAttribute('aria-hidden','false');
+      // Modal aç
+      document.getElementById('backdrop').style.display = 'block';
+      m.style.display = 'block';
+      m.setAttribute('aria-hidden','false');
 
-    // Küçük görseller
-    const thumbs = document.getElementById('galThumbs');
-    if (thumbs){
-      let t = '';
-      for (let i=0;i<photos.length;i++){
-        t += '<img data-idx="'+i+'" src="'+photos[i]+'" alt="" '
-          + 'style="width:64px;height:64px;border-radius:8px;border:2px solid '+(i===0?'#22d3ee':'var(--brd)')+';object-fit:cover;cursor:pointer">';
-      }
-      thumbs.innerHTML = t;
-    }
-
-    // Galeri kontrolü
-    let idx = 0;
-    const main = document.getElementById('galMain');
-    function setIdx(i){
-      if (!photos.length) return;
-      idx = (i+photos.length) % photos.length;
-      if (main) main.src = photos[idx];
-      document.querySelectorAll('#galThumbs img').forEach(function(el,j){
-        el.style.borderColor = (j===idx) ? '#22d3ee' : 'var(--brd)';
-        if (j===idx){ try{ el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }catch(_){ } }
-      });
-    }
-    const prevBtn = document.getElementById('galPrev');
-    const nextBtn = document.getElementById('galNext');
-    if (prevBtn) prevBtn.addEventListener('click', function(){ setIdx(idx-1); });
-    if (nextBtn) nextBtn.addEventListener('click', function(){ setIdx(idx+1); });
-    if (thumbs) thumbs.addEventListener('click', function(e){
-      const im = e.target && e.target.closest('img[data-idx]');
-      if (!im) return;
-      const i = Number(im.getAttribute('data-idx')||'0')|0;
-      setIdx(i);
-    });
-
-    // Klavye
-    m.onkeydown = function(e){
-      if (e.key === 'ArrowLeft'){ e.preventDefault(); setIdx(idx-1); }
-      if (e.key === 'ArrowRight'){ e.preventDefault(); setIdx(idx+1); }
-    };
-    try{ m.focus && m.focus(); }catch(_){}
-
-    // Satıcı profili
-    if (sellerId){
-      try{
-        const { fs, db } = await ensureFSAuth();
-        const { doc, getDoc } = fs;
-        const ref = doc(db, 'users', sellerId);
-        const snap = await getDoc(ref);
-        if (snap.exists()){
-          const u = snap.data() || {};
-          const name = u.name || u.displayName || 'Satıcı';
-          const cityU = u.city || u.district || '';
-          const avatar = u.avatar || u.photoURL || '';
-          const verified = (u.isVerified===true) || (u.role==='verified') || (u.verified===true);
-          const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
-          const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
-          const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
-          const badge = document.getElementById('sellerBadge'); if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
+      // Küçük görseller
+      const thumbs = document.getElementById('galThumbs');
+      if (thumbs){
+        let t = '';
+        for (let i=0;i<photos.length;i++){
+          t += '<img data-idx="'+i+'" src="'+photos[i]+'" alt="" '
+            + 'style="width:64px;height:64px;border-radius:8px;border:2px solid '+(i===0?'#22d3ee':'var(--brd)')+';object-fit:cover;cursor:pointer">';
         }
-      }catch(_){}
+        thumbs.innerHTML = t;
+      }
+
+      // Galeri kontrolü
+      let idx = 0;
+      const main = document.getElementById('galMain');
+      function setIdx(i){
+        if (!photos.length) return;
+        idx = (i+photos.length) % photos.length;
+        if (main) main.src = photos[idx];
+        document.querySelectorAll('#galThumbs img').forEach(function(el,j){
+          el.style.borderColor = (j===idx) ? '#22d3ee' : 'var(--brd)';
+          if (j===idx){ try{ el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }catch(_){ } }
+        });
+      }
+      const prevBtn = document.getElementById('galPrev');
+      const nextBtn = document.getElementById('galNext');
+      if (prevBtn) prevBtn.addEventListener('click', function(){ setIdx(idx-1); });
+      if (nextBtn) nextBtn.addEventListener('click', function(){ setIdx(idx+1); });
+      if (thumbs) thumbs.addEventListener('click', function(e){
+        const im = e.target && e.target.closest('img[data-idx]');
+        if (!im) return;
+        const i = Number(im.getAttribute('data-idx')||'0')|0;
+        setIdx(i);
+      });
+
+      // Klavye
+      m.onkeydown = function(e){
+        if (e.key === 'ArrowLeft'){ e.preventDefault(); setIdx(idx-1); }
+        if (e.key === 'ArrowRight'){ e.preventDefault(); setIdx(idx+1); }
+      };
+      try{ m.focus && m.focus(); }catch(_){}
+
+      // Satıcı profili
+      if (sellerId){
+        try{
+          const { fs, db } = await ensureFSAuth();
+          const { doc, getDoc } = fs;
+          const ref = doc(db, 'users', sellerId);
+          const snap = await getDoc(ref);
+          if (snap.exists()){
+            const u = snap.data() || {};
+            const name = u.name || u.displayName || 'Satıcı';
+            const cityU = u.city || u.district || '';
+            const avatar = u.avatar || u.photoURL || '';
+            const verified = (u.isVerified===true) || (u.role==='verified') || (u.verified===true);
+            const nEl = document.getElementById('sellerName'); if (nEl) nEl.textContent = name;
+            const cEl = document.getElementById('sellerCity'); if (cEl) cEl.textContent = cityU;
+            const aEl = document.getElementById('sellerAvatar'); if (aEl && avatar) aEl.src = avatar;
+            const badge = document.getElementById('sellerBadge'); if (badge) badge.innerHTML = verified ? '✅ Onaylı Satıcı' : '👤 Standart Satıcı';
+          }
+        }catch(_){}
+      }
     }
-  }
 
-  function closeInspect(){
-    const m = document.getElementById('inspectModal'); if(!m) return;
-    m.style.display = 'none';
-    m.setAttribute('aria-hidden','true');
-    document.getElementById('backdrop').style.display = 'none';
-  }
+    function closeInspect(){
+      const m = document.getElementById('inspectModal'); if(!m) return;
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden','true');
+      document.getElementById('backdrop').style.display = 'none';
+    }
 
-  function openOrder(){
-    const m = document.getElementById('orderModal'); if(!m) return;
-    m.style.display = 'block';
-    m.setAttribute('aria-hidden','false');
-    document.getElementById('backdrop').style.display = 'block';
-  }
+    function openOrder(){
+      const m = document.getElementById('orderModal'); if(!m) return;
+      m.style.display = 'block';
+      m.setAttribute('aria-hidden','false');
+      document.getElementById('backdrop').style.display = 'block';
+    }
 
-  function closeOrder(){
-    const m = document.getElementById('orderModal'); if(!m) return;
-    m.style.display = 'none';
-    m.setAttribute('aria-hidden','true');
-    document.getElementById('backdrop').style.display = 'none';
-    if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-  }
+    function closeOrder(){
+      const m = document.getElementById('orderModal'); if(!m) return;
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden','true');
+      document.getElementById('backdrop').style.display = 'none';
+      if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
+    }
 
-  async function ensureFSAuth(){
-    const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-    const db = (window.__fb && window.__fb.db) ? window.__fb.db : fs.getFirestore();
-    const auth = (window.__fb && window.__fb.auth) ? window.__fb.auth : getAuth();
-    return { fs, db, auth };
-  }
+    async function ensureFSAuth(){
+      const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+      const db = (window.__fb && window.__fb.db) ? window.__fb.db : fs.getFirestore();
+      const auth = (window.__fb && window.__fb.auth) ? window.__fb.auth : getAuth();
+      return { fs, db, auth };
+    }
 
-  async function confirmOrder(){
-    const name  = (document.getElementById('oName')?.value||'').trim();
-    const city  = (document.getElementById('oCity')?.value||'').trim();
-    const phone = (document.getElementById('oPhone')?.value||'').trim();
-    if (!__inspect) return;
-    if (!name || !city || !phone){ if (typeof toast==='function') toast('Lütfen tüm alanları doldurun'); return; }
+    async function confirmOrder(){
+      const name  = (document.getElementById('oName')?.value||'').trim();
+      const city  = (document.getElementById('oCity')?.value||'').trim();
+      const phone = (document.getElementById('oPhone')?.value||'').trim();
+      if (!__inspect) return;
+      if (!name || !city || !phone){ if (typeof toast==='function') toast('Lütfen tüm alanları doldurun'); return; }
 
-    const { fs, db, auth } = await ensureFSAuth();
-    const { addDoc, collection, serverTimestamp } = fs;
-    const buyer = auth.currentUser;
-    if (!buyer){ if (typeof toast==='function') toast('Devam için giriş yapın'); return; }
+      const { fs, db, auth } = await ensureFSAuth();
+      const { addDoc, collection, serverTimestamp } = fs;
+      const buyer = auth.currentUser;
+      if (!buyer){ if (typeof toast==='function') toast('Devam için giriş yapın'); return; }
 
-    const d = __inspect.data;
-    const sellerId = d.sellerId || d.userId || d.ownerId || d.uid || d.createdBy || null;
-    __sellerId = sellerId;
+      const d = __inspect.data;
+      const sellerId = d.sellerId || d.userId || d.ownerId || d.uid || d.createdBy || null;
+      __sellerId = sellerId;
 
-    const payload = {
-      listingId: __inspect.id,
-      sellerId,
-      buyerId: buyer.uid,
-      buyerName: name,
-      buyerCity: city,
-      buyerPhone: phone,
-      status: 'new',
-      createdAt: serverTimestamp(),
-      price: d.price || null,
-      currency: d.currency || d.cur || 'TRY',
-      title: d.title || d.name || 'İlan'
-    };
+      const payload = {
+        listingId: __inspect.id,
+        sellerId,
+        buyerId: buyer.uid,
+        buyerName: name,
+        buyerCity: city,
+        buyerPhone: phone,
+        status: 'new',
+        createdAt: serverTimestamp(),
+        price: d.price || null,
+        currency: d.currency || d.cur || 'TRY',
+        title: d.title || d.name || 'İlan'
+      };
 
-    const docRef = await addDoc(collection(db,'orders'), payload);
-    __orderId = docRef.id;
+      const docRef = await addDoc(collection(db,'orders'), payload);
+      __orderId = docRef.id;
 
-    try{
-      await addDoc(collection(db,'notifications'), {
-        to: sellerId, type:'order', orderId: __orderId, listingId: __inspect.id,
-        createdAt: serverTimestamp(), read:false
+      try{
+        await addDoc(collection(db,'notifications'), {
+          to: sellerId, type:'order', orderId: __orderId, listingId: __inspect.id,
+          createdAt: serverTimestamp(), read:false
+        });
+      }catch(_){}
+      try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
+      document.getElementById('orderChat').style.display = 'block';
+      bindOrderChat();
+    }
+
+    async function bindOrderChat(){
+      if (!__orderId) return;
+      const { fs, db, auth } = await ensureFSAuth();
+      const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
+
+      const body = document.getElementById('orderChatBody');
+      if (body) body.innerHTML = '';
+
+      const q = query(collection(db, 'orders', __orderId, 'messages'), orderBy('createdAt','asc'));
+      if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
+      __orderUnsub = onSnapshot(q, function(snap){
+        if (body){ body.innerHTML=''; }
+        snap.forEach(function(doc){
+          const m = doc.data() || {};
+          const div = document.createElement('div');
+          div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
+          div.textContent = m.text || '';
+          body && body.appendChild(div);
+        });
+        if (body) body.scrollTop = body.scrollHeight;
       });
-    }catch(_){}
-    try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
-    document.getElementById('orderChat').style.display = 'block';
-    bindOrderChat();
-  }
 
-  async function bindOrderChat(){
-    if (!__orderId) return;
-    const { fs, db, auth } = await ensureFSAuth();
-    const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
+      const btn = document.getElementById('orderChatSend');
+      if (btn) btn.onclick = async function(){
+        const inp = document.getElementById('orderChatInput');
+        const v = (inp?.value||'').trim();
+        if (!v) return;
+        if (inp) inp.value = '';
+        await addDoc(collection(db, 'orders', __orderId, 'messages'), {
+          text:v, from:auth.currentUser.uid, to:__sellerId||null, createdAt:serverTimestamp()
+        });
+        try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
+      };
+    }
 
-    const body = document.getElementById('orderChatBody');
-    if (body) body.innerHTML = '';
-
-    const q = query(collection(db, 'orders', __orderId, 'messages'), orderBy('createdAt','asc'));
-    if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-    __orderUnsub = onSnapshot(q, function(snap){
-      if (body){ body.innerHTML=''; }
-      snap.forEach(function(doc){
-        const m = doc.data() || {};
-        const div = document.createElement('div');
-        div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
-        div.textContent = m.text || '';
-        body && body.appendChild(div);
-      });
-      if (body) body.scrollTop = body.scrollHeight;
+    // Event bağları
+    document.addEventListener('click', function(e){
+      const t = e.target;
+      if (!t) return;
+      if (t.id === 'iOrder'){ e.preventDefault(); openOrder(); }
+      else if (t.id === 'iClose' || t.id === 'iCancel'){ e.preventDefault(); closeInspect(); }
+      else if (t.id === 'oClose' || t.id === 'oCancel'){ e.preventDefault(); closeOrder(); }
     });
 
-    const btn = document.getElementById('orderChatSend');
-    if (btn) btn.onclick = async function(){
-      const inp = document.getElementById('orderChatInput');
-      const v = (inp?.value||'').trim();
-      if (!v) return;
-      if (inp) inp.value = '';
-      await addDoc(collection(db, 'orders', __orderId, 'messages'), {
-        text:v, from:auth.currentUser.uid, to:__sellerId||null, createdAt:serverTimestamp()
-      });
-      try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
-    };
-  }
+    document.addEventListener('DOMContentLoaded', function(){
+      const btn = document.getElementById('oConfirm');
+      if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
+    });
 
-  // Event bağları
-  document.addEventListener('click', function(e){
-    const t = e.target;
-    if (!t) return;
-    if (t.id === 'iOrder'){ e.preventDefault(); openOrder(); }
-    else if (t.id === 'iClose' || t.id === 'iCancel'){ e.preventDefault(); closeInspect(); }
-    else if (t.id === 'oClose' || t.id === 'oCancel'){ e.preventDefault(); closeOrder(); }
-  });
+    // Kartlardan çağırabilmek için dışa aç
+    window.openInspect = openInspect;
+  })();
 
-  document.addEventListener('DOMContentLoaded', function(){
-    const btn = document.getElementById('oConfirm');
-    if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
-  });
+  fetchAndPaint();
+})(); // <— İLANLAR BÖLÜMÜ SONU
 
-  // Kartlardan çağırabilmek için dışa aç
-  window.openInspect = openInspect;
-})();
-fetchAndPaint();
-})(); //
 </script>
 </body>
 </html>
