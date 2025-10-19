@@ -823,7 +823,35 @@ async function watchNotiCount(){
 
   // ==== İncele / Sipariş / Sohbet ====
   let __inspect = null; let __orderId = null; let __orderUnsub = null; let __sellerId = null;
-  function openInspect(id, data){ __inspect = {id, data}; const m=$('#inspectModal'); const b=$('#iBody'); if(!m||!b) return; b.innerHTML = `<div style="flex:1;min-width:200px"><div style=\"aspect-ratio:1/1;border:1px solid var(--brd);border-radius:12px;background:#0f172a;overflow:hidden\"><img id=\"iImg\" alt=\"\" style=\"width:100%;height:100%;object-fit:cover;display:block\"/></div></div>
+  function openInspect(id, data){
+  __inspect = {id, data};
+  const m = $('#inspectModal');
+  const b = $('#iBody');
+  if (!m || !b) return;
+
+  let photos = [];
+  if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
+  else if (Array.isArray(data.images) && data.images.length) photos = data.images;
+  else if (data.coverUrl) photos = [data.coverUrl];
+
+  const imgs = photos.map(u=>`<img src="${u}" style="width:100%;border-radius:12px;margin-bottom:.6rem;object-fit:cover" loading="lazy"/>`).join('');
+
+  b.innerHTML = `
+    <div style="width:100%">
+      ${imgs}
+      <div style="margin-top:.4rem">
+        <div class="title" style="font-size:20px">${data.title || 'İlan'}</div>
+        <div class="mini" style="margin:.25rem 0">${data.city || data.province || ''}</div>
+        <div style="font-weight:900;margin-bottom:.6rem">${data.price ? data.price + ' TL' : ''}</div>
+        <div style="white-space:pre-line">${data.description || ''}</div>
+      </div>
+    </div>
+  `;
+
+  $('#backdrop').style.display = 'block';
+  m.style.display = 'block';
+  m.setAttribute('aria-hidden','false');
+}
     <div style=\"flex:1;min-width:220px\">
       <div class=\"title\" style=\"font-size:18px\">${data.title||data.name||'İlan'}</div>
       <div class=\"mini\" style=\"margin-top:.25rem\">${data.city||data.il||''}</div>
