@@ -1108,9 +1108,10 @@ async function watchNotiCount(){
         title: d.title || d.name || 'İlan'
       };
 
-      const docRef = await addDoc(collection(db,'orders'), payload);
-      __orderId = docRef.id;
-      
+     const docRef = await addDoc(collection(db, 'orders'), payload);
+__orderId = docRef.id;
+} // confirmOrder sonu
+
 // YENİ (kurallarla uyumlu)
 async function bindOrderChat(){
   if (!__orderId) return;
