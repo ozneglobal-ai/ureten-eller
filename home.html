@@ -712,6 +712,8 @@ async function watchNotiCount(){
   }catch(_){ setNotiCount(0); }
 }
 
+     window.CLOUDINARY_CLOUD = 'ozneglobal';
+
 <!-- ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary + firebase-init.js ile uyumlu) ======= -->
 (function(){
   const vipGrid = document.getElementById('vipGrid');
@@ -730,7 +732,7 @@ async function watchNotiCount(){
   }
 
   // --- Cloudinary helpers
-  const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'YOUR_CLOUD_NAME';
+  const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'ozneglobal';
   function isHttpUrl(x){ return /^https?:\/\//i.test(x||''); }
   function isCloudinaryPublicId(x){
     if(!x || isHttpUrl(x)) return false;
