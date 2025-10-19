@@ -1089,15 +1089,20 @@ async function bindOrderChat(){
 
 // Event bağları (incele/sipariş kapat-aç)
 document.addEventListener('click', (e)=>{
-  if(e.target?.id==='iOrder'){ e.preventDefault(); openOrder(); }
-  if(e.target && (e.target.id==='iClose' || e.target.id==='iCancel')){ e.preventDefault(); closeInspect(); }
-  if(e.target && (e.target.id==='oClose' || e.target.id==='oCancel')){ e.preventDefault(); closeOrder(); }
+  if (e.target?.id === 'iOrder') { e.preventDefault(); openOrder(); }
+  if (e.target && (e.target.id === 'iClose' || e.target.id === 'iCancel')) { e.preventDefault(); closeInspect(); }
+  if (e.target && (e.target.id === 'oClose' || e.target.id === 'oCancel')) { e.preventDefault(); closeOrder(); }
 });
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  document.getElementById('oConfirm')?.addEventListener('click', ()=>{ try{ confirmOrder(); }catch(_){}} );
+  document.getElementById('oConfirm')?.addEventListener('click', ()=>{
+    try { confirmOrder(); } catch (_) {}
+  });
 });
 
+// 
+})();
 </script>
 </body>
 </html>
+
