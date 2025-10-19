@@ -1169,20 +1169,23 @@ async function bindOrderChat(){
   };
 }
 
-
-  // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
-  function startListings(){
-    if (window.__fbReady) { fetchAndPaint(); }
-    else { document.addEventListener('fb-ready', fetchAndPaint, { once:true }); }
-  }
-    if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startListings);
+    // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
+function startListings() {
+  if (window.__fbReady) {
+    fetchAndPaint();
   } else {
-    startListings();
+    document.addEventListener('fb-ready', fetchAndPaint, { once: true });
   }
-})();  //
-</script>
+}
 
-</body> 
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startListings);
+} else {
+  startListings();
+}
+
+})(); // <--- SADECE BU KAPANIŞ OLMALI
+</script>
+</body>
 </html>
-  
+
