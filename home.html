@@ -1113,67 +1113,77 @@ async function watchNotiCount(){
 
       try{
         // YENİ (kurallarla uyumlu)
-await addDoc(collection(db, 'orders', __orderId, 'messages'), {
-  text: v,
-  from: auth.currentUser.uid,
-  createdAt: serverTimestamp()
-});
-      }catch(_){}
-      try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
-      document.getElementById('orderChat').style.display = 'block';
-      bindOrderChat();
-    }
+async function bindOrderChat(){
+  if (!__orderId) return;
+  const { fs, db, auth } = await ensureFSAuth();
+  const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
 
-    async function bindOrderChat(){
-      if (!__orderId) return;
-      const { fs, db, auth } = await ensureFSAuth();
-      const { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } = fs;
+  const body = document.getElementById('orderChatBody');
+  if (body) body.innerHTML = '';
 
-      const body = document.getElementById('orderChatBody');
-      if (body) body.innerHTML = '';
+  const q = query(collection(db, 'orders', __orderId, 'messages'), orderBy('createdAt','asc'));
+  if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
+  __orderUnsub = onSnapshot(q, function(snap){
+    if (body){ body.innerHTML=''; }
+    snap.forEach(function(doc){
+      const m = doc.data() || {};
+      const div = document.createElement('div');
+      div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
+      div.textContent = m.text || '';
+      body && body.appendChild(div);
+    });
+    if (body) body.scrollTop = body.scrollHeight;
+  });
 
-      const q = query(collection(db, 'orders', __orderId, 'messages'), orderBy('createdAt','asc'));
-      if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-      __orderUnsub = onSnapshot(q, function(snap){
-        if (body){ body.innerHTML=''; }
-        snap.forEach(function(doc){
-          const m = doc.data() || {};
-          const div = document.createElement('div');
-          div.className = 'chatMsg' + (m.from===auth.currentUser?.uid ? ' me' : '');
-          div.textContent = m.text || '';
-          body && body.appendChild(div);
-        });
-        if (body) body.scrollTop = body.scrollHeight;
+  const btn = document.getElementById('orderChatSend');
+  if (btn) btn.onclick = async function(){
+    const inp = document.getElementById('orderChatInput');
+    const v = (inp?.value||'').trim();
+    if (!v){ toast('Mesajınızı yazın'); return; }
+
+    try{
+      await addDoc(collection(db,'orders', __orderId, 'messages'), {
+        text: v,
+        from: auth.currentUser.uid,
+        createdAt: serverTimestamp()
       });
 
-      const btn = document.getElementById('orderChatSend');
-      if (btn) btn.onclick = async function(){
-        const inp = document.getElementById('orderChatInput');
-        const v = (inp?.value||'').trim();
-        if (!v) return;
-        if (inp) inp.value = '';
-        await addDoc(collection(db, 'orders', __orderId, 'messages'), {
-          text:v, from:auth.currentUser.uid, to:__sellerId||null, createdAt:serverTimestamp()
+      if (__sellerId && __sellerId !== auth.currentUser.uid) {
+        await addDoc(collection(db,'notifications'), {
+          to: __sellerId,
+          type: 'order_message',
+          orderId: __orderId,
+          text: v,
+          createdAt: serverTimestamp(),
+          read: false
         });
-        try{ document.getElementById('notifyAudio')?.play().catch(()=>{}); }catch(_){}
-      };
+      }
+
+      toast('Siparişiniz satıcıya iletildi');
+      closeOrder();
+      closeInspect();
+    }catch(err){
+      console.error('Msg send failed:', err);
+      toast('Gönderilemedi (izin/ağ)');
     }
+  };
+} // <-- bindOrderChat burada biter
 
-    document.addEventListener('click', function(e){
-      const t = e.target;
-      if (!t) return;
-      if (t.id === 'iOrder'){ e.preventDefault(); openOrder(); }
-      else if (t.id === 'iClose' || t.id === 'iCancel'){ e.preventDefault(); closeInspect(); }
-      else if (t.id === 'oClose' || t.id === 'oCancel'){ e.preventDefault(); closeOrder(); }
-    });
+document.addEventListener('click', function(e){
+  const t = e.target;
+  if (!t) return;
+  if (t.id === 'iOrder'){ e.preventDefault(); openOrder(); }
+  else if (t.id === 'iClose' || t.id === 'iCancel'){ e.preventDefault(); closeInspect(); }
+  else if (t.id === 'oClose' || t.id === 'oCancel'){ e.preventDefault(); closeOrder(); }
+});
 
-    document.addEventListener('DOMContentLoaded', function(){
-      const btn = document.getElementById('oConfirm');
-      if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
-    });
+document.addEventListener('DOMContentLoaded', function(){
+  const btn = document.getElementById('oConfirm');
+  if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
+});
 
-    window.openInspect = openInspect;
-  })();
+window.openInspect = openInspect;
+})(); // IIFE kapanışı
 
   // ==== İlk yükleme: Firebase hazırsa çalış, değilse fb-ready’yi bekle
   function startListings(){
