@@ -712,11 +712,59 @@ async function watchNotiCount(){
   }catch(_){ setNotiCount(0); }
 }
 
-// ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary uyumlu) =======
+// ======= İLANLAR: 50 Vitrin + 50 Standart (Cloudinary + Firebase-safe) =======
 (function(){
   const vipGrid = document.getElementById('vipGrid');
   const stdGrid = document.getElementById('stdGrid');
   if(!vipGrid || !stdGrid) return;
+
+  // --- Firebase'i HER KOŞULDA hazırla ---
+  async function ensureFirebase(){
+    // 1) Zaten hazırsa dön
+    if (window.__fb?.app && window.__fb?.db && window.__fb?.auth) return window.__fb;
+
+    // 2) SDK'ları modüler olarak yükle
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js');
+    const { getApps, initializeApp } = appMod;
+
+    // 3) Var olan app varsa onu kullan; yoksa config ile kur
+    let app = getApps()[0];
+    if (!app) {
+      // Config'i şu adlardan birinde bekliyoruz:
+      const cfg =
+        window.__FB_CONFIG ||
+        window.UE_FB_CONFIG ||
+        window.firebaseConfig ||
+        window.__fbConfig ||
+        (window.__fb && window.__fb.config);
+
+      if (!cfg) {
+        throw new Error('Firebase config bulunamadı. Lütfen window.__FB_CONFIG atayın veya firebase-init.js içinde __fb oluşturun.');
+      }
+      app = initializeApp(cfg);
+    }
+
+    // 4) Auth & Firestore
+    const authMod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const fsMod   = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const { getAuth } = authMod;
+    const { getFirestore } = fsMod;
+
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // 5) Storage opsiyonel (Cloudinary kullanıyoruz ama fallback için lazım olabilir)
+    let storage = null, storageMod = null;
+    try {
+      storageMod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js');
+      storage = storageMod.getStorage(app);
+    } catch(_) {}
+
+    // 6) Global cache
+    window.__fb = { app, auth, db, storage };
+    // ek olarak modülleri ile döndür (fsMod'u başka yerlerde de kullanacağız)
+    return { app, auth, db, storage, fsMod, authMod, storageMod };
+  }
 
   // --- Cloudinary helpers (cloud adınızı yazın) ---
   const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'YOUR_CLOUD_NAME';
@@ -724,7 +772,6 @@ async function watchNotiCount(){
   function isCloudinaryPublicId(x){
     if(!x) return false;
     if(isHttpUrl(x)) return false;
-    // folder/name[.ext] veya image/upload/... vb.
     return /^(image\/upload\/|video\/upload\/|raw\/upload\/|[^/]+\/[^/]+|[^/]+\.[a-z0-9]{2,5})/i.test(String(x));
   }
   function toCloudinaryURL(publicId, {w, h, crop='fill', fmt='auto', q='auto'} = {}){
@@ -739,7 +786,6 @@ async function watchNotiCount(){
     ].filter(Boolean).join(',');
     const hasUploadPrefix = publicId.startsWith('image/upload/');
     const pid = publicId.replace(/^image\/upload\//,'');
-    // Dönüşüm dizesi varsa ekle
     return `https://res.cloudinary.com/${cloud}/image/upload/${tr ? tr+'/' : ''}${hasUploadPrefix ? pid : pid}`;
   }
 
@@ -767,22 +813,12 @@ async function watchNotiCount(){
     return flag || (until && until > nowMs);
   };
 
-  // === Görsel çözümleyici: Cloudinary + (gerekirse) Firebase Storage ===
-  let __storage = null; let __storageAPI = null;
-  async function ensureStorage(){
-    if(__storage) return __storageAPI;
-    const st = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js');
-    const { getStorage } = st; __storageAPI = st; __storage = getStorage(); return st;
-  }
-
+  // === Görsel çözümleyici: Cloudinary + (gerekirse) Storage fallback ===
   function pickCandidates(d){
     const arr = [];
-    // Tekil alanlar
     if (d.cover)    arr.push(d.cover);
     if (d.coverUrl) arr.push(d.coverUrl);
     if (d.photo)    arr.push(d.photo);
-
-    // Diziler
     if (Array.isArray(d.photos)) arr.push(...d.photos);
     if (Array.isArray(d.images)){
       d.images.forEach(it=>{
@@ -795,8 +831,6 @@ async function watchNotiCount(){
         else if (it.public_id)    arr.push(it.public_id);
       });
     }
-
-    // Tek nesne altında cloudinary gelebilir
     if (d.cloudinary){
       if (typeof d.cloudinary==='string') arr.push(d.cloudinary);
       else {
@@ -810,19 +844,16 @@ async function watchNotiCount(){
 
   async function resolveURL(raw, opts={}){
     if(!raw) return '';
-    // http(s) ise direkt kullan
-    if (isHttpUrl(raw)) return raw;
-
-    // Cloudinary public_id ise dönüştür
-    if (isCloudinaryPublicId(raw)) {
+    if (isHttpUrl(raw)) return raw;                 // http(s)
+    if (isCloudinaryPublicId(raw))                  // Cloudinary public_id
       return toCloudinaryURL(raw, opts);
-    }
 
-    // Kalanlar için Firebase Storage fallback
+    // Firebase Storage fallback (gs path vs. storage path)
     try{
-      await ensureStorage();
-      const { ref, getDownloadURL } = __storageAPI;
-      const r = ref(__storage, raw);
+      const { storage, storageMod } = await ensureFirebase();
+      if (!storage || !storageMod) return raw;
+      const { ref, getDownloadURL } = storageMod;
+      const r = ref(storage, raw);
       return await getDownloadURL(r);
     }catch(_){
       return raw;
@@ -853,7 +884,6 @@ async function watchNotiCount(){
     });
   }
 
-  // Kart HTML (İncele butonu + görseli sonradan basılır)
   const cardHTML = (d,id) => {
     const title = (d.title || d.name || 'İlan');
     const price = fmtPrice(d.price, d.currency||d.cur||'TRY');
@@ -886,7 +916,6 @@ async function watchNotiCount(){
     grid.appendChild(frag);
     setTimeout(()=> resolveAllThumbs(arr), 0);
 
-    // Tek seferlik click bağlama
     grid.addEventListener('click', (e)=>{
       const btn=e.target.closest('[data-inspect]');
       if(btn){ e.preventDefault(); const lid=btn.getAttribute('data-inspect'); const hit=arr.find(x=>x.id===lid); if(hit) openInspect(hit.id, hit.data); }
@@ -901,10 +930,14 @@ async function watchNotiCount(){
   const fetchAndPaint = async () => {
     try{
       paintSkeletons(vipGrid, 6); paintSkeletons(stdGrid, 6);
-      let fs = null; let db = window.__fb && window.__fb.db ? window.__fb.db : null;
-      if(!db){ fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); db = fs.getFirestore(); }
-      if(!fs) fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const { collection, query, orderBy, limit, getDocs } = fs;
+
+      // 🔐 Firebase kesin hazır
+      const { db, fsMod } = await (async ()=> {
+        const fb = await ensureFirebase();
+        return { db: fb.db, fsMod: fb.fsMod || await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js') };
+      })();
+
+      const { collection, query, orderBy, limit, getDocs } = fsMod;
 
       const col = collection(db, 'listings');
       const qAll = query(col, orderBy('createdAt','desc'), limit(200));
@@ -936,10 +969,8 @@ async function watchNotiCount(){
       const __msg = String((e && (e.message||e.code))||'');
       if(__msg.includes('Missing or insufficient permissions')){
         try{ toast('İzin yok: İlanları görüntüleme yetkisi bulunmuyor.'); }catch(_){ }
-        console.warn('Listings load error (permissions):', e);
-      } else {
-        console.warn('Listings load error:', e);
       }
+      console.warn('Listings load error:', e);
       updateCounts(0,0);
     }
   };
@@ -959,29 +990,23 @@ async function watchNotiCount(){
       const b = document.getElementById('iBody');
       if (!m || !b) return;
 
-      // Fotoğraflar (ham adaylar)
+      // Fotoğraflar: Cloudinary public_id / url -> gerçek URL
       let photos = [];
       if (Array.isArray(data.photos) && data.photos.length) photos = data.photos;
-      else if (Array.isArray(data.images) && data.images.length) photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
+      else if (Array.isArray(data.images) && data.images.length)
+        photos = data.images.map(x => (typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||''))).filter(Boolean);
       else if (data.coverUrl) photos = [data.coverUrl];
       if (!photos.length) photos = ['/assets/icons/ureteneller.png'];
+      photos = await Promise.all(photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' })));
 
-      // Cloudinary/public_id -> URL dönüşümü
-      photos = await Promise.all(
-        photos.map(p => resolveURL(p, { w: 900, h: 900, crop: 'fit', fmt: 'auto', q: 'auto' }))
-      );
-
-      // Satıcı id
       const sellerId = data.sellerId || data.userId || data.ownerId || data.uid || data.createdBy || null;
       __sellerId = sellerId;
 
-      // Sağ panel verileri
       const priceText = (data.price!=null && data.price!=='') ? (data.price + ' TL') : '';
       const city = data.city || data.province || data.il || '';
       const title = safe(data.title || data.name, 'İlan');
       const desc  = safe(data.description, '');
 
-      // Satıcı kartı
       const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
       const sellerHTML =
         '<div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">'
@@ -997,7 +1022,6 @@ async function watchNotiCount(){
           + '</div>'
         + '</div>';
 
-      // Modal içeriği
       var html = ''
         + '<div class="row" style="align-items:flex-start; gap:1rem; width:100%; flex-wrap:wrap">'
           + '<div style="flex:1 1 360px; min-width:300px">'
@@ -1023,12 +1047,10 @@ async function watchNotiCount(){
 
       b.innerHTML = html;
 
-      // Modal aç
       document.getElementById('backdrop').style.display = 'block';
       m.style.display = 'block';
       m.setAttribute('aria-hidden','false');
 
-      // Küçük görseller
       const thumbs = document.getElementById('galThumbs');
       if (thumbs){
         let t = '';
@@ -1039,7 +1061,6 @@ async function watchNotiCount(){
         thumbs.innerHTML = t;
       }
 
-      // Galeri kontrolü
       let idx = 0;
       const main = document.getElementById('galMain');
       function setIdx(i){
@@ -1062,18 +1083,19 @@ async function watchNotiCount(){
         setIdx(i);
       });
 
-      // Klavye
       m.onkeydown = function(e){
         if (e.key === 'ArrowLeft'){ e.preventDefault(); setIdx(idx-1); }
         if (e.key === 'ArrowRight'){ e.preventDefault(); setIdx(idx+1); }
       };
       try{ m.focus && m.focus(); }catch(_){}
 
-      // Satıcı profili
       if (sellerId){
         try{
-          const { fs, db } = await ensureFSAuth();
-          const { doc, getDoc } = fs;
+          const { db, fsMod } = await (async ()=> {
+            const fb = await ensureFirebase();
+            return { db: fb.db, fsMod: fb.fsMod || await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js') };
+          })();
+          const { doc, getDoc } = fsMod;
           const ref = doc(db, 'users', sellerId);
           const snap = await getDoc(ref);
           if (snap.exists()){
@@ -1089,6 +1111,12 @@ async function watchNotiCount(){
           }
         }catch(_){}
       }
+    }
+
+    async function ensureFSAuth(){
+      const fb = await ensureFirebase();
+      const fsMod = fb.fsMod || await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      return { fs: fsMod, db: fb.db, auth: fb.auth };
     }
 
     function closeInspect(){
@@ -1111,14 +1139,6 @@ async function watchNotiCount(){
       m.setAttribute('aria-hidden','true');
       document.getElementById('backdrop').style.display = 'none';
       if (__orderUnsub){ try{ __orderUnsub(); }catch(_){ } }
-    }
-
-    async function ensureFSAuth(){
-      const fs = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-      const db = (window.__fb && window.__fb.db) ? window.__fb.db : fs.getFirestore();
-      const auth = (window.__fb && window.__fb.auth) ? window.__fb.auth : getAuth();
-      return { fs, db, auth };
     }
 
     async function confirmOrder(){
@@ -1200,7 +1220,6 @@ async function watchNotiCount(){
       };
     }
 
-    // Event bağları
     document.addEventListener('click', function(e){
       const t = e.target;
       if (!t) return;
@@ -1214,10 +1233,10 @@ async function watchNotiCount(){
       if (btn){ btn.addEventListener('click', function(){ try{ confirmOrder(); }catch(_){ } }); }
     });
 
-    // Kartlardan çağırabilmek için dışa aç
     window.openInspect = openInspect;
   })();
 
+  // İlk yükleme
   fetchAndPaint();
 })(); // <— İLANLAR BÖLÜMÜ SONU
 
