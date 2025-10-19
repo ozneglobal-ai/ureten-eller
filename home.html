@@ -857,11 +857,6 @@ function openInspect(id, data){
   m.style.display = 'block';
   m.setAttribute('aria-hidden', 'false');
 }
-    <div style=\"flex:1;min-width:220px\">
-      <div class=\"title\" style=\"font-size:18px\">${data.title||data.name||'İlan'}</div>
-      <div class=\"mini\" style=\"margin-top:.25rem\">${data.city||data.il||''}</div>
-      <div style=\"margin-top:.4rem;font-weight:900\">${fmtPrice(data.price, data.currency||data.cur||'TRY')}</div>
-    </div>`; const imgEl = document.getElementById('iImg'); const url = (data.__cover || '/assets/icons/ureteneller.png'); imgEl.src = url; $('#backdrop').style.display='block'; m.style.display='block'; m.setAttribute('aria-hidden','false'); }
   function closeInspect(){ const m=$('#inspectModal'); if(!m) return; m.style.display='none'; m.setAttribute('aria-hidden','true'); $('#backdrop').style.display='none'; }
 
   function openOrder(){ const m=$('#orderModal'); if(!m) return; m.style.display='block'; m.setAttribute('aria-hidden','false'); $('#backdrop').style.display='block'; }
