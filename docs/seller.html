@@ -47,19 +47,21 @@
     @media(min-width:1120px){.grid{grid-template-columns:repeat(3,1fr)}}
 
     .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-    .kv{display:flex;gap:.5rem;align-items:center}
-    .kv label{width:140px;color:var(--muted)}
-    .kv strong{font-weight:800}
 
-    .avatarWrap{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
-    .avatar{width:112px;height:112px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center}
+    /* Kişisel bilgiler avatar YANINDA dursun */
+    .avatarWrap{display:grid;gap:1rem;align-items:start}
+    @media(min-width:820px){.avatarWrap{grid-template-columns:280px 1fr}}
+    .avatar{width:140px;height:140px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center;margin-bottom:.5rem}
     .bioBox{margin-top:.6rem;border:1px solid var(--brd);border-radius:12px;padding:.6rem;background:linear-gradient(145deg,var(--card),var(--card2))}
     .bioBox .bioTitle{font-weight:800;margin-bottom:.35rem}
     .bioBox .bioText{white-space:pre-wrap;line-height:1.45}
 
     .stat{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .6rem;border:1px solid var(--brd);border-radius:10px}
-
     .label{font-size:.78rem;color:var(--muted)}
+
+    .kv{display:flex;gap:.5rem;align-items:center;margin:.25rem 0}
+    .kv label{width:160px;color:var(--muted)}
+    .kv strong{font-weight:800}
 
     /* Modal */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200}
@@ -94,24 +96,31 @@
       <main>
         <section aria-labelledby="accTitle">
           <div class="avatarWrap">
+            <!-- Sol taraf: avatar + temel istatistik -->
             <div>
               <div id="avatar" class="avatar" style="background-image:url('/assets/img/avatar-default.png')"></div>
-              <div class="mini" id="uBadges" style="margin-top:.35rem"></div>
+              <div class="mini" id="uBadges" style="margin:.35rem 0 .5rem"></div>
+              <div class="row" style="gap:.5rem">
+                <span class="stat"><span class="label">İlan</span><strong id="statListings">0</strong></span>
+                <span class="stat"><span class="label">Puan</span><strong id="statRating">—</strong></span>
+              </div>
               <div class="bioBox">
                 <div class="bioTitle">Biyografi</div>
                 <div id="uBio" class="bioText">—</div>
               </div>
-              <div class="row" style="margin-top:.5rem;gap:.5rem">
-                <span class="stat"><span class="label">İlan</span><strong id="statListings">0</strong></span>
-                <span class="stat"><span class="label">Puan</span><strong id="statRating">—</strong></span>
-              </div>
             </div>
-            <div>
+
+            <!-- Sağ taraf: kişisel bilgiler (avatarın YANINDA) -->
+            <div class="card pad">
               <div class="kv"><label>Ad Soyad</label><strong id="uName">—</strong></div>
               <div class="kv"><label>Şehir</label><strong id="uCity">—</strong></div>
+              <div class="kv"><label>E-posta</label><strong id="uEmail">—</strong></div>
               <div class="kv"><label>Telefon</label><strong id="uPhone">—</strong></div>
-              <div class="kv"><label>E‑posta</label><strong id="uEmail">—</strong></div>
               <div class="kv"><label>Web/Instagram</label><strong id="uLinks">—</strong></div>
+              <div class="kv"><label>Doğrulama</label><strong id="kvVerified">—</strong></div>
+              <div class="kv"><label>Üyelik</label><strong id="kvPremium">—</strong></div>
+              <div class="kv"><label>Üyelik Bitiş</label><strong id="kvPremiumUntil">—</strong></div>
+              <div class="kv"><label>Kayıt Tarihi</label><strong id="kvCreatedAt">—</strong></div>
             </div>
           </div>
         </section>
@@ -125,7 +134,8 @@
         </section>
 
         <section style="margin-top:1rem" aria-labelledby="allTitle">
-          <div class="head"><h2 id="allTitle">Tüm Bilgiler</h2></div>
+          <div class="head"><h2 id="allTitle">Genel Bilgiler</h2></div>
+          <!-- “link/URL” göstermemek için aşağıda filtreliyoruz -->
           <div id="allInfo" class="card pad"></div>
         </section>
       </main>
@@ -201,10 +211,8 @@
 
   function labelOf(k){
     const map={
-      uid:'Kullanıcı ID', email:'E-posta', username:'Kullanıcı Adı',
+      uid:'Kullanıcı ID', username:'Kullanıcı Adı',
       name:'Ad Soyad', displayName:'Görünen Ad', bio:'Biyografi',
-      phone:'Telefon', whatsapp:'WhatsApp', website:'Web', instagram:'Instagram',
-      facebook:'Facebook', tiktok:'TikTok', telegram:'Telegram',
       city:'Şehir', district:'İlçe', province:'İl', address:'Adres',
       role:'Rol', roles:'Roller', isVerified:'Doğrulama', verified:'Doğrulama',
       isPremium:'Üyelik', premium:'Üyelik', premiumUntil:'Üyelik Bitiş',
@@ -212,7 +220,7 @@
       listingsCount:'İlan Sayısı', ordersCount:'Sipariş Sayısı',
       rating:'Puan', ratingsCount:'Puanlayan',
       iban:'IBAN', taxNo:'Vergi No', identityVerified:'Kimlik Doğrulama',
-      birthday:'Doğum Tarihi', gender:'Cinsiyet', avatar:'Avatar', photoURL:'Fotoğraf'
+      birthday:'Doğum Tarihi', gender:'Cinsiyet'
     };
     return map[k] || k;
   }
@@ -226,22 +234,23 @@
     }
     return String(v);
   }
+
+  // “Genel Bilgiler”de e-posta/telefon/link/AVATAR URL GÖSTERME
   function renderAllUserFields(u){
     const el=document.getElementById('allInfo'); if(!el) return;
     const allow=[
-      'uid','email','username','name','displayName','bio',
-      'phone','whatsapp','website','instagram','facebook','tiktok','telegram',
+      'uid','username','name','displayName','bio',
       'province','city','district','address',
       'role','roles','isVerified','verified','isPremium','premium','premiumUntil',
       'createdAt','lastLoginAt','lastSeen',
       'listingsCount','ordersCount','rating','ratingsCount',
-      'iban','taxNo','identityVerified','birthday','gender','photoURL','avatar'
+      'iban','taxNo','identityVerified','birthday','gender'
     ];
     const rows = [];
     allow.forEach(k=>{
       const v = (u && (u[k]!==undefined)) ? u[k] : undefined;
       if (v===undefined || v==='' || (Array.isArray(v)&&v.length===0)) return;
-      rows.push(`<div class="kv"><label style=\"width:180px;color:var(--muted)\">${labelOf(k)}</label><strong>${fmtVal(k,v)}</strong></div>`);
+      rows.push(`<div class="kv"><label style="width:180px;color:var(--muted)">${labelOf(k)}</label><strong>${fmtVal(k,v)}</strong></div>`);
     });
     el.innerHTML = rows.length ? rows.join('') : '<div class="mini">Gösterilecek bilgi yok.</div>';
   }
@@ -278,7 +287,6 @@
     grid.appendChild(frag);
     $('#listCount').textContent = `(${arr.length})`;
 
-    // Kapakları çöz ve butonları bağla
     (async()=>{
       for(const it of arr){
         const photos=[];
@@ -291,7 +299,6 @@
         const url = await resolveURL(photos[0]||'/assets/icons/ureteneller.png',{w:800,h:600,crop:'fill',fmt:'auto',q:'auto'});
         const el = document.getElementById('t-'+it.id); if(el){ el.classList.add('thumb'); el.style.backgroundImage=`url('${String(url).replace(/"/g,'')}')`; }
       }
-      // Offer buttons
       document.querySelectorAll('[data-offer]').forEach(btn=>{
         btn.addEventListener('click',()=>openOffer(btn.dataset.offer, btn.dataset.title));
       });
@@ -316,7 +323,6 @@
       if(!auth?.currentUser){ toast('Lütfen giriş yapın'); return; }
       if(!__offer.listingId){ toast('İlan bulunamadı'); return; }
       const { addDoc, collection, serverTimestamp, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      // İlanı çekerek satıcıyı doğrula
       let sellerId = __offer.sellerId;
       if(!sellerId){
         try{ const snap=await getDoc(doc(db,'listings',__offer.listingId)); if(snap.exists()) sellerId = snap.data()?.sellerId || snap.data()?.uid || snap.data()?.userId || null; }catch{}
@@ -341,13 +347,13 @@
   // === Ana akış ===
   async function boot(){
     try{
-      // Ana Sayfa butonu: home.html içine satıcıya dönmek isterseniz `location.href='/docs/seller.html?uid=...'` yapın
-      document.getElementById('homeBtn').onclick=()=>{ location.href='/docs/home.html'; };
+      // Ana Sayfa → kökteki home.html
+      document.getElementById('homeBtn').onclick=()=>{ location.href='/home.html'; };
 
       const params=new URLSearchParams(location.search); const uid=params.get('uid');
       if(!uid){ document.body.innerHTML='<div style="padding:1rem">Satıcı bulunamadı (uid yok).</div>'; return; }
 
-      // Eğer kullanıcı kendi uid'sini açarsa profil sayfasına yönlendir (opsiyonel)
+      // Kendi profiliyse yönlendir (opsiyonel)
       try{ const me=window.__fb?.auth?.currentUser; if(me && me.uid===uid){ location.replace('/docs/profile.html'); return; } }catch{}
 
       const ensure=()=> new Promise((res)=>{ if(window.__fb?.db) return res(); document.addEventListener('fb-ready',res,{once:true}); });
@@ -368,18 +374,29 @@
       const phone=u.phone||'—';
       const email=u.email||'—';
       const links=[u.website,u.instagram].filter(Boolean).join(' • ') || '—';
-      const avatar=u.avatar||u.photoURL||'/assets/img/avatar-default.png';
+      const avatarRaw=u.avatar||u.photoURL||'/assets/img/avatar-default.png';
+      const avatar=await resolveURL(avatarRaw,{w:256,h:256,crop:'fill',fmt:'auto',q:'auto'}); // URL yazı olarak gösterilmez, sadece görsel
       const verified = (u.isVerified===true) || (u.verified===true) || (u.role==='verified');
       const premium  = (u.isPremium===true) || (u.premium===true);
 
+      // Sol kısım
+      document.getElementById('avatar').style.backgroundImage=`url('${String(avatar).replace(/"/g,'')}')`;
+      document.getElementById('uBadges').innerHTML = `${verified? '✅ Onaylı Satıcı' : '👤 Standart Satıcı'}${premium? ' • ⭐ Premium' : ''}`;
+      document.getElementById('uBio').textContent=u.bio||'—';
+      document.getElementById('statRating').textContent = (u.rating!=null? u.rating : '—');
+
+      // Sağ kısım (avatarın yanında)
       document.getElementById('uName').textContent=name;
       document.getElementById('uCity').textContent=city;
-      document.getElementById('uPhone').textContent=phone;
       document.getElementById('uEmail').textContent=email;
+      document.getElementById('uPhone').textContent=phone;
       document.getElementById('uLinks').textContent=links;
-      document.getElementById('uBio').textContent=u.bio||'—';
-      document.getElementById('avatar').style.backgroundImage=`url('${avatar}')`;
-      document.getElementById('uBadges').innerHTML = `${verified? '✅ Onaylı Satıcı' : '👤 Standart Satıcı'} ${premium? ' • ⭐ Premium' : ''}`;
+      document.getElementById('kvVerified').textContent = verified? 'Evet' : 'Hayır';
+      document.getElementById('kvPremium').textContent  = premium? 'Evet' : 'Hayır';
+      document.getElementById('kvPremiumUntil').textContent = u.premiumUntil ? fmtDate(u.premiumUntil) : '—';
+      document.getElementById('kvCreatedAt').textContent = u.createdAt ? fmtDate(u.createdAt) : '—';
+
+      // Başlık altı
       document.getElementById('vStatus').textContent = verified? 'Onaylı' : 'Standart';
       document.getElementById('mStatus').textContent = premium? 'Premium' : 'Standart';
       document.getElementById('pSub').textContent = name;
@@ -390,13 +407,11 @@
       const snaps = await Promise.all(fields.map(f=>getDocs(query(baseCol, where(f,'==', uid))).catch(()=>null)));
       const seen=new Set(); const arr=[];
       snaps.forEach(snap=>{ if(!snap) return; snap.forEach(ds=>{ if(seen.has(ds.id)) return; seen.add(ds.id); const d=ds.data()||{}; arr.push({id:ds.id,data:d}); }); });
-      // Son yüklenenler önce
       arr.sort((a,b)=>{ const ta=(a.data.createdAt?.toMillis?.()||Date.parse(a.data.createdAt)||0); const tb=(b.data.createdAt?.toMillis?.()||Date.parse(b.data.createdAt)||0); return tb-ta; });
       document.getElementById('statListings').textContent=String(arr.length);
-      document.getElementById('statRating').textContent = (u.rating!=null? u.rating : '—');
       renderListings(arr);
 
-      // Tüm alanları yazdır
+      // Genel Bilgiler (URL/kişisel iletişim linki göstermeden)
       renderAllUserFields(u);
 
     }catch(e){ console.error(e); toast('Sayfa yüklenemedi'); }
