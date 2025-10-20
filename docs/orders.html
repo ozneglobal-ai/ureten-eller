@@ -85,8 +85,8 @@
       const col = collection(window.__fb.db,'orders');
 
       // Hem alıcı hem satıcı olduğun siparişler; iki sorguyu birleştir
-      const qBuyer  = query(col, where('buyerId','==',uid),  orderBy('createdAt','desc'), limit(100));
-      const qSeller = query(col, where('sellerId','==',uid), orderBy('createdAt','desc'), limit(100));
+      const qBuyer  = query(col, where('buyerId','==',uid),  limit(100));
+const qSeller = query(col, where('sellerId','==',uid), limit(100));
 
       const [sBuyer, sSeller] = await Promise.all([getDocs(qBuyer), getDocs(qSeller)]);
 
