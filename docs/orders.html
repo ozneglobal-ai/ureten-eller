@@ -34,7 +34,7 @@
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
     input,textarea{width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:#fff;font:inherit}
   </style>
-  <!-- docs/ altında olduğumuz için bağıl yol -->
+  <!-- docs/ altında çalıştığı ve bu dosyanın /docs/order.html olacağı varsayımıyla bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -107,26 +107,33 @@
     const fmtTRY=(v)=>{ try{return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{return v+' TL';} };
     const fmtDate=(x)=>{ try{ if(!x) return '—'; if(x.toDate) return x.toDate().toLocaleString('tr-TR'); if(x.toMillis) return new Date(x.toMillis()).toLocaleString('tr-TR'); const d=new Date(x); return isNaN(d)? '—' : d.toLocaleString('tr-TR'); }catch{return '—';} };
 
-    $('#btnBack').onclick=()=>{ location.href='/docs/orders.html'; };
+    // /docs altında mı, kökten mi? Tüm yönlendirmeleri güvenli hale getir
+    const inDocs = location.pathname.startsWith('/docs/');
+    const base = inDocs ? '/docs' : '';
 
+    // Geri butonu
+    $('#btnBack').onclick=()=>{ location.href= base + '/orders.html'; };
+
+    // Parametreleri al (order ve listing için her iki anahtar ismi desteklenir)
     const params=new URLSearchParams(location.search);
-    const ORDER_ID = params.get('id') || params.get('order') || '';
-    const LISTING_ID = params.get('listing') || '';
+    const ORDER_ID   = params.get('id') || params.get('order') || '';
+    const LISTING_ID = params.get('listing') || params.get('ilan') || '';
 
+    // Firebase hazır olduğunda başlat
     (function wait(){ if(!window.__fb){ return setTimeout(wait,40);} boot(); })();
 
     async function boot(){
       const {auth,onAuthStateChanged}=window.__fb;
       onAuthStateChanged(auth, async (u)=>{
-        if(!u){ location.href='./index.html'; return; }
+        if(!u){ location.href = base + '/index.html'; return; }
 
         if (LISTING_ID) {
-          // === LISTING MODU
+          // === LISTING MODU ===
           $('#pageTitle').textContent='Sipariş Oluştur';
           $('#createBox').hidden=false;
           await loadListingForCreate(LISTING_ID, u);
         } else if (ORDER_ID) {
-          // === ORDER MODU
+          // === ORDER MODU ===
           $('#pageTitle').textContent='Sipariş Detayı';
           $('#detailBox').hidden=false;
           $('#chatBox').hidden=false;
@@ -190,8 +197,8 @@
         const total= Math.max(0, Math.round(price*qty));
 
         const payload={
-          buyerId: uid,                      // RULES gereği şart
-          sellerId: sellerId,                // Satıcı paneli sellerId ile dinliyor
+          buyerId: uid,
+          sellerId: sellerId,
           listingId: listingId,
           listingTitle: L.title || L.name || 'İlan',
           listingPrice: price||0,
@@ -206,14 +213,14 @@
         const ordersCol = collection(fb.db,'orders');
         const newRef    = await addDoc(ordersCol, payload);
 
-        // Basit bildirim
+        // Basit bildirim (hata yutsa da akış bozulmasın)
         try{
           const notifCol = collection(fb.db,'notifications');
           await addDoc(notifCol,{ to:sellerId, type:'order_new', orderId:newRef.id, text:(U.name||'Bir alıcı')+' yeni sipariş verdi', createdAt: serverTimestamp() });
         }catch{}
 
-        // Detaya yönlendir
-        location.href = '/docs/order.html?id='+newRef.id;
+        // Detaya yönlendir (docs ya da root uyumlu)
+        location.href = base + '/order.html?id=' + newRef.id;
       }catch(e){
         console.error('createOrderForListing',e);
         toast('Sipariş oluşturulamadı');
@@ -264,12 +271,12 @@
         acts.append(ok,no);
       }
 
-      // Chat kutusunu görünür kıl
+      // Chat görünür
       $('#chatBox').hidden=false;
 
       $('#btnGoThread').onclick=()=>{
         const q=new URLSearchParams({ thread:o.threadId||'', order:o.id });
-        location.href='/docs/mesajlar.html?'+q.toString();
+        location.href= base + '/mesajlar.html?' + q.toString();
       };
       $('#btnSendMsg').onclick=()=>sendMessageForOrder(o,currentUid);
     }
