@@ -16,7 +16,7 @@
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
     .logo img{width:32px;height:32px}
     .spacer{flex:1}
-    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
     .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
     .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
     .btn.ghost{background:transparent}
@@ -106,6 +106,7 @@
     function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
 
     let __unsub=null; let __uid=null; const sound=$('#orderSound');
+    let __beeping=false; // çoklama engelle
 
     function bindTabs(){ document.querySelectorAll('.tab').forEach(btn=>{ btn.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected','false')); btn.setAttribute('aria-selected','true'); showPanel(btn.dataset.tab); }); }); }
     function showPanel(key){ ['pending','approved','completed','rejected'].forEach(k=>{ const p=$(`#panel-${k}`); if(p) p.hidden=(k!==key); }); }
@@ -170,7 +171,7 @@
 
     async function approveOrder(o){
       try{
-        const {doc,updateDoc,serverTimestamp,collection,addDoc,setDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const {doc,updateDoc,serverTimestamp,collection,addDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         let threadId = o.threadId;
         if(!threadId){
           const thRef = await addDoc(collection(window.__fb.db,'messages'),{
@@ -202,6 +203,25 @@
       location.href = '/order.html?'+q.toString();
     }
 
+    // === Yeni siparişlerde sesi 3 kez çal ===
+    async function playBeep(times=3){
+      if(!sound) return;
+      __beeping = true;
+      for (let i=0;i<times;i++){
+        try{
+          sound.currentTime = 0;
+          // play() bazı tarayıcılarda kullanıcı etkileşimi olmadan reddedilebilir
+          await sound.play();
+          // çalma bitene kadar bekle
+          await new Promise(res => sound.addEventListener('ended', res, {once:true}));
+        }catch(e){
+          // Reddedilirse küçük bir gecikme ile tekrar dene
+          await new Promise(r=>setTimeout(r,600));
+        }
+      }
+      __beeping = false;
+    }
+
     async function watchOrders(uid){
       const {collection,query,where,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
       const q = query(collection(window.__fb.db,'orders'), where('sellerId','==',uid), orderBy('createdAt','desc'));
@@ -222,9 +242,11 @@
 
         $('#emptyBox').style.display = all.length? 'none':'block';
 
-        // Yeni pending algıla ve ses çal
+        // Yeni pending algıla → sesi 3 kez çal (debounce ile)
         const prev = Number(localStorage.getItem('ue_orders_pending_count')||'0')||0;
-        if(pending>prev){ try{ sound.currentTime=0; sound.play().catch(()=>{}); }catch{} }
+        if(pending > prev && !__beeping){
+          playBeep(3).catch(()=>{});
+        }
         localStorage.setItem('ue_orders_pending_count', String(pending));
       },(err)=>{ console.warn('orders snapshot',err); });
     }
@@ -240,6 +262,12 @@
       applyI18n();
       bindTabs();
       $('#btnBack').onclick=()=>{ history.length>1? history.back(): location.href='./profile.html'; };
+
+      // İlk kullanıcı etkileşiminde sessiz otomatik çalma kilidini gevşetmek için
+      // (Bazı tarayıcılar kullanıcı etkileşimi olmadan ses çalmayı engeller)
+      window.addEventListener('click', ()=>{
+        try{ sound.play().then(()=>{ sound.pause(); sound.currentTime=0; }).catch(()=>{}); }catch{}
+      }, {once:true});
     }
 
     (function init(){
