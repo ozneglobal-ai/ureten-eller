@@ -3,33 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sipariş Ver • Üreten Eller</title>
+  <title>Sipariş • Üreten Eller</title>
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
     :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --brd:#1f2937; --card:#0e172a; --card2:#0b1326; }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
     a{color:inherit;text-decoration:none}
+
     .wrap{max-width:920px;margin:0 auto;padding:1rem 1rem 4rem}
     .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
     .logo img{width:32px;height:32px}
     .spacer{flex:1}
+
     .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
     .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
+    .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
     .btn.ghost{background:transparent}
-    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .8rem}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+
     .card{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));padding:1rem}
     .row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+    .kv{display:flex;gap:.5rem;align-items:center;margin:.25rem 0}
+    .kv label{width:160px;color:var(--muted)}
+    .kv strong{font-weight:800}
     .mini{color:var(--muted)}
-    .thumb{width:120px;height:90px;border-radius:12px;background:#0f172a;background-size:cover;background-position:center;border:1px solid var(--brd)}
-    .grid{display:grid;gap:1rem;grid-template-columns:1fr}
-    @media(min-width:760px){ .grid{grid-template-columns:1.2fr .8fr} }
-    label{display:block;font-size:.9rem;color:var(--muted);margin:.25rem 0 .35rem}
-    input,textarea{width:100%;padding:.65rem .75rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font:inherit}
-    .price{font-weight:900;font-size:1.1rem}
-    .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.55rem .8rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
-    .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426}
+    .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .55rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
+    .badge.yellow{background:#241a05;border-color:#7a5408;color:#ffe2a3}
+    .badge.green{background:#052315;border-color:#0e766e;color:#9ff6dd}
+    .badge.red{background:#2a0b0b;border-color:#7a1b1b;color:#ffb4b4}
+    .badge.gray{background:#0a162c;border-color:#334155;color:#cbd5e1}
+
+    .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
@@ -42,219 +48,209 @@
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <button id="btnBack" class="btn ghost" type="button">← Ana Sayfa</button>
+      <button id="btnBack" class="btn ghost" type="button">← Siparişler</button>
     </div>
 
-    <header class="head">
-      <h2 id="pageTitle">Sipariş Ver</h2>
-      <span class="mini" id="pageSub">—</span>
-    </header>
+    <h2 id="title">Sipariş</h2>
+    <div id="statusBox" class="row" style="margin:.4rem 0"></div>
 
-    <div class="grid">
-      <!-- Sol: İlan özeti -->
-      <section class="card">
-        <div class="row" style="align-items:flex-start">
-          <div id="cover" class="thumb" aria-hidden="true"></div>
-          <div>
-            <div id="lTitle" style="font-weight:900">—</div>
-            <div class="mini" id="lSeller">Satıcı: —</div>
-            <div class="row" style="margin-top:.35rem">
-              <span class="mini">Fiyat:</span>
-              <span class="price" id="lPrice">—</span>
-            </div>
-            <div class="row" style="margin-top:.35rem">
-              <a id="viewListing" class="btn ghost" href="#" target="_blank" rel="noopener">İlanı Gör</a>
-            </div>
-          </div>
-        </div>
-      </section>
+    <section id="orderCard" class="card" style="margin-top:.6rem">
+      <div class="kv"><label>İlan</label><strong id="oListing">—</strong></div>
+      <div class="kv"><label>Adet • Tutar</label><strong id="oQtyTotal">—</strong></div>
+      <div class="kv"><label>Alıcı</label><strong id="oBuyer">—</strong></div>
+      <div class="kv"><label>Satıcı</label><strong id="oSeller">—</strong></div>
+      <div class="kv"><label>Not</label><strong id="oNote">—</strong></div>
+      <div class="kv"><label>Tarih</label><strong id="oCreated">—</strong></div>
+      <div class="row" style="margin-top:.6rem;justify-content:flex-end" id="oActions"></div>
+    </section>
 
-      <!-- Sağ: Sipariş formu -->
-      <section class="card">
-        <h3 style="margin:.2rem 0 0">Sipariş Bilgileri</h3>
-        <div class="mini">Lütfen adet ve not alanını doldurun.</div>
-        <div style="margin-top:.6rem">
-          <label for="qtyInput">Adet</label>
-          <input id="qtyInput" type="number" value="1" min="1" step="1" />
+    <section class="card" style="margin-top:.8rem">
+      <div class="row" style="justify-content:space-between;width:100%">
+        <div class="mini">Alıcı ↔ Satıcı Anlık Mesajlaşma</div>
+        <div class="row" style="gap:.5rem">
+          <button id="btnGoThread" class="btn" type="button">Mesajları Aç</button>
+          <button id="btnSendMsg" class="btn primary" type="button">Gönder</button>
         </div>
-        <div style="margin-top:.6rem">
-          <label for="noteInput">Not (opsiyonel)</label>
-          <textarea id="noteInput" rows="4" placeholder="İstediğiniz detaylar"></textarea>
-        </div>
-        <div class="row" style="justify-content:flex-end;margin-top:.9rem">
-          <button id="orderBtn" class="btn primary" type="button">Sipariş Ver</button>
-        </div>
-        <div class="notice mini" style="margin-top:.7rem">
-          Sipariş verildiğinde satıcı paneline düşer ve satıcıya bildirim gider. Ödemeyi ve teslimatı satıcı ile netleştiriniz.
-        </div>
-      </section>
-    </div>
+      </div>
+      <div style="margin-top:.6rem">
+        <textarea id="msgInput" rows="3" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:#fff" placeholder="Mesaj yazın…"></textarea>
+      </div>
+    </section>
   </div>
 
   <div id="toast" class="toast" role="status"></div>
 
   <script>
-    // ===== küçük yardımcılar
-    const $ = (s)=>document.querySelector(s);
-    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1700); }
-    const fmtTRY=(v)=>{ try{return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{return (v||0)+' TL';} };
+    // === MINI UTILS ===
+    const $=(s)=>document.querySelector(s);
+    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
+    const fmtTRY=(v)=>{ try{return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{return v+' TL';} };
+    const fmtDate=(x)=>{ try{
+      if(!x) return '—';
+      if(x.toDate) return x.toDate().toLocaleString('tr-TR');
+      if(x.toMillis) return new Date(x.toMillis()).toLocaleString('tr-TR');
+      const d=new Date(x); return isNaN(d)? '—' : d.toLocaleString('tr-TR');
+    }catch{return '—';} };
 
-    // ===== sayfa navigasyonu
-    $('#btnBack').onclick = ()=>{ location.href = '/home.html'; };
+    // === NAV ===
+    $('#btnBack').onclick=()=>{ location.href='/docs/orders.html'; };
 
-    // ===== ilan id
-    const params = new URLSearchParams(location.search);
-    const LISTING_ID = params.get('id') || '';
+    // === PARAM ===
+    const params=new URLSearchParams(location.search);
+    const ORDER_ID=params.get('id')||'';
 
-    // İlan state
-    let LISTING = null;      // Firestore'dan çekilen ilan
-    let SELLER_ID = null;    // satıcı uid
-
-    // ===== Firebase hazır olunca başla
-    (function waitForFirebase(){
-      if(!window.__fb){ setTimeout(waitForFirebase,40); return; }
-      boot().catch(e=>console.error(e));
-    })();
+    // === MAIN FLOW ===
+    (function wait(){ if(!window.__fb){ return setTimeout(wait,40);} boot(); })();
 
     async function boot(){
-      if(!LISTING_ID){
-        document.body.innerHTML = '<div class="wrap"><div class="card">İlan ID eksik.</div></div>';
-        return;
-      }
-
-      // auth kontrol
-      const { auth, db, onAuthStateChanged } = window.__fb;
+      if(!ORDER_ID){ document.body.innerHTML='<div class="wrap"><div class="card">Sipariş ID eksik.</div></div>'; return; }
+      const {auth,onAuthStateChanged}=window.__fb;
       onAuthStateChanged(auth, async (u)=>{
-        if(!u){
-          // giriş yoksa giriş sayfanıza yönlendirin
-          location.href = './index.html';
-          return;
-        }
-        try {
-          await loadListing();     // ilanı getir ve UI doldur
-          bindOrderButton();       // sipariş ver butonu
-        } catch(e){
-          console.error('boot error', e);
-          toast('Sayfa yüklenemedi');
+        if(!u){ location.href='./index.html'; return; }
+        try{
+          const order = await loadOrder(ORDER_ID);
+          bindActions(order, u.uid);
+        }catch(e){
+          console.warn(e);
+          document.body.innerHTML='<div class="wrap"><div class="card">Sipariş bulunamadı veya yetkiniz yok.</div></div>';
         }
       });
     }
 
-    // ===== ilanı çek ve göster
-    async function loadListing(){
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const snap = await getDoc(doc(window.__fb.db, 'listings', LISTING_ID));
-      if(!snap.exists()){
-        document.body.innerHTML = '<div class="wrap"><div class="card">İlan bulunamadı.</div></div>';
-        throw new Error('listing missing');
+    // === LOAD ORDER ===
+    async function loadOrder(id){
+      const {doc,getDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const ref=doc(window.__fb.db,'orders',id);
+      const snap=await getDoc(ref);
+      if(!snap.exists()) throw new Error('no-order');
+      const o={ id: snap.id, ...snap.data() };
+      paintOrder(o);
+      return o;
+    }
+
+    function paintOrder(o){
+      $('#title').textContent = 'Sipariş #' + o.id.slice(-6);
+      $('#oListing').textContent = (o.listingTitle||'İlan') + (o.listingId ? ` ( #${String(o.listingId).slice(-6)} )` : '');
+      $('#oQtyTotal').textContent = (o.qty||1) + ' • ' + fmtTRY(o.total||0);
+      $('#oBuyer').textContent = (o.buyerName||'—') + (o.buyerCity?` • ${o.buyerCity}`:'');
+      $('#oSeller').textContent = o.sellerId||'—';
+      $('#oNote').textContent   = o.note||'—';
+      $('#oCreated').textContent= fmtDate(o.createdAt);
+
+      const s=(o.status||'pending');
+      const box=$('#statusBox'); box.innerHTML='';
+      const badge=document.createElement('span'); badge.className='badge '+
+        (s==='pending'?'yellow': s==='approved'?'green': s==='rejected'?'red':'gray');
+      badge.textContent = s==='pending'?'Bekliyor': s==='approved'?'Onaylı': s==='rejected'?'Reddedildi':'Tamamlandı';
+      box.appendChild(badge);
+    }
+
+    // === ACTIONS ===
+    function bindActions(o, currentUid){
+      const acts=$('#oActions'); acts.innerHTML='';
+
+      const isSeller = (currentUid === o.sellerId);
+      const isBuyer  = (currentUid === o.buyerId);
+
+      // Yetkisiz kişiye aksiyon gösterme
+      if(!(isSeller || isBuyer)){
+        const span=document.createElement('span'); span.className='mini'; span.textContent='Bu siparişe erişim yetkiniz yok.';
+        acts.append(span);
       }
-      LISTING = snap.data() || {};
-      SELLER_ID = LISTING.sellerId || LISTING.uid || LISTING.userId || LISTING.ownerUid || LISTING.ownerId || LISTING.createdBy || null;
 
-      // UI doldur
-      $('#pageSub').textContent = LISTING.title || 'İlan';
-      $('#lTitle').textContent = LISTING.title || 'İlan';
-      $('#lSeller').textContent = 'Satıcı: ' + (LISTING.sellerName || '—');
-      $('#lPrice').textContent  = fmtTRY(Number(LISTING.price||0));
-
-      // kapak görseli (Cloudinary/Storage/URL destekli)
-      const img = await resolveCover(LISTING);
-      if(img) $('#cover').style.backgroundImage = `url('${img.replace(/'/g,"%27")}')`;
-
-      const linkEl = $('#viewListing');
-      if(linkEl) linkEl.href = `/ilan/${LISTING_ID}`;
-    }
-
-    // Kapak URL çöz (Cloudinary public_id / Firebase Storage path / direkt URL)
-    const CLOUDINARY_CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
-    function isHttpUrl(x){ return /^https?:\/\//i.test(x||''); }
-    function isCloudinaryPublicId(x){ if(!x||isHttpUrl(x)) return false; return /[\/_.-]/.test(String(x)); }
-    function toCloudinaryURL(publicId, {w, h, crop='fill', fmt='auto', q='auto'} = {}){
-      if(!CLOUDINARY_CLOUD || !publicId) return '';
-      const tr=[q&&`q_${q}`,fmt&&`f_${fmt}`,w&&`w_${w}`,h&&`h_${h}`,crop&&`c_${crop}`].filter(Boolean).join(',');
-      const pid=String(publicId).replace(/^image\/upload\//,'');
-      return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/${tr?tr+'/':''}${pid}`;
-    }
-    async function resolveCover(d){
-      const list=[];
-      if(d.coverUrl) list.push(d.coverUrl);
-      if(d.cover) list.push(d.cover);
-      if(Array.isArray(d.photos) && d.photos[0]) list.push(d.photos[0]);
-      if(Array.isArray(d.images)){
-        d.images.forEach(x=>{ if(!x) return; if(typeof x==='string') list.push(x); else if(x.secure_url) list.push(x.secure_url); else if(x.url) list.push(x.url); else if(x.public_id) list.push(x.public_id); });
+      // Sadece SATICI pending iken onay/ret
+      if(isSeller && (o.status==='pending')){
+        const btnOk=document.createElement('button'); btnOk.className='btn primary'; btnOk.textContent='Onayla';
+        const btnNo=document.createElement('button'); btnNo.className='btn warn'; btnNo.textContent='İptal';
+        btnOk.onclick=()=> approveOrder(o).catch(e=>{console.warn(e);toast('Hata');});
+        btnNo.onclick=()=> updateOrder(o.id,{status:'rejected'}).then(()=>{toast('✓');location.reload();}).catch(()=>toast('Hata'));
+        acts.append(btnOk,btnNo);
       }
-      const raw = list[0] || '';
-      if(!raw) return '';
-      if(isHttpUrl(raw)) return raw;
-      if(isCloudinaryPublicId(raw)) return toCloudinaryURL(raw,{w:600,h:450});
-      try{
-        if(window.storageRef && window._getDownloadURL){ const r=window.storageRef(raw); return await window._getDownloadURL(r); }
-      }catch{}
-      return raw;
+
+      // Mesaj gönder
+      $('#btnSendMsg').onclick = ()=> sendMessageForOrder(o, currentUid);
+      // Thread'e git
+      $('#btnGoThread').onclick = ()=>{
+        const q=new URLSearchParams({ thread:o.threadId||'', order:o.id });
+        location.href='/docs/mesajlar.html?'+q.toString();
+      };
     }
 
-    // ===== sipariş oluşturma
-    function bindOrderButton(){
-      $('#orderBtn')?.addEventListener('click', async ()=>{
-        const qty  = Math.max(1, parseInt($('#qtyInput')?.value || '1', 10) || 1);
-        const note = ($('#noteInput')?.value || '').toString().slice(0,500);
-        await createOrderForListing(LISTING_ID, qty, note);
-      });
+    async function updateOrder(id, data){
+      const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const ref = doc(window.__fb.db,'orders',id);
+      await updateDoc(ref,{...data, updatedAt:serverTimestamp()});
     }
 
-    async function createOrderForListing(listingId, qty, note){
-      try{
-        const fb = window.__fb;
-        if(!fb?.auth?.currentUser){ toast('Giriş yapın'); return; }
-        if(!LISTING){ toast('İlan bulunamadı'); return; }
-        if(!SELLER_ID){ toast('Satıcı bilgisi eksik'); return; }
+    // Onay akışı: thread yoksa oluştur + statüyü 'approved'
+    async function approveOrder(o){
+      const {collection,addDoc,doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      let threadId = o.threadId;
+      if(!threadId){
+        const thRef = await addDoc(collection(window.__fb.db,'messages'),{
+          createdAt: serverTimestamp(),
+          participants: [o.sellerId, o.buyerId],
+          lastText: 'Sipariş onaylandı',
+          lastAt: serverTimestamp(),
+          orderId: o.id
+        });
+        threadId = thRef.id;
+        await addDoc(collection(window.__fb.db,'messages',threadId,'items'),{
+          createdAt: serverTimestamp(),
+          from: o.sellerId,
+          text: 'Sipariş onaylandı',
+          sys: true
+        });
+      }
+      await updateDoc(doc(window.__fb.db,'orders',o.id),{status:'approved', threadId, updatedAt:serverTimestamp()});
+      toast('✓ Onaylandı');
+      location.reload();
+    }
 
-        const { doc, getDoc, collection, addDoc, serverTimestamp } =
+    // Siparişe mesaj yaz (thread yoksa açar)
+    async function sendMessageForOrder(o, currentUid){
+      try{
+        const text = ($('#msgInput').value||'').trim();
+        if(!text){ toast('Mesaj boş olamaz'); return; }
+
+        const {collection,addDoc,doc,getDoc,serverTimestamp,setDoc} =
           await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-        // Alıcı profilini çek (ad/şehir/telefon)
-        const uid = fb.auth.currentUser.uid;
-        const buyerSnap = await getDoc(doc(fb.db,'users',uid));
-        const U = buyerSnap.exists() ? (buyerSnap.data()||{}) : {};
+        let threadId = o.threadId;
 
-        const price = Number(LISTING.price||0);
-        const payload = {
-          buyerId: uid,                         // RULES gereği zorunlu ve auth.uid ile aynı
-          sellerId: SELLER_ID,                  // satıcı paneli sellerId ile dinliyor
-          listingId: listingId,
-          listingTitle: LISTING.title || LISTING.name || 'İlan',
-          listingPrice: price,
-
-          buyerName: U.name || fb.auth.currentUser.displayName || '',
-          buyerCity: U.city || U.district || '',
-          buyerPhone: U.phone || '',
-
-          qty: Math.max(1, qty||1),
-          total: Math.max(0, Math.round(price * Math.max(1, qty||1))),
-          note: note || '',
-          status: 'pending',
-          createdAt: serverTimestamp()
-        };
-
-        const ref = await addDoc(collection(fb.db,'orders'), payload);
-
-        // Satıcıya bildirim (opsiyonel)
-        try{
-          await addDoc(collection(fb.db,'notifications'), {
-            to: SELLER_ID,
-            type: 'order_new',
-            orderId: ref.id,
-            text: (payload.buyerName || 'Bir alıcı') + ' yeni sipariş verdi',
-            createdAt: serverTimestamp()
+        // Thread yoksa oluştur
+        if(!threadId){
+          const thRef = await addDoc(collection(window.__fb.db,'messages'),{
+            createdAt: serverTimestamp(),
+            participants: [o.sellerId, o.buyerId],
+            lastText: text.slice(0,120),
+            lastAt: serverTimestamp(),
+            orderId: o.id
           });
-        }catch{}
+          threadId = thRef.id;
+          // orders içine threadId yaz
+          await setDoc(doc(window.__fb.db,'orders',o.id),{threadId},{merge:true});
+          o.threadId = threadId;
+        } else {
+          // lastText/lastAt güncellemek için üst konuyu merge'le
+          await setDoc(doc(window.__fb.db,'messages',threadId),{
+            lastText: text.slice(0,120),
+            lastAt: serverTimestamp()
+          },{merge:true});
+        }
 
-        toast('Siparişiniz oluşturuldu');
-        // İstersen alıcıyı kendi sipariş sayfana taşı:
-        // location.href = '/docs/orders.html';
+        // Mesaj ekle
+        await addDoc(collection(window.__fb.db,'messages',threadId,'items'),{
+          createdAt: serverTimestamp(),
+          from: currentUid,
+          text
+        });
+
+        $('#msgInput').value='';
+        toast('Gönderildi');
       }catch(e){
-        console.error('createOrderForListing',e);
-        toast('Sipariş oluşturulamadı');
+        console.warn('sendMessageForOrder', e);
+        toast('Mesaj gönderilemedi');
       }
     }
   </script>
