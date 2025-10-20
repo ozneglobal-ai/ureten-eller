@@ -85,3 +85,17 @@ form?.addEventListener('submit', async (e)=>{
 if(!form){
   console.warn('[admin-login] #loginForm bulunamadı. admin/index.html içinde doğru id değerlerini kullandığınızdan emin olun.');
 }
+
+// === ŞİFRE SIFIRLAMA ===
+import { sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+document.getElementById('resetBtn')?.addEventListener('click', async ()=>{
+  const email = (emailEl?.value||'').trim();
+  if(!email){ showErr('Lütfen e-posta adresini gir'); return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    showErr('Şifre sıfırlama bağlantısı e-postana gönderildi.');
+  }catch(e){
+    showErr('Gönderilemedi: ' + (e.code || e.message));
+  }
+});
