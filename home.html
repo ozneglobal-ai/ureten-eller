@@ -953,7 +953,7 @@ async function openInspect(id, data){
   const title = safe(data.title || data.name, 'İlan');
   const desc  = safe(data.description, '');
 
-  const profileHref = sellerId ? ('/profile.html?uid=' + encodeURIComponent(sellerId)) : '#';
+  const profileHref = sellerId ? ('/docs/seller.html?uid=' + encodeURIComponent(sellerId)) : '#';
 
   const sellerHTML = `
   <div style="margin-top:.8rem;border-top:1px solid var(--brd);padding-top:.8rem">
