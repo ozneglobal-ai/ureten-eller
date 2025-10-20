@@ -97,7 +97,7 @@
 
     // === PARAM ===
     const params=new URLSearchParams(location.search);
-    const ORDER_ID=params.get('id')||'';
+    const ORDER_ID = params.get('id') || params.get('order') || '';
 
     // === MAIN FLOW ===
     (function wait(){ if(!window.__fb){ return setTimeout(wait,40);} boot(); })();
