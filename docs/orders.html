@@ -281,6 +281,111 @@
         });
       })();
     })();
-  </script>
+
+    <!-- Sipariş ver butonu (UI örneği) -->
+<div style="margin:1rem 0">
+  <label>Adet</label>
+  <input id="qtyInput" type="number" value="1" min="1" step="1" />
+  <br />
+  <label>Not (opsiyonel)</label>
+  <textarea id="noteInput" rows="3" placeholder="İstediğiniz detaylar"></textarea>
+  <br />
+  <button id="orderBtn" class="btn primary">Sipariş Ver</button>
+</div>
+
+<!-- BUNU </body> ÖNCESİNE KOY -->
+<script type="module">
+  // docs/ altında çalıştığımız için bağıl yol:
+  import './firebase-init.js';
+
+  // Sipariş oluşturma
+  async function createOrderForListing(listingId, qty = 1, note = '') {
+    try {
+      const fb = window.__fb;
+      if (!fb?.auth?.currentUser) {
+        alert('Sipariş vermek için giriş yapın.');
+        return;
+      }
+      const uid = fb.auth.currentUser.uid;
+
+      const { doc, getDoc, collection, addDoc, serverTimestamp } =
+        await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+      // İlanı çek → satıcı & fiyat
+      const listingRef  = doc(fb.db, 'listings', listingId);
+      const listingSnap = await getDoc(listingRef);
+      if (!listingSnap.exists()) { alert('İlan bulunamadı.'); return; }
+      const L = listingSnap.data() || {};
+
+      const sellerId = L.sellerId || L.uid || L.userId || L.ownerUid || L.ownerId || L.createdBy || null;
+      if (!sellerId) { alert('Satıcı bilgisi eksik.'); return; }
+
+      // Alıcı profil bilgileri (isim/şehir vs.)
+      const buyerRef  = doc(fb.db, 'users', uid);
+      const buyerSnap = await getDoc(buyerRef);
+      const U = buyerSnap.exists() ? (buyerSnap.data() || {}) : {};
+
+      const qtyNum = Math.max(1, parseInt(qty, 10) || 1);
+      const price  = Number(L.price || 0);
+      const total  = Math.max(0, Math.round(price * qtyNum));
+
+      const payload = {
+        buyerId: uid,                 // KURALLAR İÇİN ŞART
+        sellerId: sellerId,           // Satıcı paneli bu alanla filtreliyor
+        listingId: listingId,
+        listingTitle: L.title || L.name || 'İlan',
+        listingPrice: price || 0,
+
+        buyerName: U.name || fb.auth.currentUser.displayName || '',
+        buyerCity: U.city || U.district || '',
+        buyerPhone: U.phone || '',
+
+        qty: qtyNum,
+        total: total,
+        note: (note || '').toString().slice(0, 500),
+        status: 'pending',
+        createdAt: serverTimestamp()
+      };
+
+      const ordersCol = collection(fb.db, 'orders');
+      const newOrder  = await addDoc(ordersCol, payload);
+
+      // İsteğe bağlı: satıcıya bildirim kaydı
+      try {
+        const notifCol = collection(fb.db, 'notifications');
+        await addDoc(notifCol, {
+          to: sellerId,
+          type: 'order_new',
+          orderId: newOrder.id,
+          text: (U.name || 'Bir alıcı') + ' yeni sipariş verdi',
+          createdAt: serverTimestamp()
+        });
+      } catch {}
+
+      alert('Siparişiniz oluşturuldu.');
+      // İstersen alıcıyı sipariş listesine yönlendir:
+      // location.href = '/docs/orders.html';
+    } catch (e) {
+      console.error('createOrderForListing error', e);
+      alert('Sipariş oluşturulamadı.');
+    }
+  }
+
+  // Bu sayfada query string ile ilan id’si geldiğini varsayıyoruz: /docs/order.html?id=ILAN_ID
+  const params = new URLSearchParams(location.search);
+  const CURRENT_LISTING_ID = params.get('id') || '';
+
+  // Butona bağla
+  document.getElementById('orderBtn')?.addEventListener('click', () => {
+    if (!CURRENT_LISTING_ID) { alert('İlan ID yok.'); return; }
+    const qty  = document.getElementById('qtyInput')?.value || 1;
+    const note = document.getElementById('noteInput')?.value || '';
+    createOrderForListing(CURRENT_LISTING_ID, qty, note);
+  });
+
+  // Global isterse:
+  window.createOrderForListing = createOrderForListing;
+</script>
+
 </body>
 </html>
