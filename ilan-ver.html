@@ -559,6 +559,36 @@
         submitBtn.disabled = false; submitBtn.textContent = (window.__t?.btn_submit) || 'Kaydet';
       }
     });
+
+  // URL'den ilan id'yi çek (docs/ilan.html?id=ILAN_ID)
+  const CURRENT_LISTING_ID = new URLSearchParams(location.search).get('id') || '';
+
+  // Butonu hazırla
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = 'Sipariş Ver';
+  btn.className = 'btn primary'; // senin stil sistemine uyuyorsa
+  btn.onclick = () => {
+    if (!CURRENT_LISTING_ID) {
+      alert('İlan ID bulunamadı.');
+      return;
+    }
+    location.href = '/docs/order.html?listing=' + CURRENT_LISTING_ID;
+  };
+
+  // Önce aksiyon kutusunu dene; yoksa başlıktan sonra ekle
+  const actions = document.querySelector('#detailActions, .actions');
+  if (actions) {
+    actions.appendChild(btn);
+  } else {
+    const h1 = document.querySelector('h1, .title, #title');
+    if (h1 && h1.parentElement) {
+      h1.parentElement.appendChild(btn);
+    } else {
+      document.body.appendChild(btn);
+    }
+  }
+
   </script>
 </body>
 </html>
