@@ -14,7 +14,7 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
-    .wrap{max-width:1280px;margin:0 auto;padding:1rem 1rem 4.5rem}
+    .wrap{max-width:1280px;margin:0 auto;padding:1rem 1rem 6rem}
 
     .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900;letter-spacing:.2px}
@@ -23,6 +23,7 @@
 
     .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
     .btn.ghost{background:transparent}
+    .btn.primary{background:linear-gradient(90deg,var(--c10),var(--c3));border-color:transparent}
 
     .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
     .head h2{margin:0;font-size:clamp(18px,2.2vw,24px)}
@@ -33,6 +34,7 @@
 
     .card{position:relative;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;transition:box-shadow .25s,transform .15s}
     .card:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--glow,#22d3ee),0 0 26px var(--glow,#22d3ee)}
+    .pad{padding:.8rem}
     .thumb{aspect-ratio:1.2/1;background:#0f172a;display:block;background-size:cover;background-position:center}
     .meta{padding:.6rem .7rem 2.1rem}
     .title{font-weight:900}
@@ -46,16 +48,28 @@
 
     .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
     .kv{display:flex;gap:.5rem;align-items:center}
-    .kv label{width:120px;color:var(--muted)}
+    .kv label{width:140px;color:var(--muted)}
     .kv strong{font-weight:800}
 
     .avatarWrap{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
-    .avatar{width:96px;height:96px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center}
+    .avatar{width:112px;height:112px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center}
     .bioBox{margin-top:.6rem;border:1px solid var(--brd);border-radius:12px;padding:.6rem;background:linear-gradient(145deg,var(--card),var(--card2))}
     .bioBox .bioTitle{font-weight:800;margin-bottom:.35rem}
     .bioBox .bioText{white-space:pre-wrap;line-height:1.45}
 
-    .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
+    .stat{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .6rem;border:1px solid var(--brd);border-radius:10px}
+
+    .label{font-size:.78rem;color:var(--muted)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200}
+    .modal[aria-hidden="false"]{display:flex}
+    .backdrop{position:absolute;inset:0;background:#0008}
+    .sheet{position:relative;z-index:1;width:min(600px,92vw);border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));padding:1rem}
+    .field{display:grid;gap:.35rem;margin:.65rem 0}
+    .input, textarea{width:100%;padding:.65rem .75rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font:inherit}
+
+    .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1300;display:none}
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
@@ -68,7 +82,7 @@
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <button class="btn ghost" onclick="location.href='/docs/home.html'">Ana Sayfa</button>
+      <button id="homeBtn" class="btn ghost">Ana Sayfa</button>
     </div>
 
     <section class="head" aria-labelledby="pTitle">
@@ -87,30 +101,65 @@
                 <div class="bioTitle">Biyografi</div>
                 <div id="uBio" class="bioText">—</div>
               </div>
+              <div class="row" style="margin-top:.5rem;gap:.5rem">
+                <span class="stat"><span class="label">İlan</span><strong id="statListings">0</strong></span>
+                <span class="stat"><span class="label">Puan</span><strong id="statRating">—</strong></span>
+              </div>
             </div>
             <div>
               <div class="kv"><label>Ad Soyad</label><strong id="uName">—</strong></div>
               <div class="kv"><label>Şehir</label><strong id="uCity">—</strong></div>
               <div class="kv"><label>Telefon</label><strong id="uPhone">—</strong></div>
+              <div class="kv"><label>E‑posta</label><strong id="uEmail">—</strong></div>
+              <div class="kv"><label>Web/Instagram</label><strong id="uLinks">—</strong></div>
             </div>
           </div>
         </section>
 
         <section style="margin-top:1rem" aria-labelledby="listTitle">
-          <div class="head"><h2 id="listTitle">Yayındaki İlanlar</h2><span class="mini" id="listCount"></span></div>
+          <div class="head">
+            <h2 id="listTitle">Tüm İlanlar</h2>
+            <span class="mini" id="listCount"></span>
+          </div>
           <div id="listGrid" class="grid"></div>
+        </section>
+
+        <section style="margin-top:1rem" aria-labelledby="allTitle">
+          <div class="head"><h2 id="allTitle">Tüm Bilgiler</h2></div>
+          <div id="allInfo" class="card pad"></div>
         </section>
       </main>
 
       <aside>
         <section aria-labelledby="infoTitle">
           <div class="head"><h2 id="infoTitle">Bilgi</h2></div>
-          <div class="card" style="padding:.8rem">
+          <div class="card pad">
             <div class="row"><span>Doğrulama:</span><strong id="vStatus">—</strong></div>
             <div class="row" style="margin-top:.35rem"><span>Üyelik:</span><strong id="mStatus">—</strong></div>
           </div>
         </section>
       </aside>
+    </div>
+
+    <!-- Teklif Modal -->
+    <div id="offerModal" class="modal" aria-hidden="true">
+      <div class="backdrop" onclick="closeOffer()"></div>
+      <div class="sheet">
+        <h3 style="margin:0 0 .5rem">Teklif Ver</h3>
+        <div class="mini" id="offerListingTitle">—</div>
+        <div class="field">
+          <label class="label" for="offerPrice">Teklif (TL)</label>
+          <input id="offerPrice" class="input" type="number" min="1" step="1" placeholder="Örn. 250" />
+        </div>
+        <div class="field">
+          <label class="label" for="offerMsg">Mesaj (opsiyonel)</label>
+          <textarea id="offerMsg" rows="4" placeholder="İstediğiniz detayları yazın"></textarea>
+        </div>
+        <div class="row" style="justify-content:flex-end;gap:.5rem">
+          <button class="btn ghost" onclick="closeOffer()">Vazgeç</button>
+          <button class="btn primary" onclick="submitOffer()">Teklifi Gönder</button>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast" role="status"></div>
@@ -121,6 +170,14 @@
   const $ = (s)=>document.querySelector(s);
   function toast(msg){ const t=$('#toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>{t.style.display='none'},1800) }
   function fmtPrice(v){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{ return (v||0)+' TL'; } }
+  function fmtDate(x){
+    try{
+      if (x?.toMillis) return new Date(x.toMillis()).toLocaleString('tr-TR');
+      if (typeof x==='number') return new Date(x).toLocaleString('tr-TR');
+      const d=new Date(x); if(!isNaN(d)) return d.toLocaleString('tr-TR');
+    }catch{}
+    return '—';
+  }
 
   // Cloudinary yardımcıları (home.html ile uyumlu)
   const CLOUDINARY_CLOUD = window.CLOUDINARY_CLOUD || 'ozneglobal';
@@ -142,15 +199,75 @@
     return raw;
   }
 
+  function labelOf(k){
+    const map={
+      uid:'Kullanıcı ID', email:'E-posta', username:'Kullanıcı Adı',
+      name:'Ad Soyad', displayName:'Görünen Ad', bio:'Biyografi',
+      phone:'Telefon', whatsapp:'WhatsApp', website:'Web', instagram:'Instagram',
+      facebook:'Facebook', tiktok:'TikTok', telegram:'Telegram',
+      city:'Şehir', district:'İlçe', province:'İl', address:'Adres',
+      role:'Rol', roles:'Roller', isVerified:'Doğrulama', verified:'Doğrulama',
+      isPremium:'Üyelik', premium:'Üyelik', premiumUntil:'Üyelik Bitiş',
+      createdAt:'Kayıt Tarihi', lastLoginAt:'Son Giriş', lastSeen:'Son Görülme',
+      listingsCount:'İlan Sayısı', ordersCount:'Sipariş Sayısı',
+      rating:'Puan', ratingsCount:'Puanlayan',
+      iban:'IBAN', taxNo:'Vergi No', identityVerified:'Kimlik Doğrulama',
+      birthday:'Doğum Tarihi', gender:'Cinsiyet', avatar:'Avatar', photoURL:'Fotoğraf'
+    };
+    return map[k] || k;
+  }
+  function fmtVal(k,v){
+    if (v===null || v===undefined) return '—';
+    if (/At$|Until$|Date|birthday|lastSeen/i.test(k)) return fmtDate(v);
+    if (typeof v==='boolean') return v ? 'Evet' : 'Hayır';
+    if (Array.isArray(v)) return v.length ? v.join(', ') : '—';
+    if (typeof v==='object'){
+      const s=JSON.stringify(v); return s.length>120? s.slice(0,117)+'…' : s;
+    }
+    return String(v);
+  }
+  function renderAllUserFields(u){
+    const el=document.getElementById('allInfo'); if(!el) return;
+    const allow=[
+      'uid','email','username','name','displayName','bio',
+      'phone','whatsapp','website','instagram','facebook','tiktok','telegram',
+      'province','city','district','address',
+      'role','roles','isVerified','verified','isPremium','premium','premiumUntil',
+      'createdAt','lastLoginAt','lastSeen',
+      'listingsCount','ordersCount','rating','ratingsCount',
+      'iban','taxNo','identityVerified','birthday','gender','photoURL','avatar'
+    ];
+    const rows = [];
+    allow.forEach(k=>{
+      const v = (u && (u[k]!==undefined)) ? u[k] : undefined;
+      if (v===undefined || v==='' || (Array.isArray(v)&&v.length===0)) return;
+      rows.push(`<div class="kv"><label style=\"width:180px;color:var(--muted)\">${labelOf(k)}</label><strong>${fmtVal(k,v)}</strong></div>`);
+    });
+    el.innerHTML = rows.length ? rows.join('') : '<div class="mini">Gösterilecek bilgi yok.</div>';
+  }
+
+  function statusBadge(d){
+    const s=(d.status||'').toString();
+    const map={approved:'Onaylı', active:'Aktif', expired:'Süresi Doldu', rejected:'Reddedildi', pending:'Onay Bekliyor', draft:'Taslak'};
+    const label=map[s]||s||'—';
+    return `<span class="badge">${label}</span>`;
+  }
+
   function cardHTML(d,id){
     const title = d.title || d.name || 'İlan';
-    const badge = (d.showcase===true||d.isShowcase===true||d.vitrin===true) ? '<span class="badge star">⭐ Vitrin</span>' : '';
-    return `<a class="card" href="/ilan/${id}" style="--glow:#22d3ee">
-      <span class="thumb" id="t-${id}"></span>
+    const badge = (d.showcase===true||d.isShowcase===true||d.vitrin===true) ? '<span class="badge star">⭐ Vitrin</span>' : statusBadge(d);
+    const price = (typeof d.price==='number' && d.price>0) ? `<div class="mini">${fmtPrice(d.price)}</div>` : '';
+    return `<div class="card" style="--glow:#22d3ee">
+      <a class="thumb" id="t-${id}" href="/ilan/${id}" aria-label="İlana git"></a>
       <div class="meta">
         <div class="row" style="justify-content:space-between"><div class="title">${title}</div>${badge}</div>
+        ${price}
+        <div class="row" style="margin-top:.6rem;gap:.5rem">
+          <a class="btn" href="/ilan/${id}">İlanı Aç</a>
+          <button class="btn primary" data-offer="${id}" data-title="${(title+'').replace(/"/g,'')}">Teklif Ver</button>
+        </div>
       </div>
-    </a>`;
+    </div>`;
   }
 
   function renderListings(arr){
@@ -161,7 +278,7 @@
     grid.appendChild(frag);
     $('#listCount').textContent = `(${arr.length})`;
 
-    // Kapakları çöz
+    // Kapakları çöz ve butonları bağla
     (async()=>{
       for(const it of arr){
         const photos=[];
@@ -171,21 +288,68 @@
         if(Array.isArray(it.data.images)){
           it.data.images.forEach(x=>{ if(!x) return; if(typeof x==='string') photos.push(x); else if(x.secure_url) photos.push(x.secure_url); else if(x.url) photos.push(x.url); else if(x.public_id) photos.push(x.public_id); });
         }
-        const url = await resolveURL(photos[0]||'/assets/icons/ureteneller.png',{w:600,h:450,crop:'fill',fmt:'auto',q:'auto'});
+        const url = await resolveURL(photos[0]||'/assets/icons/ureteneller.png',{w:800,h:600,crop:'fill',fmt:'auto',q:'auto'});
         const el = document.getElementById('t-'+it.id); if(el){ el.classList.add('thumb'); el.style.backgroundImage=`url('${String(url).replace(/"/g,'')}')`; }
       }
+      // Offer buttons
+      document.querySelectorAll('[data-offer]').forEach(btn=>{
+        btn.addEventListener('click',()=>openOffer(btn.dataset.offer, btn.dataset.title));
+      });
     })();
   }
 
+  // === Teklif Akışı ===
+  let __offer={ listingId:null, listingTitle:'', sellerId:null };
+  function openOffer(listingId, title){
+    __offer.listingId=listingId; __offer.listingTitle=title||'';
+    document.getElementById('offerListingTitle').textContent = title||'—';
+    document.getElementById('offerPrice').value='';
+    document.getElementById('offerMsg').value='';
+    document.getElementById('offerModal').setAttribute('aria-hidden','false');
+  }
+  function closeOffer(){ document.getElementById('offerModal').setAttribute('aria-hidden','true'); }
+  async function submitOffer(){
+    try{
+      const price = Math.max(1, parseInt(document.getElementById('offerPrice').value||'0',10));
+      const msg = document.getElementById('offerMsg').value||'';
+      const auth = window.__fb?.auth; const db = window.__fb?.db;
+      if(!auth?.currentUser){ toast('Lütfen giriş yapın'); return; }
+      if(!__offer.listingId){ toast('İlan bulunamadı'); return; }
+      const { addDoc, collection, serverTimestamp, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      // İlanı çekerek satıcıyı doğrula
+      let sellerId = __offer.sellerId;
+      if(!sellerId){
+        try{ const snap=await getDoc(doc(db,'listings',__offer.listingId)); if(snap.exists()) sellerId = snap.data()?.sellerId || snap.data()?.uid || snap.data()?.userId || null; }catch{}
+      }
+      if(!sellerId){ toast('Satıcı bulunamadı'); return; }
+      await addDoc(collection(db,'offers'),{
+        listingId: __offer.listingId,
+        listingTitle: __offer.listingTitle||null,
+        sellerId,
+        buyerId: auth.currentUser.uid,
+        price,
+        message: msg,
+        status: 'sent',
+        createdAt: serverTimestamp()
+      });
+      toast('Teklifiniz gönderildi');
+      closeOffer();
+    }catch(e){ console.error(e); toast('Teklif gönderilemedi'); }
+  }
+  window.openOffer=openOffer; window.closeOffer=closeOffer; window.submitOffer=submitOffer;
+
+  // === Ana akış ===
   async function boot(){
     try{
+      // Ana Sayfa butonu: home.html içine satıcıya dönmek isterseniz `location.href='/docs/seller.html?uid=...'` yapın
+      document.getElementById('homeBtn').onclick=()=>{ location.href='/docs/home.html'; };
+
       const params=new URLSearchParams(location.search); const uid=params.get('uid');
       if(!uid){ document.body.innerHTML='<div style="padding:1rem">Satıcı bulunamadı (uid yok).</div>'; return; }
 
       // Eğer kullanıcı kendi uid'sini açarsa profil sayfasına yönlendir (opsiyonel)
       try{ const me=window.__fb?.auth?.currentUser; if(me && me.uid===uid){ location.replace('/docs/profile.html'); return; } }catch{}
 
-      // Firebase hazır olmasını bekle
       const ensure=()=> new Promise((res)=>{ if(window.__fb?.db) return res(); document.addEventListener('fb-ready',res,{once:true}); });
       await ensure();
 
@@ -201,31 +365,39 @@
 
       const name=u.name||u.displayName||'Satıcı';
       const city=u.city||u.district||'—';
-      const phone=u.phone||'—'; // İsterseniz gizleyebilirsiniz
+      const phone=u.phone||'—';
+      const email=u.email||'—';
+      const links=[u.website,u.instagram].filter(Boolean).join(' • ') || '—';
       const avatar=u.avatar||u.photoURL||'/assets/img/avatar-default.png';
       const verified = (u.isVerified===true) || (u.verified===true) || (u.role==='verified');
       const premium  = (u.isPremium===true) || (u.premium===true);
 
-      $('#uName').textContent=name;
-      $('#uCity').textContent=city;
-      $('#uPhone').textContent=phone;
-      $('#uBio').textContent=u.bio||'—';
-      $('#avatar').style.backgroundImage=`url('${avatar}')`;
-      $('#uBadges').innerHTML = `${verified? '✅ Onaylı Satıcı' : '👤 Standart Satıcı'} ${premium? ' • ⭐ Premium' : ''}`;
-      $('#vStatus').textContent = verified? 'Onaylı' : 'Standart';
-      $('#mStatus').textContent = premium? 'Premium' : 'Standart';
-      $('#pSub').textContent = name;
+      document.getElementById('uName').textContent=name;
+      document.getElementById('uCity').textContent=city;
+      document.getElementById('uPhone').textContent=phone;
+      document.getElementById('uEmail').textContent=email;
+      document.getElementById('uLinks').textContent=links;
+      document.getElementById('uBio').textContent=u.bio||'—';
+      document.getElementById('avatar').style.backgroundImage=`url('${avatar}')`;
+      document.getElementById('uBadges').innerHTML = `${verified? '✅ Onaylı Satıcı' : '👤 Standart Satıcı'} ${premium? ' • ⭐ Premium' : ''}`;
+      document.getElementById('vStatus').textContent = verified? 'Onaylı' : 'Standart';
+      document.getElementById('mStatus').textContent = premium? 'Premium' : 'Standart';
+      document.getElementById('pSub').textContent = name;
 
-      // İlanları çek (yayında olanlar)
+      // İlanları çek (satıcının TÜM ilanları)
       const baseCol = collection(db,'listings');
       const fields = ['sellerId','userId','ownerId','uid','createdBy'];
       const snaps = await Promise.all(fields.map(f=>getDocs(query(baseCol, where(f,'==', uid))).catch(()=>null)));
       const seen=new Set(); const arr=[];
-      const isApproved=(d)=> (d.status==='approved' || d.status==='published' || d.isPublished===true);
-      snaps.forEach(snap=>{ if(!snap) return; snap.forEach(ds=>{ if(seen.has(ds.id)) return; seen.add(ds.id); const d=ds.data()||{}; if(isApproved(d)) arr.push({id:ds.id,data:d}); }); });
+      snaps.forEach(snap=>{ if(!snap) return; snap.forEach(ds=>{ if(seen.has(ds.id)) return; seen.add(ds.id); const d=ds.data()||{}; arr.push({id:ds.id,data:d}); }); });
       // Son yüklenenler önce
       arr.sort((a,b)=>{ const ta=(a.data.createdAt?.toMillis?.()||Date.parse(a.data.createdAt)||0); const tb=(b.data.createdAt?.toMillis?.()||Date.parse(b.data.createdAt)||0); return tb-ta; });
+      document.getElementById('statListings').textContent=String(arr.length);
+      document.getElementById('statRating').textContent = (u.rating!=null? u.rating : '—');
       renderListings(arr);
+
+      // Tüm alanları yazdır
+      renderAllUserFields(u);
 
     }catch(e){ console.error(e); toast('Sayfa yüklenemedi'); }
   }
