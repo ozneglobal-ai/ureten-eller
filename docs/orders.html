@@ -72,7 +72,7 @@
       <div class="row" style="gap:.5rem">
         <button id="btnBulkDelete" class="btn danger">🗑️ Seçili Siparişleri Sil</button>
       </div>
-      <div class="row mini"><span id="countText"></span></div>
+      <div class="row mini"><span id="countText">Görülmemiş 0</span></div>
     </section>
 
     <section style="margin-top:.6rem">
@@ -152,7 +152,6 @@
       const data = snap.exists()? (snap.data()||{}) : null; listingCache.set(listingId,data); return data;
     }catch{return null}
   }
-  // Alıcıyı çöz (uid yoksa tel/email)
   async function findUserBy(field, value){
     try{
       if(!value) return null;
@@ -218,7 +217,6 @@
   let stopUnsub=null;
   let firstLoad=true;
   let __bag=new Map(); // id -> row obj
-  const VISIBLE_STATUSES=['new','paid','shipped','done','canceled']; // deleted yok!
 
   async function startListener(){
     if(stopUnsub){ stopUnsub(); stopUnsub=null; }
@@ -230,65 +228,54 @@
     const db = window.__fb.db; const me = window.__fb.auth.currentUser;
     if(!me){ $('#list').innerHTML='<div class="mini">'+t('login_needed')+'</div>'; return; }
 
-    const sellerFields=['sellerId','sellerUID','ownerId','uid','createdBy'];
-    const unsubs=[];
+    // SADELEŞTİRİLDİ: Sadece sellerId == benim UID’im
+    const qBase = query(collection(db,'orders'), where('sellerId','==', me.uid), limit(500));
 
-    // boşalt
-    __bag = new Map();
-    renderFromBag(__bag);
+    stopUnsub = onSnapshot(qBase, async (ss)=>{
+      const rows=[];
+      let unseen=0;
+      for (const d of ss.docs){
+        const data=d.data()||{};
+        // Silinmişleri client-side ELE
+        if((data.status||'').toLowerCase()==='deleted') continue;
 
-    for (const f of sellerFields){
-      try{
-        const qBase = query(
-          collection(db,'orders'),
-          where(f, '==', me.uid),
-          where('status', 'in', VISIBLE_STATUSES),
-          limit(250)
-        );
+        if(data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no') unseen++;
 
-        const unsub = onSnapshot(qBase, async (ss)=>{
-          const promises = ss.docs.map(async d=>{
-            const data = d.data()||{};
-            const rp = await resolvePeer(data);
-            const listing = data.listingId ? await getListing(data.listingId) : null;
-            const isUnseen = (data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no');
-            __bag.set(d.id, { id:d.id, data, peer:rp.user, peerUid:rp.uid, listing, isUnseen });
-          });
-          await Promise.all(promises);
-          renderFromBag(__bag);
-        }, (err)=>{ console.warn('orders snapshot', f, err); });
-
-        unsubs.push(unsub);
-      }catch(e){
-        // Alan yoksa sorun değil
-        console.warn('skip field', f, e?.message||e);
+        const rp = await resolvePeer(data);
+        const listing = data.listingId ? await getListing(data.listingId) : null;
+        rows.push({ id:d.id, data, peer:rp.user, peerUid:rp.uid, listing, isUnseen: (data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no') });
       }
-    }
 
-    stopUnsub=()=>{ unsubs.forEach(u=>{ try{u();}catch{} }); };
+      // store unseen badge for profile
+      try{ localStorage.setItem('ue_unseen_seller_orders', String(unseen)); }catch{}
+
+      // tarihe göre sırala (desc)
+      rows.sort((a,b)=>{
+        const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis() : (new Date(a.data?.createdAt||0)).getTime();
+        const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis() : (new Date(b.data?.createdAt||0)).getTime();
+        return (tb||0) - (ta||0);
+      });
+
+      // render
+      __bag = new Map(rows.map(r=>[r.id,r]));
+      renderFromBag(__bag, unseen);
+
+      // yeni kayıt sesi (ilk yüklemede çalma)
+      if(!firstLoad && ss.docChanges().some(ch=>ch.type==='added')) playDing();
+      firstLoad=false;
+    }, (err)=>{
+      console.error('orders onSnapshot', err);
+      $('#list').innerHTML = '<div class="mini">Kayıt okunamadı (izin veya ağ).</div>';
+    });
   }
 
-  function renderFromBag(bagMap){
+  function renderFromBag(bagMap, unseenCount){
     const rows = [...bagMap.values()];
-    // unseen
-    const unseen = rows.reduce((acc,r)=> acc + (r.isUnseen?1:0), 0);
-    try{ localStorage.setItem('ue_unseen_seller_orders', String(unseen)); }catch{}
-
-    // tarih desc
-    rows.sort((a,b)=>{
-      const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis()
-                : (new Date(a.data?.createdAt||0)).getTime();
-      const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis()
-                : (new Date(b.data?.createdAt||0)).getTime();
-      return (tb||0) - (ta||0);
-    });
+    const unseen = unseenCount!=null ? unseenCount : rows.reduce((acc,r)=> acc + (r.isUnseen?1:0), 0);
 
     const html = rows.map(({id,data,peer,peerUid,listing}) => cardOrderHTML(id,data,peer,peerUid,listing));
     $('#list').innerHTML = html.length ? html.join('') : `<div class="mini">${t('none')}</div>`;
     $('#countText').textContent = html.length ? `${t('total')} ${html.length} • ${t('unseen')} ${unseen}` : `${t('unseen')} ${unseen}`;
-
-    if(!firstLoad && rows.length){ playDing(); }
-    firstLoad=false;
   }
 
   // ========= Bulk delete (status:"deleted") =========
@@ -300,7 +287,7 @@
         await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
       await ensure();
       const db=window.__fb.db;
-      // Firestore'da batch ile de yapılabilir; küçük sayılar için ardışık update yeterli
+
       for(const id of ids){
         await updateDoc(doc(db,'orders',id), { status:'deleted', updatedAt: serverTimestamp() });
         __bag.delete(id); // anında listeden düşür
@@ -316,11 +303,8 @@
 
   // ========= Boot =========
   (async()=>{
-    // Lang
     applyI18n();
-
     await ensure();
-
     const {auth,onAuthStateChanged} = window.__fb;
     onAuthStateChanged(auth, async (u)=>{
       if(!u){ $('#list').innerHTML='<div class="mini">'+t('login_needed')+'</div>'; return; }
