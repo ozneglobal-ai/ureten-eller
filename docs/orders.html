@@ -20,16 +20,16 @@
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900;letter-spacing:.2px}
     .logo img{width:32px;height:32px}
     .spacer{flex:1}
-
     .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
     .btn.ghost{background:transparent}
     .btn.primary{background:linear-gradient(90deg,var(--info),#8b5cf6);border-color:transparent}
     .btn.danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);border-color:#7a1b1b}
+    .mini{color:var(--muted)}
+    select.lang{background:#0b1220;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem}
 
-    .head{display:grid;grid-template-columns:1fr auto;gap:.75rem;align-items:center;margin:1rem 0 .6rem}
-    .filters{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-    .input{padding:.55rem .65rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font:inherit}
-    select.input{padding-right:2rem}
+    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
+    .leftHead{display:flex;align-items:center;gap:.6rem}
+    .rightHead{display:flex;align-items:center;gap:.6rem}
 
     .grid{display:grid;gap:.85rem;grid-template-columns:repeat(1,minmax(0,1fr))}
     @media(min-width:920px){.grid{grid-template-columns:repeat(2,1fr)}}
@@ -42,7 +42,6 @@
     .kv label{width:120px;color:var(--muted)}
     .kv strong{font-weight:800}
     .title{font-weight:900}
-    .mini{color:var(--muted)}
     .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .55rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
     .unseen{border:1px solid var(--info); box-shadow:0 0 0 1px #1f4cff22}
 
@@ -64,28 +63,23 @@
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
-      <button id="homeBtn" class="btn ghost">Ana Sayfa</button>
+      <label class="mini" for="langSel" data-i18n="language">Dil</label>
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="tr">Türkçe</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+        <option value="ar">العربية</option>
+      </select>
+      <button id="homeBtn" class="btn ghost" data-i18n="home">Ana Sayfa</button>
     </div>
 
     <section class="head" aria-labelledby="pTitle">
-      <div class="filters">
+      <div class="leftHead">
         <h2 id="pTitle" style="margin:0" data-i18n="title_short">Siparişlerim</h2>
         <div class="mini" id="countText"></div>
       </div>
-      <div class="filters">
-        <input id="searchInput" class="input" placeholder="İlan adı / ID ara…" data-i18n-ph="search_ph" />
-        <select id="statusSel" class="input" aria-label="Duruma göre">
-          <option value="" data-i18n="status_all">Durum (hepsi)</option>
-          <option value="new" data-i18n="status_new">Yeni</option>
-          <option value="paid" data-i18n="status_paid">Ödendi</option>
-          <option value="shipped" data-i18n="status_shipped">Kargoda</option>
-          <option value="done" data-i18n="status_done">Tamamlandı</option>
-          <option value="canceled" data-i18n="status_canceled">İptal</option>
-        </select>
-
-        <label class="input" style="display:flex;gap:.5rem;align-items:center;cursor:pointer">
-          <input id="selAll" type="checkbox" /> <span data-i18n="select_all">Tümünü Seç</span>
-        </label>
+      <div class="rightHead">
+        <!-- SADECE SİLME BUTONU -->
         <button id="btnBulkDelete" class="btn danger" type="button">🗑️ <span data-i18n="bulk_delete">Seçili Siparişleri Sil</span></button>
       </div>
     </section>
@@ -99,45 +93,46 @@
   </div>
 
   <script>
-  /* ================== I18N (TR/EN/DE/AR) ================== */
+  /* ================== I18N (TR varsayılan) ================== */
   const I18N={
-    tr:{title:'Siparişlerim • Üreten Eller',title_short:'Siparişlerim',search_ph:'İlan adı / ID ara…',
-        status_all:'Durum (hepsi)',status_new:'Yeni',status_paid:'Ödendi',status_shipped:'Kargoda',status_done:'Tamamlandı',status_canceled:'İptal',
+    tr:{title:'Siparişlerim • Üreten Eller',title_short:'Siparişlerim',language:'Dil',
+        bulk_delete:'Seçili Siparişleri Sil',home:'Ana Sayfa',
+        status_new:'Yeni',status_paid:'Ödendi',status_shipped:'Kargoda',status_done:'Tamamlandı',status_canceled:'İptal',
         card_listing:'İlan',card_buyer:'Alıcı',card_note:'Müşteri Notu',btn_detail:'Detay',btn_reply:'Cevap Yaz',
-        bulk_delete:'Seçili Siparişleri Sil',select_all:'Tümünü Seç',
         confirm_delete_many:'Seçili siparişler "deleted" olarak işaretlensin mi?',none:'Kayıt yok.',
         toast_ok:'✓',toast_err:'Hata',login_needed:'Lütfen giriş yapın.',
-        counter_total:'Toplam',counter_unseen:'Görülmemiş',counter_new:'Yeni',home:'Ana Sayfa'},
-    en:{title:'My Orders • Ureten Eller',title_short:'My Orders',search_ph:'Search listing / ID…',
-        status_all:'Status (all)',status_new:'New',status_paid:'Paid',status_shipped:'Shipped',status_done:'Done',status_canceled:'Canceled',
+        counter_total:'Toplam',counter_unseen:'Görülmemiş',counter_new:'Yeni'},
+    en:{title:'My Orders • Ureten Eller',title_short:'My Orders',language:'Language',
+        bulk_delete:'Delete Selected Orders',home:'Home',
+        status_new:'New',status_paid:'Paid',status_shipped:'Shipped',status_done:'Done',status_canceled:'Canceled',
         card_listing:'Listing',card_buyer:'Buyer',card_note:'Customer Note',btn_detail:'Detail',btn_reply:'Reply',
-        bulk_delete:'Delete Selected Orders',select_all:'Select All',
         confirm_delete_many:'Mark selected orders as "deleted"?',none:'No records.',
         toast_ok:'✓',toast_err:'Error',login_needed:'Please sign in.',
-        counter_total:'Total',counter_unseen:'Unseen',counter_new:'New',home:'Home'},
-    de:{title:'Bestellungen • Ureten Eller',title_short:'Bestellungen',search_ph:'Anzeige / ID suchen…',
-        status_all:'Status (alle)',status_new:'Neu',status_paid:'Bezahlt',status_shipped:'Versandt',status_done:'Erledigt',status_canceled:'Storniert',
+        counter_total:'Total',counter_unseen:'Unseen',counter_new:'New'},
+    de:{title:'Bestellungen • Ureten Eller',title_short:'Bestellungen',language:'Sprache',
+        bulk_delete:'Ausgewählte Bestellungen löschen',home:'Startseite',
+        status_new:'Neu',status_paid:'Bezahlt',status_shipped:'Versandt',status_done:'Erledigt',status_canceled:'Storniert',
         card_listing:'Anzeige',card_buyer:'Käufer',card_note:'Kundennotiz',btn_detail:'Details',btn_reply:'Antworten',
-        bulk_delete:'Ausgewählte Bestellungen löschen',select_all:'Alle auswählen',
         confirm_delete_many:'Ausgewählte Bestellungen als „deleted“ markieren?',none:'Keine Einträge.',
         toast_ok:'✓',toast_err:'Fehler',login_needed:'Bitte anmelden.',
-        counter_total:'Summe',counter_unseen:'Ungelesen',counter_new:'Neu',home:'Startseite'},
-    ar:{title:'طلباتي • Ureten Eller',title_short:'طلباتي',search_ph:'ابحث في الإعلان / المعرّف…',
-        status_all:'الحالة (الكل)',status_new:'جديد',status_paid:'مدفوع',status_shipped:'قيد الشحن',status_done:'مكتمل',status_canceled:'ملغي',
+        counter_total:'Summe',counter_unseen:'Ungelesen',counter_new:'Neu'},
+    ar:{title:'طلباتي • Ureten Eller',title_short:'طلباتي',language:'اللغة',
+        bulk_delete:'حذف الطلبات المحددة',home:'الرئيسية',
+        status_new:'جديد',status_paid:'مدفوع',status_shipped:'قيد الشحن',status_done:'مكتمل',status_canceled:'ملغي',
         card_listing:'الإعلان',card_buyer:'المشتري',card_note:'ملاحظة العميل',btn_detail:'تفاصيل',btn_reply:'رد',
-        bulk_delete:'حذف الطلبات المحددة',select_all:'تحديد الكل',
         confirm_delete_many:'وضع علامة "deleted" على الطلبات المحددة؟',none:'لا توجد سجلات.',
         toast_ok:'✓',toast_err:'خطأ',login_needed:'يرجى تسجيل الدخول.',
-        counter_total:'الإجمالي',counter_unseen:'غير مقروء',counter_new:'جديد',home:'الرئيسية'}
+        counter_total:'الإجمالي',counter_unseen:'غير مقروء',counter_new:'جديد'}
   };
   const LANG_KEY='ue_lang_v1';
-  function pickLang(){ try{ const s=localStorage.getItem(LANG_KEY); if(s&&I18N[s]) return s; const n=(navigator.language||'tr').slice(0,2); return I18N[n]?n:'tr'; }catch{return 'tr'} }
+  function pickLang(){ try{ const s=localStorage.getItem(LANG_KEY); if(s&&I18N[s]) return s; return 'tr'; }catch{return 'tr'} }
+  function setLang(l){ localStorage.setItem(LANG_KEY,l); applyI18n(); }
   function t(k){ const d=I18N[pickLang()]||I18N.tr; return d[k]||k; }
   function applyI18n(){
     document.title=t('title');
     document.querySelectorAll('[data-i18n]').forEach(n=>{ const k=n.getAttribute('data-i18n'); if(I18N[pickLang()][k]) n.textContent=t(k); });
-    const phEl=document.querySelector('[data-i18n-ph="search_ph"]'); if(phEl) phEl.placeholder=t('search_ph');
-    document.getElementById('homeBtn').textContent = t('home');
+    document.documentElement.lang = pickLang();
+    const sel=document.getElementById('langSel'); if(sel) sel.value=pickLang();
   }
 
   /* ================== Helpers ================== */
@@ -148,8 +143,9 @@
   function digits(x){ return String(x||'').replace(/\D/g,''); }
   function playDing(){ const a=$('#ding'); if(a){ a.currentTime=0; a.play().catch(()=>{}); } }
 
-  // Nav
+  // Nav + Lang
   $('#homeBtn').onclick=()=>{ location.href='/home.html'; };
+  const langSel=document.getElementById('langSel'); if(langSel){ langSel.value=pickLang(); langSel.onchange=(e)=>setLang(e.target.value); }
 
   // Firebase ready
   const ensure=()=> new Promise(r=>{ if(window.__fb?.db && window.__fb?.auth){ r(); } else { document.addEventListener('fb-ready',r,{once:true}); }});
@@ -180,7 +176,7 @@
     }catch{return null}
   }
 
-  // users koleksiyonunda tekil kullanıcı arama (buyerId boş ise tel/email ile bul)
+  // users koleksiyonunda tekil kullanıcı arama (buyerId yoksa tel/email ile bul)
   async function findUserBy(field, value){
     try{
       if(!value) return null;
@@ -256,7 +252,7 @@
 
   function renderEmpty(){ $('#list').innerHTML = `<div class="mini">${t('none')}</div>`; $('#countText').textContent=''; }
 
-  /* ================== Live listener ================== */
+  /* ================== Live listener (yalnız satıcı) ================== */
   async function startListener(){
     if(stopUnsub){ stopUnsub(); stopUnsub=null; }
     await ensure();
@@ -264,30 +260,22 @@
     const db = window.__fb.db; const me = window.__fb.auth.currentUser;
     if(!me){ $('#list').innerHTML=`<div class="mini">${t('login_needed')}</div>`; return; }
 
-    // Yalnızca SATICI siparişleri
     const baseQ = query(collection(db,'orders'), where('sellerId','==', me.uid), limit(300));
 
     stopUnsub = onSnapshot(baseQ, async (ss)=>{
-      const term = ($('#searchInput').value||'').toLowerCase().trim();
-      const statusFilter = $('#statusSel').value||'';
-
       const rowsRaw = ss.docs
         .map(d=>({id:d.id,data:d.data()||{}}))
         .filter(x => x.data && x.data.status !== 'deleted'); // silinenler görünmez
 
-      // “yeni” sayısı + “görülmemiş” sayısı
       const unseen = rowsRaw.reduce((n,x)=> n + ((x.data.sellerSeen===false||x.data.sellerSeen===0||x.data.sellerSeen==='no')?1:0), 0);
       const newCount = rowsRaw.reduce((n,x)=> n + (x.data.status==='new'?1:0), 0);
 
-      // profilde rozet için localStorage
       try{
         localStorage.setItem('ue_unseen_seller_orders', String(unseen));
-        // kullanıcı profili eski anahtarı okuyorsa diye “pending”e de yazalım
         localStorage.setItem('ue_orders_pending_count', String(newCount));
         localStorage.setItem('ue_orders_new_count', String(newCount));
       }catch{}
 
-      // zenginleştir + sırala
       const rows = await Promise.all(rowsRaw.map(async x=>{
         const peer = await resolvePeer(x.data);
         const listing = x.data.listingId ? await getListing(x.data.listingId) : null;
@@ -299,14 +287,8 @@
         return (tb||0) - (ta||0);
       });
 
-      // filtre
       const items=[];
       rows.forEach(({id,data,peer,peerUid,listing})=>{
-        if(term){
-          const hay = `${id} ${(data.listingTitle||'')} ${(data.listingId||'')}`.toLowerCase();
-          if(!hay.includes(term)) return;
-        }
-        if(statusFilter && data.status!==statusFilter) return;
         items.push(cardOrderHTML(id,data,peer,peerUid,listing));
       });
 
@@ -315,47 +297,26 @@
         ? `${t('counter_total')} ${items.length} • ${t('counter_unseen')} ${unseen} • ${t('counter_new')} ${newCount}`
         : `${t('counter_unseen')} ${unseen}`;
 
-      // Kart içi checkbox eventleri
+      // checkbox eventleri
       document.querySelectorAll('[data-act="sel"]').forEach(cb=>{
         cb.addEventListener('change', (e)=>{
           const card = e.target.closest('.card'); const id = card?.dataset?.id;
           if(!id) return;
           if(e.target.checked){ selection.add(id); } else { selection.delete(id); }
-          updateSelAllState();
         });
       });
 
-      // yeni kayıt sesi (ilk yüklemede çalma yok)
+      // sesli uyarı (ilk yüklemede çalma yok)
       const hadAdded = ss.docChanges().some(ch=>ch.type==='added' && (ch.doc.data()?.status!=='deleted'));
       if(!firstLoad && hadAdded) playDing();
       firstLoad=false;
-
-      // Select All mevcut filtreye göre çalışır
-      document.getElementById('selAll').onclick = (e)=>{
-        const checks = Array.from(document.querySelectorAll('[data-act="sel"]'));
-        if(e.target.checked){
-          checks.forEach(x=>{ x.checked=true; const id=x.closest('.card')?.dataset?.id; if(id) selection.add(id); });
-        }else{
-          checks.forEach(x=>{ x.checked=false; const id=x.closest('.card')?.dataset?.id; if(id) selection.delete(id); });
-        }
-      };
-      updateSelAllState();
     }, (err)=>{
       console.error(err);
-      $('#list').innerHTML = `<div class="mini">${t('none')}</div>`;
+      renderEmpty();
     });
   }
 
-  function updateSelAllState(){
-    const checks = Array.from(document.querySelectorAll('[data-act="sel"]'));
-    const selAll = document.getElementById('selAll');
-    const total = checks.length;
-    const selCount = checks.filter(x=>x.checked).length;
-    selAll.indeterminate = selCount>0 && selCount<total;
-    selAll.checked = selCount>0 && selCount===total;
-  }
-
-  /* ================== Bulk delete (status:"deleted") ================== */
+  /* ================== Toplu sil (status:"deleted") ================== */
   async function bulkDelete(){
     if(selection.size===0) return;
     if(!confirm(t('confirm_delete_many'))) return;
@@ -363,7 +324,6 @@
       const { doc, updateDoc, serverTimestamp, writeBatch } =
         await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
       const db=window.__fb.db;
-      // batch ile hızlı
       const batch = writeBatch(db);
       selection.forEach(id=>{
         const ref = doc(db,'orders',id);
@@ -371,21 +331,18 @@
       });
       await batch.commit();
       selection.clear();
-      document.getElementById('selAll').checked=false;
-      updateSelAllState();
       toast(t('toast_ok'));
     }catch(e){ console.warn(e); toast(t('toast_err')); }
   }
 
-  /* ================== UI handlers & Boot ================== */
+  /* ================== Boot ================== */
   document.getElementById('btnBulkDelete').onclick = bulkDelete;
-  document.getElementById('statusSel').onchange=()=>startListener();
-  document.getElementById('searchInput').addEventListener('input',()=>startListener());
 
   (async()=>{
     applyI18n();
+    const sel=document.getElementById('langSel');
+    if(sel){ sel.value=pickLang(); sel.addEventListener('change',(e)=>setLang(e.target.value)); }
     await ensure();
-    // giriş kontrolü ve başlat
     const { onAuthStateChanged } = window.__fb;
     onAuthStateChanged(window.__fb.auth, (u)=>{
       if(!u){ location.href='/docs/index.html'; return; }
