@@ -56,6 +56,7 @@
     .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426;margin:.8rem}
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
   </style>
+  <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -106,7 +107,7 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script>
-    // I18N (TR/EN minimal)
+    // ===== I18N =====
     const I18N={
       tr:{title:'Mesajlar • Üreten Eller',brand:'Üreten Eller',back:'Profile Dön',bulk_delete:'Seçili Sil',delete_thread:'Sohbeti Sil',confirm_delete_many:'Seçili sohbetler tamamen silinsin mi? (Karşı tarafta da yok olacak)',confirm_delete_one:'Bu sohbet tamamen silinsin mi? (Karşı tarafta da yok olacak)',confirm_delete_msg:'Bu mesaj silinsin mi? (Kalıcı)',search:'Ara…',none:'Henüz mesaj yok.',send:'Gönder'},
       en:{title:'Messages • Ureten Eller',brand:'Ureten Eller',back:'Back to Profile',bulk_delete:'Delete Selected',delete_thread:'Delete Chat',confirm_delete_many:'Delete selected chats permanently for both sides?',confirm_delete_one:'Delete this chat permanently for both sides?',confirm_delete_msg:'Delete this message permanently?',search:'Search…',none:'No messages yet.',send:'Send'}
@@ -121,6 +122,13 @@
 
     let __uid=null; let __threads=[]; let __filtered=[]; let __sel=new Set(); let __unsubThreads=null; let __unsubItems=null; let __currentThread=null;
 
+    // ===== Utils =====
+    function threadIdFromPair(a,b){ return [a,b].sort().join('__'); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+    function formatDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
+    function getParam(name){ const u=new URL(location.href); return u.searchParams.get(name); }
+
+    // ===== UI =====
     function ui(){
       $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='./profile.html'; };
       $('#btnBulkDelete').onclick=bulkDelete;
@@ -141,8 +149,8 @@
           <input type="checkbox" ${__sel.has(t.id)?'checked':''} data-act="sel" aria-label="select" />
           <div class="ava" style="background-image:url('${t.otherAvatar||'/assets/img/avatar-default.png'}')"></div>
           <div style="min-width:0">
-            <div class="ttl" title="${t.otherName||''}">${t.otherName||'—'}</div>
-            <div class="last">${t.lastText||''}</div>
+            <div class="ttl" title="${escapeHtml(t.otherName||'')}">${escapeHtml(t.otherName||'—')}</div>
+            <div class="last">${escapeHtml(t.lastText||'')}</div>
           </div>
           <div class="meta">
             <button class="btn ghost" data-act="open" title="Aç">➤</button>
@@ -161,7 +169,7 @@
     async function deleteThreadHard(threadId){
       try{
         if(__unsubItems){ try{__unsubItems();}catch{} __unsubItems=null; }
-        const {collection,doc,getDocs,deleteDoc,serverTimestamp,query,orderBy,limit,startAfter} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const {collection,doc,getDocs,deleteDoc,query,orderBy,limit,startAfter} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const root=doc(window.__fb.db,'messages',threadId);
         // Sil: items alt koleksiyonu parça parça
         const itemsCol=collection(window.__fb.db,'messages',threadId,'items');
@@ -172,7 +180,6 @@
           if(snap.empty) break;
           const batchOps=[]; let i=0;
           for(const ds of snap.docs){ batchOps.push(deleteDoc(ds.ref)); i++; last=ds; }
-          // sequential to avoid exceeding limits
           for(const op of batchOps){ await op; }
           if(i<CHUNK) break;
         }
@@ -188,11 +195,8 @@
         const {doc,getDoc,collection,query,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const ref=doc(window.__fb.db,'messages',id); const snap=await getDoc(ref); if(!snap.exists()) { toast('Sohbet bulunamadı'); return; }
         const d=snap.data()||{}; __currentThread={id, ...d};
-        const otherId=(d.participants||[]).find(x=>x!==__uid)||'';
-        // kullanıcı bilgisi çek (isteğe bağlı)
-        try{ const {doc:getDocDoc}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); }catch{}
-        $('#chatName').textContent=d.otherName||d.other||'Sohbet';
-        $('#chatSub').textContent=d.orderId? ('Order #'+d.orderId) : '';
+        $('#chatName').textContent=d.otherName||'Sohbet';
+        $('#chatSub').textContent=d.orderId? ('Sipariş #'+d.orderId) : '';
         $('#chatAva').style.backgroundImage=`url('${d.otherAvatar||'/assets/img/avatar-default.png'}')`;
 
         const listCol=collection(window.__fb.db,'messages',id,'items');
@@ -210,9 +214,6 @@
       return div;
     }
 
-    function escapeHtml(s){ return (s||'').replace(/[&<>\"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-    function formatDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
-
     async function deleteMessage(m){
       try{
         const {doc,deleteDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
@@ -221,27 +222,72 @@
       }catch(e){ console.warn('deleteMessage',e); toast('Hata'); }
     }
 
+    // ===== Thread oluştur / garantile =====
+    async function ensureThread(buyerUid, sellerUid, meta={}){
+      const { doc, getDoc, setDoc, serverTimestamp } =
+        await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const tid = threadIdFromPair(buyerUid, sellerUid);
+      const ref = doc(window.__fb.db, 'messages', tid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()){
+        await setDoc(ref, {
+          participants: [buyerUid, sellerUid],
+          lastText: meta.lastText || '',
+          lastAt: serverTimestamp(),
+          otherName: meta.otherName || '',
+          otherAvatar: meta.otherAvatar || '',
+          orderId: meta.orderId || null
+        });
+      }
+      return { id: tid, ref };
+    }
+
+    // ===== Mesaj gönder =====
     async function sendMessage(){
       try{
-        const text=($('#msgInput').value||'').trim(); if(!text||!__currentThread) return;
-        const {collection,addDoc,serverTimestamp,doc,updateDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const text=($('#msgInput').value||'').trim(); if(!text) return;
+        if (!__currentThread){
+          // İlk kez gelmiş olabilir → URL ile peer bilgisi taşındıysa thread aç
+          const peerUid = getParam('peer');
+          if(peerUid){
+            const meta = { lastText: text, otherName: getParam('name')||'', otherAvatar: getParam('ava')||'', orderId: getParam('order')||null };
+            const t = await ensureThread(__uid, peerUid, meta);
+            __currentThread = { id: t.id };
+          } else {
+            toast('Karşı taraf bulunamadı'); return;
+          }
+        }
+        const { collection, addDoc, serverTimestamp, doc, updateDoc } =
+          await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         await addDoc(collection(window.__fb.db,'messages',__currentThread.id,'items'),{ createdAt:serverTimestamp(), from:__uid, text });
         await updateDoc(doc(window.__fb.db,'messages',__currentThread.id),{ lastText:text, lastAt:serverTimestamp() });
         $('#msgInput').value='';
       }catch(e){ console.warn('sendMessage',e); }
     }
 
+    // ===== Sohbet listesi (indekssiz) =====
     async function watchThreads(uid){
       try{
         if(__unsubThreads){ try{__unsubThreads();}catch{} __unsubThreads=null; }
-        const {collection,query,where,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const q=query(collection(window.__fb.db,'messages'), where('participants','array-contains',uid), orderBy('lastAt','desc'));
+        const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const q=query(collection(window.__fb.db,'messages'), where('participants','array-contains',uid));
         __unsubThreads=onSnapshot(q,(snap)=>{
-          __threads=[]; snap.forEach(ds=>{ const d=ds.data()||{}; const otherName=d.otherName||d.other||''; __threads.push({ id:ds.id, otherName, otherAvatar:d.otherAvatar||'', lastText:d.lastText||'', lastAt:d.lastAt||null }); });
+          __threads=[]; snap.forEach(ds=>{ const d=ds.data()||{}; __threads.push({ id:ds.id, otherName:d.otherName||'', otherAvatar:d.otherAvatar||'', lastText:d.lastText||'', lastAt:d.lastAt||null }); });
+          // istemci tarafı sırala (lastAt desc)
+          __threads.sort((a,b)=>{ const ta=a.lastAt?.toMillis? a.lastAt.toMillis():(new Date(a.lastAt||0)).getTime(); const tb=b.lastAt?.toMillis? b.lastAt.toMillis():(new Date(b.lastAt||0)).getTime(); return (tb||0)-(ta||0); });
           __filtered=[...__threads]; renderThreadList();
           if(!__currentThread && __threads[0]) openThread(__threads[0].id);
         },(err)=>{ console.warn('threads onSnapshot',err); });
       }catch(e){ console.warn('watchThreads',e); }
+    }
+
+    // ===== URL ile otomatik thread aç (örn. ilan sayfasından geldi) =====
+    async function openOrCreateThreadFromQuery(){
+      const peerUid = getParam('peer');
+      if(!peerUid) return; // doğrudan sayfaya geldiyse pas
+      const meta = { otherName: getParam('name')||'', otherAvatar: getParam('ava')||'', orderId: getParam('order')||null };
+      const t = await ensureThread(__uid, peerUid, meta);
+      await openThread(t.id);
     }
 
     function boot(){ applyI18n(); ui(); }
@@ -251,7 +297,12 @@
       (function waitForFirebase(){
         if(!window.__fb){ setTimeout(waitForFirebase,50); return; }
         const {auth,onAuthStateChanged} = window.__fb;
-        onAuthStateChanged(auth,(u)=>{ if(!u){ location.href='./index.html'; return; } __uid=u.uid; watchThreads(__uid); });
+        onAuthStateChanged(auth, async (u)=>{
+          if(!u){ location.href='./index.html'; return; }
+          __uid=u.uid;
+          await watchThreads(__uid);
+          await openOrCreateThreadFromQuery();
+        });
       })();
     })();
   </script>
