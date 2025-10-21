@@ -30,7 +30,7 @@
     .leftHead{display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:.6rem;border-bottom:1px solid var(--brd)}
     .search{flex:1;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem}
     .threadList{overflow:auto}
-    .th{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;padding:.6rem;border-bottom:1px solid var(--brd);cursor:pointer}
+    .th{display:grid;grid-template-columns:24px 42px 1fr auto;gap:.6rem;padding:.6rem;border-bottom:1px solid var(--brd);cursor:pointer}
     .th:hover{background:#0b1220}
     .th .ava{width:42px;height:42px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center}
     .th .ttl{font-weight:800}
@@ -56,7 +56,6 @@
     .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426;margin:.8rem}
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
   </style>
-  <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -74,7 +73,6 @@
       <aside class="left">
         <div class="leftHead">
           <input id="q" class="search" placeholder="Ara…" />
-          <input id="selectAll" type="checkbox" title="Tümünü seç" />
           <button class="btn danger" id="btnBulkDelete" type="button" title="Seçili Sil">🗑️ <span data-i18n="bulk_delete">Seçili Sil</span></button>
         </div>
         <div id="threadList" class="threadList" role="listbox" aria-label="Sohbetler"></div>
@@ -96,7 +94,7 @@
         <div id="chatBody" class="chatBody"></div>
         <div class="chatSend">
           <input id="msgInput" class="inp" placeholder="Mesaj yaz…" />
-          <button class="btn primary" id="btnSend" type="button">Gönder</button>
+          <button class="btn primary" id="btnSend" type="button" data-i18n="send">Gönder</button>
         </div>
       </section>
     </div>
@@ -107,42 +105,58 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script>
-    // ===== I18N =====
+    // ==== I18N: TR / DE / EN / AR ====
     const I18N={
-      tr:{title:'Mesajlar • Üreten Eller',brand:'Üreten Eller',back:'Profile Dön',bulk_delete:'Seçili Sil',delete_thread:'Sohbeti Sil',confirm_delete_many:'Seçili sohbetler tamamen silinsin mi? (Karşı tarafta da yok olacak)',confirm_delete_one:'Bu sohbet tamamen silinsin mi? (Karşı tarafta da yok olacak)',confirm_delete_msg:'Bu mesaj silinsin mi? (Kalıcı)',search:'Ara…',none:'Henüz mesaj yok.',send:'Gönder'},
-      en:{title:'Messages • Ureten Eller',brand:'Ureten Eller',back:'Back to Profile',bulk_delete:'Delete Selected',delete_thread:'Delete Chat',confirm_delete_many:'Delete selected chats permanently for both sides?',confirm_delete_one:'Delete this chat permanently for both sides?',confirm_delete_msg:'Delete this message permanently?',search:'Search…',none:'No messages yet.',send:'Send'}
+      tr:{title:'Mesajlar • Üreten Eller',brand:'Üreten Eller',back:'Profile Dön',bulk_delete:'Seçili Sil',delete_thread:'Sohbeti Sil',confirm_delete_many:'Seçili sohbetler silinsin mi? (Kalıcı)',confirm_delete_one:'Bu sohbet silinsin mi? (Kalıcı)',confirm_delete_msg:'Bu mesaj silinsin mi? (Kalıcı)',search:'Ara…',none:'Henüz mesaj yok.',send:'Gönder',order:'#Sipariş '},
+      de:{title:'Nachrichten • Ureten Eller',brand:'Ureten Eller',back:'Zurück zum Profil',bulk_delete:'Ausgewählte löschen',delete_thread:'Chat löschen',confirm_delete_many:'Ausgewählte Chats dauerhaft löschen?',confirm_delete_one:'Diesen Chat dauerhaft löschen?',confirm_delete_msg:'Diese Nachricht löschen?',search:'Suchen…',none:'Noch keine Nachrichten.',send:'Senden',order:'#Bestellung '},
+      en:{title:'Messages • Ureten Eller',brand:'Ureten Eller',back:'Back to Profile',bulk_delete:'Delete Selected',delete_thread:'Delete Chat',confirm_delete_many:'Delete selected chats permanently?',confirm_delete_one:'Delete this chat permanently?',confirm_delete_msg:'Delete this message?',search:'Search…',none:'No messages yet.',send:'Send',order:'#Order '},
+      ar:{title:'الرسائل • Ureten Eller',brand:'Ureten Eller',back:'العودة للملف',bulk_delete:'حذف المحدد',delete_thread:'حذف المحادثة',confirm_delete_many:'حذف المحادثات المحددة نهائيًا؟',confirm_delete_one:'حذف هذه المحادثة نهائيًا؟',confirm_delete_msg:'حذف هذه الرسالة؟',search:'ابحث…',none:'لا توجد رسائل بعد.',send:'إرسال',order:'رقم الطلب #'}
     };
     const LANG_KEY='ue_lang_v1';
-    function getLang(){ try{return localStorage.getItem(LANG_KEY)||'tr';}catch{return 'tr';} }
-    function t(k){ const d=I18N[getLang()]||I18N.tr; return d[k]||k; }
-    function applyI18n(){ document.title=t('title'); document.querySelectorAll('[data-i18n]').forEach(n=>{const k=n.getAttribute('data-i18n'); n.textContent=t(k);}); const q=document.getElementById('q'); if(q) q.placeholder=t('search'); const mi=document.getElementById('msgInput'); if(mi) mi.placeholder=t('send'); document.getElementById('emptyBox').textContent=t('none'); }
+    function pickLang(){
+      try{
+        const saved = localStorage.getItem(LANG_KEY);
+        if(saved && I18N[saved]) return saved;
+        const nav = (navigator.language||'tr').slice(0,2);
+        return I18N[nav]? nav : 'tr';
+      }catch{ return 'tr'; }
+    }
+    function t(k){ const d=I18N[pickLang()]||I18N.tr; return d[k]||k; }
+    function applyI18n(){
+      document.title=t('title'); 
+      document.querySelectorAll('[data-i18n]').forEach(n=>{const k=n.getAttribute('data-i18n'); n.textContent=t(k);});
+      const q=document.getElementById('q'); if(q) q.placeholder=t('search');
+      const mi=document.getElementById('msgInput'); if(mi) mi.placeholder=t('send');
+      document.getElementById('emptyBox').textContent=t('none');
+    }
 
+    // ==== Utils ====
     const $=(s)=>document.querySelector(s);
+    const qs=(s)=>new URLSearchParams(location.search).get(s)||'';
     function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1500); }
-
-    let __uid=null; let __threads=[]; let __filtered=[]; let __sel=new Set(); let __unsubThreads=null; let __unsubItems=null; let __currentThread=null;
-
-    // ===== Utils =====
+    function digits(x){ return String(x||'').replace(/\D/g,''); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>\"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+    function formatDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString(pickLang()==='tr'?'tr-TR':undefined); }catch{ return '—'; } }
     function threadIdFromPair(a,b){ return [a,b].sort().join('__'); }
-    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-    function formatDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
-    function getParam(name){ const u=new URL(location.href); return u.searchParams.get(name); }
 
-    // ===== UI =====
+    // ==== State ====
+    let __uid=null; 
+    let __threads=[]; let __filtered=[]; let __sel=new Set();
+    let __unsubThreads=null; let __unsubItems=null; let __currentThread=null;
+
+    // ==== UI ====
     function ui(){
       $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='./profile.html'; };
       $('#btnBulkDelete').onclick=bulkDelete;
-      $('#selectAll').onchange=(e)=>{ if(e.target.checked){ __filtered.forEach(t=>__sel.add(t.id)); } else { __sel.clear(); } renderThreadList(); };
       $('#q').oninput=filterList;
       $('#btnSend').onclick=sendMessage;
       $('#btnDeleteThread').onclick=()=>{ if(!__currentThread) return; confirm(t('confirm_delete_one')) && deleteThreadHard(__currentThread.id); };
     }
 
     function filterList(){ const q=($('#q').value||'').toLowerCase(); if(!q){ __filtered=[...__threads]; } else { __filtered=__threads.filter(x=> (x.otherName||'').toLowerCase().includes(q) || (x.lastText||'').toLowerCase().includes(q) ); } renderThreadList(); }
-
     function renderThreadList(){
       const host=$('#threadList'); host.innerHTML='';
-      if(__filtered.length===0){ $('#emptyBox').style.display='block'; } else { $('#emptyBox').style.display='none'; }
+      $('#emptyBox').style.display = __filtered.length===0 ? 'block' : 'none';
       __filtered.forEach(t=>{
         const row=document.createElement('div'); row.className='th'; row.setAttribute('role','option'); row.dataset.id=t.id;
         row.innerHTML=`
@@ -154,37 +168,38 @@
           </div>
           <div class="meta">
             <button class="btn ghost" data-act="open" title="Aç">➤</button>
-            <button class="btn ghost" data-act="delete" title="Sil">🗑️</button>
           </div>`;
         row.querySelector('[data-act="sel"]').addEventListener('change',(e)=>{ if(e.target.checked){ __sel.add(t.id);} else { __sel.delete(t.id);} });
         row.querySelector('[data-act="open"]').addEventListener('click',()=>openThread(t.id));
-        row.querySelector('[data-act="delete"]').addEventListener('click',()=>{ confirm(t('confirm_delete_one')) && deleteThreadHard(t.id); });
         row.addEventListener('click',(e)=>{ if(e.target.closest('[data-act]')||e.target.type==='checkbox') return; openThread(t.id); });
         host.appendChild(row);
       });
     }
 
-    async function bulkDelete(){ if(__sel.size===0) return; if(!confirm(t('confirm_delete_many'))) return; const ids=[...__sel]; for(const id of ids){ await deleteThreadHard(id); } __sel.clear(); $('#selectAll').checked=false; }
+    async function bulkDelete(){
+      if(__sel.size===0) return;
+      if(!confirm(t('confirm_delete_many'))) return;
+      const ids=[...__sel];
+      for(const id of ids){ await deleteThreadHard(id); }
+      __sel.clear(); renderThreadList();
+      toast('✓');
+    }
 
     async function deleteThreadHard(threadId){
       try{
         if(__unsubItems){ try{__unsubItems();}catch{} __unsubItems=null; }
         const {collection,doc,getDocs,deleteDoc,query,orderBy,limit,startAfter} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const root=doc(window.__fb.db,'messages',threadId);
-        // Sil: items alt koleksiyonu parça parça
         const itemsCol=collection(window.__fb.db,'messages',threadId,'items');
         let last=null; const CHUNK=400;
         while(true){
           let q=query(itemsCol, orderBy('createdAt','asc'), last? startAfter(last): undefined, limit(CHUNK));
           const snap=await getDocs(q);
           if(snap.empty) break;
-          const batchOps=[]; let i=0;
-          for(const ds of snap.docs){ batchOps.push(deleteDoc(ds.ref)); i++; last=ds; }
-          for(const op of batchOps){ await op; }
-          if(i<CHUNK) break;
+          for(const ds of snap.docs){ await deleteDoc(ds.ref); }
+          if(snap.size<CHUNK) break;
         }
         await deleteDoc(root);
-        toast('✓');
         if(__currentThread && __currentThread.id===threadId){ __currentThread=null; $('#chatBody').innerHTML=''; $('#chatName').textContent='—'; $('#chatSub').textContent='—'; }
       }catch(e){ console.warn('deleteThreadHard',e); toast('Hata'); }
     }
@@ -195,13 +210,18 @@
         const {doc,getDoc,collection,query,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const ref=doc(window.__fb.db,'messages',id); const snap=await getDoc(ref); if(!snap.exists()) { toast('Sohbet bulunamadı'); return; }
         const d=snap.data()||{}; __currentThread={id, ...d};
-        $('#chatName').textContent=d.otherName||'Sohbet';
-        $('#chatSub').textContent=d.orderId? ('Sipariş #'+d.orderId) : '';
+
+        // Başlık
+        $('#chatName').textContent=d.otherName||'—';
+        $('#chatSub').textContent=d.orderId ? (t('order') + d.orderId) : '—';
         $('#chatAva').style.backgroundImage=`url('${d.otherAvatar||'/assets/img/avatar-default.png'}')`;
 
         const listCol=collection(window.__fb.db,'messages',id,'items');
         __unsubItems=onSnapshot(query(listCol, orderBy('createdAt','asc')),(qs)=>{
-          const box=$('#chatBody'); box.innerHTML=''; qs.forEach(ds=>{ const m={id:ds.id, ...(ds.data()||{})}; box.appendChild(msgBubble(m)); }); box.scrollTop=box.scrollHeight; });
+          const box=$('#chatBody'); box.innerHTML='';
+          qs.forEach(ds=>{ const m={id:ds.id, ...(ds.data()||{})}; box.appendChild(msgBubble(m)); });
+          box.scrollTop=box.scrollHeight;
+        });
       }catch(e){ console.warn('openThread',e); }
     }
 
@@ -209,7 +229,7 @@
       const mine = m.from===__uid;
       const div=document.createElement('div');
       div.className='msg '+(mine?'mine':'theirs');
-      div.innerHTML=`<div class="msgRow"><div style="flex:1;white-space:pre-wrap">${escapeHtml(m.text||'')}</div><div class="tools">${mine?'<button data-act="delmsg" title="Sil">🗑️</button>':''}</div></div><div class="mini" style="opacity:.7;margin-top:.2rem">${formatDate(m.createdAt)}</div>`;
+      div.innerHTML=`<div class="msgRow"><div style="flex:1;white-space:pre-wrap">${escapeHtml(m.text||'')}</div>${mine?'<div class="tools"><button data-act="delmsg" title="Sil">🗑️</button></div>':''}</div><div class="mini" style="opacity:.7;margin-top:.2rem">${formatDate(m.createdAt)}</div>`;
       const delBtn=div.querySelector('[data-act="delmsg"]'); if(delBtn){ delBtn.addEventListener('click',()=>{ if(confirm(t('confirm_delete_msg'))) deleteMessage(m); }); }
       return div;
     }
@@ -222,9 +242,20 @@
       }catch(e){ console.warn('deleteMessage',e); toast('Hata'); }
     }
 
-    // ===== Thread oluştur / garantile =====
+    async function sendMessage(){
+      try{
+        const input=$('#msgInput');
+        const text=(input.value||'').trim(); if(!text||!__currentThread) return;
+        const {collection,addDoc,serverTimestamp,doc,updateDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        await addDoc(collection(window.__fb.db,'messages',__currentThread.id,'items'),{ createdAt:serverTimestamp(), from:__uid, text });
+        await updateDoc(doc(window.__fb.db,'messages',__currentThread.id),{ lastText:text, lastAt:serverTimestamp() });
+        input.value='';
+      }catch(e){ console.warn('sendMessage',e); }
+    }
+
+    // === Thread oluştur/aç: orders.html -> ?peer & ?order ile geldiğinde ===
     async function ensureThread(buyerUid, sellerUid, meta={}){
-      const { doc, getDoc, setDoc, serverTimestamp } =
+      const { doc, getDoc, setDoc, updateDoc, serverTimestamp } =
         await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
       const tid = threadIdFromPair(buyerUid, sellerUid);
       const ref = doc(window.__fb.db, 'messages', tid);
@@ -238,60 +269,56 @@
           otherAvatar: meta.otherAvatar || '',
           orderId: meta.orderId || null
         });
+      } else {
+        await updateDoc(ref, {
+          otherName: meta.otherName || '',
+          otherAvatar: meta.otherAvatar || '',
+          orderId: meta.orderId || null
+        });
       }
       return { id: tid, ref };
     }
 
-    // ===== Mesaj gönder =====
-    async function sendMessage(){
-      try{
-        const text=($('#msgInput').value||'').trim(); if(!text) return;
-        if (!__currentThread){
-          // İlk kez gelmiş olabilir → URL ile peer bilgisi taşındıysa thread aç
-          const peerUid = getParam('peer');
-          if(peerUid){
-            const meta = { lastText: text, otherName: getParam('name')||'', otherAvatar: getParam('ava')||'', orderId: getParam('order')||null };
-            const t = await ensureThread(__uid, peerUid, meta);
-            __currentThread = { id: t.id };
-          } else {
-            toast('Karşı taraf bulunamadı'); return;
-          }
-        }
-        const { collection, addDoc, serverTimestamp, doc, updateDoc } =
-          await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        await addDoc(collection(window.__fb.db,'messages',__currentThread.id,'items'),{ createdAt:serverTimestamp(), from:__uid, text });
-        await updateDoc(doc(window.__fb.db,'messages',__currentThread.id),{ lastText:text, lastAt:serverTimestamp() });
-        $('#msgInput').value='';
-      }catch(e){ console.warn('sendMessage',e); }
+    async function openOrCreateThreadFromQuery(){
+      const peerUid = qs('peer');
+      if(!peerUid){ return; }
+      const meta = { otherName: qs('name')||'', otherAvatar: qs('ava')||'', orderId: qs('order')||null };
+      if(meta.otherName) $('#chatName').textContent = meta.otherName;
+      if(meta.orderId)  $('#chatSub').textContent  = t('order') + meta.orderId;
+      if(meta.otherAvatar) $('#chatAva').style.backgroundImage = `url('${meta.otherAvatar}')`;
+      // __uid (ben) -> peerUid ile thread
+      const t = await ensureThread(__uid, peerUid, meta);
+      await openThread(t.id);
+      $('#msgInput').focus();
     }
 
-    // ===== Sohbet listesi (indekssiz) =====
     async function watchThreads(uid){
       try{
         if(__unsubThreads){ try{__unsubThreads();}catch{} __unsubThreads=null; }
         const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        // Sadece where + limit kullan, client-side sort
         const q=query(collection(window.__fb.db,'messages'), where('participants','array-contains',uid));
         __unsubThreads=onSnapshot(q,(snap)=>{
-          __threads=[]; snap.forEach(ds=>{ const d=ds.data()||{}; __threads.push({ id:ds.id, otherName:d.otherName||'', otherAvatar:d.otherAvatar||'', lastText:d.lastText||'', lastAt:d.lastAt||null }); });
-          // istemci tarafı sırala (lastAt desc)
-          __threads.sort((a,b)=>{ const ta=a.lastAt?.toMillis? a.lastAt.toMillis():(new Date(a.lastAt||0)).getTime(); const tb=b.lastAt?.toMillis? b.lastAt.toMillis():(new Date(b.lastAt||0)).getTime(); return (tb||0)-(ta||0); });
+          __threads=[];
+          snap.forEach(ds=>{
+            const d=ds.data()||{};
+            __threads.push({ id:ds.id, otherName:d.otherName||'', otherAvatar:d.otherAvatar||'', lastText:d.lastText||'', lastAt:d.lastAt||null });
+          });
+          // sort by lastAt desc
+          __threads.sort((a,b)=>{
+            const ta = a.lastAt?.toMillis ? a.lastAt.toMillis() : (a.lastAt? new Date(a.lastAt).getTime():0);
+            const tb = b.lastAt?.toMillis ? b.lastAt.toMillis() : (b.lastAt? new Date(b.lastAt).getTime():0);
+            return (tb||0)-(ta||0);
+          });
           __filtered=[...__threads]; renderThreadList();
-          if(!__currentThread && __threads[0]) openThread(__threads[0].id);
+          // Eğer orders.html'den gelmediysek ilk sohbeti aç
+          if(!qs('peer') && !__currentThread && __threads[0]) openThread(__threads[0].id);
         },(err)=>{ console.warn('threads onSnapshot',err); });
       }catch(e){ console.warn('watchThreads',e); }
     }
 
-    // ===== URL ile otomatik thread aç (örn. ilan sayfasından geldi) =====
-    async function openOrCreateThreadFromQuery(){
-      const peerUid = getParam('peer');
-      if(!peerUid) return; // doğrudan sayfaya geldiyse pas
-      const meta = { otherName: getParam('name')||'', otherAvatar: getParam('ava')||'', orderId: getParam('order')||null };
-      const t = await ensureThread(__uid, peerUid, meta);
-      await openThread(t.id);
-    }
-
+    // ==== Boot ====
     function boot(){ applyI18n(); ui(); }
-
     (function init(){
       if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
       (function waitForFirebase(){
@@ -301,7 +328,7 @@
           if(!u){ location.href='./index.html'; return; }
           __uid=u.uid;
           await watchThreads(__uid);
-          await openOrCreateThreadFromQuery();
+          await openOrCreateThreadFromQuery(); // orders.html’den geldiyse otomatik aç
         });
       })();
     })();
