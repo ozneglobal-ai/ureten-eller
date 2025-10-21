@@ -113,8 +113,8 @@
   function digits(x){ return String(x||'').replace(/\D/g,''); }
   function playDing(){ const a=$('#ding'); if(a){ a.currentTime=0; a.play().catch(()=>{}); } }
 
-  // Nav
-  $('#homeBtn').onclick=()=>{ location.href='/docs/home.html'; };
+  // Nav (docs/ yayın kökünde index.html var)
+  $('#homeBtn').onclick=()=>{ location.href='./index.html'; };
 
   // Firebase ready
   const ensure=()=> new Promise(r=>{ if(window.__fb?.db && window.__fb?.auth){ r(); } else { document.addEventListener('fb-ready',r,{once:true}); }});
@@ -122,6 +122,7 @@
   // State
   let MODE='seller'; // 'seller' | 'buyer' | 'offers_in' | 'offers_out'
   let stopUnsub=null;
+  let firstLoad=true; // ilk snapshotta ses çalma
   const userCache=new Map();
 
   function setActiveTab(){
@@ -168,10 +169,11 @@
       </div>
       ${price}
       <div class="row" style="margin-top:.55rem;gap:.5rem">
-        <a class="btn" href="/docs/order.html?id=${id}">Detay</a>
-        ${tel? `<a class="btn ok" href="tel:${digits(tel)}">Ara</a>`:''}
-        ${wa? `<a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
-        ${(o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
+        <!-- Detay sayfası olmayan kurulumlarda 404 olmasın diye kendi sayfasına yönlendiriyoruz -->
+        <a class="btn" href="/docs/orders.html?id=${id}">Detay</a>
+        ${tel? `<a class=\"btn ok\" href=\"tel:${digits(tel)}\">Ara</a>`:''}
+        ${wa? `<a class=\"btn\" href=\"${wa}\" target=\"_blank\" rel=\"noopener\">WhatsApp</a>`:''}
+        ${(o.sellerId)? `<a class=\"btn ghost\" href=\"/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}\">Satıcı Profili</a>`:''}
       </div>
     </div>`;
   }
@@ -192,9 +194,9 @@
       ${price}
       ${ofr.message? `<div class="mini" style="margin-top:.35rem">“${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}”</div>`:''}
       <div class="row" style="margin-top:.55rem;gap:.5rem">
-        ${tel? `<a class="btn ok" href="tel:${digits(tel)}">Ara</a>`:''}
-        ${wa? `<a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
-        ${(ofr.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}">Satıcı Profili</a>`:''}
+        ${tel? `<a class=\"btn ok\" href=\"tel:${digits(tel)}\">Ara</a>`:''}
+        ${wa? `<a class=\"btn\" href=\"${wa}\" target=\"_blank\" rel=\"noopener\">WhatsApp</a>`:''}
+        ${(ofr.sellerId)? `<a class=\"btn ghost\" href=\"/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}\">Satıcı Profili</a>`:''}
       </div>
     </div>`;
   }
@@ -204,31 +206,31 @@
   async function startListener(){
     if(stopUnsub){ stopUnsub(); stopUnsub=null; }
     await ensure();
-    const { collection, query, where, orderBy, limit, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const { collection, query, where, limit, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
     const db = window.__fb.db; const me = window.__fb.auth.currentUser;
     if(!me){ $('#list').innerHTML='<div class="mini">Lütfen giriş yapın.</div>'; return; }
 
-    // Base query by mode
+    // === İNDEKS İSTEMESİN DİYE: Sadece where + limit, sıralamayı İSTEMCİDE yapıyoruz ===
     let baseQ;
     if(MODE==='seller'){
-      baseQ = query(collection(db,'orders'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+      baseQ = query(collection(db,'orders'), where('sellerId','==', me.uid), limit(200));
     }else if(MODE==='buyer'){
-      baseQ = query(collection(db,'orders'), where('buyerId','==', me.uid),  orderBy('createdAt','desc'), limit(200));
+      baseQ = query(collection(db,'orders'), where('buyerId','==', me.uid),  limit(200));
     }else if(MODE==='offers_in'){
-      baseQ = query(collection(db,'offers'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+      baseQ = query(collection(db,'offers'), where('sellerId','==', me.uid), limit(200));
     }else if(MODE==='offers_out'){
-      baseQ = query(collection(db,'offers'), where('buyerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+      baseQ = query(collection(db,'offers'), where('buyerId','==', me.uid), limit(200));
     }
 
     stopUnsub = onSnapshot(baseQ, async (ss)=>{
-      const items=[]; const changes=ss.docChanges(); let played=false; for(const ch of changes){ if(ch.type==='added'){ played=true; } }
+      const items=[]; const changes=ss.docChanges(); const hadAdded=changes.some(ch=>ch.type==='added');
 
       // Filters
       const term = ($('#searchInput').value||'').toLowerCase().trim();
       const statusFilter = $('#statusSel').value||'';
       const offerFilter = $('#offerStatusSel').value||'';
 
-      // Enrich peer
+      // Enrich peer & build rows
       const rows = await Promise.all(ss.docs.map(async d=>{
         const data=d.data()||{}; let peer=null;
         if(MODE==='seller' && data.buyerId){ peer = await getUser(data.buyerId); }
@@ -237,6 +239,13 @@
         if(MODE==='offers_out' && data.sellerId){ peer = await getUser(data.sellerId); }
         return { id:d.id, data, peer };
       }));
+
+      // Client-side sort by createdAt desc (timestamp veya Date string destekli)
+      rows.sort((a,b)=>{
+        const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis() : (new Date(a.data?.createdAt||0)).getTime();
+        const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis() : (new Date(b.data?.createdAt||0)).getTime();
+        return (tb||0) - (ta||0);
+      });
 
       rows.forEach(({id,data,peer})=>{
         if(term){
@@ -254,7 +263,10 @@
 
       $('#list').innerHTML = items.length ? items.join('') : '<div class="mini">Kayıt yok.</div>';
       $('#countText').textContent = items.length? `Toplam ${items.length}` : '';
-      if(played) playDing();
+
+      // Yeni kayıt sesi (ilk yüklemede çalma)
+      if(!firstLoad && hadAdded) playDing();
+      firstLoad=false;
     }, (err)=>{
       console.error(err);
       $('#list').innerHTML = '<div class="mini">Kayıt okunamadı (izin veya ağ hatası).</div>';
@@ -262,10 +274,10 @@
   }
 
   // UI handlers
-  $('#tabSeller').onclick=()=>{ MODE='seller'; setActiveTab(); startListener(); };
-  $('#tabBuyer').onclick=()=>{ MODE='buyer';  setActiveTab(); startListener(); };
-  $('#tabOffersIn').onclick=()=>{ MODE='offers_in';  setActiveTab(); startListener(); };
-  $('#tabOffersOut').onclick=()=>{ MODE='offers_out'; setActiveTab(); startListener(); };
+  $('#tabSeller').onclick=()=>{ MODE='seller'; setActiveTab(); firstLoad=true; startListener(); };
+  $('#tabBuyer').onclick =()=>{ MODE='buyer';  setActiveTab(); firstLoad=true; startListener(); };
+  $('#tabOffersIn').onclick =()=>{ MODE='offers_in';  setActiveTab(); firstLoad=true; startListener(); };
+  $('#tabOffersOut').onclick=()=>{ MODE='offers_out'; setActiveTab(); firstLoad=true; startListener(); };
   $('#statusSel').onchange=()=>startListener();
   $('#offerStatusSel').onchange=()=>startListener();
   $('#searchInput').addEventListener('input',()=>startListener());
