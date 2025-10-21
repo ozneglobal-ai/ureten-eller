@@ -23,7 +23,6 @@
     .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
     .btn.ghost{background:transparent}
     .btn.primary{background:linear-gradient(90deg,var(--info),#8b5cf6);border-color:transparent}
-    .btn.ok{background:linear-gradient(90deg,var(--ok),#22d3ee);border-color:transparent}
 
     .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
     .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
@@ -154,17 +153,22 @@
     }catch{return null}
   }
 
+  // === KARTLAR ===
   function cardOrderHTML(id, o, peer, mode){
     const title = o.listingTitle || o.listingId || 'Sipariş';
     const price = (o.price!=null) ? `<div class="mini">${fmtTL(o.price)}</div>` : '';
-    const tel   = peer?.phone || '';
-    const wa    = tel? `https://wa.me/${digits(tel)}` : '';
 
     // CEVAP VER → mesajlar.html?peer=...&name=...&ava=...&order=...
     const peerUid  = (mode==='seller') ? (o.buyerId||'') : (o.sellerId||'');
-    const peerName = peer?.name || peer?.displayName || '';
+    const peerName = peer?.name || peer?.displayName || o.buyerName || o.sellerName || '';
     const peerAva  = peer?.avatar || peer?.photoURL || '';
     const chatUrl  = peerUid ? `/docs/mesajlar.html?peer=${encodeURIComponent(peerUid)}&name=${encodeURIComponent(peerName)}&ava=${encodeURIComponent(peerAva)}&order=${encodeURIComponent(id)}` : '';
+
+    const listingLine = `${(o.listingTitle||'—')}${o.listingId ? ` (#${o.listingId})` : ''}`;
+    const whoLabel = (mode==='seller') ? 'Alıcı' : 'Satıcı';
+
+    // Müşteri notu olası alan adları: note | buyerNote | orderNote | message
+    const customerNote = (o.note||o.buyerNote||o.orderNote||o.message||'').toString().trim();
 
     return `<div class="card pad">
       <div class="row" style="justify-content:space-between">
@@ -175,29 +179,44 @@
         <div>${statusBadge(o.status)}</div>
       </div>
       ${price}
+      <div class="kv" style="margin-top:.45rem"><label>İlan</label><strong>${listingLine}</strong></div>
+      <div class="kv"><label>${whoLabel}</label><strong>${peerName||'—'}</strong></div>
+      ${customerNote ? `<div class="kv"><label>Müşteri Notu</label><strong style="white-space:pre-wrap">${customerNote.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</strong></div>` : ''}
       <div class="row" style="margin-top:.55rem;gap:.5rem">
         <a class="btn" href="/docs/orders.html?id=${id}">Detay</a>
-        ${chatUrl? `<a class=\"btn primary\" href=\"${chatUrl}\">Cevap Ver</a>`:''}
-        ${tel? `<a class=\"btn ok\" href=\"tel:${digits(tel)}\">Ara</a>`:''}
-        ${wa? `<a class=\"btn\" href=\"${wa}\" target=\"_blank\" rel=\"noopener\">WhatsApp</a>`:''}
-        ${(o.sellerId)? `<a class=\"btn ghost\" href=\"/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}\">Satıcı Profili</a>`:''}
+        ${chatUrl? `<a class="btn primary" href="${chatUrl}">Cevap Ver</a>`:''}
       </div>
     </div>`;
   }
 
   function cardOfferHTML(id, ofr, peer, mode){
     const title = ofr.listingTitle || ofr.listingId || 'Teklif';
-    const price = (ofr.price!=null) ? `<div class=\"mini\">${fmtTL(ofr.price)}</div>` : '';
-    const tel   = peer?.phone || '';
-    const wa    = tel? `https://wa.me/${digits(tel)}` : '';
+    const price = (ofr.price!=null) ? `<div class="mini">${fmtTL(ofr.price)}</div>` : '';
 
-    // CEVAP VER → offers_in (satıcı) buyerId'ye, offers_out (alıcı) sellerId'ye
     const peerUid  = (mode==='offers_in') ? (ofr.buyerId||'') : (ofr.sellerId||'');
-    const peerName = peer?.name || peer?.displayName || '';
+    const peerName = peer?.name || peer?.displayName || ofr.buyerName || ofr.sellerName || '';
     const peerAva  = peer?.avatar || peer?.photoURL || '';
     const chatUrl  = peerUid ? `/docs/mesajlar.html?peer=${encodeURIComponent(peerUid)}&name=${encodeURIComponent(peerName)}&ava=${encodeURIComponent(peerAva)}&order=${encodeURIComponent(ofr.orderId||id)}` : '';
 
-    return `<div class=\"card pad\">\n      <div class=\"row\" style=\"justify-content:space-between\">\n        <div>\n          <div class=\"title\">${title}</div>\n          <div class=\"mini\">${id} • ${fmtDate(ofr.createdAt)}</div>\n        </div>\n        <div>${offerStatusBadge(ofr.status||'sent')}</div>\n      </div>\n      ${price}\n      ${ofr.message? `<div class=\"mini\" style=\"margin-top:.35rem\">“${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}”</div>`:''}\n      <div class=\"row\" style=\"margin-top:.55rem;gap:.5rem\">\n        ${chatUrl? `<a class=\\\"btn primary\\\" href=\\\"${chatUrl}\\\">Cevap Ver</a>`:''}\n        ${tel? `<a class=\\\"btn ok\\\" href=\\\"tel:${digits(tel)}\\\">Ara</a>`:''}\n        ${wa? `<a class=\\\"btn\\\" href=\\\"${wa}\\\" target=\\\"_blank\\\" rel=\\\"noopener\\\">WhatsApp</a>`:''}\n        ${(ofr.sellerId)? `<a class=\\\"btn ghost\\\" href=\\\"/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}\\\">Satıcı Profili</a>`:''}\n      </div>\n    </div>`;
+    const listingLine = `${(ofr.listingTitle||'—')}${ofr.listingId ? ` (#${ofr.listingId})` : ''}`;
+    const whoLabel = (mode==='offers_in') ? 'Alıcı' : 'Satıcı';
+
+    return `<div class="card pad">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="title">${title}</div>
+          <div class="mini">${id} • ${fmtDate(ofr.createdAt)}</div>
+        </div>
+        <div>${offerStatusBadge(ofr.status||'sent')}</div>
+      </div>
+      ${price}
+      <div class="kv" style="margin-top:.45rem"><label>İlan</label><strong>${listingLine}</strong></div>
+      <div class="kv"><label>${whoLabel}</label><strong>${peerName||'—'}</strong></div>
+      ${ofr.message? `<div class="kv"><label>Mesaj</label><strong style="white-space:pre-wrap">${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</strong></div>`:''}
+      <div class="row" style="margin-top:.55rem;gap:.5rem">
+        ${chatUrl? `<a class="btn primary" href="${chatUrl}">Cevap Ver</a>`:''}
+      </div>
+    </div>`;
   }
 
   function renderEmpty(){ $('#list').innerHTML = '<div class="mini">Kayıt yok.</div>'; $('#countText').textContent=''; }
@@ -209,7 +228,7 @@
     const db = window.__fb.db; const me = window.__fb.auth.currentUser;
     if(!me){ $('#list').innerHTML='<div class="mini">Lütfen giriş yapın.</div>'; return; }
 
-    // === İNDEKS İSTEMESİN DİYE: Sadece where + limit, sıralamayı İSTEMCİDE yapıyoruz ===
+    // İndeks istemesin: where + limit, sıralamayı istemci yap
     let baseQ;
     if(MODE==='seller'){
       baseQ = query(collection(db,'orders'), where('sellerId','==', me.uid), limit(200));
@@ -224,12 +243,10 @@
     stopUnsub = onSnapshot(baseQ, async (ss)=>{
       const items=[]; const changes=ss.docChanges(); const hadAdded=changes.some(ch=>ch.type==='added');
 
-      // Filters
       const term = ($('#searchInput').value||'').toLowerCase().trim();
       const statusFilter = $('#statusSel').value||'';
       const offerFilter = $('#offerStatusSel').value||'';
 
-      // Enrich peer & build rows
       const rows = await Promise.all(ss.docs.map(async d=>{
         const data=d.data()||{}; let peer=null;
         if(MODE==='seller' && data.buyerId){ peer = await getUser(data.buyerId); }
@@ -239,7 +256,7 @@
         return { id:d.id, data, peer };
       }));
 
-      // Client-side sort by createdAt desc (timestamp veya Date string destekli)
+      // createdAt desc
       rows.sort((a,b)=>{
         const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis() : (new Date(a.data?.createdAt||0)).getTime();
         const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis() : (new Date(b.data?.createdAt||0)).getTime();
@@ -263,7 +280,6 @@
       $('#list').innerHTML = items.length ? items.join('') : '<div class="mini">Kayıt yok.</div>';
       $('#countText').textContent = items.length? `Toplam ${items.length}` : '';
 
-      // Yeni kayıt sesi (ilk yüklemede çalma)
       if(!firstLoad && hadAdded) playDing();
       firstLoad=false;
     }, (err)=>{
