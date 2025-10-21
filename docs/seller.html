@@ -48,6 +48,7 @@
     .card .img{width:100%;aspect-ratio:1/1;border-bottom:1px solid var(--brd);background:#111827;background-size:cover;background-position:center}
     .card .body{padding:10px}
     .price{font-weight:900}
+    .empty{padding:10px;border:1px dashed var(--brd);border-radius:12px;color:var(--muted);text-align:center}
 
     /* Detay çekmecesi */
     .drawer{position:fixed;inset:0;display:none;background:#00000080;z-index:1500}
@@ -65,6 +66,7 @@
       .kv{grid-template-columns:120px 1fr}
     }
   </style>
+  <!-- Firestore & Auth yardımcılarını sağlayan dosya -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -93,7 +95,7 @@
 
         <div class="about" aria-label="Satıcı detayları">
           <div class="kv"><div class="mini">Üyelik</div><div id="joined">—</div></div>
-          <div class="kv"><div class="mini">E‑posta</div><div id="email">—</div></div>
+          <div class="kv"><div class="mini">E-posta</div><div id="email">—</div></div>
           <div class="kv"><div class="mini">İlan sayısı</div><div id="countListings">—</div></div>
         </div>
 
@@ -113,7 +115,9 @@
     </section>
 
     <h2>İlanlar</h2>
-    <section id="listings" class="grid" aria-live="polite"></section>
+    <section id="listings" class="grid" aria-live="polite">
+      <div class="empty" id="emptyList" style="display:none">Henüz ilan yok.</div>
+    </section>
   </div>
 
   <!-- İLAN DETAY ÇEKMECESİ -->
@@ -138,95 +142,102 @@
   <div id="toast" class="toast" role="status"></div>
 
   <script>
+    // ---------- UTIL ----------
     const $=(s)=>document.querySelector(s);
     const qs=(k)=>new URLSearchParams(location.search).get(k)||'';
-    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
+    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1800); }
     function fmtTRY(x){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(x||0); }catch{ return (x||0)+' TL'; } }
-    function fmtDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
+    function toDate(v){ try{ return v?.toDate ? v.toDate() : (v ? new Date(v) : null); } catch { return null; } }
+    function fmtDate(ts){ const d=toDate(ts); return d? d.toLocaleString('tr-TR') : '—'; }
     function maskPhone(p){ if(!p) return '—'; const d=(p+'').replace(/\D/g,''); if(d.length<7) return p; return d.slice(0,3)+' *** **'+d.slice(-2); }
     function maskEmail(e){ if(!e) return '—'; const [u,dom]=(e+'').split('@'); if(!dom) return e; return (u.slice(0,2)+'***@'+dom); }
     function fillStars(avg){ const stars=[...document.querySelectorAll('#ratingBox .star')]; stars.forEach((s,i)=>{ s.classList.toggle('active', i < Math.round(avg||0)); }); }
 
     let __viewer=null;
     let __sellerId = qs('uid') || qs('seller') || '';
-    if(!__sellerId){
-      try{ __sellerId = (window.auth && window.auth.currentUser && window.auth.currentUser.uid) || ''; }catch{}
-    }
 
     $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='./home.html'; };
+    const drawer = $('#drawer'), dCover=$('#dCover'), dThumbs=$('#dThumbs');
+    const dTitle=$('#dTitle'), dSub=$('#dSub'), dPrice=$('#dPrice'), dStock=$('#dStock'), dLoc=$('#dLoc'), dDate=$('#dDate'), dDesc=$('#dDesc');
 
-    // ---------- SELLER YÜKLE ----------
+    $('#closeDrawer').onclick = ()=> drawer.style.display='none';
+    drawer.addEventListener('click', (e)=>{ if(e.target===drawer) drawer.style.display='none'; });
+
+    // ---------- FIREBASE GUARD ----------
+    function ensureFirebaseReady(){
+      if(!window.__fb || !window.__fb.db || !window.__fb.auth || !window.__fb.onAuthStateChanged){
+        console.error('window.__fb beklenen yapıda değil. firebase-init.js dosyanızı kontrol edin.');
+        toast('Bağlantı kurulamadı (firebase-init).');
+        return false;
+      }
+      return true;
+    }
+
+    // ---------- SELLER ----------
     async function loadSeller(){
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const ref = doc(window.__fb.db,'users',__sellerId);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){ toast('Satıcı bulunamadı'); return; }
-      const u = snap.data()||{};
+      try{
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const ref = doc(window.__fb.db,'users',__sellerId);
+        const snap = await getDoc(ref);
+        if(!snap.exists()){ toast('Satıcı bulunamadı'); return false; }
+        const u = snap.data()||{};
 
-      // Ad Soyad
-      const full = [
-        (u.name || u.firstName || '').trim(),
-        (u.surname || u.lastName || '').trim()
-      ].filter(Boolean).join(' ') || (u.displayName || '—');
+        // İsim alan varyasyonları
+        const first = (u.name || u.firstName || u.ad || '').trim();
+        const last  = (u.surname || u.lastName || u.soyad || '').trim();
+        const full = [first,last].filter(Boolean).join(' ') || (u.displayName || '—');
+        $('#fullName').textContent = full;
 
-      $('#fullName').textContent = full;
-      $('#avatar').style.backgroundImage = `url('${u.avatar||u.photoURL||'/assets/img/avatar-default.png'}')`;
-      $('#city').textContent = u.province || u.city || u.sehir || 'Şehir yok';
-      $('#phone').textContent = maskPhone(u.phone || u.tel || u.phoneNumber);
-      $('#bio').textContent = (u.bio || '').trim() || '—';
+        // Avatar
+        $('#avatar').style.backgroundImage = `url('${u.avatar||u.photoURL||'/assets/img/avatar-default.png'}')`;
+        // Şehir (TR varyasyonları)
+        $('#city').textContent = u.province || u.city || u.il || u.sehir || 'Şehir yok';
+        // Telefon & Bio
+        $('#phone').textContent = maskPhone(u.phone || u.tel || u.phoneNumber);
+        $('#bio').textContent   = (u.bio || u.about || u.hakkinda || '').trim() || '—';
 
-      // Onaylı rozet
-      const verified = !!(u.isVerified || u.verified || u.verifiedSeller);
-      $('#verifiedBadge').style.display = verified ? 'inline-flex' : 'none';
+        // Onaylı rozet
+        const verified = !!(u.isVerified || u.verified || u.verifiedSeller);
+        $('#verifiedBadge').style.display = verified ? 'inline-flex' : 'none';
 
-      // Hakkında
-      const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
-      $('#joined').textContent = fmtDate(joined);
-      $('#email').textContent = maskEmail(u.email || u.mail);
+        // Hakkında
+        const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
+        $('#joined').textContent = fmtDate(joined);
+        $('#email').textContent  = maskEmail(u.email || u.mail);
 
-      $('#btnMessage').onclick = ()=>{
-        const p = new URLSearchParams({ peer: __sellerId, name: encodeURIComponent(full), ava: u.avatar||u.photoURL||'', order: '' });
-        location.href = './mesajlar.html?'+p.toString();
+        // Mesaj
+        $('#btnMessage').onclick = ()=>{
+          const p = new URLSearchParams({ peer: __sellerId, name: encodeURIComponent(full), ava: u.avatar||u.photoURL||'', order: '' });
+          location.href = './mesajlar.html?'+p.toString();
+        };
+        return true;
+      }catch(err){
+        console.error(err);
+        toast('Profil okunamadı (izin/yetki).');
+        return false;
       }
     }
 
-    // ---------- LİKE & RATING ----------
+    // ---------- STATS (LIKE & RATING) ----------
     async function refreshStats(){
-      const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      // Likes
-      const likeQ = query(collection(window.__fb.db,'likes'), where('sellerId','==',__sellerId));
-      const likeSnap = await getDocs(likeQ); const likeCount = likeSnap.size;
-      // Ratings
-      const rateQ = query(collection(window.__fb.db,'ratings'), where('sellerId','==',__sellerId));
-      const rateSnap = await getDocs(rateQ);
-      let sum=0, cnt=0; rateSnap.forEach(d=>{ const v=(d.data().stars||0); if(v>0){ sum+=v; cnt++; }});
-      const avg = cnt? (sum/cnt) : 0;
-      $('#stats').textContent = `${likeCount} beğeni • ${(avg?avg.toFixed(1):'—')}/5`;
-      fillStars(avg);
-      return { likeCount, avg };
-    }
-
-    async function ensureViewer(){ return new Promise((res)=>{ const { auth, onAuthStateChanged } = window.__fb; onAuthStateChanged(auth, (u)=>{ __viewer=u||null; res(u); }); }); }
-
-    async function likeOnce(){
-      if(!__viewer){ toast('Giriş yapın'); return; }
-      if(__viewer.uid===__sellerId){ toast('Kendi profilinizi beğenemezsiniz'); return; }
-      const { doc, runTransaction, serverTimestamp, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const likeId = `${__sellerId}__${__viewer.uid}`;
-      const ref = doc(window.__fb.db,'likes',likeId);
       try{
-        // zaten beğenmiş mi?
-        const has = await getDoc(ref);
-        if(has.exists()){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); return; }
-        await runTransaction(window.__fb.db, async (tx)=>{
-          const cur = await tx.get(ref);
-          if(cur.exists()){ throw new Error('already'); }
-          tx.set(ref, { sellerId:__sellerId, userId:__viewer.uid, createdAt:serverTimestamp() });
-        });
-        $('#btnLike').disabled = true;
-        toast('❤ Beğenildi');
-        await refreshStats();
-      }catch(e){ if(e && e.message==='already'){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); } else { console.warn(e); toast('Hata'); } }
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const likeQ = query(collection(window.__fb.db,'likes'), where('sellerId','==',__sellerId));
+        const likeSnap = await getDocs(likeQ); const likeCount = likeSnap.size;
+
+        const rateQ = query(collection(window.__fb.db,'ratings'), where('sellerId','==',__sellerId));
+        const rateSnap = await getDocs(rateQ);
+        let sum=0, cnt=0; rateSnap.forEach(d=>{ const v=(d.data().stars||0); if(v>0){ sum+=v; cnt++; }});
+        const avg = cnt? (sum/cnt) : 0;
+
+        $('#stats').textContent = `${likeCount} beğeni • ${(avg?avg.toFixed(1):'—')}/5`;
+        fillStars(avg);
+        return { likeCount, avg };
+      }catch(err){
+        console.error(err);
+        // stats kritik değil, sessiz kalabilir
+        return { likeCount:0, avg:0 };
+      }
     }
 
     function initStars(){
@@ -240,12 +251,12 @@
           const n=Number(s.dataset.s||0);
           const ok=confirm(`${n} yıldız vermek istediğinize emin misiniz? Bu işlem geri alınamaz.`);
           if(!ok) return;
-          const { doc, runTransaction, serverTimestamp, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-          const rid = `${__sellerId}__${__viewer.uid}`;
-          const ref = doc(window.__fb.db,'ratings',rid);
-          const exists = await getDoc(ref);
-          if(exists.exists()){ toast('Daha önce puan verdiniz'); return; }
           try{
+            const { doc, runTransaction, serverTimestamp, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+            const rid = `${__sellerId}__${__viewer.uid}`;
+            const ref = doc(window.__fb.db,'ratings',rid);
+            const exists = await getDoc(ref);
+            if(exists.exists()){ toast('Daha önce puan verdiniz'); return; }
             await runTransaction(window.__fb.db, async (tx)=>{
               const cur = await tx.get(ref);
               if(cur.exists()){ throw new Error('rated'); }
@@ -253,55 +264,113 @@
             });
             toast('⭐ Puanlandı');
             await refreshStats();
-          }catch(e){ if(e && e.message==='rated'){ toast('Daha önce puan verdiniz'); } else { console.warn(e); toast('Hata'); } }
+          }catch(e){
+            if(e && e.message==='rated'){ toast('Daha önce puan verdiniz'); } else { console.warn(e); toast('Hata'); }
+          }
         });
       });
     }
 
-    async function precheckButtons(){
-      if(!__viewer){ return; }
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const lid = `${__sellerId}__${__viewer.uid}`;
-      const likeRef = doc(window.__fb.db,'likes',lid); const likeSnap = await getDoc(likeRef);
-      if(likeSnap.exists()){ $('#btnLike').disabled = true; }
-      const rateRef = doc(window.__fb.db,'ratings',lid); const rateSnap = await getDoc(rateRef);
-      if(rateSnap.exists()){ fillStars((rateSnap.data()||{}).stars||0); }
+    async function likeOnce(){
+      if(!__viewer){ toast('Giriş yapın'); return; }
+      if(__viewer.uid===__sellerId){ toast('Kendi profilinizi beğenemezsiniz'); return; }
+      try{
+        const { doc, runTransaction, serverTimestamp, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const likeId = `${__sellerId}__${__viewer.uid}`;
+        const ref = doc(window.__fb.db,'likes',likeId);
+
+        const has = await getDoc(ref);
+        if(has.exists()){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); return; }
+
+        await runTransaction(window.__fb.db, async (tx)=>{
+          const cur = await tx.get(ref);
+          if(cur.exists()){ throw new Error('already'); }
+          tx.set(ref, { sellerId:__sellerId, userId:__viewer.uid, createdAt:serverTimestamp() });
+        });
+        $('#btnLike').disabled = true;
+        toast('❤ Beğenildi');
+        await refreshStats();
+      }catch(e){
+        if(e && e.message==='already'){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); }
+        else { console.warn(e); toast('Hata'); }
+      }
     }
 
-    // ---------- LİSTİNGS ----------
+    async function precheckButtons(){
+      if(!__viewer){ return; }
+      try{
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const lid = `${__sellerId}__${__viewer.uid}`;
+        const likeRef = doc(window.__fb.db,'likes',lid); const likeSnap = await getDoc(likeRef);
+        if(likeSnap.exists()){ $('#btnLike').disabled = true; }
+        const rateRef = doc(window.__fb.db,'ratings',lid); const rateSnap = await getDoc(rateRef);
+        if(rateSnap.exists()){ fillStars((rateSnap.data()||{}).stars||0); }
+      }catch(err){
+        console.warn(err);
+      }
+    }
+
+    // ---------- LİSTINGS ----------
     async function loadListings(){
-      const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const q = query(collection(window.__fb.db,'listings'), where('userId','==',__sellerId));
-      const snap = await getDocs(q);
       const host = $('#listings'); host.innerHTML='';
-      const arr = [];
-      snap.forEach(ds=>{ const d = ds.data()||{}; arr.push({id:ds.id, d}); });
-      arr.sort((a,b)=>{
-        const ta = a.d.createdAt?.toMillis ? a.d.createdAt.toMillis() : (a.d.createdAt? new Date(a.d.createdAt).getTime():0);
-        const tb = b.d.createdAt?.toMillis ? b.d.createdAt.toMillis() : (b.d.createdAt? new Date(b.d.createdAt).getTime():0);
-        return (tb||0)-(ta||0);
-      });
-      $('#countListings').textContent = arr.length;
-      arr.forEach(({id,d})=>{
-        const card = document.createElement('div'); card.className='card'; card.setAttribute('role','button'); card.tabIndex=0;
-        card.innerHTML = `
-          <div class="img" style="background-image:url('${d.coverUrl||'/assets/img/avatar-default.png'}')" aria-label="Kapak görseli"></div>
-          <div class="body">
-            <div style="font-weight:800;min-height:42px">${(d.title||'—')}</div>
-            <div class="row" style="justify-content:space-between"><span class="mini">${d.province||''}</span><span class="price">${fmtTRY(d.price||0)}</span></div>
-          </div>`;
-        card.addEventListener('click', ()=> openDrawer(id, d));
-        card.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') openDrawer(id,d); });
-        host.appendChild(card);
-      });
+      $('#emptyList').style.display='none';
+      try{
+        const { collection, query, where, getDocs } =
+          await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+        // Herkes: sadece approved görsün
+        let q = query(
+          collection(window.__fb.db,'listings'),
+          where('userId','==',__sellerId),
+          where('status','==','approved')
+        );
+
+        // Eğer sayfayı satıcının kendisi açtıysa, tüm ilanlarını göster (kurallarda istisna eklediysen çalışır)
+        if(__viewer && __viewer.uid === __sellerId){
+          q = query(
+            collection(window.__fb.db,'listings'),
+            where('userId','==',__sellerId)
+          );
+        }
+
+        const snap = await getDocs(q);
+        const arr = [];
+        snap.forEach(ds=>{ const d = ds.data()||{}; arr.push({id:ds.id, d}); });
+
+        arr.sort((a,b)=>{
+          const ta = a.d.createdAt?.toMillis ? a.d.createdAt.toMillis() : (a.d.createdAt? new Date(a.d.createdAt).getTime():0);
+          const tb = b.d.createdAt?.toMillis ? b.d.createdAt.toMillis() : (b.d.createdAt? new Date(b.d.createdAt).getTime():0);
+          return (tb||0)-(ta||0);
+        });
+
+        $('#countListings').textContent = arr.length;
+
+        if(arr.length === 0){
+          $('#emptyList').style.display='block';
+          return;
+        }
+
+        arr.forEach(({id,d})=>{
+          const card = document.createElement('div'); card.className='card'; card.setAttribute('role','button'); card.tabIndex=0;
+          card.innerHTML = `
+            <div class="img" style="background-image:url('${d.coverUrl||'/assets/img/avatar-default.png'}')" aria-label="Kapak görseli"></div>
+            <div class="body">
+              <div style="font-weight:800;min-height:42px">${(d.title||'—')}</div>
+              <div class="row" style="justify-content:space-between"><span class="mini">${d.province||''}</span><span class="price">${fmtTRY(d.price||0)}</span></div>
+            </div>`;
+          card.addEventListener('click', ()=> openDrawer(id, d));
+          card.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') openDrawer(id,d); });
+          host.appendChild(card);
+        });
+      }catch(err){
+        console.error(err);
+        toast('İlanlar okunamadı (izin/yetki).');
+        // Muhtemel composite index hatırlatması:
+        console.warn('Eğer iki where koşulu kullanıyorsanız (userId + status), Firestore bileşik indeks isteyebilir. Konsoldaki linkten indeksi oluşturun.');
+      }
     }
 
     // ---------- DETAY ÇEKMECESİ ----------
-    const drawer = $('#drawer'), dCover=$('#dCover'), dThumbs=$('#dThumbs');
-    const dTitle=$('#dTitle'), dSub=$('#dSub'), dPrice=$('#dPrice'), dStock=$('#dStock'), dLoc=$('#dLoc'), dDate=$('#dDate'), dDesc=$('#dDesc');
-    $('#closeDrawer').onclick = ()=> drawer.style.display='none';
-    drawer.addEventListener('click', (e)=>{ if(e.target===drawer) drawer.style.display='none'; });
-
     function openDrawer(id, d){
       dCover.style.backgroundImage = `url('${d.coverUrl||'/assets/img/avatar-default.png'}')`;
       dThumbs.innerHTML='';
@@ -322,14 +391,25 @@
 
     // ---------- BOOT ----------
     async function boot(){
+      // URL param yoksa, oturumdaki kullanıcı satıcı kabul edilir
+      if(!__sellerId){
+        try{ __sellerId = (window.__fb?.auth?.currentUser?.uid) || ''; }catch{}
+      }
       if(!__sellerId){ toast('Satıcı ID yok'); return; }
+      if(!ensureFirebaseReady()) return;
+
+      // Auth
+      await new Promise((res)=>{
+        window.__fb.onAuthStateChanged(window.__fb.auth,(u)=>{ __viewer=u||null; res(); });
+      });
+
       $('#btnLike').addEventListener('click', likeOnce);
       initStars();
-      await ensureViewer();
-      await loadSeller();
+
+      const okSeller = await loadSeller();
       await refreshStats();
       await precheckButtons();
-      await loadListings();
+      if(okSeller) await loadListings();
     }
 
     (function init(){
