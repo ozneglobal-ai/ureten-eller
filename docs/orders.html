@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sipariş Detayı • Üreten Eller</title>
+  <title>Siparişler • Üreten Eller</title>
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
     :root{
@@ -14,7 +14,7 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
-    .wrap{max-width:1080px;margin:0 auto;padding:1rem 1rem 6rem}
+    .wrap{max-width:1280px;margin:0 auto;padding:1rem 1rem 6rem}
 
     .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900;letter-spacing:.2px}
@@ -25,27 +25,30 @@
     .btn.primary{background:linear-gradient(90deg,var(--info),#8b5cf6);border-color:transparent}
     .btn.ok{background:linear-gradient(90deg,var(--ok),#22d3ee);border-color:transparent}
 
-    .grid{display:grid;gap:1rem}
-    @media(min-width:960px){.grid{grid-template-columns:2fr 1fr}}
+    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
+    .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+    .tab{padding:.45rem .8rem;border:1px solid var(--brd);border-radius:999px;cursor:pointer}
+    .tab.active{background:linear-gradient(145deg,var(--card),var(--card2));box-shadow:0 0 0 1px var(--accent)}
+
+    .filters{display:flex;gap:.5rem;flex-wrap:wrap}
+    .input{padding:.55rem .65rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font:inherit}
+    select.input{padding-right:2rem}
+
+    .grid{display:grid;gap:.85rem;grid-template-columns:repeat(1,minmax(0,1fr))}
+    @media(min-width:920px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:1280px){.grid{grid-template-columns:repeat(3,1fr)}}
 
     .card{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden}
-    .pad{padding:1rem}
-    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem}
-    .mini{color:var(--muted)}
-    .kv{display:flex;gap:.5rem;align-items:center;margin:.25rem 0}
-    .kv label{width:160px;color:var(--muted)}
-    .kv strong{font-weight:800}
-
+    .pad{padding:.85rem}
     .row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+    .kv{display:flex;gap:.5rem;align-items:center}
+    .kv label{width:120px;color:var(--muted)}
+    .kv strong{font-weight:800}
+    .title{font-weight:900}
+    .mini{color:var(--muted)}
     .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .55rem;border-radius:999px;border:1px solid var(--brd);font-size:.78rem}
 
-    .msgs{display:grid;gap:.5rem;max-height:420px;overflow:auto;padding-right:.25rem}
-    .bubble{max-width:80%;padding:.6rem .75rem;border:1px solid var(--brd);border-radius:14px;line-height:1.35}
-    .me{justify-self:end;background:#0b1220}
-    .them{justify-self:start;background:#0c1324}
-
     .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1300;display:none}
-    .muted{color:var(--muted)}
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="./firebase-init.js"></script>
@@ -61,141 +64,168 @@
       <button id="homeBtn" class="btn ghost">Ana Sayfa</button>
     </div>
 
-    <div class="grid">
-      <!-- SOL: SİPARİŞ DETAY + MESAJLAŞMA -->
-      <main class="card pad">
-        <div class="head">
-          <h2 style="margin:0">Sipariş Detayı</h2>
-          <span id="orderStatus" class="badge">—</span>
-        </div>
-        <div id="orderBox">
-          Yükleniyor…
-        </div>
+    <section class="head" aria-labelledby="pTitle">
+      <h2 id="pTitle">Siparişler</h2>
+      <div class="tabs">
+        <button class="tab active" id="tabSeller">Satıcı Olduklarım</button>
+        <button class="tab" id="tabBuyer">Alıcı Olduklarım</button>
+      </div>
+    </section>
 
-        <hr style="border:0;border-top:1px solid var(--brd);margin:1rem 0"/>
+    <section class="row" style="justify-content:space-between;align-items:center">
+      <div class="filters">
+        <input id="searchInput" class="input" placeholder="İlan adı / ID ara…" />
+        <select id="statusSel" class="input">
+          <option value="">Durum (hepsi)</option>
+          <option value="new">new</option>
+          <option value="paid">paid</option>
+          <option value="shipped">shipped</option>
+          <option value="done">done</option>
+          <option value="canceled">canceled</option>
+        </select>
+      </div>
+      <div class="row mini"><span id="countText"></span></div>
+    </section>
 
-        <section aria-labelledby="msgTitle">
-          <div class="head"><h3 id="msgTitle" style="margin:0;font-size:1rem">Mesajlaşma</h3></div>
-          <div id="msgs" class="msgs"></div>
-          <div class="row" style="margin-top:.6rem">
-            <input id="msgInput" class="btn" style="flex:1;min-height:40px;background:#0b1220;border-radius:12px" placeholder="Mesaj yazın…" />
-            <button id="sendBtn" class="btn primary">Gönder</button>
-          </div>
-        </section>
-      </main>
+    <section style="margin-top:.6rem">
+      <div id="list" class="grid"></div>
+    </section>
 
-      <!-- SAĞ: ALICI & SATICI & HIZLI AKSİYONLAR -->
-      <aside class="card pad">
-        <div class="head"><h3 style="margin:0">Taraflar</h3></div>
-        <div id="peopleBox">
-          —
-        </div>
-        <div class="row" style="margin-top:.75rem;gap:.5rem">
-          <button id="callBtn" class="btn ok" disabled>Ara</button>
-          <button id="waBtn" class="btn" disabled>WhatsApp</button>
-          <button id="sellerBtn" class="btn ghost" disabled>Satıcı Profili</button>
-        </div>
-      </aside>
-    </div>
-
-    <audio id="ding" src="/assets/sounds/ding.mp3" preload="auto"></audio>
+    <audio id="ding" src="./notify.wav" preload="auto"></audio>
     <div id="toast" class="toast" role="status"></div>
   </div>
 
   <script>
+  // === Helpers ===
   const $ = (s)=>document.querySelector(s);
+  const $$ = (s)=>Array.from(document.querySelectorAll(s));
   function toast(msg){ const t=$('#toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>{t.style.display='none'},1800) }
   function fmtTL(v){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v||0);}catch{ return (v||0)+' TL'; } }
   function fmtDate(x){ try{ if(x?.toMillis) return new Date(x.toMillis()).toLocaleString('tr-TR'); const d=new Date(x); if(!isNaN(d)) return d.toLocaleString('tr-TR'); }catch{} return '—'; }
   function digits(x){ return String(x||'').replace(/\D/g,''); }
   function playDing(){ const a=$('#ding'); if(a){ a.currentTime=0; a.play().catch(()=>{}); } }
 
-  // Back to home
+  // Nav
   $('#homeBtn').onclick=()=>{ location.href='/docs/home.html'; };
 
-  const params=new URLSearchParams(location.search); const ORDER_ID=params.get('id');
-  if(!ORDER_ID){ document.body.innerHTML='<div class="wrap">Sipariş ID yok.</div>'; }
+  // Firebase ready
+  const ensure=()=> new Promise(r=>{ if(window.__fb?.db && window.__fb?.auth){ r(); } else { document.addEventListener('fb-ready',r,{once:true}); }});
 
-  // Firebase hazır
-  const ensure=()=> new Promise(r=>{ if(window.__fb?.db) r(); else document.addEventListener('fb-ready',r,{once:true}); });
+  // State
+  let MODE='seller'; // 'seller' | 'buyer'
+  let stopUnsub=null;
+  const buyerCache=new Map();
+  const sellerCache=new Map();
 
-  (async()=>{
+  function setActiveTab(){
+    $('#tabSeller').classList.toggle('active', MODE==='seller');
+    $('#tabBuyer').classList.toggle('active', MODE==='buyer');
+  }
+
+  function statusBadge(s){
+    const m={new:'Yeni', paid:'Ödendi', shipped:'Kargoda', done:'Tamamlandı', canceled:'İptal'};
+    const t=m[s]||s||'—';
+    return `<span class="badge">${t}</span>`;
+  }
+
+  function cardHTML(id, o, peer){
+    const title = o.listingTitle || o.listingId || 'Sipariş';
+    const price = (o.price!=null) ? `<div class="mini">${fmtTL(o.price)}</div>` : '';
+    const who   = (MODE==='seller') ? (peer?.name||peer?.displayName||o.buyerId||'Alıcı') : (peer?.name||peer?.displayName||o.sellerId||'Satıcı');
+    const tel   = peer?.phone || '';
+    const wa    = tel? `https://wa.me/${digits(tel)}` : '';
+    return `<div class="card pad">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="title">${title}</div>
+          <div class="mini">${id} • ${fmtDate(o.createdAt)}</div>
+        </div>
+        <div>${statusBadge(o.status)}</div>
+      </div>
+      ${price}
+      <div class="row" style="margin-top:.55rem;gap:.5rem">
+        <a class="btn" href="/docs/order.html?id=${id}">Detay</a>
+        ${tel? `<a class="btn ok" href="tel:${digits(tel)}">Ara</a>`:''}
+        ${wa? `<a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
+        ${(MODE==='seller' && o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
+        ${(MODE==='buyer' && o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
+      </div>
+    </div>`;
+  }
+
+  function renderEmpty(){ $('#list').innerHTML = '<div class="mini">Kayıt yok.</div>'; $('#countText').textContent=''; }
+
+  async function getUser(uid){
+    if(!uid) return null;
+    if(buyerCache.has(uid)) return buyerCache.get(uid);
+    if(sellerCache.has(uid)) return sellerCache.get(uid);
+    try{
+      const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const snap = await getDoc(doc(window.__fb.db,'users',uid));
+      const data = snap.exists()? (snap.data()||{}) : null;
+      // cache generic
+      if(data) buyerCache.set(uid,data);
+      return data;
+    }catch{return null}
+  }
+
+  async function startListener(){
+    if(stopUnsub){ stopUnsub(); stopUnsub=null; }
     await ensure();
-    const { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-    const db = window.__fb.db || getFirestore();
-    const auth = window.__fb.auth || getAuth();
+    const { collection, query, where, orderBy, limit, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const db = window.__fb.db; const me = window.__fb.auth.currentUser;
+    if(!me){ $('#list').innerHTML='<div class="mini">Lütfen giriş yapın.</div>'; return; }
 
-    // Sipariş oku
-    let order=null, buyer=null, seller=null;
-    async function load(){
-      const os = await getDoc(doc(db,'orders',ORDER_ID));
-      if(!os.exists()){ $('#orderBox').textContent='Sipariş bulunamadı.'; return; }
-      order = os.data()||{};
+    // Base query by mode
+    const baseQ = MODE==='seller'
+      ? query(collection(db,'orders'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200))
+      : query(collection(db,'orders'), where('buyerId','==', me.uid),  orderBy('createdAt','desc'), limit(200));
 
-      // Buyer & Seller
-      try{ const bs=await getDoc(doc(db,'users', order.buyerId)); if(bs.exists()) buyer=bs.data()||{}; }catch{}
-      try{ const ss=await getDoc(doc(db,'users', order.sellerId)); if(ss.exists()) seller=ss.data()||{}; }catch{}
+    stopUnsub = onSnapshot(baseQ, async (ss)=>{
+      const items=[];
+      const changes=ss.docChanges();
+      let played=false;
+      for(const ch of changes){ if(ch.type==='added'){ played=true; } }
 
-      // UI doldur
-      $('#orderStatus').textContent = (order.status||'—');
-      const rows = [];
-      rows.push(`<div class="kv"><label>Sipariş ID</label><strong>${ORDER_ID}</strong></div>`);
-      rows.push(`<div class="kv"><label>İlan</label><strong>${order.listingTitle||order.listingId||'—'}</strong></div>`);
-      if(order.price!=null) rows.push(`<div class="kv"><label>Tutar</label><strong>${fmtTL(order.price)}</strong></div>`);
-      if(order.quantity!=null) rows.push(`<div class="kv"><label>Adet</label><strong>${order.quantity}</strong></div>`);
-      rows.push(`<div class="kv"><label>Oluşturma</label><strong>${fmtDate(order.createdAt)||'—'}</strong></div>`);
-      if(order.note) rows.push(`<div class="kv"><label>Not</label><strong>${order.note}</strong></div>`);
-      $('#orderBox').innerHTML = rows.join('');
+      // Filter in-memory by UI controls
+      const term = ($('#searchInput').value||'').toLowerCase().trim();
+      const statusFilter = $('#statusSel').value||'';
 
-      // People
-      const tel = buyer?.phone || order.buyerPhone || '';
-      const wa  = tel ? `https://wa.me/${digits(tel)}` : '';
-      $('#peopleBox').innerHTML = `
-        <div class="kv"><label>Alıcı</label><strong>${buyer?.name||buyer?.displayName||'—'}</strong></div>
-        <div class="kv"><label>Telefon</label><strong>${tel||'—'}</strong></div>
-        <div class="kv"><label>Satıcı</label><strong>${seller?.name||seller?.displayName||'—'}</strong></div>
-      `;
-      const callBtn=$('#callBtn'), waBtn=$('#waBtn'), sellerBtn=$('#sellerBtn');
-      if(tel){ callBtn.disabled=false; callBtn.onclick=()=>{ location.href='tel:'+digits(tel); }; }
-      if(wa){ waBtn.disabled=false; waBtn.onclick=()=>{ window.open(wa,'_blank'); }; }
-      if(order.sellerId){ sellerBtn.disabled=false; sellerBtn.onclick=()=>{ location.href='/docs/seller.html?uid='+encodeURIComponent(order.sellerId); }; }
-
-      // Mesaj çek (canlı)
-      const q = query(collection(db,'orders',ORDER_ID,'messages'), orderBy('createdAt','asc'));
-      onSnapshot(q,(ss)=>{
-        const box=$('#msgs'); if(!box) return; box.innerHTML='';
-        ss.forEach(ms=>{
-          const m=ms.data()||{}; const mine = auth.currentUser && m.from===auth.currentUser.uid;
-          const el=document.createElement('div'); el.className='bubble ' + (mine?'me':'them');
-          const when = m.createdAt? fmtDate(m.createdAt) : '';
-          el.innerHTML = `${m.text||''}<div class="muted" style="margin-top:.25rem;font-size:.75rem">${when}</div>`;
-          box.appendChild(el);
-        });
-        // yeni mesaj sesi
-        playDing();
-        box.scrollTop = box.scrollHeight;
+      // Enrich with peer data
+      const promises = ss.docs.map(async d=>{
+        const o=d.data()||{}; let peer=null;
+        if(MODE==='seller' && o.buyerId){ peer = await getUser(o.buyerId); }
+        if(MODE==='buyer'  && o.sellerId){ peer = await getUser(o.sellerId); }
+        return { id:d.id, data:o, peer };
       });
-    }
+      const rows = await Promise.all(promises);
 
-    await load();
+      rows.forEach(({id,data,peer})=>{
+        if(term){
+          const hay = `${id} ${(data.listingTitle||'')} ${(data.listingId||'')}`.toLowerCase();
+          if(!hay.includes(term)) return;
+        }
+        if(statusFilter && data.status!==statusFilter) return;
+        items.push(cardHTML(id,data,peer));
+      });
 
-    // Mesaj gönder
-    async function send(){
-      try{
-        const v = ($('#msgInput').value||'').trim();
-        if(!v) return; if(!auth.currentUser){ toast('Lütfen giriş yapın'); return; }
-        await addDoc(collection(db,'orders',ORDER_ID,'messages'),{
-          text:v,
-          from: auth.currentUser.uid,
-          createdAt: serverTimestamp()
-        });
-        $('#msgInput').value='';
-      }catch(e){ console.error(e); toast('Mesaj gönderilemedi'); }
-    }
-    $('#sendBtn').onclick=send; $('#msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+      $('#list').innerHTML = items.length ? items.join('') : '<div class="mini">Kayıt yok.</div>';
+      $('#countText').textContent = items.length? `Toplam ${items.length}` : '';
+      if(played) playDing();
+    }, (err)=>{
+      console.error(err);
+      $('#list').innerHTML = '<div class="mini">Siparişler okunamadı (izin veya ağ hatası).</div>';
+    });
+  }
 
-  })();
+  // UI handlers
+  $('#tabSeller').onclick=()=>{ MODE='seller'; setActiveTab(); startListener(); };
+  $('#tabBuyer').onclick=()=>{ MODE='buyer';  setActiveTab(); startListener(); };
+  $('#statusSel').onchange=()=>startListener();
+  $('#searchInput').addEventListener('input',()=>startListener());
+
+  // Boot
+  (async()=>{ await ensure(); setActiveTab(); startListener(); })();
   </script>
 </body>
 </html>
