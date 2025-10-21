@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Siparişler • Üreten Eller</title>
+  <title>Siparişler & Teklifler • Üreten Eller</title>
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
     :root{
@@ -65,10 +65,12 @@
     </div>
 
     <section class="head" aria-labelledby="pTitle">
-      <h2 id="pTitle">Siparişler</h2>
+      <h2 id="pTitle">Siparişler & Teklifler</h2>
       <div class="tabs">
         <button class="tab active" id="tabSeller">Satıcı Olduklarım</button>
         <button class="tab" id="tabBuyer">Alıcı Olduklarım</button>
+        <button class="tab" id="tabOffersIn">Teklifler (Aldığım)</button>
+        <button class="tab" id="tabOffersOut">Teklifler (Gönderdiğim)</button>
       </div>
     </section>
 
@@ -82,6 +84,12 @@
           <option value="shipped">shipped</option>
           <option value="done">done</option>
           <option value="canceled">canceled</option>
+        </select>
+        <select id="offerStatusSel" class="input" style="display:none">
+          <option value="">Teklif durumu (hepsi)</option>
+          <option value="sent">sent</option>
+          <option value="accepted">accepted</option>
+          <option value="rejected">rejected</option>
         </select>
       </div>
       <div class="row mini"><span id="countText"></span></div>
@@ -112,14 +120,18 @@
   const ensure=()=> new Promise(r=>{ if(window.__fb?.db && window.__fb?.auth){ r(); } else { document.addEventListener('fb-ready',r,{once:true}); }});
 
   // State
-  let MODE='seller'; // 'seller' | 'buyer'
+  let MODE='seller'; // 'seller' | 'buyer' | 'offers_in' | 'offers_out'
   let stopUnsub=null;
-  const buyerCache=new Map();
-  const sellerCache=new Map();
+  const userCache=new Map();
 
   function setActiveTab(){
     $('#tabSeller').classList.toggle('active', MODE==='seller');
     $('#tabBuyer').classList.toggle('active', MODE==='buyer');
+    $('#tabOffersIn').classList.toggle('active', MODE==='offers_in');
+    $('#tabOffersOut').classList.toggle('active', MODE==='offers_out');
+    // Sipariş/teklif filtrelerinin görünürlüğü
+    $('#statusSel').style.display = (MODE==='seller'||MODE==='buyer')? 'inline-block':'none';
+    $('#offerStatusSel').style.display = (MODE==='offers_in'||MODE==='offers_out')? 'inline-block':'none';
   }
 
   function statusBadge(s){
@@ -127,11 +139,24 @@
     const t=m[s]||s||'—';
     return `<span class="badge">${t}</span>`;
   }
+  function offerStatusBadge(s){
+    const m={sent:'Gönderildi', accepted:'Kabul', rejected:'Reddedildi'}; const t=m[s]||s||'—';
+    return `<span class="badge">${t}</span>`;
+  }
 
-  function cardHTML(id, o, peer){
+  async function getUser(uid){
+    if(!uid) return null; if(userCache.has(uid)) return userCache.get(uid);
+    try{
+      const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const snap = await getDoc(doc(window.__fb.db,'users',uid));
+      const data = snap.exists()? (snap.data()||{}) : null; userCache.set(uid,data); return data;
+    }catch{return null}
+  }
+
+  function cardOrderHTML(id, o, peer, mode){
     const title = o.listingTitle || o.listingId || 'Sipariş';
     const price = (o.price!=null) ? `<div class="mini">${fmtTL(o.price)}</div>` : '';
-    const who   = (MODE==='seller') ? (peer?.name||peer?.displayName||o.buyerId||'Alıcı') : (peer?.name||peer?.displayName||o.sellerId||'Satıcı');
+    const who   = (mode==='seller') ? (peer?.name||peer?.displayName||o.buyerId||'Alıcı') : (peer?.name||peer?.displayName||o.sellerId||'Satıcı');
     const tel   = peer?.phone || '';
     const wa    = tel? `https://wa.me/${digits(tel)}` : '';
     return `<div class="card pad">
@@ -147,27 +172,36 @@
         <a class="btn" href="/docs/order.html?id=${id}">Detay</a>
         ${tel? `<a class="btn ok" href="tel:${digits(tel)}">Ara</a>`:''}
         ${wa? `<a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
-        ${(MODE==='seller' && o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
-        ${(MODE==='buyer' && o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
+        ${(o.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}">Satıcı Profili</a>`:''}
+      </div>
+    </div>`;
+  }
+
+  function cardOfferHTML(id, ofr, peer, mode){
+    const title = ofr.listingTitle || ofr.listingId || 'Teklif';
+    const price = (ofr.price!=null) ? `<div class="mini">${fmtTL(ofr.price)}</div>` : '';
+    const who   = (mode==='offers_in') ? (peer?.name||peer?.displayName||ofr.buyerId||'Alıcı') : (peer?.name||peer?.displayName||ofr.sellerId||'Satıcı');
+    const tel   = peer?.phone || '';
+    const wa    = tel? `https://wa.me/${digits(tel)}` : '';
+    return `<div class="card pad">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="title">${title}</div>
+          <div class="mini">${id} • ${fmtDate(ofr.createdAt)}</div>
+        </div>
+        <div>${offerStatusBadge(ofr.status||'sent')}</div>
+      </div>
+      ${price}
+      ${ofr.message? `<div class="mini" style="margin-top:.35rem">“${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}”</div>`:''}
+      <div class="row" style="margin-top:.55rem;gap:.5rem">
+        ${tel? `<a class="btn ok" href="tel:${digits(tel)}">Ara</a>`:''}
+        ${wa? `<a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
+        ${(ofr.sellerId)? `<a class="btn ghost" href="/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}">Satıcı Profili</a>`:''}
       </div>
     </div>`;
   }
 
   function renderEmpty(){ $('#list').innerHTML = '<div class="mini">Kayıt yok.</div>'; $('#countText').textContent=''; }
-
-  async function getUser(uid){
-    if(!uid) return null;
-    if(buyerCache.has(uid)) return buyerCache.get(uid);
-    if(sellerCache.has(uid)) return sellerCache.get(uid);
-    try{
-      const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const snap = await getDoc(doc(window.__fb.db,'users',uid));
-      const data = snap.exists()? (snap.data()||{}) : null;
-      // cache generic
-      if(data) buyerCache.set(uid,data);
-      return data;
-    }catch{return null}
-  }
 
   async function startListener(){
     if(stopUnsub){ stopUnsub(); stopUnsub=null; }
@@ -177,36 +211,47 @@
     if(!me){ $('#list').innerHTML='<div class="mini">Lütfen giriş yapın.</div>'; return; }
 
     // Base query by mode
-    const baseQ = MODE==='seller'
-      ? query(collection(db,'orders'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200))
-      : query(collection(db,'orders'), where('buyerId','==', me.uid),  orderBy('createdAt','desc'), limit(200));
+    let baseQ;
+    if(MODE==='seller'){
+      baseQ = query(collection(db,'orders'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+    }else if(MODE==='buyer'){
+      baseQ = query(collection(db,'orders'), where('buyerId','==', me.uid),  orderBy('createdAt','desc'), limit(200));
+    }else if(MODE==='offers_in'){
+      baseQ = query(collection(db,'offers'), where('sellerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+    }else if(MODE==='offers_out'){
+      baseQ = query(collection(db,'offers'), where('buyerId','==', me.uid), orderBy('createdAt','desc'), limit(200));
+    }
 
     stopUnsub = onSnapshot(baseQ, async (ss)=>{
-      const items=[];
-      const changes=ss.docChanges();
-      let played=false;
-      for(const ch of changes){ if(ch.type==='added'){ played=true; } }
+      const items=[]; const changes=ss.docChanges(); let played=false; for(const ch of changes){ if(ch.type==='added'){ played=true; } }
 
-      // Filter in-memory by UI controls
+      // Filters
       const term = ($('#searchInput').value||'').toLowerCase().trim();
       const statusFilter = $('#statusSel').value||'';
+      const offerFilter = $('#offerStatusSel').value||'';
 
-      // Enrich with peer data
-      const promises = ss.docs.map(async d=>{
-        const o=d.data()||{}; let peer=null;
-        if(MODE==='seller' && o.buyerId){ peer = await getUser(o.buyerId); }
-        if(MODE==='buyer'  && o.sellerId){ peer = await getUser(o.sellerId); }
-        return { id:d.id, data:o, peer };
-      });
-      const rows = await Promise.all(promises);
+      // Enrich peer
+      const rows = await Promise.all(ss.docs.map(async d=>{
+        const data=d.data()||{}; let peer=null;
+        if(MODE==='seller' && data.buyerId){ peer = await getUser(data.buyerId); }
+        if(MODE==='buyer'  && data.sellerId){ peer = await getUser(data.sellerId); }
+        if(MODE==='offers_in' && data.buyerId){ peer = await getUser(data.buyerId); }
+        if(MODE==='offers_out' && data.sellerId){ peer = await getUser(data.sellerId); }
+        return { id:d.id, data, peer };
+      }));
 
       rows.forEach(({id,data,peer})=>{
         if(term){
           const hay = `${id} ${(data.listingTitle||'')} ${(data.listingId||'')}`.toLowerCase();
           if(!hay.includes(term)) return;
         }
-        if(statusFilter && data.status!==statusFilter) return;
-        items.push(cardHTML(id,data,peer));
+        if(MODE==='seller' || MODE==='buyer'){
+          if(statusFilter && data.status!==statusFilter) return;
+          items.push(cardOrderHTML(id,data,peer,MODE));
+        }else{
+          if(offerFilter && (data.status||'sent')!==offerFilter) return;
+          items.push(cardOfferHTML(id,data,peer,MODE));
+        }
       });
 
       $('#list').innerHTML = items.length ? items.join('') : '<div class="mini">Kayıt yok.</div>';
@@ -214,14 +259,17 @@
       if(played) playDing();
     }, (err)=>{
       console.error(err);
-      $('#list').innerHTML = '<div class="mini">Siparişler okunamadı (izin veya ağ hatası).</div>';
+      $('#list').innerHTML = '<div class="mini">Kayıt okunamadı (izin veya ağ hatası).</div>';
     });
   }
 
   // UI handlers
   $('#tabSeller').onclick=()=>{ MODE='seller'; setActiveTab(); startListener(); };
   $('#tabBuyer').onclick=()=>{ MODE='buyer';  setActiveTab(); startListener(); };
+  $('#tabOffersIn').onclick=()=>{ MODE='offers_in';  setActiveTab(); startListener(); };
+  $('#tabOffersOut').onclick=()=>{ MODE='offers_out'; setActiveTab(); startListener(); };
   $('#statusSel').onchange=()=>startListener();
+  $('#offerStatusSel').onchange=()=>startListener();
   $('#searchInput').addEventListener('input',()=>startListener());
 
   // Boot
