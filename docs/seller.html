@@ -145,7 +145,7 @@
     // ---------- UTIL ----------
     const $=(s)=>document.querySelector(s);
     const qs=(k)=>new URLSearchParams(location.search).get(k)||'';
-    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1800); }
+    function toast(msg){ const el=$('#toast'); if(!el) return; el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1800); }
     function fmtTRY(x){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(x||0); }catch{ return (x||0)+' TL'; } }
     function toDate(v){ try{ return v?.toDate ? v.toDate() : (v ? new Date(v) : null); } catch { return null; } }
     function fmtDate(ts){ const d=toDate(ts); return d? d.toLocaleString('tr-TR') : '—'; }
@@ -156,12 +156,12 @@
     let __viewer=null;
     let __sellerId = qs('uid') || qs('seller') || '';
 
-    $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='./home.html'; };
+    const btnBack = $('#btnBack'); if(btnBack){ btnBack.onclick=()=>{ history.length>1?history.back():location.href='./home.html'; }; }
     const drawer = $('#drawer'), dCover=$('#dCover'), dThumbs=$('#dThumbs');
     const dTitle=$('#dTitle'), dSub=$('#dSub'), dPrice=$('#dPrice'), dStock=$('#dStock'), dLoc=$('#dLoc'), dDate=$('#dDate'), dDesc=$('#dDesc');
 
-    $('#closeDrawer').onclick = ()=> drawer.style.display='none';
-    drawer.addEventListener('click', (e)=>{ if(e.target===drawer) drawer.style.display='none'; });
+    const closeDrawer = $('#closeDrawer'); if(closeDrawer){ closeDrawer.onclick = ()=>{ if(drawer) drawer.style.display='none'; }; }
+    if(drawer){ drawer.addEventListener('click', (e)=>{ if(e.target===drawer) drawer.style.display='none'; }); }
 
     // ---------- FIREBASE GUARD ----------
     function ensureFirebaseReady(){
@@ -186,30 +186,33 @@
         const first = (u.name || u.firstName || u.ad || '').trim();
         const last  = (u.surname || u.lastName || u.soyad || '').trim();
         const full = [first,last].filter(Boolean).join(' ') || (u.displayName || '—');
-        $('#fullName').textContent = full;
+        const fullNameEl = $('#fullName'); if(fullNameEl) fullNameEl.textContent = full;
 
         // Avatar
-        $('#avatar').style.backgroundImage = `url('${u.avatar||u.photoURL||'/assets/img/avatar-default.png'}')`;
+        const avatarEl = $('#avatar'); if(avatarEl) avatarEl.style.backgroundImage = `url('${u.avatar||u.photoURL||'/assets/img/avatar-default.png'}')`;
         // Şehir (TR varyasyonları)
-        $('#city').textContent = u.province || u.city || u.il || u.sehir || 'Şehir yok';
+        const cityEl = $('#city'); if(cityEl) cityEl.textContent = u.province || u.city || u.il || u.sehir || 'Şehir yok';
         // Telefon & Bio
-        $('#phone').textContent = maskPhone(u.phone || u.tel || u.phoneNumber);
-        $('#bio').textContent   = (u.bio || u.about || u.hakkinda || '').trim() || '—';
+        const phoneEl = $('#phone'); if(phoneEl) phoneEl.textContent = maskPhone(u.phone || u.tel || u.phoneNumber);
+        const bioEl = $('#bio'); if(bioEl) bioEl.textContent = (u.bio || u.about || u.hakkinda || '').trim() || '—';
 
         // Onaylı rozet
         const verified = !!(u.isVerified || u.verified || u.verifiedSeller);
-        $('#verifiedBadge').style.display = verified ? 'inline-flex' : 'none';
+        const verEl = $('#verifiedBadge'); if(verEl) verEl.style.display = verified ? 'inline-flex' : 'none';
 
         // Hakkında
         const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
-        $('#joined').textContent = fmtDate(joined);
-        $('#email').textContent  = maskEmail(u.email || u.mail);
+        const joinedEl = $('#joined'); if(joinedEl) joinedEl.textContent = fmtDate(joined);
+        const emailEl = $('#email'); if(emailEl) emailEl.textContent = maskEmail(u.email || u.mail);
 
         // Mesaj
-        $('#btnMessage').onclick = ()=>{
-          const p = new URLSearchParams({ peer: __sellerId, name: encodeURIComponent(full), ava: u.avatar||u.photoURL||'', order: '' });
-          location.href = './mesajlar.html?'+p.toString();
-        };
+        const btnMessage = $('#btnMessage');
+        if(btnMessage){
+          btnMessage.onclick = ()=>{
+            const p = new URLSearchParams({ peer: __sellerId, name: encodeURIComponent(full), ava: u.avatar||u.photoURL||'', order: '' });
+            location.href = './mesajlar.html?'+p.toString();
+          };
+        }
         return true;
       }catch(err){
         console.error(err);
@@ -230,12 +233,11 @@
         let sum=0, cnt=0; rateSnap.forEach(d=>{ const v=(d.data().stars||0); if(v>0){ sum+=v; cnt++; }});
         const avg = cnt? (sum/cnt) : 0;
 
-        $('#stats').textContent = `${likeCount} beğeni • ${(avg?avg.toFixed(1):'—')}/5`;
+        const statsEl = $('#stats'); if(statsEl) statsEl.textContent = `${likeCount} beğeni • ${(avg?avg.toFixed(1):'—')}/5`;
         fillStars(avg);
         return { likeCount, avg };
       }catch(err){
         console.error(err);
-        // stats kritik değil, sessiz kalabilir
         return { likeCount:0, avg:0 };
       }
     }
@@ -280,18 +282,18 @@
         const ref = doc(window.__fb.db,'likes',likeId);
 
         const has = await getDoc(ref);
-        if(has.exists()){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); return; }
+        if(has.exists()){ const b = $('#btnLike'); if(b) b.disabled=true; toast('Zaten beğendiniz'); return; }
 
         await runTransaction(window.__fb.db, async (tx)=>{
           const cur = await tx.get(ref);
           if(cur.exists()){ throw new Error('already'); }
           tx.set(ref, { sellerId:__sellerId, userId:__viewer.uid, createdAt:serverTimestamp() });
         });
-        $('#btnLike').disabled = true;
+        const b = $('#btnLike'); if(b) b.disabled = true;
         toast('❤ Beğenildi');
         await refreshStats();
       }catch(e){
-        if(e && e.message==='already'){ $('#btnLike').disabled=true; toast('Zaten beğendiniz'); }
+        if(e && e.message==='already'){ const b=$('#btnLike'); if(b) b.disabled=true; toast('Zaten beğendiniz'); }
         else { console.warn(e); toast('Hata'); }
       }
     }
@@ -302,7 +304,7 @@
         const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const lid = `${__sellerId}__${__viewer.uid}`;
         const likeRef = doc(window.__fb.db,'likes',lid); const likeSnap = await getDoc(likeRef);
-        if(likeSnap.exists()){ $('#btnLike').disabled = true; }
+        if(likeSnap.exists()){ const b=$('#btnLike'); if(b) b.disabled = true; }
         const rateRef = doc(window.__fb.db,'ratings',lid); const rateSnap = await getDoc(rateRef);
         if(rateSnap.exists()){ fillStars((rateSnap.data()||{}).stars||0); }
       }catch(err){
@@ -312,8 +314,11 @@
 
     // ---------- LİSTINGS ----------
     async function loadListings(){
-      const host = $('#listings'); host.innerHTML='';
-      $('#emptyList').style.display='none';
+      const host = $('#listings');
+      if(host) host.innerHTML='';
+      const emptyEl = document.getElementById('emptyList');
+      if(emptyEl) emptyEl.style.display='none';
+
       try{
         const { collection, query, where, getDocs } =
           await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
@@ -343,10 +348,10 @@
           return (tb||0)-(ta||0);
         });
 
-        $('#countListings').textContent = arr.length;
+        const countEl = $('#countListings'); if(countEl) countEl.textContent = arr.length;
 
         if(arr.length === 0){
-          $('#emptyList').style.display='block';
+          if(emptyEl) emptyEl.style.display='block';
           return;
         }
 
@@ -360,33 +365,32 @@
             </div>`;
           card.addEventListener('click', ()=> openDrawer(id, d));
           card.addEventListener('keydown', (ev)=>{ if(ev.key==='Enter') openDrawer(id,d); });
-          host.appendChild(card);
+          if(host) host.appendChild(card);
         });
       }catch(err){
         console.error(err);
         toast('İlanlar okunamadı (izin/yetki).');
-        // Muhtemel composite index hatırlatması:
-        console.warn('Eğer iki where koşulu kullanıyorsanız (userId + status), Firestore bileşik indeks isteyebilir. Konsoldaki linkten indeksi oluşturun.');
+        console.warn('İki where (userId + status) birlikteyse, Firestore bileşik indeks isteyebilir. Konsoldaki linkten oluşturun.');
       }
     }
 
     // ---------- DETAY ÇEKMECESİ ----------
     function openDrawer(id, d){
-      dCover.style.backgroundImage = `url('${d.coverUrl||'/assets/img/avatar-default.png'}')`;
-      dThumbs.innerHTML='';
+      if(dCover) dCover.style.backgroundImage = `url('${d.coverUrl||'/assets/img/avatar-default.png'}')`;
+      if(dThumbs) dThumbs.innerHTML='';
       (d.photos||[]).forEach(url=>{
         const t=document.createElement('div'); t.className='t'; t.style.backgroundImage=`url('${url}')`;
-        t.onclick=()=>{ dCover.style.backgroundImage=`url('${url}')`; };
-        dThumbs.appendChild(t);
+        t.onclick=()=>{ if(dCover) dCover.style.backgroundImage=`url('${url}')`; };
+        if(dThumbs) dThumbs.appendChild(t);
       });
-      dTitle.textContent = d.title || '—';
-      dSub.textContent   = `${d.category||''}${d.subcategory?(' • '+d.subcategory):''}`;
-      dPrice.textContent = fmtTRY(d.price||0);
-      dStock.textContent = (d.stock==='yok'?'Yok':'Var');
-      dLoc.textContent   = `${d.province||''}${d.district?(' / '+d.district):''}`;
-      dDate.textContent  = fmtDate(d.createdAt);
-      dDesc.textContent  = d.description || '—';
-      drawer.style.display='block';
+      if(dTitle) dTitle.textContent = d.title || '—';
+      if(dSub)   dSub.textContent   = `${d.category||''}${d.subcategory?(' • '+d.subcategory):''}`;
+      if(dPrice) dPrice.textContent = fmtTRY(d.price||0);
+      if(dStock) dStock.textContent = (d.stock==='yok'?'Yok':'Var');
+      if(dLoc)   dLoc.textContent   = `${d.province||''}${d.district?(' / '+d.district):''}`;
+      if(dDate)  dDate.textContent  = fmtDate(d.createdAt);
+      if(dDesc)  dDesc.textContent  = d.description || '—';
+      if(drawer) drawer.style.display='block';
     }
 
     // ---------- BOOT ----------
@@ -398,12 +402,12 @@
       if(!__sellerId){ toast('Satıcı ID yok'); return; }
       if(!ensureFirebaseReady()) return;
 
-      // Auth
+      // Auth hazır olunca başla
       await new Promise((res)=>{
         window.__fb.onAuthStateChanged(window.__fb.auth,(u)=>{ __viewer=u||null; res(); });
       });
 
-      $('#btnLike').addEventListener('click', likeOnce);
+      const likeBtn = $('#btnLike'); if(likeBtn) likeBtn.addEventListener('click', likeOnce);
       initStars();
 
       const okSeller = await loadSeller();
