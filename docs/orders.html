@@ -159,6 +159,13 @@
     const price = (o.price!=null) ? `<div class="mini">${fmtTL(o.price)}</div>` : '';
     const tel   = peer?.phone || '';
     const wa    = tel? `https://wa.me/${digits(tel)}` : '';
+
+    // CEVAP VER → mesajlar.html?peer=...&name=...&ava=...&order=...
+    const peerUid  = (mode==='seller') ? (o.buyerId||'') : (o.sellerId||'');
+    const peerName = peer?.name || peer?.displayName || '';
+    const peerAva  = peer?.avatar || peer?.photoURL || '';
+    const chatUrl  = peerUid ? `/docs/mesajlar.html?peer=${encodeURIComponent(peerUid)}&name=${encodeURIComponent(peerName)}&ava=${encodeURIComponent(peerAva)}&order=${encodeURIComponent(id)}` : '';
+
     return `<div class="card pad">
       <div class="row" style="justify-content:space-between">
         <div>
@@ -169,8 +176,8 @@
       </div>
       ${price}
       <div class="row" style="margin-top:.55rem;gap:.5rem">
-        <!-- Detay sayfası olmayan kurulumlarda 404 olmasın diye kendi sayfasına yönlendiriyoruz -->
         <a class="btn" href="/docs/orders.html?id=${id}">Detay</a>
+        ${chatUrl? `<a class=\"btn primary\" href=\"${chatUrl}\">Cevap Ver</a>`:''}
         ${tel? `<a class=\"btn ok\" href=\"tel:${digits(tel)}\">Ara</a>`:''}
         ${wa? `<a class=\"btn\" href=\"${wa}\" target=\"_blank\" rel=\"noopener\">WhatsApp</a>`:''}
         ${(o.sellerId)? `<a class=\"btn ghost\" href=\"/docs/seller.html?uid=${encodeURIComponent(o.sellerId)}\">Satıcı Profili</a>`:''}
@@ -180,25 +187,17 @@
 
   function cardOfferHTML(id, ofr, peer, mode){
     const title = ofr.listingTitle || ofr.listingId || 'Teklif';
-    const price = (ofr.price!=null) ? `<div class="mini">${fmtTL(ofr.price)}</div>` : '';
+    const price = (ofr.price!=null) ? `<div class=\"mini\">${fmtTL(ofr.price)}</div>` : '';
     const tel   = peer?.phone || '';
     const wa    = tel? `https://wa.me/${digits(tel)}` : '';
-    return `<div class="card pad">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div class="title">${title}</div>
-          <div class="mini">${id} • ${fmtDate(ofr.createdAt)}</div>
-        </div>
-        <div>${offerStatusBadge(ofr.status||'sent')}</div>
-      </div>
-      ${price}
-      ${ofr.message? `<div class="mini" style="margin-top:.35rem">“${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}”</div>`:''}
-      <div class="row" style="margin-top:.55rem;gap:.5rem">
-        ${tel? `<a class=\"btn ok\" href=\"tel:${digits(tel)}\">Ara</a>`:''}
-        ${wa? `<a class=\"btn\" href=\"${wa}\" target=\"_blank\" rel=\"noopener\">WhatsApp</a>`:''}
-        ${(ofr.sellerId)? `<a class=\"btn ghost\" href=\"/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}\">Satıcı Profili</a>`:''}
-      </div>
-    </div>`;
+
+    // CEVAP VER → offers_in (satıcı) buyerId'ye, offers_out (alıcı) sellerId'ye
+    const peerUid  = (mode==='offers_in') ? (ofr.buyerId||'') : (ofr.sellerId||'');
+    const peerName = peer?.name || peer?.displayName || '';
+    const peerAva  = peer?.avatar || peer?.photoURL || '';
+    const chatUrl  = peerUid ? `/docs/mesajlar.html?peer=${encodeURIComponent(peerUid)}&name=${encodeURIComponent(peerName)}&ava=${encodeURIComponent(peerAva)}&order=${encodeURIComponent(ofr.orderId||id)}` : '';
+
+    return `<div class=\"card pad\">\n      <div class=\"row\" style=\"justify-content:space-between\">\n        <div>\n          <div class=\"title\">${title}</div>\n          <div class=\"mini\">${id} • ${fmtDate(ofr.createdAt)}</div>\n        </div>\n        <div>${offerStatusBadge(ofr.status||'sent')}</div>\n      </div>\n      ${price}\n      ${ofr.message? `<div class=\"mini\" style=\"margin-top:.35rem\">“${ofr.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}”</div>`:''}\n      <div class=\"row\" style=\"margin-top:.55rem;gap:.5rem\">\n        ${chatUrl? `<a class=\\\"btn primary\\\" href=\\\"${chatUrl}\\\">Cevap Ver</a>`:''}\n        ${tel? `<a class=\\\"btn ok\\\" href=\\\"tel:${digits(tel)}\\\">Ara</a>`:''}\n        ${wa? `<a class=\\\"btn\\\" href=\\\"${wa}\\\" target=\\\"_blank\\\" rel=\\\"noopener\\\">WhatsApp</a>`:''}\n        ${(ofr.sellerId)? `<a class=\\\"btn ghost\\\" href=\\\"/docs/seller.html?uid=${encodeURIComponent(ofr.sellerId)}\\\">Satıcı Profili</a>`:''}\n      </div>\n    </div>`;
   }
 
   function renderEmpty(){ $('#list').innerHTML = '<div class="mini">Kayıt yok.</div>'; $('#countText').textContent=''; }
