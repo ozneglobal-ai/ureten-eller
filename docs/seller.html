@@ -29,7 +29,6 @@
     .ava{width:160px;height:160px;border-radius:16px;border:1px solid var(--brd);background:#111827;background-size:cover;background-position:center}
     .h1{font-size:1.35rem;font-weight:900;display:flex;align-items:center;gap:.5rem}
     .verBadge{display:inline-flex;align-items:center;gap:.35rem;background:#0b1326;border:1px solid #0e766e;color:#a7f3d0;padding:.15rem .5rem;border-radius:999px;font-weight:800}
-
     .bio{margin-top:6px;white-space:pre-wrap}
 
     .row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:6px}
@@ -60,13 +59,27 @@
 
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1600;display:none}
 
+    /* Yorumlar */
+    .reviews{margin-top:18px;border:1px solid var(--brd);border-radius:16px;background:#0b1326;padding:12px}
+    .revItem{border-top:1px solid var(--brd);padding:10px 4px}
+    .revItem:first-child{border-top:none}
+    .revHead{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .revStars{font-size:14px;opacity:.9}
+    .revAuthor{font-weight:700}
+    .revText{white-space:pre-wrap;margin-top:4px;color:#e5e7eb}
+    .revForm{display:grid;grid-template-columns:1fr 120px auto;gap:8px;margin-top:10px}
+    .revForm textarea{background:#0b1326;color:var(--ink);border:1px solid var(--brd);border-radius:10px;padding:8px;min-height:70px}
+    .revForm select{background:#0b1326;color:var(--ink);border:1px solid var(--brd);border-radius:10px;padding:8px}
+    .revForm button{border:1px solid var(--brd);border-radius:10px;padding:8px 12px;background:var(--accent);color:#03222a;font-weight:800;cursor:pointer}
+    .muted{color:var(--muted);font-size:12px;margin-top:6px}
+
     @media (max-width:720px){
       .profile{grid-template-columns:1fr}
       .ava{width:120px;height:120px}
       .kv{grid-template-columns:120px 1fr}
+      .revForm{grid-template-columns:1fr}
     }
   </style>
-  <!-- Firestore & Auth yardımcılarını sağlayan dosya -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -118,6 +131,27 @@
     <section id="listings" class="grid" aria-live="polite">
       <div class="empty" id="emptyList" style="display:none">Henüz ilan yok.</div>
     </section>
+
+    <!-- YORUMLAR -->
+    <section class="reviews" id="reviewsBox" aria-label="Yorumlar">
+      <h3 style="margin:8px 2px 6px">Yorumlar</h3>
+      <div id="reviewsList"></div>
+      <div id="reviewsEmpty" class="muted" style="display:none">Henüz yorum yok. İlk yorumu siz yazın.</div>
+
+      <div class="revForm" id="reviewFormWrap" style="display:none">
+        <textarea id="revText" placeholder="Deneyiminizi paylaşın (en az 6 karakter)"></textarea>
+        <select id="revStars">
+          <option value="5">5 ⭐</option>
+          <option value="4">4 ⭐</option>
+          <option value="3">3 ⭐</option>
+          <option value="2">2 ⭐</option>
+          <option value="1">1 ⭐</option>
+          <option value="0">Yıldız yok</option>
+        </select>
+        <button id="revSend" type="button">Gönder</button>
+        <div class="muted" id="revHint">Kibar kalın. Küfür/hakaret engellenir.</div>
+      </div>
+    </section>
   </div>
 
   <!-- İLAN DETAY ÇEKMECESİ -->
@@ -153,6 +187,17 @@
     function maskEmail(e){ if(!e) return '—'; const [u,dom]=(e+'').split('@'); if(!dom) return e; return (u.slice(0,2)+'***@'+dom); }
     function fillStars(avg){ const stars=[...document.querySelectorAll('#ratingBox .star')]; stars.forEach((s,i)=>{ s.classList.toggle('active', i < Math.round(avg||0)); }); }
 
+    // Yasaklı kelimeler (küfür/hakaret) — küçük harfle karşılaştırılır
+    const BAN = [
+      'salak','aptal','gerizekalı','mall','mal','orospu','oç','oc','sikerim','siktir','amk','aq','a.q','piç',
+      'yarrak','yavşak','şerefsiz','kahpe','ş...','fuck','shit'
+    ];
+
+    function hasBanned(text){
+      const t=(text||'').toLowerCase();
+      return BAN.some(w=> t.includes(w));
+    }
+
     let __viewer=null;
     let __sellerId = qs('uid') || qs('seller') || '';
 
@@ -163,7 +208,6 @@
     const closeDrawer = $('#closeDrawer'); if(closeDrawer){ closeDrawer.onclick = ()=>{ if(drawer) drawer.style.display='none'; }; }
     if(drawer){ drawer.addEventListener('click', (e)=>{ if(e.target===drawer) drawer.style.display='none'; }); }
 
-    // ---------- FIREBASE GUARD ----------
     function ensureFirebaseReady(){
       if(!window.__fb || !window.__fb.db || !window.__fb.auth || !window.__fb.onAuthStateChanged){
         console.error('window.__fb beklenen yapıda değil. firebase-init.js dosyanızı kontrol edin.');
@@ -182,30 +226,23 @@
         if(!snap.exists()){ toast('Satıcı bulunamadı'); return false; }
         const u = snap.data()||{};
 
-        // İsim alan varyasyonları
         const first = (u.name || u.firstName || u.ad || '').trim();
         const last  = (u.surname || u.lastName || u.soyad || '').trim();
         const full = [first,last].filter(Boolean).join(' ') || (u.displayName || '—');
         const fullNameEl = $('#fullName'); if(fullNameEl) fullNameEl.textContent = full;
 
-        // Avatar
         const avatarEl = $('#avatar'); if(avatarEl) avatarEl.style.backgroundImage = `url('${u.avatar||u.photoURL||'/assets/img/avatar-default.png'}')`;
-        // Şehir (TR varyasyonları)
         const cityEl = $('#city'); if(cityEl) cityEl.textContent = u.province || u.city || u.il || u.sehir || 'Şehir yok';
-        // Telefon & Bio
         const phoneEl = $('#phone'); if(phoneEl) phoneEl.textContent = maskPhone(u.phone || u.tel || u.phoneNumber);
         const bioEl = $('#bio'); if(bioEl) bioEl.textContent = (u.bio || u.about || u.hakkinda || '').trim() || '—';
 
-        // Onaylı rozet
         const verified = !!(u.isVerified || u.verified || u.verifiedSeller);
         const verEl = $('#verifiedBadge'); if(verEl) verEl.style.display = verified ? 'inline-flex' : 'none';
 
-        // Hakkında
         const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
         const joinedEl = $('#joined'); if(joinedEl) joinedEl.textContent = fmtDate(joined);
         const emailEl = $('#email'); if(emailEl) emailEl.textContent = maskEmail(u.email || u.mail);
 
-        // Mesaj
         const btnMessage = $('#btnMessage');
         if(btnMessage){
           btnMessage.onclick = ()=>{
@@ -225,6 +262,7 @@
     async function refreshStats(){
       try{
         const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
         const likeQ = query(collection(window.__fb.db,'likes'), where('sellerId','==',__sellerId));
         const likeSnap = await getDocs(likeQ); const likeCount = likeSnap.size;
 
@@ -233,12 +271,16 @@
         let sum=0, cnt=0; rateSnap.forEach(d=>{ const v=(d.data().stars||0); if(v>0){ sum+=v; cnt++; }});
         const avg = cnt? (sum/cnt) : 0;
 
-        const statsEl = $('#stats'); if(statsEl) statsEl.textContent = `${likeCount} beğeni • ${(avg?avg.toFixed(1):'—')}/5`;
+        const statsEl = $('#stats');
+        if(statsEl){
+          const avgTxt = avg ? avg.toFixed(1) : '—';
+          statsEl.textContent = `${likeCount} beğeni • ${avgTxt}/5${cnt?` (${cnt} oy)`:''}`;
+        }
         fillStars(avg);
-        return { likeCount, avg };
+        return { likeCount, avg, cnt };
       }catch(err){
         console.error(err);
-        return { likeCount:0, avg:0 };
+        return { likeCount:0, avg:0, cnt:0 };
       }
     }
 
@@ -323,24 +365,26 @@
         const { collection, query, where, getDocs } =
           await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-        // Herkes: sadece approved görsün
         let q = query(
           collection(window.__fb.db,'listings'),
           where('userId','==',__sellerId),
           where('status','==','approved')
         );
 
-        // Eğer sayfayı satıcının kendisi açtıysa, tüm ilanlarını göster (kurallarda istisna eklediysen çalışır)
         if(__viewer && __viewer.uid === __sellerId){
-          q = query(
-            collection(window.__fb.db,'listings'),
-            where('userId','==',__sellerId)
-          );
+          q = query(collection(window.__fb.db,'listings'), where('userId','==',__sellerId));
         }
 
         const snap = await getDocs(q);
         const arr = [];
         snap.forEach(ds=>{ const d = ds.data()||{}; arr.push({id:ds.id, d}); });
+
+        // Şehir fallback (profil boşsa)
+        const cityEl = $('#city');
+        if(cityEl && (cityEl.textContent==='Şehir yok' || cityEl.textContent==='—')){
+          const firstProv = arr.find(x=>x.d.province)?.d?.province;
+          if(firstProv) cityEl.textContent = firstProv;
+        }
 
         arr.sort((a,b)=>{
           const ta = a.d.createdAt?.toMillis ? a.d.createdAt.toMillis() : (a.d.createdAt? new Date(a.d.createdAt).getTime():0);
@@ -374,6 +418,119 @@
       }
     }
 
+    // ---------- YORUMLAR ----------
+    async function loadReviews(){
+      const list = $('#reviewsList');
+      const empty = $('#reviewsEmpty');
+      if(list) list.innerHTML='';
+      if(empty) empty.style.display='none';
+
+      try{
+        const { collection, query, where, orderBy, getDocs } =
+          await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const q = query(
+          collection(window.__fb.db,'reviews'),
+          where('sellerId','==',__sellerId),
+          orderBy('createdAt','desc')
+        );
+        const snap = await getDocs(q);
+        let has = false;
+
+        snap.forEach(ds=>{
+          const r = ds.data()||{};
+          has = true;
+          const item = document.createElement('div');
+          item.className='revItem';
+          const stars = Number(r.stars||0);
+          const starTxt = stars>0 ? ('★'.repeat(stars)+'☆'.repeat(5-stars)) : '—';
+          item.innerHTML = `
+            <div class="revHead">
+              <div class="revAuthor">${r.userName || 'Anonim'}</div>
+              <div class="revStars">${starTxt}</div>
+            </div>
+            <div class="revText">${(r.text||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s]))}</div>
+            <div class="muted">${fmtDate(r.createdAt)}</div>
+          `;
+          if(list) list.appendChild(item);
+        });
+
+        if(!has && empty) empty.style.display='block';
+      }catch(err){
+        console.error(err);
+      }
+    }
+
+    function setupReviewForm(){
+      const wrap = $('#reviewFormWrap');
+      if(!wrap) return;
+      wrap.style.display = (__viewer && __viewer.uid !== __sellerId) ? 'grid' : 'none';
+
+      const send = $('#revSend');
+      if(!send) return;
+
+      send.onclick = async ()=>{
+        if(!__viewer){ toast('Giriş yapın'); return; }
+        if(__viewer.uid===__sellerId){ toast('Kendi sayfanıza yorum bırakamazsınız'); return; }
+
+        const text = ($('#revText')?.value||'').trim();
+        const stars = parseInt($('#revStars')?.value||'0',10) || 0;
+
+        if(text.length < 6){ toast('Yorum çok kısa'); return; }
+        if(hasBanned(text)){ toast('Uygunsuz ifade tespit edildi. Lütfen kibar olun.'); return; }
+
+        try{
+          const { collection, addDoc, serverTimestamp } =
+            await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+          await addDoc(collection(window.__fb.db,'reviews'),{
+            sellerId: __sellerId,
+            userId: __viewer.uid,
+            userName: __viewer.displayName || (__viewer.email?__viewer.email.split('@')[0]:'Kullanıcı'),
+            text, stars,
+            createdAt: serverTimestamp()
+          });
+
+          // Bildirim oluştur
+          await addDoc(collection(window.__fb.db,'notifications'),{
+            to: __sellerId,
+            type: 'comment',
+            text: `${(__viewer.displayName||'Bir kullanıcı')} yorum yaptı`,
+            createdAt: serverTimestamp()
+          });
+
+          // Sesli uyarı
+          try{ new Audio('./notify.wav').play(); }catch{}
+
+          // Eğer yıldız verildiyse ve daha önce rating yoksa bir kez kayıt
+          if(stars>0){
+            try{
+              const { doc, getDoc, runTransaction, serverTimestamp } =
+                await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+              const rid = `${__sellerId}__${__viewer.uid}`;
+              const ref = doc(window.__fb.db,'ratings',rid);
+              const has = await getDoc(ref);
+              if(!has.exists()){
+                await runTransaction(window.__fb.db, async (tx)=>{
+                  const cur = await tx.get(ref);
+                  if(!cur.exists()){
+                    tx.set(ref,{ sellerId:__sellerId, userId:__viewer.uid, stars, createdAt:serverTimestamp() });
+                  }
+                });
+              }
+            }catch(e){ console.warn('rating optional fail', e); }
+          }
+
+          toast('Yorum gönderildi');
+          $('#revText').value='';
+          await loadReviews();
+          await refreshStats();
+        }catch(err){
+          console.error(err);
+          toast('Yorum gönderilemedi');
+        }
+      };
+    }
+
     // ---------- DETAY ÇEKMECESİ ----------
     function openDrawer(id, d){
       if(dCover) dCover.style.backgroundImage = `url('${d.coverUrl||'/assets/img/avatar-default.png'}')`;
@@ -395,14 +552,12 @@
 
     // ---------- BOOT ----------
     async function boot(){
-      // URL param yoksa, oturumdaki kullanıcı satıcı kabul edilir
       if(!__sellerId){
         try{ __sellerId = (window.__fb?.auth?.currentUser?.uid) || ''; }catch{}
       }
       if(!__sellerId){ toast('Satıcı ID yok'); return; }
       if(!ensureFirebaseReady()) return;
 
-      // Auth hazır olunca başla
       await new Promise((res)=>{
         window.__fb.onAuthStateChanged(window.__fb.auth,(u)=>{ __viewer=u||null; res(); });
       });
@@ -414,6 +569,8 @@
       await refreshStats();
       await precheckButtons();
       if(okSeller) await loadListings();
+      await loadReviews();
+      setupReviewForm();
     }
 
     (function init(){
