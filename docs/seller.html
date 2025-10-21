@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title data-i18n="title">Siparişler • Üreten Eller</title>
-  <link rel="icon" href="/assets/icons/favicon.png" />
+  <link rel="icon" href="./assets/icons/favicon.png" />
   <style>
     :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326 }
     *{box-sizing:border-box}
@@ -277,8 +277,7 @@
       const q = query(
         collection(window.__fb.db,'orders'),
         where('sellerId','==',uid),
-        where('archivedBySeller','!=',true),
-        orderBy('archivedBySeller'),
+        where('archivedBySeller','==',false),
         orderBy('createdAt','desc')
       );
       __unsub = onSnapshot(q, async (snap)=>{
