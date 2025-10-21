@@ -17,14 +17,14 @@
     .app{display:grid;grid-template-columns:320px 1fr;gap:0;height:100vh}
 
     /* Sidebar */
-    .side{border-right:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column}
+    .side{border-right:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column;min-width:0}
     .sideHead{padding:10px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px}
     .logo{display:flex;align-items:center;gap:8px;font-weight:900}
     .logo img{width:28px;height:28px}
-    .me{margin-left:auto;font-size:12px;color:var(--muted)}
+    .me{margin-left:auto;font-size:12px;color:var(--muted);max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
     .search{padding:8px}
     .search input{width:100%;border:1px solid var(--brd);border-radius:10px;background:#0b1326;color:var(--ink);padding:8px 10px}
-    .threads{overflow:auto;gap:0}
+    .threads{overflow:auto}
     .th{display:grid;grid-template-columns:48px 1fr auto;gap:8px;padding:10px;border-bottom:1px solid var(--brd);cursor:pointer;align-items:center}
     .th:hover{background:#0b132633}
     .ava{width:44px;height:44px;border-radius:999px;background:#111827 center/cover no-repeat;border:1px solid var(--brd)}
@@ -35,16 +35,16 @@
 
     /* Chat */
     .chat{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
-    .chatHead{border-bottom:1px solid var(--brd);padding:10px;display:flex;align-items:center;gap:10px}
+    .chatHead{border-bottom:1px solid var(--brd);padding:10px;display:flex;align-items:center;gap:10px;min-width:0}
     .chatHead .ava{width:36px;height:36px}
-    .peerName{font-weight:900}
+    .peerName{font-weight:900;max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .chatActions{margin-left:auto;display:flex;gap:8px}
     .btn{border:1px solid var(--brd);background:#0b1326;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer}
     .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
     .btn.danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);border-color:#7a1b1b}
     .btn.ghost{background:transparent}
     .log{padding:12px;overflow:auto}
-    .msg{max-width:70%;margin:6px 0;padding:8px 10px;border-radius:12px;background:#0b1326;border:1px solid var(--brd);white-space:pre-wrap}
+    .msg{max-width:70%;margin:6px 0;padding:8px 10px;border-radius:12px;background:#0b1326;border:1px solid var(--brd);white-space:pre-wrap;word-wrap:break-word}
     .mine{margin-left:auto;background:#072430;border-color:#0e766e}
     .meta{font-size:11px;color:var(--muted);margin-top:2px}
     .composer{display:grid;grid-template-columns:1fr auto;gap:8px;border-top:1px solid var(--brd);padding:10px}
@@ -53,7 +53,7 @@
     .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border:1px solid var(--brd);border-radius:999px;color:var(--muted);font-size:12px}
 
     .toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1600;display:none}
-    @media (max-width:900px){ .app{grid-template-columns:1fr} .side{display:none} .chat{height:100vh} }
+    @media (max-width:900px){ .app{grid-template-columns:1fr} .side{display:none} .chat{height:100vh} #btnBackMobile{display:inline-block!important} }
   </style>
   <script type="module" src="./firebase-init.js"></script>
 </head>
@@ -106,6 +106,7 @@
 
   // Küfür/hakaret basit filtre (UI tarafı)
   const BAN = ['salak','aptal','gerizekalı','orospu','oç','sikerim','siktir','amk','aq','piç','yarrak','yavşak','şerefsiz','kahpe','fuck','shit'];
+  const sanitize = (t) => (t||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s]));
 
   function badText(t){ const x=(t||'').toLowerCase(); return BAN.some(w=>x.includes(w)); }
 
@@ -117,7 +118,7 @@
   let __peerCache = new Map(); // uid -> {name, avatar}
 
   function ensureFirebaseReady(){
-    if(!window.__fb || !window.__fb.db || !window.__fb.auth || !window.__fb.onAuthStateChanged){
+    if(!self.__fb || !self.db || !self.auth || !self.onAuthStateChanged){
       console.error('firebase-init hazır değil');
       toast('Bağlantı kurulamadı (firebase-init).');
       return false;
@@ -140,7 +141,7 @@
     if(__peerCache.has(uid)) return __peerCache.get(uid);
     try{
       const {doc, getDoc} = await api();
-      const snap = await getDoc(doc(window.__fb.db,'users',uid));
+      const snap = await getDoc(doc(self.db,'users',uid));
       let name='Kullanıcı', avatar='';
       if(snap.exists()){
         const u=snap.data()||{};
@@ -165,8 +166,8 @@
     t.innerHTML = `
       <div class="ava" style="background-image:url('${other.avatar||'/assets/img/avatar-default.png'}')"></div>
       <div>
-        <div class="thTitle">${other.name||'Kullanıcı'}</div>
-        <div class="thSub">${(lastText||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s]))}</div>
+        <div class="thTitle">${sanitize(other.name||'Kullanıcı')}</div>
+        <div class="thSub">${sanitize(lastText||'')}</div>
       </div>
       <div class="thTime">${lastAt? fmtDate(lastAt):''}</div>
     `;
@@ -191,9 +192,9 @@
     $('#peerAva').style.backgroundImage = `url('${other.avatar||'/assets/img/avatar-default.png'}')`;
     $('#peerMeta').textContent = `UID: ${otherUid}`;
 
-    // Scroll + live listen items
+    // live listen items
     const {collection, query, orderBy, onSnapshot} = await api();
-    const q = query(collection(window.__fb.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
+    const q = query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
 
     const log = $('#log'); log.innerHTML='';
     let firstLoad = true;
@@ -206,7 +207,7 @@
           const wrap = document.createElement('div');
           wrap.className = 'msg' + (mine?' mine':'');
           wrap.innerHTML = `
-            <div>${(d.text||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s]))}</div>
+            <div>${sanitize(d.text||'')}</div>
             <div class="meta">${fmtDate(d.createdAt)}</div>
           `;
           log.appendChild(wrap);
@@ -216,6 +217,9 @@
       if(playBell){ try{ bell.currentTime=0; bell.play(); }catch{} }
       firstLoad = false;
       log.scrollTop = log.scrollHeight;
+    }, (err)=>{
+      console.error('Items listen error:', err);
+      toast('Mesajlar okunamadı');
     });
   }
 
@@ -223,7 +227,7 @@
   async function createOrGetThread(peerUid, presetName='', presetAva=''){
     const {collection, query, where, getDocs, addDoc, serverTimestamp} = await api();
     // Var mı?
-    const q = query(collection(window.__fb.db,'messages'),
+    const q = query(collection(self.db,'messages'),
       where('participants','array-contains', __me.uid));
     const snap = await getDocs(q);
     let foundId = '';
@@ -236,7 +240,7 @@
     if(foundId) return foundId;
     // Yoksa oluştur
     const now = serverTimestamp();
-    const docRef = await addDoc(collection(window.__fb.db,'messages'),{
+    const docRef = await addDoc(collection(self.db,'messages'),{
       participants:[__me.uid, peerUid],
       lastText:'',
       lastAt: now,
@@ -256,7 +260,7 @@
 
     const {collection, addDoc, serverTimestamp, doc, updateDoc, getDoc} = await api();
     const now = serverTimestamp();
-    const tRef = doc(window.__fb.db,'messages',__currentThreadId);
+    const tRef = doc(self.db,'messages',__currentThreadId);
 
     // alıcıyı bul
     let peerUid = '';
@@ -267,7 +271,7 @@
       peerUid = arr.find(x=>x!==__me.uid) || '';
     }
 
-    await addDoc(collection(window.__fb.db,'messages',__currentThreadId,'items'),{
+    await addDoc(collection(self.db,'messages',__currentThreadId,'items'),{
       text, from: __me.uid, createdAt: now
     });
 
@@ -275,11 +279,11 @@
       lastText: text, lastAt: now, lastFrom: __me.uid
     });
 
-    // (Opsiyonel) Bildirim — kurallar izin veriyor
+    // (Opsiyonel) Bildirim
     try{
       const {collection, addDoc, serverTimestamp} = await api();
-      await addDoc(collection(window.__fb.db,'notifications'),{
-        to: peerUid, type:'message', text:`Yeni mesajınız var`, createdAt: serverTimestamp()
+      await addDoc(collection(self.db,'notifications'),{
+        to: peerUid, type:'message', text:`${(__me.email||'Biri')} size mesaj gönderdi`, createdAt: serverTimestamp()
       });
     }catch(e){ /* sessiz */ }
 
@@ -294,15 +298,15 @@
     try{
       const {collection, getDocs, writeBatch, doc} = await api();
       // items
-      const itemsCol = collection(window.__fb.db,'messages',__currentThreadId,'items');
+      const itemsCol = collection(self.db,'messages',__currentThreadId,'items');
       const itemsSnap = await getDocs(itemsCol);
-      const batch = writeBatch(window.__fb.db);
+      const batch = writeBatch(self.db);
       itemsSnap.forEach(m=> batch.delete(m.ref));
       // thread
-      batch.delete(doc(window.__fb.db,'messages',__currentThreadId));
+      batch.delete(doc(self.db,'messages',__currentThreadId));
       await batch.commit();
       __currentThreadId = null;
-      clearUnsub();
+      if(__itemsUnsub){ __itemsUnsub(); __itemsUnsub=null; }
       $('#log').innerHTML='';
       $('#msgInput').disabled = true; $('#sendBtn').disabled=true; $('#btnDelete').disabled=true;
       $('#peerName').textContent='Kişi seçin'; $('#peerMeta').textContent='—'; $('#peerAva').style.backgroundImage='';
@@ -313,28 +317,37 @@
     }
   }
 
-  // ====== LOAD THREADS (LEFT) ======
+  // ====== LISTEN THREADS (LEFT) with index-safe fallback ======
   async function listenThreads(){
     if(__threadsUnsub){ __threadsUnsub(); __threadsUnsub=null; }
-    const {collection, query, where, orderBy, onSnapshot} = await api();
-    let q = query(
-      collection(window.__fb.db,'messages'),
-      where('participants','array-contains', __me.uid),
-      orderBy('lastAt','desc')
-    );
+    const {collection, query, where, orderBy, onSnapshot, getDocs} = await api();
+    const baseQ = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
 
     const listEl = $('#threads');
     listEl.innerHTML = '<div class="empty">Yükleniyor…</div>';
 
-    __threadsUnsub = onSnapshot(q, async (snap)=>{
-      const changes = snap.docChanges();
-      if(!changes.length){
-        listEl.innerHTML = '<div class="empty">Konuşma yok.</div>';
-        return;
-      }
-      listEl.innerHTML = '';
+    // Önce indeksi deneyelim
+    try{
+      const q = query(baseQ, orderBy('lastAt','desc'));
+      __threadsUnsub = onSnapshot(q, (snap)=> renderThreadsSnapshot(snap), (err)=>{
+        console.warn('Threads listen error (indexed):', err);
+        // Fallback’e düş
+        fallbackNoIndex();
+      });
+    }catch(err){
+      console.warn('Indexed query build failed:', err);
+      fallbackNoIndex();
+    }
+
+    async function fallbackNoIndex(){
+      // orderBy olmadan dinleyelim; render’da JS ile sıralayacağız
+      if(__threadsUnsub){ __threadsUnsub(); __threadsUnsub=null; }
+      __threadsUnsub = onSnapshot(baseQ, (snap)=> renderThreadsSnapshot(snap, /*clientSort*/true));
+      console.info('%cFirestore index önerisi: messages {participants array-contains, lastAt desc}', 'color:#f59e0b');
+    }
+
+    async function renderThreadsSnapshot(snap, clientSort=false){
       const rows = [];
-      // Build all rows first (need peer names)
       for(const ds of snap.docs){
         const d=ds.data()||{};
         const arr = d.participants||[];
@@ -342,21 +355,28 @@
         const other = await getUserBrief(otherUid);
         rows.push({id:ds.id, otherUid, other, lastText:d.lastText||'', lastAt:d.lastAt});
       }
+      if(clientSort){
+        rows.sort((a,b)=>{
+          const ta = a.lastAt?.toMillis ? a.lastAt.toMillis() : (a.lastAt? new Date(a.lastAt).getTime():0);
+          const tb = b.lastAt?.toMillis ? b.lastAt.toMillis() : (b.lastAt? new Date(b.lastAt).getTime():0);
+          return (tb||0)-(ta||0);
+        });
+      }
 
       // Search filter
       const qtxt = ($('#search')?.value||'').trim().toLowerCase();
       const filtered = qtxt ? rows.filter(r => (r.other.name||'').toLowerCase().includes(qtxt) || (r.lastText||'').toLowerCase().includes(qtxt)) : rows;
 
+      listEl.innerHTML = filtered.length ? '' : '<div class="empty">Konuşma yok.</div>';
       filtered.forEach(r=>{
         const el = threadItemTemplate(r);
         el.onclick = ()=> openThread(r.id, r.otherUid);
         listEl.appendChild(el);
       });
 
-      // Auto-open by URL peer
+      // URL ile otomatik açma (bir kere)
       const urlPeer = qs('peer');
       if(urlPeer){
-        // find thread that matches peer, else create
         const has = rows.find(x=>x.otherUid===urlPeer);
         if(has){ openThread(has.id, urlPeer); }
         else{
@@ -364,10 +384,9 @@
             .then((id)=> openThread(id, urlPeer))
             .catch(()=> toast('Konuşma açılamadı'));
         }
-        // URL’i bir kere kullan
         history.replaceState({}, document.title, location.pathname);
       }
-    });
+    }
   }
 
   // ====== BOOT ======
@@ -376,16 +395,12 @@
     $('#sendBtn').onclick = sendMessage;
     $('#btnDelete').onclick = deleteCurrentThread;
     $('#btnBackMobile').onclick = ()=>{ document.querySelector('.side').style.display='block'; };
+    $('#search').addEventListener('input', ()=> listenThreads());
 
     // auth
-    await new Promise((res)=> window.__fb.onAuthStateChanged(window.__fb.auth,(u)=>{ __me=u||null; res(); }));
+    await new Promise((res)=> self.onAuthStateChanged(self.auth,(u)=>{ __me=u||null; res(); }));
     if(!__me){ toast('Oturum bulunamadı. Giriş yapın.'); return; }
     $('#meInfo').textContent = __me.email || (__me.uid.slice(0,6)+'…');
-
-    // enable composer once a thread is opened (default disabled)
-
-    // search
-    $('#search').addEventListener('input', ()=> listenThreads());
 
     // listen threads
     listenThreads();
