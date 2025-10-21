@@ -91,7 +91,7 @@
             <button class="btn warn" id="btnDeleteThread" type="button">🗑️ <span data-i18n="delete_thread">Sohbeti Sil</span></button>
           </div>
         </header>
-        <div id="chatBody" class="chatBody"></div>
+        <div id="chatBody" class="chatBody" aria-live="polite"></div>
         <div class="chatSend">
           <input id="msgInput" class="inp" placeholder="Mesaj yaz…" />
           <button class="btn primary" id="btnSend" type="button" data-i18n="send">Gönder</button>
@@ -126,9 +126,8 @@
     // ==== Utils ====
     const $=(s)=>document.querySelector(s);
     const qs=(s)=>new URLSearchParams(location.search).get(s)||'';
-    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1500); }
-    function digits(x){ return String(x||'').replace(/\D/g,''); }
-    function escapeHtml(s){ return (s||'').replace(/[&<>\"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+    function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
     function formatDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString(pickLang()==='tr'?'tr-TR':undefined); }catch{ return '—'; } }
     function threadIdFromPair(a,b){ return [a,b].sort().join('__'); }
 
@@ -143,12 +142,12 @@
       $('#btnBulkDelete').onclick=bulkDelete;
       $('#q').oninput=filterList;
       $('#btnSend').onclick=sendMessage;
-      // Enter ile gönder
       $('#msgInput').addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }});
       $('#btnDeleteThread').onclick=()=>{ if(!__currentThread) return; confirm(t('confirm_delete_one')) && deleteThreadHard(__currentThread.id); };
     }
 
     function filterList(){ const q=($('#q').value||'').toLowerCase(); if(!q){ __filtered=[...__threads]; } else { __filtered=__threads.filter(x=> (x.otherName||'').toLowerCase().includes(q) || (x.lastText||'').toLowerCase().includes(q) ); } renderThreadList(); }
+
     function renderThreadList(){
       const host=$('#threadList'); host.innerHTML='';
       $('#emptyBox').style.display = __filtered.length===0 ? 'block' : 'none';
@@ -193,20 +192,21 @@
           if(snap.empty) break;
           for(const ds of snap.docs){ await deleteDoc(ds.ref); }
           if(snap.size<CHUNK) break;
+          last=snap.docs[snap.docs.length-1];
         }
         await deleteDoc(root);
         if(__currentThread && __currentThread.id===threadId){ __currentThread=null; $('#chatBody').innerHTML=''; $('#chatName').textContent='—'; $('#chatSub').textContent='—'; }
-      }catch(e){ console.warn('deleteThreadHard',e); toast('Hata'); }
+      }catch(e){ console.warn('deleteThreadHard',e); toast('Silinemedi'); }
     }
 
     async function openThread(id){
       try{
         if(__unsubItems){ try{__unsubItems();}catch{} __unsubItems=null; }
         const {doc,getDoc,collection,query,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const ref=doc(window.__fb.db,'messages',id); const snap=await getDoc(ref); if(!snap.exists()) { toast('Sohbet bulunamadı'); return; }
+        const ref=doc(window.__fb.db,'messages',id); const snap=await getDoc(ref);
+        if(!snap.exists()) { toast('Sohbet bulunamadı'); return; }
         const d=snap.data()||{}; __currentThread={id, ...d};
 
-        // Başlık (gerekirse peer verisini tamamla)
         const { otherName, otherAvatar } = await resolveOtherFromDoc(id, d);
         $('#chatName').textContent=otherName||'—';
         $('#chatSub').textContent=d.orderId ? (t('order') + d.orderId) : '—';
@@ -217,8 +217,8 @@
           const box=$('#chatBody'); box.innerHTML='';
           qsnap.forEach(ds=>{ const m={id:ds.id, ...(ds.data()||{})}; box.appendChild(msgBubble(m)); });
           box.scrollTop=box.scrollHeight;
-        });
-      }catch(e){ console.warn('openThread',e); }
+        },(err)=>{ console.warn('items onSnapshot',err); toast('Mesajlar okunamadı'); });
+      }catch(e){ console.warn('openThread',e); toast('Açılamadı'); }
     }
 
     function msgBubble(m){
@@ -239,23 +239,24 @@
     }
 
     // === Thread yoksa oluştur + gönder ===
-    async function ensureThread(buyerUid, sellerUid, meta={}){
+    async function ensureThread(meUid, peerUid, meta={}){
       const { doc, getDoc, setDoc, updateDoc, serverTimestamp } =
         await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const tid = threadIdFromPair(buyerUid, sellerUid);
+      const tid = threadIdFromPair(meUid, peerUid);
       const ref = doc(window.__fb.db, 'messages', tid);
       const snap = await getDoc(ref);
       const base = {
-        participants: [buyerUid, sellerUid],
+        participants: [meUid, peerUid],
         lastText: meta.lastText || '',
         lastAt: serverTimestamp(),
         otherName: meta.otherName || '',
         otherAvatar: meta.otherAvatar || '',
         orderId: meta.orderId || null
       };
-      if (!snap.exists()){ await setDoc(ref, base); }
-      else {
-        await updateDoc(ref, {
+      if (!snap.exists()){
+        await setDoc(ref, base);     // kurallardaki allowed fields ile birebir
+      } else {
+        await updateDoc(ref, {       // sadece güvenli meta güncelle
           otherName: base.otherName, otherAvatar: base.otherAvatar, orderId: base.orderId
         });
       }
@@ -276,19 +277,23 @@
           await openThread(t.id);
         }
 
+        // mesajı alt koleksiyona ekle (yalnızca text, from, createdAt!)
         const {collection,addDoc,serverTimestamp,doc,updateDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        await addDoc(collection(window.__fb.db,'messages',__currentThread.id,'items'),{ createdAt:serverTimestamp(), from:__uid, text });
+        await addDoc(collection(window.__fb.db,'messages',__currentThread.id,'items'),{ text, from:__uid, createdAt:serverTimestamp() });
         await updateDoc(doc(window.__fb.db,'messages',__currentThread.id),{ lastText:text, lastAt:serverTimestamp() });
         input.value='';
         const box=$('#chatBody'); box.scrollTop=box.scrollHeight;
-      }catch(e){ console.warn('sendMessage',e); toast('Mesaj gönderilemedi'); }
+      }catch(e){
+        console.warn('sendMessage',e);
+        toast(e && e.message && /insufficient permissions/i.test(e.message) ? 'İzin reddedildi (kurallar): Oturum veya katılımcı değil.' : 'Mesaj gönderilemedi');
+      }
     }
 
     // === orders.html’den gelindiyse otomatik aç ===
     async function openOrCreateThreadFromQuery(){
       const peerUid = qs('peer');
       if(!peerUid){ return; }
-      const meta = { otherName: qs('name')||'', otherAvatar: qs('ava')||'', orderId: qs('order')||null };
+      const meta = { otherName: decodeURIComponent(qs('name')||''), otherAvatar: qs('ava')||'', orderId: qs('order')||null };
       const t = await ensureThread(__uid, peerUid, meta);
       await openThread(t.id);
       $('#msgInput').focus();
@@ -296,7 +301,6 @@
 
     // ==== SOL LİSTE — kişiler kesin görünsün ====
     async function resolveOtherFromDoc(docId, docData){
-      // thread id = uid1__uid2 → benim olmayan = diğer
       const parts = (docId||'').split('__');
       const otherUid = parts.find(p=>p && p!==__uid) || '';
       let otherName = docData.otherName || '';
@@ -320,8 +324,12 @@
     async function watchThreads(uid){
       try{
         if(__unsubThreads){ try{__unsubThreads();}catch{} __unsubThreads=null; }
-        const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const q=query(collection(window.__fb.db,'messages'), where('participants','array-contains',uid));
+        const {collection,query,where,onSnapshot,orderBy} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const q=query(
+          collection(window.__fb.db,'messages'),
+          where('participants','array-contains',uid),
+          // lastAt'a göre sıralama istemiyoruz; client-side sort var.
+        );
         __unsubThreads=onSnapshot(q, async (snap)=>{
           const tmp=[];
           for (const ds of snap.docs){
@@ -338,8 +346,8 @@
           __filtered=[...__threads]; renderThreadList();
 
           if(!qs('peer') && !__currentThread && __threads[0]) openThread(__threads[0].id);
-        },(err)=>{ console.warn('threads onSnapshot',err); });
-      }catch(e){ console.warn('watchThreads',e); }
+        },(err)=>{ console.warn('threads onSnapshot',err); toast('Sohbetler okunamadı'); });
+      }catch(e){ console.warn('watchThreads',e); toast('Liste açılamadı'); }
     }
 
     // ==== Boot ====
