@@ -156,7 +156,6 @@
   function cardOrderHTML(id, o, peer, mode){
     const title = o.listingTitle || o.listingId || 'Sipariş';
     const price = (o.price!=null) ? `<div class="mini">${fmtTL(o.price)}</div>` : '';
-    const who   = (mode==='seller') ? (peer?.name||peer?.displayName||o.buyerId||'Alıcı') : (peer?.name||peer?.displayName||o.sellerId||'Satıcı');
     const tel   = peer?.phone || '';
     const wa    = tel? `https://wa.me/${digits(tel)}` : '';
     return `<div class="card pad">
@@ -180,7 +179,6 @@
   function cardOfferHTML(id, ofr, peer, mode){
     const title = ofr.listingTitle || ofr.listingId || 'Teklif';
     const price = (ofr.price!=null) ? `<div class="mini">${fmtTL(ofr.price)}</div>` : '';
-    const who   = (mode==='offers_in') ? (peer?.name||peer?.displayName||ofr.buyerId||'Alıcı') : (peer?.name||peer?.displayName||ofr.sellerId||'Satıcı');
     const tel   = peer?.phone || '';
     const wa    = tel? `https://wa.me/${digits(tel)}` : '';
     return `<div class="card pad">
