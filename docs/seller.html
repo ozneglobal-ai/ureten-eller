@@ -37,6 +37,10 @@
     .star.active{opacity:1}
     .stats{margin-left:.25rem}
 
+    /* Hakkında kutusu */
+    .kv{display:grid;grid-template-columns:160px 1fr;gap:6px;align-items:center;margin-top:6px}
+    .about{border:1px solid var(--brd);border-radius:14px;background:#0b1326;padding:10px;margin-top:8px}
+
     /* İlanlar */
     h2{margin:14px 2px 6px}
     .grid{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
@@ -47,14 +51,19 @@
 
     /* Detay çekmecesi */
     .drawer{position:fixed;inset:0;display:none;background:#00000080;z-index:1500}
-    .drawerInner{position:absolute;right:0;top:0;bottom:0;width:min(680px,100%);background:linear-gradient(145deg,var(--card),var(--card2));border-left:1px solid var(--brd);padding:12px 14px;overflow:auto}
+    .drawerInner{position:absolute;right:0;top:0;bottom:0;width:min(720px,100%);background:linear-gradient(145deg,var(--card),var(--card2));border-left:1px solid var(--brd);padding:12px 14px;overflow:auto}
     .drawer .cover{width:100%;aspect-ratio:16/10;border-radius:12px;border:1px solid var(--brd);background:#111827 center/cover no-repeat}
     .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .thumbs .t{width:88px;height:88px;border-radius:10px;border:1px solid var(--brd);background:#111827 center/cover no-repeat;cursor:pointer}
-    .kv{display:grid;grid-template-columns:140px 1fr;gap:6px;align-items:center;margin-top:6px}
     .closeX{position:absolute;right:12px;top:10px;background:#fff;color:#0b1220;border:none;width:32px;height:32px;border-radius:999px;font-size:18px;line-height:32px;text-align:center;cursor:pointer}
 
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1600;display:none}
+
+    @media (max-width:720px){
+      .profile{grid-template-columns:1fr}
+      .ava{width:120px;height:120px}
+      .kv{grid-template-columns:120px 1fr}
+    }
   </style>
   <script type="module" src="./firebase-init.js"></script>
 </head>
@@ -69,18 +78,24 @@
       <button class="btn ghost" id="btnBack" type="button">← Geri</button>
     </div>
 
-    <section class="profile">
-      <div id="avatar" class="ava"></div>
+    <section class="profile" aria-labelledby="sellerName">
+      <div id="avatar" class="ava" aria-label="Profil fotoğrafı"></div>
       <div>
         <div class="h1">
-          <span id="fullName">—</span>
-          <span id="verifiedBadge" class="verBadge" style="display:none">✔ Onaylı Satıcı</span>
+          <span id="fullName" class="h1" aria-live="polite">—</span>
+          <span id="verifiedBadge" class="verBadge" style="display:none" aria-label="Onaylı Satıcı">✔ Onaylı Satıcı</span>
         </div>
         <div class="row mini" style="gap:.6rem;margin-top:.25rem">
           <span id="city" class="pill">—</span>
           <span id="phone" class="pill">—</span>
         </div>
         <div class="bio mini" id="bio">—</div>
+
+        <div class="about" aria-label="Satıcı detayları">
+          <div class="kv"><div class="mini">Üyelik</div><div id="joined">—</div></div>
+          <div class="kv"><div class="mini">E‑posta</div><div id="email">—</div></div>
+          <div class="kv"><div class="mini">İlan sayısı</div><div id="countListings">—</div></div>
+        </div>
 
         <div class="row" style="gap:.6rem">
           <button id="btnMessage" class="btn warn">💬 Mesaj</button>
@@ -98,11 +113,11 @@
     </section>
 
     <h2>İlanlar</h2>
-    <section id="listings" class="grid"></section>
+    <section id="listings" class="grid" aria-live="polite"></section>
   </div>
 
   <!-- İLAN DETAY ÇEKMECESİ -->
-  <div id="drawer" class="drawer" role="dialog" aria-modal="true">
+  <div id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="İlan detayı">
     <div class="drawerInner">
       <button class="closeX" id="closeDrawer" aria-label="Kapat">×</button>
       <div id="dCover" class="cover"></div>
@@ -129,6 +144,7 @@
     function fmtTRY(x){ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(x||0); }catch{ return (x||0)+' TL'; } }
     function fmtDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } }
     function maskPhone(p){ if(!p) return '—'; const d=(p+'').replace(/\D/g,''); if(d.length<7) return p; return d.slice(0,3)+' *** **'+d.slice(-2); }
+    function maskEmail(e){ if(!e) return '—'; const [u,dom]=(e+'').split('@'); if(!dom) return e; return (u.slice(0,2)+'***@'+dom); }
     function fillStars(avg){ const stars=[...document.querySelectorAll('#ratingBox .star')]; stars.forEach((s,i)=>{ s.classList.toggle('active', i < Math.round(avg||0)); }); }
 
     let __viewer=null;
@@ -162,6 +178,11 @@
       // Onaylı rozet
       const verified = !!(u.isVerified || u.verified || u.verifiedSeller);
       $('#verifiedBadge').style.display = verified ? 'inline-flex' : 'none';
+
+      // Hakkında
+      const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
+      $('#joined').textContent = fmtDate(joined);
+      $('#email').textContent = maskEmail(u.email || u.mail);
 
       $('#btnMessage').onclick = ()=>{
         const p = new URLSearchParams({ peer: __sellerId, name: encodeURIComponent(full), ava: u.avatar||u.photoURL||'', order: '' });
@@ -260,10 +281,11 @@
         const tb = b.d.createdAt?.toMillis ? b.d.createdAt.toMillis() : (b.d.createdAt? new Date(b.d.createdAt).getTime():0);
         return (tb||0)-(ta||0);
       });
+      $('#countListings').textContent = arr.length;
       arr.forEach(({id,d})=>{
         const card = document.createElement('div'); card.className='card'; card.setAttribute('role','button'); card.tabIndex=0;
         card.innerHTML = `
-          <div class="img" style="background-image:url('${d.coverUrl||'/assets/img/avatar-default.png'}')"></div>
+          <div class="img" style="background-image:url('${d.coverUrl||'/assets/img/avatar-default.png'}')" aria-label="Kapak görseli"></div>
           <div class="body">
             <div style="font-weight:800;min-height:42px">${(d.title||'—')}</div>
             <div class="row" style="justify-content:space-between"><span class="mini">${d.province||''}</span><span class="price">${fmtTRY(d.price||0)}</span></div>
