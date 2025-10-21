@@ -13,7 +13,6 @@
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
-
     .wrap{max-width:1280px;margin:0 auto;padding:1rem 1rem 6rem}
     .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900;letter-spacing:.2px}
@@ -47,6 +46,11 @@
     .img{width:88px;height:88px;border-radius:10px;background:#0b1220;border:1px solid var(--brd);background-size:cover;background-position:center}
 
     .toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1300;display:none}
+
+    /* DEBUG BAR */
+    .debug{display:none;margin:.5rem 0 0;padding:.5rem .6rem;border:1px dashed var(--brd);border-radius:10px;background:#0c1426}
+    .debug.on{display:block}
+    .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.18rem .5rem;border:1px solid var(--brd);border-radius:999px}
   </style>
   <script type="module" src="./firebase-init.js"></script>
 </head>
@@ -73,6 +77,7 @@
         <button id="btnBulkDelete" class="btn danger">🗑️ Seçili Siparişleri Sil</button>
       </div>
       <div class="row mini"><span id="countText">Görülmemiş 0</span></div>
+      <div id="dbg" class="debug"></div>
     </section>
 
     <section style="margin-top:.6rem">
@@ -117,7 +122,7 @@
     document.getElementById('homeBtn').textContent=t('home');
     document.getElementById('pTitle').textContent=t('orders');
     document.getElementById('btnBulkDelete').textContent=t('bulk');
-    renderFromBag(__bag); // metinler güncellensin
+    renderFromBag(__bag); // metinleri güncelle
   }
 
   // ========= Helpers =========
@@ -127,6 +132,8 @@
   function fmtDate(x){ try{ if(x?.toMillis) return new Date(x.toMillis()).toLocaleString(getLang()==='tr'?'tr-TR':undefined); const d=new Date(x); if(!isNaN(d)) return d.toLocaleString(getLang()==='tr'?'tr-TR':undefined); }catch{} return '—'; }
   function digits(x){ return String(x||'').replace(/\D/g,''); }
   function playDing(){ const a=$('#ding'); if(a){ a.currentTime=0; a.play().catch(()=>{}); } }
+  const debug = new URLSearchParams(location.search).get('debug')==='1';
+  function logDebug(s){ if(!debug) return; const el=$('#dbg'); el.classList.add('on'); const d=document.createElement('div'); d.innerHTML=s; el.appendChild(d); }
 
   // ========= Nav / Lang =========
   $('#homeBtn').onclick=()=>{ location.href='/home.html'; };
@@ -175,7 +182,6 @@
     return { uid, user };
   }
 
-  // ========= Render helpers =========
   function statusBadge(s){
     const key = (s||'').toLowerCase();
     const map = { new:t('new'), paid:t('paid'), shipped:t('shipped'), done:t('done'), canceled:t('canceled') };
@@ -213,13 +219,16 @@
     </div>`;
   }
 
-  // ========= State & listener =========
-  let stopUnsub=null;
-  let firstLoad=true;
-  let __bag=new Map(); // id -> row obj
+  // ========= State & multi-listener =========
+  let firstLoad = true;
+  let unsubList = [];
+  let __bag = new Map(); // id -> row
+  const SELLER_FIELDS = ['sellerId','sellerUID','sellerUid','seller','ownerId','vendorId','uid','userId'];
 
-  async function startListener(){
-    if(stopUnsub){ stopUnsub(); stopUnsub=null; }
+  function clearUnsubs(){ unsubList.forEach(u=>{try{u&&u();}catch{}}); unsubList=[]; }
+
+  async function startListeners(){
+    clearUnsubs();
     await ensure();
 
     const { collection, query, where, limit, onSnapshot } =
@@ -228,54 +237,68 @@
     const db = window.__fb.db; const me = window.__fb.auth.currentUser;
     if(!me){ $('#list').innerHTML='<div class="mini">'+t('login_needed')+'</div>'; return; }
 
-    // SADELEŞTİRİLDİ: Sadece sellerId == benim UID’im
-    const qBase = query(collection(db,'orders'), where('sellerId','==', me.uid), limit(500));
+    let totalActive = 0;
+    let fieldHits = {};
+    __bag.clear();
 
-    stopUnsub = onSnapshot(qBase, async (ss)=>{
-      const rows=[];
-      let unseen=0;
-      for (const d of ss.docs){
-        const data=d.data()||{};
-        // Silinmişleri client-side ELE
-        if((data.status||'').toLowerCase()==='deleted') continue;
+    SELLER_FIELDS.forEach((field)=>{
+      const q = query(collection(db,'orders'), where(field,'==', me.uid), limit(500));
+      const unsub = onSnapshot(q, async (ss)=>{
+        fieldHits[field] = (ss.size||0);
+        logDebug(`<span class="pill">field <b>${field}</b>: ${ss.size} doc</span>`);
 
-        if(data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no') unseen++;
+        // Bu field’a ait id’leri önce temizle (yeniden kuracağız)
+        // Not: Aynı sipariş farklı field’da da varsa set üzerine yazılır (doğru davranış)
+        for(const d of ss.docs){
+          const id = d.id;
+          const data = d.data()||{};
+          if((data.status||'').toLowerCase()==='deleted') { __bag.delete(id); continue; }
 
-        const rp = await resolvePeer(data);
-        const listing = data.listingId ? await getListing(data.listingId) : null;
-        rows.push({ id:d.id, data, peer:rp.user, peerUid:rp.uid, listing, isUnseen: (data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no') });
-      }
+          // enrich
+          const rp = await resolvePeer(data);
+          const listing = data.listingId ? await getListing(data.listingId) : null;
+          const row = { id, data, peer:rp.user, peerUid:rp.uid, listing,
+            isUnseen: (data.sellerSeen===false || data.sellerSeen===0 || data.sellerSeen==='no') };
+          __bag.set(id, row);
+        }
 
-      // store unseen badge for profile
-      try{ localStorage.setItem('ue_unseen_seller_orders', String(unseen)); }catch{}
+        // sıralama + render
+        const rows = [...__bag.values()];
+        rows.sort((a,b)=>{
+          const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis() : (new Date(a.data?.createdAt||0)).getTime();
+          const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis() : (new Date(b.data?.createdAt||0)).getTime();
+          return (tb||0) - (ta||0);
+        });
 
-      // tarihe göre sırala (desc)
-      rows.sort((a,b)=>{
-        const ta = a.data?.createdAt?.toMillis ? a.data.createdAt.toMillis() : (new Date(a.data?.createdAt||0)).getTime();
-        const tb = b.data?.createdAt?.toMillis ? b.data.createdAt.toMillis() : (new Date(b.data?.createdAt||0)).getTime();
-        return (tb||0) - (ta||0);
+        renderFromBag(__bag);
+
+        // İlk yükleme sonrası yeni kayıt gelirse ding
+        if(!firstLoad && ss.docChanges().some(ch=>ch.type==='added')) playDing();
+
+        // Debug bar üst bilgilendirme
+        const unseen = rows.reduce((acc,r)=> acc + (r.isUnseen?1:0), 0);
+        const total = rows.length;
+        totalActive = total;
+        logDebug(`<div style="margin-top:.35rem">toplam birleşik: <b>${total}</b> • ${t('unseen')} <b>${unseen}</b></div>`);
+        firstLoad = false;
+      }, (err)=>{
+        console.warn('orders onSnapshot', field, err);
+        logDebug(`<div style="color:#f87171">field <b>${field}</b> hata: ${err?.message||err}</div>`);
       });
 
-      // render
-      __bag = new Map(rows.map(r=>[r.id,r]));
-      renderFromBag(__bag, unseen);
-
-      // yeni kayıt sesi (ilk yüklemede çalma)
-      if(!firstLoad && ss.docChanges().some(ch=>ch.type==='added')) playDing();
-      firstLoad=false;
-    }, (err)=>{
-      console.error('orders onSnapshot', err);
-      $('#list').innerHTML = '<div class="mini">Kayıt okunamadı (izin veya ağ).</div>';
+      unsubList.push(unsub);
     });
+
+    if(debug){ $('#dbg').classList.add('on'); }
   }
 
-  function renderFromBag(bagMap, unseenCount){
-    const rows = [...bagMap.values()];
-    const unseen = unseenCount!=null ? unseenCount : rows.reduce((acc,r)=> acc + (r.isUnseen?1:0), 0);
-
+  function renderFromBag(bag){
+    const rows = [...bag.values()];
+    const unseen = rows.reduce((acc,r)=> acc + (r.isUnseen?1:0), 0);
     const html = rows.map(({id,data,peer,peerUid,listing}) => cardOrderHTML(id,data,peer,peerUid,listing));
     $('#list').innerHTML = html.length ? html.join('') : `<div class="mini">${t('none')}</div>`;
     $('#countText').textContent = html.length ? `${t('total')} ${html.length} • ${t('unseen')} ${unseen}` : `${t('unseen')} ${unseen}`;
+    try{ localStorage.setItem('ue_unseen_seller_orders', String(unseen)); }catch{}
   }
 
   // ========= Bulk delete (status:"deleted") =========
@@ -308,7 +331,9 @@
     const {auth,onAuthStateChanged} = window.__fb;
     onAuthStateChanged(auth, async (u)=>{
       if(!u){ $('#list').innerHTML='<div class="mini">'+t('login_needed')+'</div>'; return; }
-      await startListener();
+      // debug modunu aç
+      if(new URLSearchParams(location.search).get('debug')==='1'){ $('#dbg').classList.add('on'); }
+      await startListeners();
     });
   })();
   </script>
