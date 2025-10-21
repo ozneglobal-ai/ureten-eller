@@ -116,18 +116,24 @@
     }
 
     async function loadListings(){
-      const { collection, query, where, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const q = query(collection(window.__fb.db,'listings'), where('userId','==',__sellerId), orderBy('createdAt','desc'));
+      const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const q = query(collection(window.__fb.db,'listings'), where('userId','==',__sellerId));
       const snap = await getDocs(q);
       const host = $('#listings'); host.innerHTML='';
-      snap.forEach(ds=>{
-        const d = ds.data()||{};
-        const card = document.createElement('a'); card.className='card'; card.href = `./home.html#listing-${ds.id}`; card.setAttribute('aria-label', d.title||'İlan');
+      const arr = [];
+      snap.forEach(ds=>{ const d = ds.data()||{}; arr.push({id:ds.id, d}); });
+      arr.sort((a,b)=>{
+        const ta = a.d.createdAt?.toMillis ? a.d.createdAt.toMillis() : (a.d.createdAt? new Date(a.d.createdAt).getTime():0);
+        const tb = b.d.createdAt?.toMillis ? b.d.createdAt.toMillis() : (b.d.createdAt? new Date(b.d.createdAt).getTime():0);
+        return (tb||0)-(ta||0);
+      });
+      arr.forEach(({id,d})=>{
+        const card = document.createElement('a'); card.className='card'; card.href = `./home.html#listing-${id}`; card.setAttribute('aria-label', d.title||'İlan');
         card.innerHTML = `
           <div class="img" style="background-image:url('${d.coverUrl||'/assets/img/avatar-default.png'}')"></div>
           <div class="body">
-            <div style="font-weight:800;min-height:40px">${(d.title||'—')}</div>
-            <div class="row" style="justify-content:space-between"><span class="mini">${d.province||''}</span><span class="price">${fmtTRY(d.price||0)}</span></div>
+            <div style=\"font-weight:800;min-height:40px\">${(d.title||'—')}</div>
+            <div class=\"row\" style=\"justify-content:space-between\"><span class=\"mini\">${d.province||''}</span><span class=\"price\">${fmtTRY(d.price||0)}</span></div>
           </div>`;
         host.appendChild(card);
       });
