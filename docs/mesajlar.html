@@ -6,17 +6,31 @@
   <title>Mesajlar • Üreten Eller</title>
   <link rel="icon" href="./assets/icons/favicon.png" />
   <style>
-    :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326 }
+    :root{
+      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
+      --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
+    }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow:hidden}
-    a{color:inherit;text-decoration:none}
+    html,body{
+      margin:0;padding:0;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+      max-width:100%;
+      overflow:hidden;
+    }
 
-    .page{height:100vh;display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px}
-    @media(max-width:900px){ .page{grid-template-columns:1fr} }
+    /* mobil klavye için 100dvh */
+    .page{
+      height:100dvh;
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:10px;
+      padding:10px;
+    }
+    @media(max-width:900px){ .page{ grid-template-columns:1fr } }
 
     .panel{border:1px solid var(--brd);border-radius:14px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;position:relative}
-
-    /* Sol: thread list */
     .left{display:flex;flex-direction:column}
     .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2))}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
@@ -42,28 +56,56 @@
     .thTime{color:var(--muted);font-size:.8rem;min-width:80px;text-align:right}
 
     /* Sağ: chat */
-    .right{display:grid;grid-template-rows:auto 1fr auto}
-    .chatTop{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--brd)}
+    .right{display:grid;grid-template-rows:auto 1fr auto; min-height:0;}
+    .chatTop{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2))}
     .chatTop .name{font-weight:900;cursor:pointer}
     .chatTop .mini{color:var(--muted);font-size:.9rem}
-    .chatBody{overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-    .msg{max-width:70%;padding:10px 12px;border:1px solid var(--brd);border-radius:12px;background:#0b1326;white-space:pre-wrap}
+
+    .chatBody{
+      overflow:auto;
+      padding:12px;
+      display:flex;flex-direction:column;gap:8px;
+      min-height:0; /* sticky footer için */
+    }
+    .msg{max-width:80%;padding:10px 12px;border:1px solid var(--brd);border-radius:12px;background:#0b1326;white-space:pre-wrap;word-wrap:break-word}
     .me{align-self:flex-end;background:#0e2233}
     .other{align-self:flex-start}
-    .chatInput{display:flex;gap:8px;padding:10px;border-top:1px solid var(--brd)}
-    .chatInput input{flex:1;border:1px solid var(--brd);border-radius:10px;background:#0b1326;color:var(--ink);padding:10px}
-    .chatInput button{border:1px solid var(--brd);border-radius:10px;background:var(--accent);color:#03222a;font-weight:900;padding:10px 14px;cursor:pointer}
+
+    /* Alt bar her zaman görünsün */
+    .chatInput{
+      display:flex;gap:8px;padding:10px;border-top:1px solid var(--brd);
+      position:sticky;bottom:0;z-index:5;
+      background:linear-gradient(145deg,var(--card),var(--card2));
+      padding-bottom: calc(10px + env(safe-area-inset-bottom,0px));
+    }
+    .chatInput input{
+      flex:1;border:1px solid var(--brd);border-radius:999px;background:#0b1326;color:var(--ink);
+      padding:12px 14px;font-size:16px; /* iOS zoom’u önlemek için >=16px */
+    }
+    .chatInput button{
+      border:1px solid var(--brd);border-radius:999px;background:var(--accent);color:#03222a;
+      font-weight:900;padding:12px 16px;cursor:pointer;min-width:88px;
+    }
 
     .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border:1px solid var(--brd);border-radius:999px}
     .pill.badge{background:#0b1326}
+
+    /* Sağ altta yedek FAB gönder (mobilde asla kaybolmasın) */
+    .fab-send{
+      position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+      width:56px;height:56px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid var(--brd);background:var(--accent);color:#03222a;font-weight:900;
+      box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer;z-index:20;
+    }
+    @media(min-width:901px){ .fab-send{ display:none; } } /* sadece mobil/tablet */
   </style>
 
-  <!-- KÖK init -->
   <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
   <div class="page">
-    <!-- LEFT: THREADS -->
+    <!-- LEFT -->
     <div class="panel left">
       <div class="topbar">
         <div class="logo">
@@ -87,7 +129,7 @@
       </div>
     </div>
 
-    <!-- RIGHT: CHAT -->
+    <!-- RIGHT -->
     <div class="panel right">
       <div class="chatTop">
         <div id="peerAva" class="ava"></div>
@@ -110,293 +152,262 @@
     </div>
   </div>
 
+  <!-- mobil güvenlik: yedek gönder -->
+  <button class="fab-send" id="fabSend" aria-label="Gönder">➤</button>
+
   <audio id="ding" preload="auto" src="./notify.wav"></audio>
 
   <script>
-    // ===== Utilities =====
-    const $ = (s)=> document.querySelector(s);
-    const qs = (k)=> new URLSearchParams(location.search).get(k)||'';
-    function fmtDate(ts){
-      try{ const d = ts?.toDate ? ts.toDate() : (ts? new Date(ts): null); return d? d.toLocaleString('tr-TR'):''; }catch{ return ''; }
-    }
-    function escapeHtml(x){ return (x||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s])); }
+  const log = (...a)=>console.log('[msg]',...a);
+  const $ = s=>document.querySelector(s);
+  const qs = k=> new URLSearchParams(location.search).get(k)||'';
 
-    // LocalStorage: "sadece benim panelimden kaldır"
-    const LS_KEY_THREADS = (uid)=> `ue.hiddenThreads.${uid}`;
-    function getHiddenThreads(uid){ try{ return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]')); }catch{ return new Set(); } }
-    function setHiddenThreads(uid,set){ try{ localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify(Array.from(set))); }catch{} }
+  let __me=null, __threadsUnsub=null, __msgsUnsub=null;
+  let __curThreadId=null, __curPeerUid=null;
+  let __ding=null, __soundEnabled = (localStorage.getItem('ue_sound_enabled')==='1');
+  let __soundUnlocked=false;
+  let __hiddenThreads=new Set();
+  let __lastSeenMap={};
 
-    // Dinamik Firestore import
-    async function api(){
-      return await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-    }
+  const LS_KEY_THREADS = uid => `ue.hiddenThreads.${uid}`;
+  const getHiddenThreads = uid => { try{return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]'));}catch{return new Set()} };
+  const setHiddenThreads = (uid,set)=>{ try{localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify([...set]));}catch{} };
 
-    let __me=null;
-    let __threadsUnsub=null;
-    let __msgsUnsub=null;
-    let __curThreadId=null;
-    let __curPeerUid=null;
-    let __ding = null;
-    let __lastSeenMap = {};  // threadId -> lastAt millis
-    let __hiddenThreads = new Set(); // sadece bu kullanıcı
+  async function api(){ return await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); }
 
-    // Profil kısa
-    const _briefCache = new Map();
-    async function getUserBrief(uid){
-      if(!uid) return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
-      if(_briefCache.has(uid)) return _briefCache.get(uid);
-      try{
-        const { doc, getDoc } = await api();
-        const snap = await getDoc(doc(self.db,'users',uid));
-        const d = snap.exists()? (snap.data()||{}) : {};
-        const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Kullanıcı';
-        const brief = { name, avatar: d.avatar||d.photoURL||'/assets/img/avatar-default.png' };
-        _briefCache.set(uid, brief);
-        return brief;
-      }catch{ return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' }; }
-    }
+  const _briefCache=new Map();
+  async function getUserBrief(uid){
+    if(!uid) return {name:'Kullanıcı',avatar:'/assets/img/avatar-default.png'};
+    if(_briefCache.has(uid)) return _briefCache.get(uid);
+    try{
+      const {doc,getDoc}=await api();
+      const snap=await getDoc(doc(self.db,'users',uid));
+      const d=snap.exists()?(snap.data()||{}):{};
+      const name=[d.name||d.firstName||'',d.surname||d.lastName||''].filter(Boolean).join(' ')||d.displayName||'Kullanıcı';
+      const brief={name,avatar:d.avatar||d.photoURL||'/assets/img/avatar-default.png'};
+      _briefCache.set(uid,brief); return brief;
+    }catch{ return {name:'Kullanıcı',avatar:'/assets/img/avatar-default.png'} }
+  }
 
-    // ===== Threads render (client-side sort, gizleme desteği) =====
-    function renderThreadsSnapshotLike(snap){
-      const listEl = $('#threads');
-      const rows = [];
-      snap.forEach(ds=>{
-        const d = ds.data()||{};
-        if(__hiddenThreads.has(ds.id)) return;         // 👈 sadece benim panelimde gizli
-        const arr = d.participants||[];
-        const otherUid = arr.find(x=>x!==__me.uid) || '';
-        rows.push({ id: ds.id, d, otherUid });
-      });
+  function updateNotifLabel(){
+    if(!('Notification' in window)){ $('#notifLbl').textContent='Tarayıcı desteklemiyor'; return; }
+    $('#notifLbl').textContent = Notification.permission==='granted' ? 'Bildirimler aktif'
+      : (Notification.permission==='denied' ? 'Bildirim engelli' : 'Bildirimleri Aç');
+  }
+  function updateSoundLabel(){ $('#soundLbl').textContent = __soundEnabled ? 'Sesi Kapat' : 'Sesi Aç'; }
 
-      rows.sort((a,b)=>{
-        const ta = a.d.lastAt?.toMillis ? a.d.lastAt.toMillis() : (a.d.lastAt? new Date(a.d.lastAt).getTime():0);
-        const tb = b.d.lastAt?.toMillis ? b.d.lastAt.toMillis() : (b.d.lastAt? new Date(b.d.lastAt).getTime():0);
-        return (tb||0) - (ta||0);
-      });
+  function bindButtons(){
+    $('#btnHome').addEventListener('click', e=>{ e.preventDefault(); location.href='/home.html'; });
+    $('#btnNotif').addEventListener('click', onNotifClick);
+    $('#btnSound').addEventListener('click', onSoundClick);
+    $('#btnHideThread').addEventListener('click', hideCurrentThreadForMe);
+    $('#peerName').addEventListener('click', ()=>{ if(__curPeerUid) location.href=`/docs/profile.html?uid=${encodeURIComponent(__curPeerUid)}`; });
+    $('#msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+    $('#btnSend').addEventListener('click', sendMessage);
+    $('#fabSend').addEventListener('click', sendMessage);
+    $('#search').addEventListener('input', ()=> listenThreads());
 
-      const qtxt = ($('#search')?.value||'').trim().toLowerCase();
-      listEl.innerHTML = rows.length ? '' : '<div class="empty">Konuşma yok.</div>';
+    // ses kilidi
+    ['click','pointerdown','touchstart','keydown'].forEach(ev=>{
+      window.addEventListener(ev, ()=>{ if(__soundEnabled) tryUnlockSound(false); }, {capture:true});
+    });
 
-      let unreadThreads = 0;
-
-      (async ()=>{
-        for(const r of rows){
-          const other = await getUserBrief(r.otherUid);
-          if(qtxt && !(other.name||'').toLowerCase().includes(qtxt) && !(r.d.lastText||'').toLowerCase().includes(qtxt)) continue;
-
-          // okunmamış kontrolü
-          const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
-          const seenMy = r.d.seen && r.d.seen[__me.uid] ? (r.d.seen[__me.uid].toMillis ? r.d.seen[__me.uid].toMillis() : new Date(r.d.seen[__me.uid]).getTime() ) : 0;
-          const isUnread = (r.d.lastFrom && r.d.lastFrom !== __me.uid && lastMillis > (seenMy||0));
-          if(isUnread) unreadThreads++;
-
-          const t = document.createElement('div');
-          t.className='th'; t.dataset.id=r.id;
-          t.innerHTML = `
-            <div class="ava" style="background-image:url('${other.avatar||'/assets/img/avatar-default.png'}')"></div>
-            <div>
-              <div class="thTitle">${escapeHtml(other.name||'Kullanıcı')}</div>
-              <div class="thSub">${escapeHtml(r.d.lastText||'')}</div>
-            </div>
-            <div class="thTime">${r.d.lastAt? fmtDate(r.d.lastAt):''}</div>
-          `;
-          t.onclick = ()=> openThread(r.id, r.otherUid, other);
-          listEl.appendChild(t);
-
-          // yeni mesaj sesi + bildirim (benden değil & önce görülmemiş)
-          const prev = __lastSeenMap[r.id] || 0;
-          if(lastMillis && lastMillis > prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom !== __me.uid){
-            try{ __ding && __ding.play().catch(()=>{}); }catch{}
-            if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
-              const title = other.name || 'Yeni mesaj';
-              try{ new Notification(title, { body: r.d.lastText, icon:'./üreteneller.png' }); }catch{}
-            }
-          }
-          __lastSeenMap[r.id] = lastMillis || prev;
-        }
-
-        // toplam okunmamış rozet
-        $('#unreadBadge').textContent = String(unreadThreads);
-      })();
-    }
-
-    // ===== LISTEN THREADS (orderBy yok → indeks gerekmez) =====
-    async function listenThreads(){
-      if(__threadsUnsub){ __threadsUnsub(); __threadsUnsub=null; }
-      const {collection, query, where, onSnapshot, getDocs} = await api();
-      const baseQ = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
-
-      const listEl = $('#threads');
-      listEl.innerHTML = '<div class="empty">Yükleniyor…</div>';
-
-      try{
-        __threadsUnsub = onSnapshot(baseQ, (snap)=> renderThreadsSnapshotLike(snap), async (err)=>{
-          console.warn('Threads listen error:', err);
-          const snap2 = await getDocs(baseQ);
-          renderThreadsSnapshotLike(snap2);
-        });
-      }catch(err){
-        console.warn('Threads bind failed:', err);
-        const snap2 = await getDocs(baseQ);
-        renderThreadsSnapshotLike(snap2);
-      }
-    }
-
-    // ===== Messages (right) =====
-    async function listenMessages(threadId){
-      if(__msgsUnsub){ __msgsUnsub(); __msgsUnsub=null; }
-      const { collection, query, orderBy, onSnapshot } = await api();
-      const q = query(collection(self.db,'messages', threadId, 'items'), orderBy('createdAt','asc'));
+    // mobil klavye / viewport yükseklik
+    if (window.visualViewport){
       const chat = $('#chat');
-      chat.innerHTML = '';
-      __msgsUnsub = onSnapshot(q, (snap)=>{
-        chat.innerHTML = '';
-        snap.forEach(ds=>{
-          const m = ds.data()||{};
-          const div = document.createElement('div');
-          div.className = 'msg ' + (m.from === __me.uid ? 'me':'other');
-          div.textContent = m.text || '';
-          chat.appendChild(div);
-        });
-        chat.scrollTop = chat.scrollHeight;
-      }, (err)=>{ console.warn('listenMessages error:', err); });
+      const handler = ()=>{
+        const vv = window.visualViewport;
+        const bottomInset = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop));
+        chat.style.paddingBottom = (bottomInset + 90) + 'px'; // alt bar + klavye
+      };
+      window.visualViewport.addEventListener('resize', handler);
+      window.visualViewport.addEventListener('scroll', handler);
     }
+  }
 
-    async function openThread(threadId, peerUid, peerBrief=null){
-      __curThreadId = threadId;
-      __curPeerUid  = peerUid;
-      const info = peerBrief || await getUserBrief(peerUid);
-      $('#peerAva').style.backgroundImage = `url('${info.avatar||'/assets/img/avatar-default.png'}')`;
-      $('#peerName').textContent = info.name || 'Kullanıcı';
-      $('#peerInfo').textContent = peerUid;
-      $('#peerName').onclick = ()=> { location.href = `/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
-
-      // seen damgası
-      try{
-        const { doc, updateDoc, serverTimestamp } = await api();
-        const ref = doc(self.db,'messages',threadId);
-        await updateDoc(ref, { [`seen.${__me.uid}`]: serverTimestamp() });
-      }catch(e){/* sessiz */ }
-
-      await listenMessages(threadId);
+  function onNotifClick(){
+    if(!('Notification' in window)){ alert('Tarayıcınız bildirimleri desteklemiyor.'); return; }
+    if(location.protocol!=='https:' && location.hostname!=='localhost'){
+      alert('Bildirimler için HTTPS gerekir (localhost hariç).');
     }
-
-    async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
-      const { collection, query, where, getDocs, doc, setDoc, serverTimestamp } = await api();
-      const q = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
-      const snap = await getDocs(q);
-      let found = '';
-      snap.forEach(ds=>{
-        const arr = (ds.data()?.participants)||[];
-        if(arr.includes(peerUid)) found = ds.id;
-      });
-      if(found) return found;
-
-      const participants = [__me.uid, peerUid];
-      const ref = doc(self.db, 'messages', crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
-      await setDoc(ref, {
-        participants, lastText:'', lastAt: serverTimestamp(),
-        otherName: otherName || '', otherAvatar: otherAvatar || ''
-      });
-      return ref.id;
+    if(Notification.permission==='granted'){
+      updateNotifLabel();
+      try{ new Notification('Bildirim testi',{body:'Mesajlar için bildirimler açık.',icon:'./üreteneller.png'});}catch{}
+      return;
     }
+    Notification.requestPermission().then(p=>{
+      updateNotifLabel();
+      if(p==='granted'){ try{ new Notification('Bildirim açık',{body:'Yeni mesajlarda bildirim alacaksınız.',icon:'./üreteneller.png'});}catch{} }
+    });
+  }
 
-    async function sendMessage(){
-      const text = ($('#msgInput').value||'').trim();
-      if(!text || !__curThreadId) return;
-      $('#msgInput').value = '';
-      try{
-        const { collection, addDoc, serverTimestamp, doc, updateDoc } = await api();
-        await addDoc(collection(self.db,'messages',__curThreadId,'items'),{
-          text, from: __me.uid, createdAt: serverTimestamp()
-        });
-        await updateDoc(doc(self.db,'messages',__curThreadId),{
-          lastText: text, lastAt: serverTimestamp(), lastFrom: __me.uid
-        });
-      }catch(err){ console.warn('sendMessage error:', err); }
-    }
+  function onSoundClick(){
+    __soundEnabled = !__soundEnabled;
+    localStorage.setItem('ue_sound_enabled', __soundEnabled?'1':'0');
+    updateSoundLabel();
+    if(__soundEnabled) tryUnlockSound(true);
+  }
+  function tryUnlockSound(playTest){
+    if(!__ding) return;
+    if(__soundUnlocked){ if(playTest && __soundEnabled) playDing(); return; }
+    __ding.muted=false; __ding.currentTime=0;
+    __ding.play().then(()=>{ __soundUnlocked=true; if(playTest && __soundEnabled) playDing(); }).catch(()=>{});
+  }
+  function playDing(){
+    if(!__soundEnabled || !__ding) return;
+    __ding.currentTime=0; __ding.play().catch(()=>{});
+    if('vibrate' in navigator){ try{ navigator.vibrate([60,30,60]); }catch{} }
+  }
 
-    // ====== PANELİMDEN KALDIR (soft delete sadece bu kullanıcı) ======
-    function hideCurrentThreadForMe(){
-      if(!__curThreadId || !__me) return;
-      __hiddenThreads.add(__curThreadId);
-      setHiddenThreads(__me.uid, __hiddenThreads);
-      // sağ panel temizle
-      __curThreadId = null; __curPeerUid = null;
-      $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin'; $('#peerInfo').textContent='—';
-      $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
-      // listeyi yenile
-      listenThreads();
-    }
+  function fmtDate(ts){ try{ const d=ts?.toDate?ts.toDate():(ts?new Date(ts):null); return d? d.toLocaleString('tr-TR'):'';}catch{ return '' } }
+  function escapeHtml(x){ return (x||'').replace(/[<>&]/g,s=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[s])); }
 
-    // ===== Bildirim / Ses =====
-    function ensureNotificationPermission(){
-      if(!('Notification' in window)) { alert('Tarayıcınız bildirimleri desteklemiyor.'); return; }
-      if(Notification.permission === 'granted'){
-        $('#notifLbl').textContent = 'Bildirimler aktif';
-        return;
+  function renderThreadsSnapshotLike(snap){
+    const listEl=$('#threads'); const rows=[];
+    snap.forEach(ds=>{
+      const d=ds.data()||{}; if(__hiddenThreads.has(ds.id)) return;
+      const arr=d.participants||[]; const otherUid=arr.find(x=>x!==__me.uid)||'';
+      rows.push({id:ds.id,d,otherUid});
+    });
+    rows.sort((a,b)=>{
+      const ta=a.d.lastAt?.toMillis? a.d.lastAt.toMillis() : (a.d.lastAt? new Date(a.d.lastAt).getTime():0);
+      const tb=b.d.lastAt?.toMillis? b.d.lastAt.toMillis() : (b.d.lastAt? new Date(b.d.lastAt).getTime():0);
+      return (tb||0)-(ta||0);
+    });
+    const qtxt = ($('#search')?.value||'').trim().toLowerCase();
+    listEl.innerHTML = rows.length ? '' : '<div class="empty">Konuşma yok.</div>';
+    let unread=0;
+
+    (async()=>{
+      for(const r of rows){
+        const other = await getUserBrief(r.otherUid);
+        if(qtxt && !(other.name||'').toLowerCase().includes(qtxt) && !(r.d.lastText||'').toLowerCase().includes(qtxt)) continue;
+
+        const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
+        const seenMy = r.d.seen && r.d.seen[__me.uid] ? (r.d.seen[__me.uid].toMillis ? r.d.seen[__me.uid].toMillis() : new Date(r.d.seen[__me.uid]).getTime() ) : 0;
+        const isUnread = (r.d.lastFrom && r.d.lastFrom !== __me.uid && lastMillis > (seenMy||0));
+        if(isUnread) unread++;
+
+        const t=document.createElement('div');
+        t.className='th'; t.dataset.id=r.id;
+        t.innerHTML=`
+          <div class="ava" style="background-image:url('${other.avatar||'/assets/img/avatar-default.png'}')"></div>
+          <div>
+            <div class="thTitle">${escapeHtml(other.name||'Kullanıcı')}</div>
+            <div class="thSub">${escapeHtml(r.d.lastText||'')}</div>
+          </div>
+          <div class="thTime">${r.d.lastAt? fmtDate(r.d.lastAt):''}</div>`;
+        t.addEventListener('click', ()=> openThread(r.id, r.otherUid, other));
+        listEl.appendChild(t);
+
+        const prev = __lastSeenMap[r.id] || 0;
+        if(lastMillis && lastMillis>prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom!==__me.uid){
+          playDing();
+          if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
+            try{ new Notification(other.name||'Yeni mesaj',{ body:r.d.lastText, icon:'./üreteneller.png' }); }catch{}
+          }
+        }
+        __lastSeenMap[r.id]=lastMillis||prev;
       }
-      Notification.requestPermission().then(p=>{
-        $('#notifLbl').textContent = (p==='granted')? 'Bildirimler aktif' : (p==='denied' ? 'Bildirim engelli' : 'Bildirimleri Aç');
-      }).catch(()=>{});
-    }
-
-    function unlockSound(){
-      try{
-        const a = __ding;
-        if(!a) return;
-        a.muted = true;
-        a.play().then(()=>{ a.pause(); a.currentTime=0; a.muted=false; }).catch(()=>{});
-      }catch{}
-    }
-
-    // ===== Boot =====
-    async function boot(){
-      await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
-      if(!__me){ window.location.href = '/login.html'; return; }
-
-      // Ses
-      __ding = document.getElementById('ding');
-
-      // Gizli thread setini yükle
-      __hiddenThreads = getHiddenThreads(__me.uid);
-
-      // UI hooks
-      $('#btnSend').addEventListener('click', sendMessage);
-      $('#msgInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
-      $('#btnHideThread').addEventListener('click', hideCurrentThreadForMe);
-      $('#btnHome').addEventListener('click', (e)=>{ e.preventDefault(); location.href='/home.html'; }); // KÖK
-      $('#btnNotif').addEventListener('click', ensureNotificationPermission);
-      $('#btnSound').addEventListener('click', unlockSound);
-      $('#search').addEventListener('input', ()=> listenThreads());
-
-      // URL’den otomatik başlatma
-      const urlPeer = qs('peer');
-      if(urlPeer){
-        const name = qs('name') ? decodeURIComponent(qs('name')) : '';
-        const ava  = qs('ava') || '';
-        try{
-          const tid = await createOrGetThread(urlPeer, name, ava);
-          openThread(tid, urlPeer);
-        }catch{}
-        history.replaceState({}, document.title, location.pathname);
-      }
-
-      // threads dinle
-      listenThreads();
-
-      // bildirim etiketi
-      if('Notification' in window){
-        $('#notifLbl').textContent = Notification.permission==='granted' ? 'Bildirimler aktif'
-                                 : (Notification.permission==='denied' ? 'Bildirim engelli' : 'Bildirimleri Aç');
-      }
-    }
-
-    (function init(){
-      if(document.readyState==='loading'){
-        document.addEventListener('DOMContentLoaded', boot);
-      } else { boot(); }
+      $('#unreadBadge').textContent=String(unread);
     })();
+  }
+
+  async function listenThreads(){
+    if(__threadsUnsub){ try{__threadsUnsub();}catch{} __threadsUnsub=null; }
+    const {collection,query,where,onSnapshot,getDocs}=await api();
+    const baseQ=query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
+    $('#threads').innerHTML='<div class="empty">Yükleniyor…</div>';
+    try{
+      __threadsUnsub = onSnapshot(baseQ, snap=>renderThreadsSnapshotLike(snap), async err=>{
+        console.warn('[msg] threads snapshot err:',err);
+        const snap2=await getDocs(baseQ); renderThreadsSnapshotLike(snap2);
+      });
+    }catch(err){
+      const snap2=await getDocs(baseQ); renderThreadsSnapshotLike(snap2);
+    }
+  }
+
+  async function listenMessages(threadId){
+    if(__msgsUnsub){ try{__msgsUnsub();}catch{} __msgsUnsub=null; }
+    const {collection,query,orderBy,onSnapshot}=await api();
+    const q=query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
+    const chat=$('#chat'); chat.innerHTML='';
+    __msgsUnsub = onSnapshot(q, snap=>{
+      chat.innerHTML=''; snap.forEach(ds=>{
+        const m=ds.data()||{}; const div=document.createElement('div');
+        div.className='msg '+(m.from===__me.uid?'me':'other'); div.textContent=m.text||''; chat.appendChild(div);
+      });
+      chat.scrollTop=chat.scrollHeight;
+    }, err=>console.warn('[msg] listenMessages err',err));
+  }
+
+  async function openThread(threadId, peerUid, brief=null){
+    __curThreadId=threadId; __curPeerUid=peerUid;
+    const info = brief || await getUserBrief(peerUid);
+    $('#peerAva').style.backgroundImage=`url('${info.avatar||'/assets/img/avatar-default.png'}')`;
+    $('#peerName').textContent=info.name||'Kullanıcı';
+    $('#peerInfo').textContent=peerUid;
+    $('#peerName').onclick=()=>{ location.href=`/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
+    try{
+      const {doc,updateDoc,serverTimestamp}=await api();
+      await updateDoc(doc(self.db,'messages',threadId), { [`seen.${__me.uid}`]: serverTimestamp() });
+    }catch{}
+    await listenMessages(threadId);
+    // odakla
+    $('#msgInput').focus({preventScroll:true});
+  }
+
+  async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
+    const {collection,query,where,getDocs,doc,setDoc,serverTimestamp}=await api();
+    const q=query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
+    const snap=await getDocs(q); let found='';
+    snap.forEach(ds=>{ const arr=(ds.data()?.participants)||[]; if(arr.includes(peerUid)) found=ds.id; });
+    if(found) return found;
+    const participants=[__me.uid,peerUid];
+    const ref=doc(self.db,'messages', crypto.randomUUID? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
+    await setDoc(ref,{ participants, lastText:'', lastAt:serverTimestamp(), otherName:otherName||'', otherAvatar:otherAvatar||'' });
+    return ref.id;
+  }
+
+  async function sendMessage(){
+    const text=($('#msgInput').value||'').trim();
+    if(!text || !__curThreadId) return;
+    $('#msgInput').value='';
+    try{
+      const {collection,addDoc,serverTimestamp,doc,updateDoc}=await api();
+      await addDoc(collection(self.db,'messages',__curThreadId,'items'),{ text, from:__me.uid, createdAt:serverTimestamp() });
+      await updateDoc(doc(self.db,'messages',__curThreadId),{ lastText:text, lastAt:serverTimestamp(), lastFrom:__me.uid });
+    }catch(e){ console.warn('[msg] sendMessage err',e); }
+    // mobilde yazdıktan sonra Gönder görünür kalsın
+    setTimeout(()=>{ $('#msgInput').blur(); }, 10);
+  }
+
+  function hideCurrentThreadForMe(){
+    if(!__curThreadId || !__me) return;
+    __hiddenThreads.add(__curThreadId);
+    setHiddenThreads(__me.uid,__hiddenThreads);
+    __curThreadId=null; __curPeerUid=null;
+    $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin'; $('#peerInfo').textContent='—';
+    $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
+    listenThreads();
+  }
+
+  function boot(){
+    __ding=$('#ding'); bindButtons(); updateNotifLabel(); updateSoundLabel();
+    self.onAuthStateChanged(self.auth, async (u)=>{
+      __me=u||null; if(!__me){ location.href='/login.html'; return; }
+      __hiddenThreads=getHiddenThreads(__me.uid);
+      const urlPeer=qs('peer');
+      if(urlPeer){
+        const name=qs('name')?decodeURIComponent(qs('name')):''; const ava=qs('ava')||'';
+        try{ const tid=await createOrGetThread(urlPeer,name,ava); openThread(tid,urlPeer); }catch{}
+        history.replaceState({},document.title,location.pathname);
+      }
+      listenThreads();
+    });
+  }
+  (document.readyState==='loading'? document.addEventListener('DOMContentLoaded',boot) : boot());
   </script>
 </body>
 </html>
