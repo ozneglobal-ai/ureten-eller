@@ -2,33 +2,35 @@
 <html lang="tr" dir="ltr">
 <head>
   <!-- İsteğe bağlı: GSI Client ID'nizi ekleyin (eklemezseniz Firebase Google Popup çalışır) -->
-  <script>window.UE_GSI_CLIENT_ID="";</script>
+<script>window.UE_GSI_CLIENT_ID="";</script>
 
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="meta.title">Giriş • Üreten Eller</title>
-  <meta name="description" content="Üreten Eller – El emeği ürünler, aracısız satış platformu. Kadın girişimciler için güvenli alışveriş ortamı.">
-<meta name="keywords" content="üreten eller, el emeği, kadın girişimi, el yapımı ürünler, alışveriş">
-<meta property="og:title" content="Üreten Eller – El Emeği Platformu">
-<meta property="og:description" content="El emeği ürünler, aracısız satışlar. Kadın girişimciler için güvenli platform.">
-<meta property="og:image" content="https://ureteneller.com.tr/assets/icons/icon-512.png">
-<meta property="og:url" content="https://ureteneller.com.tr/">
-<meta name="twitter:card" content="summary_large_image">
-  <meta name="description" content="" data-i18n-attr="content:meta.description" />
-  <meta name="theme-color" content="#0b1220">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title data-i18n="meta.title">Giriş • Üreten Eller</title>
+<meta name="description" content="" data-i18n-attr="content:meta.description" />
 
-  <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="32x32"  href="/assets/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
-  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
-  <link rel="preload" as="image" href="/assets/icons/ureteneller.png">
+<!-- Favicon ve PWA Meta -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0b1220">
+<!-- 🔼 EKLEMEN GEREKEN YER BURASI 🔼 -->
 
-  <style>
-    :root{
-      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
-      --c1:#10b981; --c2:#f59e0b; --c3:#8b5cf6; --c4:#06b6d4; --c5:#ef4444; --c6:#eab308; --c7:#14b8a6; --c8:#f97316; --c9:#a855f7; --c10:#3b82f6;
-      --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
-    }
+<!-- Icons (eski satırlar kalsın, çakışma yapmaz) -->
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+<link rel="preload" as="image" href="/assets/icons/ureteneller.png">
+
+<style>
+  :root{
+    --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
+    --c1:#10b981; --c2:#f59e0b; --c3:#8b5cf6; --c4:#06b6d4; --c5:#ef4444; --c6:#eab308;
+    --c7:#14b8a6; --c8:#f97316; --c9:#a855f7; --c10:#3b82f6;
+    --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
+  }
+
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
     a{color:inherit}
