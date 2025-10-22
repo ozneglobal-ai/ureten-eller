@@ -701,7 +701,7 @@
       catch (e) { console.error("user upsert error", e); }
     })();
 
-    // küçük bir UI geri bildirimi:
+        // küçük bir UI geri bildirimi:
     const box = document.getElementById('lmsg');
     if (box) box.textContent = "Giriş başarılı ✔︎";
 
@@ -710,8 +710,18 @@
       window.location.assign("/home.html");
     }, 500);
   }); // <= onAuthStateChanged bloğunu KAPATAN parantez ve noktalı virgül
-
 </script>
+
+<!-- PWA: Manifest + Service Worker -->
+<link rel="manifest" href="/site.webmanifest">
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then(() => console.log("Service Worker yüklendi."))
+      .catch((err) => console.error("Service Worker hatası:", err));
+  }
+</script>
+
 <div id="gsiBtn"></div>
 <button id="fbLogin" style="display:none">Google ile giriş</button>
 </body>
