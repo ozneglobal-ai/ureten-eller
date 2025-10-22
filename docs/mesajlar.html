@@ -20,8 +20,11 @@
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
     .logo img{width:24px;height:24px}
     .spacer{flex:1}
-    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem .8rem;border:1px solid var(--brd);border-radius:10px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer}
+    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem .8rem;border:1px solid var(--brd);border-radius:10px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap}
     .btn.ghost{background:transparent}
+    .btn.accent{background:linear-gradient(180deg,#22d3ee,#0ea5b3);color:#042026;border-color:#0ea5b3}
+    .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
+    .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
     .search{padding:8px 10px;border-bottom:1px solid var(--brd)}
     .search input{width:100%;border:1px solid var(--brd);border-radius:10px;background:#0b1326;color:var(--ink);padding:10px}
 
@@ -38,7 +41,7 @@
     /* Sağ: chat */
     .right{display:grid;grid-template-rows:auto 1fr auto}
     .chatTop{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--brd)}
-    .chatTop .name{font-weight:900}
+    .chatTop .name{font-weight:900;cursor:pointer}
     .chatTop .mini{color:var(--muted);font-size:.9rem}
     .chatBody{overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
     .msg{max-width:70%;padding:10px 12px;border:1px solid var(--brd);border-radius:12px;background:#0b1326;white-space:pre-wrap}
@@ -52,9 +55,10 @@
     .danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);color:#fff;border:none}
     .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border:1px solid var(--brd);border-radius:999px}
     .tools{display:flex;gap:6px}
+    .pill.badge{background:#0b1326}
   </style>
 
-  <!-- Firebase init -->
+  <!-- Firebase init (docs altında) -->
   <script type="module" src="./firebase-init.js"></script>
 </head>
 <body>
@@ -64,10 +68,12 @@
       <div class="topbar">
         <div class="logo">
           <img src="./üreteneller.png" alt="logo" />
-          <span>Üreten Eller</span>
+          <span id="brandTxt">Üreten Eller</span>
         </div>
         <div class="spacer"></div>
-        <button class="btn ghost" id="btnHome" type="button">🏠 Ana sayfa</button>
+        <button class="btn ghost" id="btnHome" type="button">🏠 <span id="homeLbl">Ana sayfa</span></button>
+        <button class="btn accent" id="btnNotif" type="button">🔔 <span id="notifLbl">Bildirimleri Aç</span></button>
+        <button class="btn primary" id="btnSound" type="button">🔊 <span id="soundLbl">Sesi Aç</span></button>
       </div>
       <div class="search">
         <input id="search" placeholder="Kişi veya mesaj ara" />
@@ -82,10 +88,11 @@
       <div class="chatTop">
         <div id="peerAva" class="ava"></div>
         <div style="flex:1">
-          <div class="name" id="peerName">Kişi seçin</div>
+          <div class="name" id="peerName" title="Profili aç">Kişi seçin</div>
           <div class="mini" id="peerInfo">—</div>
         </div>
         <div class="tools">
+          <span class="pill badge" id="unreadBadge" title="Okunmamış mesaj">0</span>
           <button class="btn danger" id="btnHideThread" title="Bu konuşmayı panelimden kaldır">🗑 Panelimden kaldır</button>
         </div>
       </div>
@@ -102,21 +109,82 @@
   <audio id="ding" preload="auto" src="./notify.wav"></audio>
 
   <script>
+    // ========= I18N =========
+    const I18N = {
+      tr: {
+        brand:'Üreten Eller', home:'Ana sayfa', search:'Kişi veya mesaj ara',
+        notif_enable:'Bildirimleri Aç', notif_granted:'Bildirimler aktif', notif_blocked:'Bildirim engelli',
+        sound_on:'Sesi Aç', sound_off:'Sesi Kapat',
+        list_loading:'Yükleniyor…', list_empty:'Konuşma yok.',
+        pick_someone:'Kişi seçin', write_msg:'Mesaj yazın…',
+        new_message_title:'Yeni mesaj',
+        new_message_body:(name,text)=>`${name}: ${text}`,
+        you:'(siz)', unseen_label:(n)=>`Okunmamış: ${n}`
+      },
+      en: {
+        brand:'Ureten Eller', home:'Home', search:'Search people or messages',
+        notif_enable:'Enable Notifications', notif_granted:'Notifications on', notif_blocked:'Notifications blocked',
+        sound_on:'Turn Sound On', sound_off:'Turn Sound Off',
+        list_loading:'Loading…', list_empty:'No conversations.',
+        pick_someone:'Select a conversation', write_msg:'Type a message…',
+        new_message_title:'New message',
+        new_message_body:(name,text)=>`${name}: ${text}`,
+        you:'(you)', unseen_label:(n)=>`Unseen: ${n}`
+      },
+      de: {
+        brand:'Ureten Eller', home:'Startseite', search:'Person oder Nachricht suchen',
+        notif_enable:'Benachrichtigungen aktivieren', notif_granted:'Benachrichtigungen an', notif_blocked:'Benachrichtigungen blockiert',
+        sound_on:'Ton einschalten', sound_off:'Ton ausschalten',
+        list_loading:'Wird geladen…', list_empty:'Keine Konversationen.',
+        pick_someone:'Person auswählen', write_msg:'Nachricht schreiben…',
+        new_message_title:'Neue Nachricht',
+        new_message_body:(name,text)=>`${name}: ${text}`,
+        you:'(du)', unseen_label:(n)=>`Ungelesen: ${n}`
+      },
+      ar: {
+        brand:'أيادي منتجة', home:'الرئيسية', search:'ابحث عن شخص أو رسالة',
+        notif_enable:'تفعيل الإشعارات', notif_granted:'الإشعارات مفعّلة', notif_blocked:'الإشعارات محظورة',
+        sound_on:'تشغيل الصوت', sound_off:'إيقاف الصوت',
+        list_loading:'جارٍ التحميل…', list_empty:'لا محادثات.',
+        pick_someone:'اختر محادثة', write_msg:'اكتب رسالة…',
+        new_message_title:'رسالة جديدة',
+        new_message_body:(name,text)=>`${name}: ${text}`,
+        you:'(أنت)', unseen_label:(n)=>`غير المقروءة: ${n}`
+      }
+    };
+    const LANG_KEY='ue_lang_v1';
+    function lang(){ try{ const s=localStorage.getItem(LANG_KEY); if(s && I18N[s]) return s; const nav=(navigator.language||'tr').slice(0,2); return I18N[nav]?nav:'tr'; }catch{ return 'tr'; }}
+    function t(k){ const d=I18N[lang()]||I18N.tr; return d[k]||k; }
+
     // ========= Utilities =========
     const $ = (s)=> document.querySelector(s);
     const qs = (k)=> new URLSearchParams(location.search).get(k)||'';
     function fmtDate(ts){
-      try{ const d = ts?.toDate ? ts.toDate() : (ts? new Date(ts): null); return d? d.toLocaleString('tr-TR'):''; }catch{ return ''; }
+      try{ const d = ts?.toDate ? ts.toDate() : (ts? new Date(ts): null); return d? d.toLocaleString(lang()==='tr'?'tr-TR':undefined):''; }catch{ return ''; }
     }
     function escapeHtml(x){ return (x||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s])); }
+    function toast(msg){ /* minimal */ }
 
-    // localStorage tabanlı "sadece benim panelimden sil" (gizle) setleri
+    // ========= Local soft-hide =========
     const LS_KEY_THREADS = (uid)=> `ue.hiddenThreads.${uid}`;
-    const LS_KEY_MSGS    = (uid)=> `ue.hiddenMsgs.${uid}`; // ileride tek tek mesaj gizlemek istersen
     function getHiddenThreads(uid){ try{ return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]')); }catch{ return new Set(); } }
     function setHiddenThreads(uid,set){ try{ localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify(Array.from(set))); }catch{} }
 
-    // Firebase helpers
+    // ========= Global unread publish (for home.html) =========
+    const UNREAD_LS_KEY = 'ue_messages_unread_count';
+    const UNREAD_TEXT_LS_KEY = 'ue_messages_unread_latest_text';
+    const bc = ('BroadcastChannel' in self) ? new BroadcastChannel('ue-messages') : null;
+    function publishUnread(count, latestText=''){
+      try{
+        localStorage.setItem(UNREAD_LS_KEY, String(count));
+        localStorage.setItem(UNREAD_TEXT_LS_KEY, latestText||'');
+        if(bc) bc.postMessage({ type:'unread', count, latestText });
+        const badge = document.getElementById('unreadBadge');
+        if(badge) badge.textContent = String(count);
+      }catch{}
+    }
+
+    // ========= Firebase helpers =========
     async function api(){
       const mod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
       return mod;
@@ -129,7 +197,8 @@
     let __curPeerUid=null;
     let __hiddenThreads = new Set();
     let __ding = null;
-    let __lastSeenMap = {}; // threadId -> lastAt millis (notify kontrolü için)
+    let __lastSeenMap = {}; // threadId -> lastAt millis (bildirim kıyası)
+    let __soundEnabled = (localStorage.getItem('ue_msg_sound')==='1');
 
     // Profil kısa getirme (ad/ava)
     const _briefCache = new Map();
@@ -141,27 +210,86 @@
         const snap = await getDoc(doc(self.db,'users',uid));
         const d = snap.exists()? (snap.data()||{}) : {};
         const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Kullanıcı';
-        const brief = { name, avatar: d.avatar||d.photoURL||'/assets/img/avatar-default.png' };
+        const brief = { name, avatar: d.avatar||d.photoURL||'/assets/img/avatar-default.png', email: d.email||'' };
         _briefCache.set(uid, brief);
         return brief;
-      }catch{ return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' }; }
+      }catch{ return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png', email:'' }; }
     }
 
-    // ========= Threads render =========
+    // ========= Bildirim & Ses =========
+    function ensureNotifPermission(){
+      if(!('Notification' in self)) return;
+      if(Notification.permission==='default'){
+        // izin istemeyi butona da bağladık; otomatik tetiklemeyelim
+      }
+      updateNotifBtn();
+    }
+    function updateNotifBtn(){
+      const lbl = document.getElementById('notifLbl');
+      if(!('Notification' in self)){ lbl.textContent = t('notif_blocked'); return; }
+      lbl.textContent = Notification.permission==='granted' ? t('notif_granted') : t('notif_enable');
+    }
+    function requestNotif(){
+      if(!('Notification' in self)) return;
+      Notification.requestPermission().then(()=> updateNotifBtn()).catch(()=>{});
+    }
+    function updateSoundBtn(){
+      document.getElementById('soundLbl').textContent = __soundEnabled ? t('sound_off') : t('sound_on');
+    }
+    function toggleSound(){
+      __soundEnabled = !__soundEnabled;
+      localStorage.setItem('ue_msg_sound', __soundEnabled?'1':'0');
+      updateSoundBtn();
+      if(__soundEnabled && __ding){
+        __ding.currentTime=0; __ding.play().catch(()=>{});
+      }
+    }
+    function playDing(){
+      if(!__soundEnabled) return;
+      try{ __ding && __ding.play().catch(()=>{}); }catch{}
+    }
+    async function showNotify({title, body, threadId}){
+      try{
+        if(!('Notification' in self)) return;
+        if(Notification.permission!=='granted') return;
+        const icon = '/assets/icons/icon-192.png';
+        const n = new Notification(title,{ body, icon, vibrate:[120,60,120] });
+        n.onclick = ()=>{ self.focus(); if(threadId) openThread(threadId); };
+      }catch{}
+    }
+
+    // ========= THREADS render & unread hesap =========
+    function computeUnreadCount(rows){
+      // Unread: lastAt > seen[me] && lastFrom != me
+      let total = 0;
+      let latestText = '';
+      rows.forEach(r=>{
+        const d = r.d || {};
+        const seenObj = d.seen || {};
+        const seenForMe = seenObj?.[__me.uid];
+        const seenMs = seenForMe?.toMillis ? seenForMe.toMillis() : (seenForMe? new Date(seenForMe).getTime():0);
+        const lastMs = d.lastAt?.toMillis ? d.lastAt.toMillis() : (d.lastAt? new Date(d.lastAt).getTime():0);
+        const fromOther = d.lastFrom && d.lastFrom !== __me.uid;
+        if(fromOther && lastMs && lastMs>(seenMs||0)){
+          total++;
+          if(!latestText) latestText = (d.lastText||'').slice(0,120);
+        }
+      });
+      publishUnread(total, latestText);
+      return total;
+    }
+
     function renderThreadsSnapshot(snap){
       const listEl = $('#threads');
       const rows = [];
-      // snap: hem onSnapshot Snapshot'ı, hem getDocs QuerySnapshot'ı desteklenir
       snap.forEach(ds=>{
         const d = ds.data()||{};
-        // gizle seti
         if(__hiddenThreads.has(ds.id)) return;
         const arr = d.participants||[];
         const otherUid = arr.find(x=>x!==__me.uid) || '';
         rows.push({ id: ds.id, d, otherUid });
       });
 
-      // JS ile lastAt desc sırala
       rows.sort((a,b)=>{
         const ta = a.d.lastAt?.toMillis ? a.d.lastAt.toMillis() : (a.d.lastAt? new Date(a.d.lastAt).getTime():0);
         const tb = b.d.lastAt?.toMillis ? b.d.lastAt.toMillis() : (b.d.lastAt? new Date(b.d.lastAt).getTime():0);
@@ -170,12 +298,12 @@
 
       const qtxt = ($('#search')?.value||'').trim().toLowerCase();
 
-      listEl.innerHTML = rows.length ? '' : '<div class="empty">Konuşma yok.</div>';
+      listEl.innerHTML = rows.length ? '' : `<div class="empty">${t('list_empty')}</div>`;
 
       (async ()=>{
+        let unreadCount = 0;
         for(const r of rows){
           const other = await getUserBrief(r.otherUid);
-          // arama filtresi
           if(qtxt && !(other.name||'').toLowerCase().includes(qtxt) && !(r.d.lastText||'').toLowerCase().includes(qtxt)) continue;
 
           const t = document.createElement('div');
@@ -191,33 +319,37 @@
           t.onclick = ()=> openThread(r.id, r.otherUid, other);
           listEl.appendChild(t);
 
-          // bildirim sesi kontrolü (yeni mesaj ve benden değilse)
+          // Yeni mesaj algıla (sesten bağımsız)
           const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
           const prev = __lastSeenMap[r.id] || 0;
-          if(lastMillis && lastMillis > prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom !== __me.uid){
-            try{ __ding && __ding.play().catch(()=>{}); }catch{}
+          if(lastMillis && lastMillis>prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom!==__me.uid){
+            playDing();
+            showNotify({
+              title: t('new_message_title'),
+              body: (I18N[lang()].new_message_body||((n,txt)=>`${n}: ${txt}`))(other.name||'', r.d.lastText||''),
+              threadId: r.id
+            });
           }
           __lastSeenMap[r.id] = lastMillis || prev;
         }
+        // Unread sayısını hesapla ve yayınla
+        unreadCount = computeUnreadCount(rows);
       })();
     }
 
-    // ========= THREADS LISTEN (index-safe) =========
-    // ====== LISTEN THREADS (LEFT) with index-safe fallback ======
+    // ========= Listen Threads (index-safe) =========
     async function listenThreads(){
       if(__threadsUnsub){ __threadsUnsub(); __threadsUnsub=null; }
       const {collection, query, where, orderBy, onSnapshot, getDocs} = await api();
       const baseQ = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
 
       const listEl = $('#threads');
-      listEl.innerHTML = '<div class="empty">Yükleniyor…</div>';
+      listEl.innerHTML = `<div class="empty">${t('list_loading')}</div>`;
 
-      // Önce indeksi deneyelim
       try{
         const q = query(baseQ, orderBy('lastAt','desc'));
         __threadsUnsub = onSnapshot(q, (snap)=> renderThreadsSnapshot(snap), (err)=>{
           console.warn('Threads listen error (indexed):', err);
-          // Fallback’e düş
           fallbackNoIndex();
         });
       }catch(err){
@@ -230,7 +362,7 @@
       const {collection, query, where, getDocs} = await api();
       const q = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
       const snap = await getDocs(q);
-      renderThreadsSnapshot(snap); // aynı render fonksiyonunu kullan
+      renderThreadsSnapshot(snap);
     }
 
     // ========= Chat (right) =========
@@ -244,7 +376,6 @@
         chat.innerHTML = '';
         snap.forEach(ds=>{
           const m = ds.data()||{};
-          // ileride tek tek mesaj gizleme istersen burada localStorage check edebilirsin (LS_KEY_MSGS)
           const div = document.createElement('div');
           div.className = 'msg ' + (m.from === __me.uid ? 'me':'other');
           div.textContent = m.text || '';
@@ -254,27 +385,37 @@
       }, (err)=>{ console.warn('listenMessages error:', err); });
     }
 
-    async function openThread(threadId, peerUid, peerBrief=null){
+    async function openThread(threadId, peerUid=null, peerBrief=null){
       __curThreadId = threadId;
-      __curPeerUid  = peerUid;
-      const info = peerBrief || await getUserBrief(peerUid);
+      const { doc, updateDoc, serverTimestamp, getDoc } = await api();
+      // thread doc
+      const tRef = doc(self.db,'messages',threadId);
+      try{
+        const tSnap = await getDoc(tRef);
+        const d = tSnap.exists()? (tSnap.data()||{}) : {};
+        const arr = d.participants||[];
+        __curPeerUid = peerUid || arr.find(x=>x!==__me.uid) || '';
+      }catch{}
+
+      const info = peerBrief || await getUserBrief(__curPeerUid);
       $('#peerAva').style.backgroundImage = `url('${info.avatar||'/assets/img/avatar-default.png'}')`;
       $('#peerName').textContent = info.name || 'Kullanıcı';
-      $('#peerInfo').textContent = peerUid;
+      $('#peerInfo').textContent = info.email || __curPeerUid || '—';
+      // Profil açma
+      $('#peerAva').onclick = ()=>{ if(__curPeerUid) location.href = '/docs/profile.html?uid='+encodeURIComponent(__curPeerUid); };
+      $('#peerName').onclick = ()=>{ if(__curPeerUid) location.href = '/docs/profile.html?uid='+encodeURIComponent(__curPeerUid); };
 
       // seen damgası
       try{
-        const { doc, updateDoc, serverTimestamp } = await api();
-        const ref = doc(self.db,'messages',threadId);
-        await updateDoc(ref, { [`seen.${__me.uid}`]: serverTimestamp() });
+        await updateDoc(tRef, { [`seen.${__me.uid}`]: serverTimestamp() });
       }catch(e){/* sessiz */}
 
       await listenMessages(threadId);
     }
 
     async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
-      const { collection, query, where, getDocs, addDoc, doc, setDoc, serverTimestamp } = await api();
-      // önce var mı?
+      const { collection, query, where, getDocs, doc, setDoc, serverTimestamp } = await api();
+      // var mı?
       const q = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
       const snap = await getDocs(q);
       let found = '';
@@ -287,10 +428,7 @@
       // yoksa oluştur
       const participants = [__me.uid, peerUid];
       const ref = doc(self.db, 'messages', crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
-      await setDoc(ref, {
-        participants, lastText:'', lastAt: serverTimestamp(),
-        otherName: otherName || '', otherAvatar: otherAvatar || ''
-      });
+      await setDoc(ref, { participants, lastText:'', lastAt: serverTimestamp(), otherName, otherAvatar });
       return ref.id;
     }
 
@@ -303,85 +441,90 @@
         await addDoc(collection(self.db,'messages',__curThreadId,'items'),{
           text, from: __me.uid, createdAt: serverTimestamp()
         });
-        // thread son özet
         await updateDoc(doc(self.db,'messages',__curThreadId),{
           lastText: text, lastAt: serverTimestamp(), lastFrom: __me.uid
         });
       }catch(err){ console.warn('sendMessage error:', err); }
     }
 
-    // ========= “Panelimden kaldır” (soft delete sadece bu kullanıcı için) =========
+    // ========= “Panelimden kaldır” =========
     function hideCurrentThreadForMe(){
       if(!__curThreadId || !__me) return;
       __hiddenThreads.add(__curThreadId);
       setHiddenThreads(__me.uid, __hiddenThreads);
       // sağ paneli temizle
-      $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin';
-      $('#peerInfo').textContent='—'; $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
-      __curThreadId = null; __curPeerUid = null;
-
-      // listeyi yeniden çiz
+      $('#peerAva').style.backgroundImage='';
+      $('#peerName').textContent=t('pick_someone');
+      $('#peerInfo').textContent='—';
+      $('#chat').innerHTML=`<div class="empty">${t('pick_someone')}</div>`;
+      __curThreadId=null; __curPeerUid=null;
       listenThreads();
     }
 
-    // ========= Boot (güncel) =========
-async function boot(){
-  // Auth hazır olana kadar bekle
-  await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
-  if(!__me){ window.location.href = './login.html'; return; }
+    // ========= Boot =========
+    async function boot(){
+      // Dil uygula
+      document.getElementById('brandTxt').textContent = t('brand');
+      document.getElementById('homeLbl').textContent = t('home');
+      document.getElementById('notifLbl').textContent = t('notif_enable');
+      document.getElementById('soundLbl').textContent = __soundEnabled ? t('sound_off') : t('sound_on');
+      const sEl = document.getElementById('search'); if(sEl) sEl.placeholder = t('search');
 
-  // ✅ Ana sayfa butonu: kesin yönlendirme
-  const btnHome = document.getElementById('btnHome');
-  if (btnHome) {
-    btnHome.addEventListener('click', (e) => {
-      e.preventDefault();
-      // messages.html ile home.html aynı klasördeyse bu yeterli
-      window.location.href = './home.html';
-    }, { passive: true });
-  }
+      // Auth
+      await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
+      if(!__me){ location.href='./index.html'; return; }
 
-  // Ses nesnesi (sayfa içi mesaj sesi – global notifier ayrı çalışır)
-  __ding = document.getElementById('ding');
+      // Ses & Bildirim
+      __ding = document.getElementById('ding');
+      ensureNotifPermission();
+      updateSoundBtn();
 
-  // Gizli thread setini yükle
-  __hiddenThreads = getHiddenThreads(__me.uid);
+      // Gizli thread setini yükle
+      __hiddenThreads = getHiddenThreads(__me.uid);
 
-  // UI hooks
-  const btnSend = document.getElementById('btnSend');
-  const msgInput = document.getElementById('msgInput');
-  const btnHideThread = document.getElementById('btnHideThread');
-  const search = document.getElementById('search');
+      // UI hooks
+      const btnHome = document.getElementById('btnHome');
+      if(btnHome){ btnHome.addEventListener('click',(e)=>{ e.preventDefault(); location.href='./home.html'; },{passive:true}); }
+      const btnSend = document.getElementById('btnSend');
+      const msgInput = document.getElementById('msgInput');
+      const btnHideThread = document.getElementById('btnHideThread');
+      const search = document.getElementById('search');
+      const btnNotif = document.getElementById('btnNotif');
+      const btnSound = document.getElementById('btnSound');
 
-  if (btnSend) btnSend.addEventListener('click', sendMessage);
-  if (msgInput) msgInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
-  if (btnHideThread) btnHideThread.addEventListener('click', hideCurrentThreadForMe);
-  if (search) search.addEventListener('input', ()=> listenThreads()); // filtreleme için yeniden render
+      if (btnSend) btnSend.addEventListener('click', sendMessage);
+      if (msgInput) msgInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
+      if (btnHideThread) btnHideThread.addEventListener('click', hideCurrentThreadForMe);
+      if (search) search.addEventListener('input', ()=> listenThreads());
+      if (btnNotif) btnNotif.addEventListener('click', requestNotif);
+      if (btnSound) btnSound.addEventListener('click', toggleSound);
 
-  // URL’den otomatik başlatma (seller sayfasından gelir)
-  const urlPeer = qs('peer');
-  if(urlPeer){
-    const name = qs('name') ? decodeURIComponent(qs('name')) : '';
-    const ava  = qs('ava') || '';
-    try{
-      const tid = await createOrGetThread(urlPeer, name, ava);
-      openThread(tid, urlPeer);
-    }catch{ /* sessiz */ }
-    // query’i temizle
-    history.replaceState({}, document.title, location.pathname);
-  }
+      // URL’den otomatik başlatma (orders/profile yönlendirmesiyle gelebilir)
+      const urlPeer = qs('peer');
+      if(urlPeer){
+        const name = qs('name') ? decodeURIComponent(qs('name')) : '';
+        const ava  = qs('ava') || '';
+        try{
+          const tid = await createOrGetThread(urlPeer, name, ava);
+          openThread(tid, urlPeer);
+        }catch{}
+        history.replaceState({}, document.title, location.pathname);
+      }
 
-  // Thread’leri dinle
-  listenThreads();
-}
+      // Thread’leri dinle (sayfa görünmez olsa bile çalışır)
+      listenThreads();
 
-// Sayfa hazır olduğunda başlat
-(function init(){
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-})();
+      // Sayfa görünürlüğü değişse de (arka sekme) çalışmaya devam
+      document.addEventListener('visibilitychange', ()=>{ /* Firestore listener zaten aktif; ekstra işlem gerekmiyor */ });
+    }
+
+    (function init(){
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+      } else {
+        boot();
+      }
+    })();
   </script>
 </body>
 </html>
