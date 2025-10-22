@@ -86,3 +86,94 @@ self.__fbReady = true;
 try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
 
 console.debug('[firebase-init] ready:', app.options.projectId);
+/* === GLOBAL MESSAGE NOTIFIER (arka plan ses + opsiyonel desktop bildirim) === */
+
+// Ses kaynağı (sayfada <audio> etiketi gerektirmez)
+const __ue_ding = new Audio('./notify.wav');
+
+// Autoplay engelini bir defa kaldır (ilk kullanıcı etkileşiminde)
+let __ue_audioUnlocked = false;
+function __ue_unlockAudio(){
+  if (__ue_audioUnlocked) return;
+  __ue_ding.muted = true;
+  __ue_ding.play().then(()=>{
+    __ue_ding.pause(); __ue_ding.currentTime = 0;
+    __ue_ding.muted = false;
+    __ue_audioUnlocked = true;
+  }).catch(()=>{ /* kullanıcı etkileşimine kadar kilitli kalabilir */ });
+}
+['click','keydown','touchstart','pointerdown'].forEach(ev=>{
+  window.addEventListener(ev, __ue_unlockAudio, { once:true, capture:true });
+});
+
+// LocalStorage anahtarları
+const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`; // { threadId: lastMillis }
+function __ue_loadSeen(uid){
+  try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; }
+}
+function __ue_saveSeen(uid, obj){
+  try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{}
+}
+
+// Masaüstü bildirimi (isteğe bağlı)
+function __ue_desktopNotify(title, body){
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: './üreteneller.png' }); }catch{}
+}
+// İzni sessizce iste (kullanıcı onaylarsa arka planda toast da görebilir)
+if ('Notification' in window && Notification.permission === 'default'){
+  Notification.requestPermission().catch(()=>{});
+}
+
+// Firestore dinleyicisini başlat
+async function __ue_startGlobalNotifier(user){
+  if (!self.db) return;
+  const { collection, query, where, orderBy, onSnapshot } =
+    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+  const uid = user.uid;
+  const seen = __ue_loadSeen(uid);
+
+  // Katılımcısı olduğum tüm konuşmalar, son mesaja göre sıralı
+  const q = query(
+    collection(self.db, 'messages'),
+    where('participants','array-contains', uid),
+    orderBy('lastAt','desc')
+  );
+
+  onSnapshot(q, (snap)=>{
+    snap.forEach(ds=>{
+      const d = ds.data()||{};
+      const threadId = ds.id;
+
+      const lastMillis = d.lastAt?.toMillis ? d.lastAt.toMillis()
+                        : (d.lastAt ? new Date(d.lastAt).getTime() : 0);
+      const prev = seen[threadId] || 0;
+
+      // Yeni mesaj ve benden değilse
+      if (lastMillis && lastMillis > prev && d.lastText && d.lastFrom && d.lastFrom !== uid){
+        __ue_ding.play().catch(()=>{});              // SES 📣
+        if (document.hidden) {                       // Sekme arkadaysa opsiyonel desktop bildirimi
+          __ue_desktopNotify(d.otherName || 'Yeni mesaj', d.lastText);
+        }
+        seen[threadId] = lastMillis;
+        __ue_saveSeen(uid, seen);
+      } else if (!seen[threadId]) {
+        // İlk yüklemede başlangıç damgasını yaz
+        seen[threadId] = lastMillis || 0;
+        __ue_saveSeen(uid, seen);
+      }
+    });
+  }, (err)=> console.warn('[notify] snapshot error:', err));
+}
+
+// Auth hazır olduğunda notifier’ı bağla (TÜM SAYFALARDA çalışır)
+try{
+  self.onAuthStateChanged(self.auth, (u)=>{
+    if (u) __ue_startGlobalNotifier(u);
+  });
+}catch(e){
+  console.warn('[notify] onAuthStateChanged bağlanamadı:', e);
+}
+
