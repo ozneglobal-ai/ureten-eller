@@ -79,7 +79,7 @@
       padding-bottom: calc(10px + env(safe-area-inset-bottom,0px));
     }
     .chatInput input{
-      flex:1;border:1px solid var(--brd);border-radius:999px;background:#0b1326;color:var(--ink);
+      flex:1;border:1px solid var(--brd);border-radius:999px;background:#0b1326;color:#0000; /* color later overridden by JS fix */
       padding:12px 14px;font-size:16px; /* iOS zoom’u önlemek için >=16px */
     }
     .chatInput button{
@@ -169,6 +169,10 @@
   let __hiddenThreads=new Set();
   let __lastSeenMap={};
 
+  // === FCM CONFIG ===
+  const FCM_VAPID_KEY = 'WEB_PUSH_CERTIFICATE_PUBLIC_VAPID_KEY'; // Firebase Console > Cloud Messaging > Web Push
+  const FCM_SW_PATH = '/firebase-messaging-sw.js'; // Bu dosyayı site köküne (ve docs/ köküne) koymalısın
+
   const LS_KEY_THREADS = uid => `ue.hiddenThreads.${uid}`;
   const getHiddenThreads = uid => { try{return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]'));}catch{return new Set()} };
   const setHiddenThreads = (uid,set)=>{ try{localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify([...set]));}catch{} };
@@ -225,19 +229,62 @@
     }
   }
 
+  // ==== WEB PUSH / FCM entegrasyonu ====
+  async function setupFCMForThisDevice(currentUid){
+    try{
+      if(!('Notification' in window)) return null;
+      if(location.protocol!=='https:' && location.hostname!=='localhost'){
+        alert('Bildirimler için HTTPS gerekir (localhost hariç).');
+        return null;
+      }
+      // messaging modüllerini yükle
+      const { getMessaging, getToken, onMessage, isSupported } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js');
+      if(!(await isSupported())){ updateNotifLabel(); return null; }
+
+      // SW kaydı
+      const reg = await navigator.serviceWorker.register(FCM_SW_PATH, { scope: '/' });
+
+      // izin iste
+      const perm = await Notification.requestPermission();
+      updateNotifLabel();
+      if(perm!=='granted') return null;
+
+      // token al
+      const messaging = getMessaging(self.app);
+      const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+      if(!token) return null;
+
+      // Token'ı Firestore'a yaz
+      const { getFirestore, doc, setDoc, serverTimestamp, updateDoc, arrayUnion } = await api();
+      const db = getFirestore(self.app);
+      try{
+        await setDoc(doc(db,'fcmTokens', token), {
+          token, uid: currentUid||null, platform:'web', active:true, createdAt: serverTimestamp()
+        }, { merge: true });
+      }catch(e){ console.warn('fcmTokens write err', e); }
+      if(currentUid){
+        try{ await updateDoc(doc(db,'users', currentUid), { fcmTokens: arrayUnion(token) }); }catch{}
+      }
+
+      // Uygulama açıkken gelen push -> bildirim + ding
+      onMessage(messaging, (payload)=>{
+        try{ new Notification(payload?.notification?.title||'Yeni mesaj', {
+          body: payload?.notification?.body||'', icon:'./assets/icons/favicon.png'
+        }); }catch{}
+        playDing();
+      });
+
+      return token;
+    }catch(e){ console.warn('[msg] setupFCM error', e); return null; }
+  }
+
   function onNotifClick(){
     if(!('Notification' in window)){ alert('Tarayıcınız bildirimleri desteklemiyor.'); return; }
-    if(location.protocol!=='https:' && location.hostname!=='localhost'){
-      alert('Bildirimler için HTTPS gerekir (localhost hariç).');
-    }
-    if(Notification.permission==='granted'){
-      updateNotifLabel();
-      try{ new Notification('Bildirim testi',{body:'Mesajlar için bildirimler açık.',icon:'./üreteneller.png'});}catch{}
-      return;
-    }
-    Notification.requestPermission().then(p=>{
-      updateNotifLabel();
-      if(p==='granted'){ try{ new Notification('Bildirim açık',{body:'Yeni mesajlarda bildirim alacaksınız.',icon:'./üreteneller.png'});}catch{} }
+    // izin + FCM kaydı
+    setupFCMForThisDevice(__me?.uid||null).then(tok=>{
+      if(tok){
+        try{ new Notification('Bildirim açık', { body:'Bu cihaz için bildirimler etkin.', icon:'./üreteneller.png' }); }catch{}
+      }
     });
   }
 
@@ -395,6 +442,9 @@
 
   function boot(){
     __ding=$('#ding'); bindButtons(); updateNotifLabel(); updateSoundLabel();
+    // iOS renk kontrast hatası yaşayan tarayıcılar için fix
+    try{ document.querySelector('.chatInput input').style.color = getComputedStyle(document.body).getPropertyValue('--ink'); }catch{}
+
     self.onAuthStateChanged(self.auth, async (u)=>{
       __me=u||null; if(!__me){ location.href='/login.html'; return; }
       __hiddenThreads=getHiddenThreads(__me.uid);
@@ -404,6 +454,8 @@
         try{ const tid=await createOrGetThread(urlPeer,name,ava); openThread(tid,urlPeer); }catch{}
         history.replaceState({},document.title,location.pathname);
       }
+      // oturum açınca bu cihazı FCM'e kaydet
+      setupFCMForThisDevice(__me.uid);
       listenThreads();
     });
   }
