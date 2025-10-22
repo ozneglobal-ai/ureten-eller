@@ -188,7 +188,7 @@
   const $=(s)=>document.querySelector(s);
   const qs=(s)=>new URLSearchParams(location.search).get(s)||'';
   function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
-  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
   function fmtTRY(x){ try{ return new Intl.NumberFormat(pickLang()==='tr'?'tr-TR':undefined,{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(x||0); }catch{ return (x||0)+' TL'; } }
   function fmtDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString(pickLang()==='tr'?'tr-TR':undefined); }catch{ return '—'; } }
 
@@ -197,6 +197,26 @@
   let __unsub=null; let __current=null; let __knownIds=new Set(JSON.parse(localStorage.getItem('ue_known_order_ids')||'[]'));
   let __prevIds=new Set();
   let __soundEnabled = (localStorage.getItem('ue_sound_enabled')==='1'); // kullanıcı etkileşimi sonrası aktif
+
+  // Alıcı brief cache
+  const __buyerBriefCache = new Map();
+  async function getBuyerBrief(uid){
+    if(!uid) return {name:'Müşteri', avatar:'/assets/img/avatar-default.png', email:''};
+    if(__buyerBriefCache.has(uid)) return __buyerBriefCache.get(uid);
+    try{
+      const {doc,getDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const snap = await getDoc(doc(window.__fb.db,'users',uid));
+      const d = snap.exists() ? (snap.data()||{}) : {};
+      const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Müşteri';
+      const avatar = d.avatar || d.photoURL || '/assets/img/avatar-default.png';
+      const email = d.email || '';
+      const brief = {name, avatar, email};
+      __buyerBriefCache.set(uid, brief);
+      return brief;
+    }catch{
+      return {name:'Müşteri', avatar:'/assets/img/avatar-default.png', email:''};
+    }
+  }
 
   function ui(){
     $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='/docs/profile.html'; };
@@ -212,7 +232,18 @@
     $('#buyerName').onclick=openBuyerProfile;
   }
 
-  function filterList(){ const q=($('#q').value||'').toLowerCase(); if(!q){ __filtered=[...__orders]; } else { __filtered=__orders.filter(x=> (x.buyerName||'').toLowerCase().includes(q) || (x.title||'').toLowerCase().includes(q) || (x.orderId||'').includes(q) ); } renderList(); }
+  function filterList(){
+    const q=($('#q').value||'').toLowerCase();
+    if(!q){ __filtered=[...__orders]; }
+    else {
+      __filtered=__orders.filter(x=>
+        (x.buyerName||'').toLowerCase().includes(q) ||
+        (x.title||'').toLowerCase().includes(q) ||
+        (x.orderId||'').toLowerCase().includes(q)
+      );
+    }
+    renderList();
+  }
 
   function renderList(){
     const host=$('#orderList'); host.innerHTML='';
@@ -224,7 +255,7 @@
       const row=document.createElement('div'); row.className='row'; row.setAttribute('role','option'); row.dataset.id=o.id;
       row.innerHTML=`
         <input type="checkbox" ${__sel.has(o.id)?'checked':''} data-act="sel" aria-label="select" />
-        <div class="thumb" style="background-image:url('${o.coverUrl||'/assets/img/avatar-default.png'}')"></div>
+        <div class="thumb" style="background-image:url('${o.buyerAvatar||'/assets/img/avatar-default.png'}')"></div>
         <div style="min-width:0">
           <div class="ttl">${escapeHtml(o.title||'—')}</div>
           <div class="sub">${escapeHtml(o.buyerName||'—')} • ${fmtDate(o.createdAt)} • ${fmtTRY(o.total||0)} • ${S[o.status]||o.status}</div>
@@ -248,7 +279,6 @@
   function updateBadges(n){
     const b=$('#unreadBadge'); b.textContent=String(n); b.style.display = n>0 ? 'inline-flex' : 'none';
     document.title = (n>0?`(${n}) `:'') + t('title');
-    // Bu anahtarları profile.html okuyabilir
     localStorage.setItem('ue_orders_unread_count', String(n));
     localStorage.setItem('ue_orders_unread_text', String((I18N[pickLang()].unseen_label||((x)=>`Görünmemiş siparişlerim: ${x}`))(n)));
   }
@@ -273,7 +303,6 @@
     $('#note').textContent = o.note || '—';
     $('#statusSel').value = o.status || 'new';
 
-    // Alıcı detaylarını getir
     loadBuyerMore(o.buyerId);
 
     if(o.isNew){ markSeen(o.id); }
@@ -330,9 +359,9 @@
     __soundEnabled = !__soundEnabled;
     localStorage.setItem('ue_sound_enabled', __soundEnabled?'1':'0');
     $('#soundLbl').textContent = __soundEnabled ? t('sound_off') : t('sound_on');
-    if(__soundEnabled){ // kullanıcı etkileşimi ile ses motorunu aç
+    if(__soundEnabled){
       const a=document.getElementById('beep'); a.currentTime=0;
-      a.play().then(()=>{ /* unlocked */ }).catch(()=>{ /* sessiz olabilir */ });
+      a.play().then(()=>{}).catch(()=>{});
     }
   }
   function playBeep(){
@@ -352,24 +381,15 @@
 
   function unseenCount(){ return __orders.filter(o=>o.isNew).length; }
 
-  // ===== Buyer info load =====
+  // ===== Buyer info load (detay kutusu) =====
   async function loadBuyerMore(buyerId){
     try{
       if(!buyerId){ $('#buyerMore').textContent='—'; return; }
-      const {doc,getDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      const ref = doc(window.__fb.db,'users',buyerId);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){ $('#buyerMore').textContent='—'; return; }
-      const u = snap.data()||{};
-      const city = u.city || '—';
-      const phone = u.phone || '—';
-      const email = u.email || '—';
-      const bio = u.bio || '';
-      $('#buyerSub').textContent = email;
+      const brief = await getBuyerBrief(buyerId);
+      $('#buyerSub').textContent = brief.email || '—';
       $('#buyerMore').innerHTML = `
-        <div><strong>${escapeHtml(u.name||'—')}</strong></div>
-        <div class="mini">${escapeHtml(city)} • ${escapeHtml(phone)} • ${escapeHtml(email)}</div>
-        ${bio?`<div class="mini" style="margin-top:.25rem">${escapeHtml(bio)}</div>`:''}
+        <div><strong>${escapeHtml(brief.name||'—')}</strong></div>
+        <div class="mini">${escapeHtml(brief.email||'—')}</div>
       `;
     }catch(e){ console.warn('buyer load',e); $('#buyerMore').textContent='—'; }
   }
@@ -392,7 +412,7 @@
           if (d.archivedBySeller === true) return;
           const o={ id:ds.id, orderId:d.orderNo||ds.id, createdAt:d.createdAt||null, status:d.status||'new',
                     buyerId:d.buyerId||'', buyerName:d.buyerName||'Müşteri', buyerAvatar:d.buyerAvatar||'',
-                    buyerEmail:d.buyerEmail||'', // varsa
+                    buyerEmail:d.buyerEmail||'',
                     listingId:d.listingId||'', title:d.listingTitle||d.title||'', coverUrl:d.listingCover||d.coverUrl||'',
                     price:d.price||0, qty:d.qty||1, total:d.total||((d.price||0)*(d.qty||1)), note:d.note||'',
                     archivedBySeller: !!d.archivedBySeller };
@@ -402,12 +422,22 @@
           if(o.isNew && !__prevIds.has(ds.id)){ anyNewArrived=true; }
         });
 
-        // sort: newest first
+        // siparişleri yenilik tarihine göre sırala
         tmp.sort((a,b)=>{
           const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt? new Date(a.createdAt).getTime():0);
           const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt? new Date(b.createdAt).getTime():0);
           return (tb||0)-(ta||0);
         });
+
+        // === Alıcı avatar/isimlerini kullanıcı belgesinden tamamla ===
+        // (sipariş içinde yoksa veya boşsa)
+        const toEnrich = tmp.filter(x=>(!x.buyerAvatar || !x.buyerName) && x.buyerId);
+        await Promise.allSettled(toEnrich.map(async (o)=>{
+          const brief = await getBuyerBrief(o.buyerId);
+          if(!o.buyerAvatar) o.buyerAvatar = brief.avatar;
+          if(!o.buyerName || o.buyerName==='Müşteri') o.buyerName = brief.name;
+          if(!o.buyerEmail) o.buyerEmail = brief.email;
+        }));
 
         __orders = tmp; __filtered = [...__orders];
         renderList();
@@ -423,7 +453,6 @@
 
         __prevIds = curIds;
 
-        // Bilinen id'leri cache
         const known = new Set(__knownIds); __orders.forEach(o=>known.add(o.id));
         __knownIds=known; localStorage.setItem('ue_known_order_ids', JSON.stringify([...known]));
       },(err)=>{ console.warn('orders onSnapshot',err); });
@@ -435,10 +464,10 @@
   (function init(){
     if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 
-    // otomatik: izin istenmediyse hatırlat
+    // nazik bildirim hatırlatıcısı
     try{
-      if(('Notification'in window) && Notification.permission==='default'){
-        setTimeout(()=>{ /* nazik gecikme */ }, 800);
+      if(('Notification' in window) && Notification.permission==='default'){
+        setTimeout(()=>{/* opsiyonel uyarı koyulabilir */}, 800);
       }
     }catch{}
 
@@ -450,7 +479,6 @@
         __uid=u.uid;
         await watchOrders(__uid);
 
-        // URL ile bir siparişi aç
         const openId = qs('open'); if(openId){ setTimeout(()=>openOrder(openId), 300); }
       });
     })();
