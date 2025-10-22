@@ -9,6 +9,7 @@
     :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326 }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow:hidden}
+    a{color:inherit;text-decoration:none}
 
     .page{height:100vh;display:grid;grid-template-columns:320px 1fr;gap:10px;padding:10px}
     @media(max-width:900px){ .page{grid-template-columns:1fr} }
@@ -57,7 +58,7 @@
     .pill.badge{background:#0b1326}
   </style>
 
-  <!-- KÖKTEKİ init (mutlaka kök) -->
+  <!-- KÖK init -->
   <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
@@ -71,8 +72,8 @@
         </div>
         <div class="spacer"></div>
         <div class="actions">
-          <button class="btn ghost" id="btnHome" type="button">🏠 Ana sayfa</button>
-          <button class="btn accent" id="btnNotif" type="button">🔔 <span id="notifLbl">Bildirimleri Aç</span></button>
+          <button class="btn ghost"   id="btnHome"  type="button">🏠 Ana sayfa</button>
+          <button class="btn accent"  id="btnNotif" type="button">🔔 <span id="notifLbl">Bildirimleri Aç</span></button>
           <button class="btn primary" id="btnSound" type="button">🔊 <span id="soundLbl">Sesi Aç</span></button>
         </div>
       </div>
@@ -95,7 +96,7 @@
           <div class="mini" id="peerInfo">—</div>
         </div>
         <div class="pill badge" id="unreadBadge" title="Okunmamış mesaj">0</div>
-        <button class="btn danger" id="btnDeleteThread" title="Konuşmayı kalıcı sil (mesajlar dahil)">🗑 Konuşmayı Sil</button>
+        <button class="btn" id="btnHideThread" title="Bu konuşmayı panelimden kaldır">👁‍🗨 Panelimden kaldır</button>
       </div>
 
       <div id="chat" class="chatBody" aria-live="polite">
@@ -112,7 +113,7 @@
   <audio id="ding" preload="auto" src="./notify.wav"></audio>
 
   <script>
-    // ========= Utilities =========
+    // ===== Utilities =====
     const $ = (s)=> document.querySelector(s);
     const qs = (k)=> new URLSearchParams(location.search).get(k)||'';
     function fmtDate(ts){
@@ -120,10 +121,14 @@
     }
     function escapeHtml(x){ return (x||'').replace(/[<>&]/g, s=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[s])); }
 
-    // Firebase helpers (dinamik import)
+    // LocalStorage: "sadece benim panelimden kaldır"
+    const LS_KEY_THREADS = (uid)=> `ue.hiddenThreads.${uid}`;
+    function getHiddenThreads(uid){ try{ return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]')); }catch{ return new Set(); } }
+    function setHiddenThreads(uid,set){ try{ localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify(Array.from(set))); }catch{} }
+
+    // Dinamik Firestore import
     async function api(){
-      const mod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      return mod;
+      return await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
     }
 
     let __me=null;
@@ -132,9 +137,10 @@
     let __curThreadId=null;
     let __curPeerUid=null;
     let __ding = null;
-    let __lastSeenMap = {}; // threadId -> lastAt millis (ses/rozet kontrolü)
+    let __lastSeenMap = {};  // threadId -> lastAt millis
+    let __hiddenThreads = new Set(); // sadece bu kullanıcı
 
-    // Profil kısa getirme (ad/ava)
+    // Profil kısa
     const _briefCache = new Map();
     async function getUserBrief(uid){
       if(!uid) return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
@@ -150,18 +156,18 @@
       }catch{ return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' }; }
     }
 
-    // ========= Threads render =========
+    // ===== Threads render (client-side sort, gizleme desteği) =====
     function renderThreadsSnapshotLike(snap){
       const listEl = $('#threads');
       const rows = [];
       snap.forEach(ds=>{
         const d = ds.data()||{};
+        if(__hiddenThreads.has(ds.id)) return;         // 👈 sadece benim panelimde gizli
         const arr = d.participants||[];
         const otherUid = arr.find(x=>x!==__me.uid) || '';
         rows.push({ id: ds.id, d, otherUid });
       });
 
-      // Client-side sıralama (lastAt desc) — index gerektirmez
       rows.sort((a,b)=>{
         const ta = a.d.lastAt?.toMillis ? a.d.lastAt.toMillis() : (a.d.lastAt? new Date(a.d.lastAt).getTime():0);
         const tb = b.d.lastAt?.toMillis ? b.d.lastAt.toMillis() : (b.d.lastAt? new Date(b.d.lastAt).getTime():0);
@@ -171,10 +177,18 @@
       const qtxt = ($('#search')?.value||'').trim().toLowerCase();
       listEl.innerHTML = rows.length ? '' : '<div class="empty">Konuşma yok.</div>';
 
+      let unreadThreads = 0;
+
       (async ()=>{
         for(const r of rows){
           const other = await getUserBrief(r.otherUid);
           if(qtxt && !(other.name||'').toLowerCase().includes(qtxt) && !(r.d.lastText||'').toLowerCase().includes(qtxt)) continue;
+
+          // okunmamış kontrolü
+          const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
+          const seenMy = r.d.seen && r.d.seen[__me.uid] ? (r.d.seen[__me.uid].toMillis ? r.d.seen[__me.uid].toMillis() : new Date(r.d.seen[__me.uid]).getTime() ) : 0;
+          const isUnread = (r.d.lastFrom && r.d.lastFrom !== __me.uid && lastMillis > (seenMy||0));
+          if(isUnread) unreadThreads++;
 
           const t = document.createElement('div');
           t.className='th'; t.dataset.id=r.id;
@@ -189,18 +203,24 @@
           t.onclick = ()=> openThread(r.id, r.otherUid, other);
           listEl.appendChild(t);
 
-          // yeni mesaj sesi (benden değilse)
-          const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
+          // yeni mesaj sesi + bildirim (benden değil & önce görülmemiş)
           const prev = __lastSeenMap[r.id] || 0;
           if(lastMillis && lastMillis > prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom !== __me.uid){
             try{ __ding && __ding.play().catch(()=>{}); }catch{}
+            if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
+              const title = other.name || 'Yeni mesaj';
+              try{ new Notification(title, { body: r.d.lastText, icon:'./üreteneller.png' }); }catch{}
+            }
           }
           __lastSeenMap[r.id] = lastMillis || prev;
         }
+
+        // toplam okunmamış rozet
+        $('#unreadBadge').textContent = String(unreadThreads);
       })();
     }
 
-    // ========= LISTEN THREADS (orderBy YOK → index gerekmez) =========
+    // ===== LISTEN THREADS (orderBy yok → indeks gerekmez) =====
     async function listenThreads(){
       if(__threadsUnsub){ __threadsUnsub(); __threadsUnsub=null; }
       const {collection, query, where, onSnapshot, getDocs} = await api();
@@ -222,11 +242,10 @@
       }
     }
 
-    // ========= Chat (right) =========
+    // ===== Messages (right) =====
     async function listenMessages(threadId){
       if(__msgsUnsub){ __msgsUnsub(); __msgsUnsub=null; }
       const { collection, query, orderBy, onSnapshot } = await api();
-      // Tek alan orderBy (createdAt) → otomatik tekil indeks yeter
       const q = query(collection(self.db,'messages', threadId, 'items'), orderBy('createdAt','asc'));
       const chat = $('#chat');
       chat.innerHTML = '';
@@ -264,7 +283,6 @@
 
     async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
       const { collection, query, where, getDocs, doc, setDoc, serverTimestamp } = await api();
-      // önce var mı?
       const q = query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
       const snap = await getDocs(q);
       let found = '';
@@ -274,7 +292,6 @@
       });
       if(found) return found;
 
-      // yoksa oluştur
       const participants = [__me.uid, peerUid];
       const ref = doc(self.db, 'messages', crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
       await setDoc(ref, {
@@ -293,39 +310,26 @@
         await addDoc(collection(self.db,'messages',__curThreadId,'items'),{
           text, from: __me.uid, createdAt: serverTimestamp()
         });
-        // thread son özet
         await updateDoc(doc(self.db,'messages',__curThreadId),{
           lastText: text, lastAt: serverTimestamp(), lastFrom: __me.uid
         });
       }catch(err){ console.warn('sendMessage error:', err); }
     }
 
-    // ========= KALICI SİL (konuşma + alt mesajlar) =========
-    async function deleteCurrentThread(){
+    // ====== PANELİMDEN KALDIR (soft delete sadece bu kullanıcı) ======
+    function hideCurrentThreadForMe(){
       if(!__curThreadId || !__me) return;
-      if(!confirm('Bu konuşmayı kalıcı olarak silmek istiyor musunuz?')) return;
-      try{
-        const { collection, getDocs, doc, deleteDoc } = await api();
-        // alt mesajları sil
-        const itemsSnap = await getDocs(collection(self.db,'messages',__curThreadId,'items'));
-        const deletes = [];
-        itemsSnap.forEach(m => deletes.push(deleteDoc(doc(self.db,'messages',__curThreadId,'items', m.id))));
-        await Promise.allSettled(deletes);
-        // ana belgeyi sil
-        await deleteDoc(doc(self.db,'messages',__curThreadId));
-        // UI temizle
-        __curThreadId = null; __curPeerUid = null;
-        $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin'; $('#peerInfo').textContent='—';
-        $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
-        // listeyi yenile
-        listenThreads();
-      }catch(e){
-        console.warn('delete thread fail:', e);
-        alert('Silme sırasında hata oluştu.');
-      }
+      __hiddenThreads.add(__curThreadId);
+      setHiddenThreads(__me.uid, __hiddenThreads);
+      // sağ panel temizle
+      __curThreadId = null; __curPeerUid = null;
+      $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin'; $('#peerInfo').textContent='—';
+      $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
+      // listeyi yenile
+      listenThreads();
     }
 
-    // ========= Bildirim / Ses butonları =========
+    // ===== Bildirim / Ses =====
     function ensureNotificationPermission(){
       if(!('Notification' in window)) { alert('Tarayıcınız bildirimleri desteklemiyor.'); return; }
       if(Notification.permission === 'granted'){
@@ -346,25 +350,27 @@
       }catch{}
     }
 
-    // ========= Boot =========
+    // ===== Boot =====
     async function boot(){
-      // Auth bekle
       await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
       if(!__me){ window.location.href = '/login.html'; return; }
 
       // Ses
       __ding = document.getElementById('ding');
 
+      // Gizli thread setini yükle
+      __hiddenThreads = getHiddenThreads(__me.uid);
+
       // UI hooks
       $('#btnSend').addEventListener('click', sendMessage);
       $('#msgInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
-      $('#btnDeleteThread').addEventListener('click', deleteCurrentThread);
+      $('#btnHideThread').addEventListener('click', hideCurrentThreadForMe);
       $('#btnHome').addEventListener('click', (e)=>{ e.preventDefault(); location.href='/home.html'; }); // KÖK
       $('#btnNotif').addEventListener('click', ensureNotificationPermission);
       $('#btnSound').addEventListener('click', unlockSound);
-      $('#search').addEventListener('input', ()=> listenThreads()); // filtre için yeniden render
+      $('#search').addEventListener('input', ()=> listenThreads());
 
-      // URL’den otomatik başlatma (seller sayfasından gelir)
+      // URL’den otomatik başlatma
       const urlPeer = qs('peer');
       if(urlPeer){
         const name = qs('name') ? decodeURIComponent(qs('name')) : '';
@@ -372,8 +378,7 @@
         try{
           const tid = await createOrGetThread(urlPeer, name, ava);
           openThread(tid, urlPeer);
-        }catch{ /* sessiz */ }
-        // query’i temizle
+        }catch{}
         history.replaceState({}, document.title, location.pathname);
       }
 
