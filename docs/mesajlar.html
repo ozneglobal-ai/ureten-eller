@@ -324,47 +324,64 @@
       listenThreads();
     }
 
-    // ========= Boot =========
-    async function boot(){
-      // Auth hazır
-      await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
-      if(!__me){ location.href='./login.html'; return; }
+    // ========= Boot (güncel) =========
+async function boot(){
+  // Auth hazır olana kadar bekle
+  await new Promise((res)=> self.onAuthStateChanged(self.auth, (u)=>{ __me=u||null; res(); }));
+  if(!__me){ window.location.href = './login.html'; return; }
 
-      // Ana sayfa butonu
-      $('#btnHome').onclick = ()=> location.href = './home.html';
+  // ✅ Ana sayfa butonu: kesin yönlendirme
+  const btnHome = document.getElementById('btnHome');
+  if (btnHome) {
+    btnHome.addEventListener('click', (e) => {
+      e.preventDefault();
+      // messages.html ile home.html aynı klasördeyse bu yeterli
+      window.location.href = './home.html';
+    }, { passive: true });
+  }
 
-      // ses nesnesi
-      __ding = $('#ding');
+  // Ses nesnesi (sayfa içi mesaj sesi – global notifier ayrı çalışır)
+  __ding = document.getElementById('ding');
 
-      // gizli thread setini yükle
-      __hiddenThreads = getHiddenThreads(__me.uid);
+  // Gizli thread setini yükle
+  __hiddenThreads = getHiddenThreads(__me.uid);
 
-      // UI hook
-      $('#btnSend').onclick = sendMessage;
-      $('#msgInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
-      $('#btnHideThread').onclick = hideCurrentThreadForMe;
-      $('#search').addEventListener('input', ()=> listenThreads()); // filtreleme için yeniden render
+  // UI hooks
+  const btnSend = document.getElementById('btnSend');
+  const msgInput = document.getElementById('msgInput');
+  const btnHideThread = document.getElementById('btnHideThread');
+  const search = document.getElementById('search');
 
-      // URL’den otomatik başlatma (seller sayfasından gelir)
-      const urlPeer = qs('peer');
-      if(urlPeer){
-        const name = qs('name') ? decodeURIComponent(qs('name')) : '';
-        const ava  = qs('ava') || '';
-        try{
-          const tid = await createOrGetThread(urlPeer, name, ava);
-          openThread(tid, urlPeer);
-        }catch{ /* sessiz */ }
-        // query’i temizle
-        history.replaceState({}, document.title, location.pathname);
-      }
+  if (btnSend) btnSend.addEventListener('click', sendMessage);
+  if (msgInput) msgInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ sendMessage(); } });
+  if (btnHideThread) btnHideThread.addEventListener('click', hideCurrentThreadForMe);
+  if (search) search.addEventListener('input', ()=> listenThreads()); // filtreleme için yeniden render
 
-      // threads dinle
-      listenThreads();
-    }
+  // URL’den otomatik başlatma (seller sayfasından gelir)
+  const urlPeer = qs('peer');
+  if(urlPeer){
+    const name = qs('name') ? decodeURIComponent(qs('name')) : '';
+    const ava  = qs('ava') || '';
+    try{
+      const tid = await createOrGetThread(urlPeer, name, ava);
+      openThread(tid, urlPeer);
+    }catch{ /* sessiz */ }
+    // query’i temizle
+    history.replaceState({}, document.title, location.pathname);
+  }
 
-    (function init(){
-      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-    })();
+  // Thread’leri dinle
+  listenThreads();
+}
+
+// Sayfa hazır olduğunda başlat
+(function init(){
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
   </script>
 </body>
 </html>
