@@ -248,7 +248,6 @@
     <button class="bbtn" id="navMsg" type="button">
       <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
       <span class="mini" data-i18n="messages">Mesajlar</span>
-      <!-- OKUNMAMIŞ MESAJ ROZETİ -->
       <span id="msgBadge" style="display:none;margin-top:2px;border:1px solid #7a1b1b;background:#ef4444;color:#fff;border-radius:999px;padding:0 .4rem;font-weight:900;font-size:.75rem;line-height:18px;min-width:18px;text-align:center">0</span>
     </button>
     <button class="bbtn" id="navNotif" type="button">
@@ -409,38 +408,44 @@
     async function adminVerifySeller(){ try{ user.isVerified=true; applyHeaderBadges(); cacheSave(); toast('✔'); if(window.__fb?.auth?.currentUser){ const uid=window.__fb.auth.currentUser.uid; const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); await setDoc(doc(window.__fb.db,'users',uid),{ name: user.name||'', city:user.city||'', district:user.district||'', phone:user.phone||'', bio:user.bio||'', isPremium:!!user.isPremium, isVerified:!!user.isVerified, avatar:user.avatar||'/assets/img/avatar-default.png', updatedAt:serverTimestamp() },{merge:true}); } }catch(e){ console.warn('Profil yazma hatası:',e); } closeEdit(); }
     function updateShowcaseSummary(){ const chosen=window.listings.find(l=>l.showcase===true); $('#qShowcase').textContent=chosen?(chosen.title||'—'):'—'; const freeRemain=user.isPremium?Math.max(0,PREMIUM_FREE_SHOWCASE-(user.monthlyShowcaseUsed||0)):0; const d=I18N[getLang()]; const note=user.isPremium?(freeRemain>0?`Bu ay ${freeRemain} ücretsiz vitrin hakkınız var.`:`${d.premium_extra}: ${fmtPrice(PRICE_SHOWCASE_PREMIUM_EXTRA)}`):`${d.standard_showcase}: ${fmtPrice(PRICE_SHOWCASE_STANDARD)}`; $('#qNote').textContent=note; }
 
-    // --- Sipariş rozet & ses ---
-    let __ordersUnsub=null; let __ordersPrevPending=Number(localStorage.getItem('ue_orders_pending_count')||'0')||0; const __orderAudio=new Audio('./notify.wav');
+    // --- Sipariş rozeti (sahte sayaç YOK) ---
+    let __ordersUnsub=null;
     function updateOrdersBadge(pending,total){
       try{
         const b=document.getElementById('ordPendingBadge');
-        if(b){ b.textContent=String(pending); b.title=`${(I18N[getLang()]||I18N.tr).pending_orders}: ${pending} / ${(I18N[getLang()]||I18N.tr).total_orders}: ${total}`; }
+        if(!b) return;
+        b.textContent=String(pending);
+        b.title=`${(I18N[getLang()]||I18N.tr).pending_orders}: ${pending} / ${(I18N[getLang()]||I18N.tr).total_orders}: ${total}`;
       }catch{}
     }
-
     async function watchOrders(uid){
       try{
         if(!window.__fb?.db) return;
         const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        // sellerId == uid; diğer filtreler client-side: silinmiş/okunmuş/bitmiş olanlar sayılmayacak
         const q=query(collection(window.__fb.db,'orders'), where('sellerId','==',uid));
         if(__ordersUnsub) { try{__ordersUnsub();}catch{} __ordersUnsub=null; }
         __ordersUnsub=onSnapshot(q,(snap)=>{
           let pending=0,total=0;
           snap.forEach(d=>{
+            const data=d.data()||{};
             total++;
-            const s=(d.data()||{}).status;
-            // BEKLEYEN: new/accepted/preparing olarak say
-            if (['new','accepted','preparing'].includes(s||'')) pending++;
+            const status=(data.status||'').toLowerCase();
+            const deleted = data.deleted===true || data.isDeleted===true || data.archived===true;
+            const finished = ['completed','delivered','refunded','canceled','cancelled'].includes(status);
+            const waiting = ['new','pending','accepted','preparing','ready','awaiting_payment','awaiting_confirmation'].includes(status);
+            // okunmuş/silinmiş/bitmiş siparişleri sayma
+            if(!deleted && !finished && waiting){
+              pending++;
+            }
           });
           updateOrdersBadge(pending,total);
-          if(pending>__ordersPrevPending){ __orderAudio.play().catch(()=>{}); }
-          __ordersPrevPending=pending; localStorage.setItem('ue_orders_pending_count', String(pending));
-        },(err)=>{ console.warn('orders onSnapshot',err); });
-      }catch(e){ console.warn('watchOrders fail',e); }
+        },(err)=>{ console.warn('orders onSnapshot',err); updateOrdersBadge(0,0); });
+      }catch(e){ console.warn('watchOrders fail',e); updateOrdersBadge(0,0); }
     }
 
-    // --- Mesaj rozeti ---
-    let __msgUnsub=null;
+    // --- Mesaj rozeti (sadece okunmamış, sahte yok) ---
+    let __msgUnsubA=null, __msgUnsubB=null, __msgUnsubC=null;
     function updateMsgBadge(n){
       const b=document.getElementById('msgBadge');
       if(!b) return;
@@ -450,29 +455,38 @@
     async function watchUnreadMessages(uid){
       try{
         if(!window.__fb?.db) return;
-        if(__msgUnsub){ try{__msgUnsub();}catch{} __msgUnsub=null; }
         const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-        // Şema farklarına tolerans: üç koleksiyon tipi dinliyoruz.
-        const colA = query(collection(window.__fb.db,'messages'), where('to','==',uid), where('seen','!=',true));
-        const colB = query(collection(window.__fb.db,'threads'), where('unreadFor','array-contains',uid));
-        const colC = query(collection(window.__fb.db,'chats'), where('participantIds','array-contains',uid));
+        // Koleksiyon olasılıkları: messages (to, seen), threads (unreadFor), chats (unreadCount/unreadFor)
+        const qMessages = query(collection(window.__fb.db,'messages'), where('to','==',uid), where('seen','==',false));
+        const qThreads  = query(collection(window.__fb.db,'threads'), where('unreadFor','array-contains',uid));
+        const qChats    = query(collection(window.__fb.db,'chats'), where('participantIds','array-contains',uid));
 
-        let lastCount=0;
-        const handle=(c)=>{ if(c>lastCount){ lastCount=c; } updateMsgBadge(lastCount); };
+        // önce temizle
+        if(__msgUnsubA) try{__msgUnsubA();}catch{}; if(__msgUnsubB) try{__msgUnsubB();}catch{}; if(__msgUnsubC) try{__msgUnsubC();}catch{};
 
-        __msgUnsub = onSnapshot(colA,(snap)=>{ handle(snap.size||0); },()=>{});
-        onSnapshot(colB,(snap)=>{ handle(snap.size||0); },()=>{});
-        onSnapshot(colC,(snap)=>{
-          let approx=0;
+        let counts={a:0,b:0,c:0};
+        const refresh=()=> updateMsgBadge(counts.a + counts.b + counts.c);
+
+        __msgUnsubA = onSnapshot(qMessages,(snap)=>{
+          let n=0; snap.forEach(ds=>{ const d=ds.data()||{}; if(d.deleted!==true && d.isDeleted!==true) n++; }); counts.a=n; refresh();
+        },()=>{ counts.a=0; refresh(); });
+
+        __msgUnsubB = onSnapshot(qThreads,(snap)=>{
+          counts.b = snap.size||0; refresh();
+        },()=>{ counts.b=0; refresh(); });
+
+        __msgUnsubC = onSnapshot(qChats,(snap)=>{
+          let n=0;
           snap.forEach(ds=>{
             const d=ds.data()||{};
-            if(typeof d.unreadCount==='number'){ approx+=Math.max(0,d.unreadCount); }
-            else if(Array.isArray(d.unreadFor) && d.unreadFor.includes(uid)){ approx+=1; }
+            if(Array.isArray(d.unreadFor) && d.unreadFor.includes(uid)) n++;
+            else if(typeof d.unreadCount==='number' && d.unreadCount>0) n+=d.unreadCount;
           });
-          handle(approx);
-        },()=>{});
-      }catch(e){ console.warn('watchUnreadMessages fail',e); }
+          counts.c=n; refresh();
+        },()=>{ counts.c=0; refresh(); });
+
+      }catch(e){ console.warn('watchUnreadMessages fail',e); updateMsgBadge(0); }
     }
 
     // Tam silme (Firestore'dan)
@@ -510,11 +524,11 @@
     async function uploadListingCover(file){
       if(!file) return null;
       const cfg=window.__CLOUDINARY||{};
-      const cn=cfg.cloudName; const up=cfg.uploadPreset; const folder = cfg.folder || 'avatars';
+      const cn=cfg.cloudName; const up=cfg.uploadPreset; const folder = (cfg.folder||'avatars').replace('avatars','listings');
       if(!cn||!up){ toast('Cloudinary yapılandırması eksik'); return null; }
       const url=`https://api.cloudinary.com/v1_1/${cn}/image/upload`;
       const form=new FormData();
-      form.append('file',file); form.append('upload_preset',up); if(folder) form.append('folder', folder.replace('avatars','listings'));
+      form.append('file',file); form.append('upload_preset',up); form.append('folder', folder);
       try{
         const res=await fetch(url,{method:'POST',body:form}); const data=await res.json();
         if(!res.ok) throw new Error(data?.error?.message||'Upload failed');
@@ -528,7 +542,6 @@
       const desc=$('#lmDesc').value.trim();
       const id=__editingListing.id;
 
-      // mevcut local resmi kullan
       let photo=__editingListing.photo||'';
       try{
         const f=$('#lmFile').files && $('#lmFile').files[0];
@@ -546,7 +559,6 @@
           title:t, price:price, description:desc, coverUrl:photo, updatedAt:serverTimestamp()
         },{merge:true});
 
-        // local listeyi güncelle
         const i=(window.listings||[]).findIndex(x=>x.id===id);
         if(i>-1){ Object.assign(window.listings[i],{title:t,price:price,photo:photo,description:desc}); }
         paintAllPanels();
@@ -611,6 +623,8 @@
             if(!u){
               try{ document.body.setAttribute('data-auth','signed-out'); }catch{}
               showAdminControlsIfAny();
+              updateOrdersBadge(0,0);
+              updateMsgBadge(0);
               return;
             }
             const authData={name:u.displayName||'',email:u.email||'',phone:u.phoneNumber||'',avatarFromAuth:u.photoURL||''};
@@ -645,11 +659,12 @@
               showAdminControlsIfAny();
               const b=document.getElementById('btnAdminVerify'); if(b){ b.onclick=adminVerifySeller; }
               try { await loadMyListings(u.uid); } catch(e) { console.warn('loadMyListings fail', e); }
-              try { await watchOrders(u.uid); } catch(e) { console.warn('watchOrders start fail', e); }
-              try { await watchUnreadMessages(u.uid); } catch(e) { console.warn('watchUnreadMessages start fail', e); }
+              try { await watchOrders(u.uid); } catch(e) { console.warn('watchOrders start fail', e); updateOrdersBadge(0,0); }
+              try { await watchUnreadMessages(u.uid); } catch(e) { console.warn('watchUnreadMessages start fail', e); updateMsgBadge(0); }
             }catch(e){
               console.warn('Profil okuma/oluşturma hatası:',e);
               try{ toast('Profil yüklenemedi'); }catch{}
+              updateOrdersBadge(0,0); updateMsgBadge(0);
             }
           });
         })();
