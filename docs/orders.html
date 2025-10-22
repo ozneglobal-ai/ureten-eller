@@ -6,17 +6,21 @@
   <title data-i18n="title">Siparişler • Üreten Eller</title>
   <link rel="icon" href="/docs/assets/icons/favicon.png" />
   <style>
-    :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326 }
+    :root{
+      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
+      --space: clamp(.75rem, 1vw + .5rem, 1rem);
+      --radius: 16px;
+    }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
 
-    .wrap{max-width:1280px;margin:0 auto;padding:1rem}
+    .wrap{max-width:1280px;margin:0 auto;padding:var(--space)}
     .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
     .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
     .logo img{width:32px;height:32px}
     .spacer{flex:1}
-    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap}
+    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:var(--ink);font-weight:800;cursor:pointer;white-space:nowrap;min-height:40px}
     .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
     .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
     .btn.danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);border-color:#7a1b1b}
@@ -24,22 +28,31 @@
     .mini{color:var(--muted)}
     .badge{display:inline-flex;min-width:22px;height:22px;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-weight:900}
 
-    .layout{display:grid;grid-template-columns:380px 1fr;gap:1rem}
+    .layout{display:grid;grid-template-columns:380px 1fr;gap:var(--space)}
+    @media(max-width:1200px){ .layout{grid-template-columns:340px 1fr} }
     @media(max-width:920px){ .layout{grid-template-columns:1fr} .right{order:2} }
 
-    .left{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column;min-height:70vh}
-    .leftHead{display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:.6rem;border-bottom:1px solid var(--brd)}
-    .search{flex:1;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem}
-    .orderList{overflow:auto}
-    .row{display:grid;grid-template-columns:24px 64px 1fr auto;gap:.6rem;padding:.6rem;border-bottom:1px solid var(--brd);cursor:pointer}
+    .left{border:1px solid var(--brd);border-radius:var(--radius);background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column;min-height:70vh}
+    .leftHead{position:sticky;top:0;z-index:5;display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:.6rem;border-bottom:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2))}
+    .search{flex:1;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem;min-height:40px}
+    .orderList{overflow:auto;-webkit-overflow-scrolling:touch}
+    .row{display:grid;grid-template-columns:28px 64px 1fr auto;gap:.6rem;padding:.6rem;border-bottom:1px solid var(--brd);cursor:pointer;align-items:center}
     .row:hover{background:#0b1220}
     .row .thumb{width:64px;height:64px;border-radius:10px;border:1px solid var(--brd);background:#111827;background-size:cover;background-position:center}
     .ttl{font-weight:900}
     .sub{color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
 
-    .right{border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column;min-height:70vh}
-    .head{display:flex;align-items:center;justify-content:space-between;padding:.6rem;border-bottom:1px solid var(--brd)}
-    .quick{display:flex;gap:.4rem;flex-wrap:wrap}
+    @media (max-width:640px){
+      .row{grid-template-columns:36px 56px 1fr 32px;padding:.5rem}
+      .row .thumb{width:56px;height:56px}
+      .sub{max-width:200px}
+      .btn{min-height:44px}
+      input[type="checkbox"]{transform:scale(1.2)}
+    }
+
+    .right{border:1px solid var(--brd);border-radius:var(--radius);background:linear-gradient(145deg,var(--card),var(--card2));display:flex;flex-direction:column;min-height:70vh}
+    .head{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:.6rem;border-bottom:1px solid var(--brd);background:linear-gradient(145deg,var(--card),var(--card2))}
+    .quick{display:flex;gap:.4rem;flex-wrap:wrap;overflow:auto;-webkit-overflow-scrolling:touch}
 
     .detail{padding:.8rem;display:grid;grid-template-columns:120px 1fr;gap:12px}
     .detail .cover{width:120px;height:120px;border-radius:12px;border:1px solid var(--brd);background:#111827;background-size:cover;background-position:center}
@@ -49,17 +62,34 @@
 
     .actions{display:flex;gap:.5rem;flex-wrap:wrap}
 
-    .footer{display:flex;gap:.5rem;padding:.6rem;border-top:1px solid var(--brd);align-items:center}
+    .footer{position:sticky;bottom:0;z-index:4;display:flex;gap:.5rem;padding:.6rem;border-top:1px solid var(--brd);align-items:center;background:linear-gradient(145deg,var(--card),var(--card2));padding-bottom:calc(.6rem + env(safe-area-inset-bottom))}
 
     .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426;margin:.8rem}
     .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
 
     /* Buyer box */
-    .buyerBox{display:flex;align-items:center;gap:.6rem}
+    .buyerBox{display:flex;align-items:center;gap:.6rem;min-width:0}
     .buyerAva{width:36px;height:36px;border-radius:50%;background:#111827;border:1px solid var(--brd);background-size:cover;background-position:center;cursor:pointer}
     .buyerInfo{display:flex;flex-direction:column;min-width:0}
-    .buyerInfo strong{font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
-    .buyerInfo .mini{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+    .buyerInfo strong{font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(240px,55vw)}
+    .buyerInfo .mini{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(240px,55vw)}
+
+    /* Tablet & down: stack details */
+    @media(max-width:860px){
+      .detail{grid-template-columns:1fr;grid-auto-rows:auto}
+      .detail .cover{width:100%;height:220px}
+      .kv{grid-template-columns:120px 1fr}
+    }
+
+    @media(max-width:420px){
+      .logo img{width:28px;height:28px}
+      .kv{grid-template-columns:100px 1fr}
+      .detail .cover{height:180px}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto}
+    }
   </style>
   <!-- KÖKTEKİ Firebase init -->
   <script type="module" src="/firebase-init.js"></script>
@@ -92,7 +122,7 @@
 
       <section class="right">
         <header class="head">
-          <div style="display:flex;align-items:center;gap:.6rem">
+          <div style="display:flex;align-items:center;gap:.6rem;min-width:0">
             <div id="buyerBox" class="buyerBox">
               <div id="buyerAva" class="buyerAva"></div>
               <div class="buyerInfo">
@@ -100,7 +130,7 @@
                 <span class="mini" id="buyerSub">—</span>
               </div>
             </div>
-            <span class="mini" id="orderId">—</span>
+            <span class="mini" id="orderId" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</span>
           </div>
           <div class="actions">
             <select id="statusSel" class="btn">
