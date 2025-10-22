@@ -248,6 +248,8 @@
     <button class="bbtn" id="navMsg" type="button">
       <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
       <span class="mini" data-i18n="messages">Mesajlar</span>
+      <!-- OKUNMAMIŞ MESAJ ROZETİ -->
+      <span id="msgBadge" style="display:none;margin-top:2px;border:1px solid #7a1b1b;background:#ef4444;color:#fff;border-radius:999px;padding:0 .4rem;font-weight:900;font-size:.75rem;line-height:18px;min-width:18px;text-align:center">0</span>
     </button>
     <button class="bbtn" id="navNotif" type="button">
       <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 0 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
@@ -320,6 +322,32 @@
       <div class="row" style="margin-top:.8rem">
         <button class="btn primary" id="edSave" type="button" data-i18n="save">Kaydet</button>
         <button class="btn ghost" id="edCancel" type="button" data-i18n="cancel">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- İLAN DÜZENLE Modal -->
+  <div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="lmTitle" aria-hidden="true">
+    <button class="close" id="lmClose" aria-label="Kapat" type="button">✕</button>
+    <h2 id="lmTitle" style="margin-top:0">İlanı Düzenle</h2>
+    <div class="sCard">
+      <div class="row" style="align-items:flex-start;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div id="lmCover" class="avatar" style="width:140px;height:140px;background-image:url('/assets/img/avatar-default.png')"></div>
+          <input id="lmFile" type="file" accept="image/*" style="margin-top:.5rem" />
+        </div>
+        <div style="flex:1;min-width:260px">
+          <label class="mini">Başlık</label>
+          <input id="lmTitleIn" type="text" placeholder="Başlık" style="width:100%;margin:.25rem 0 .6rem;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem" />
+          <label class="mini">Fiyat (TL)</label>
+          <input id="lmPrice" type="number" min="0" step="1" placeholder="Fiyat" style="width:100%;margin:.25rem 0 .6rem;background:#0a0f1c;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.55rem .6rem" />
+          <label class="mini">Açıklama</label>
+          <textarea id="lmDesc" rows="4" placeholder="Açıklama" style="width:100%;background:#0a0f1c;border:1px solid var(--brd);border-radius:10px;padding:.55rem .6rem;color:#fff"></textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:.8rem">
+        <button class="btn primary" id="lmSave" type="button">Kaydet</button>
+        <button class="btn ghost" id="lmCancel" type="button">Vazgeç</button>
       </div>
     </div>
   </div>
@@ -397,12 +425,137 @@
         const q=query(collection(window.__fb.db,'orders'), where('sellerId','==',uid));
         if(__ordersUnsub) { try{__ordersUnsub();}catch{} __ordersUnsub=null; }
         __ordersUnsub=onSnapshot(q,(snap)=>{
-          let pending=0,total=0; snap.forEach(d=>{ total++; const s=(d.data()||{}).status; if(s==='pending') pending++; });
+          let pending=0,total=0;
+          snap.forEach(d=>{
+            total++;
+            const s=(d.data()||{}).status;
+            // BEKLEYEN: new/accepted/preparing olarak say
+            if (['new','accepted','preparing'].includes(s||'')) pending++;
+          });
           updateOrdersBadge(pending,total);
           if(pending>__ordersPrevPending){ __orderAudio.play().catch(()=>{}); }
           __ordersPrevPending=pending; localStorage.setItem('ue_orders_pending_count', String(pending));
         },(err)=>{ console.warn('orders onSnapshot',err); });
       }catch(e){ console.warn('watchOrders fail',e); }
+    }
+
+    // --- Mesaj rozeti ---
+    let __msgUnsub=null;
+    function updateMsgBadge(n){
+      const b=document.getElementById('msgBadge');
+      if(!b) return;
+      if(n>0){ b.textContent=String(n); b.style.display='inline-block'; }
+      else{ b.style.display='none'; }
+    }
+    async function watchUnreadMessages(uid){
+      try{
+        if(!window.__fb?.db) return;
+        if(__msgUnsub){ try{__msgUnsub();}catch{} __msgUnsub=null; }
+        const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+        // Şema farklarına tolerans: üç koleksiyon tipi dinliyoruz.
+        const colA = query(collection(window.__fb.db,'messages'), where('to','==',uid), where('seen','!=',true));
+        const colB = query(collection(window.__fb.db,'threads'), where('unreadFor','array-contains',uid));
+        const colC = query(collection(window.__fb.db,'chats'), where('participantIds','array-contains',uid));
+
+        let lastCount=0;
+        const handle=(c)=>{ if(c>lastCount){ lastCount=c; } updateMsgBadge(lastCount); };
+
+        __msgUnsub = onSnapshot(colA,(snap)=>{ handle(snap.size||0); },()=>{});
+        onSnapshot(colB,(snap)=>{ handle(snap.size||0); },()=>{});
+        onSnapshot(colC,(snap)=>{
+          let approx=0;
+          snap.forEach(ds=>{
+            const d=ds.data()||{};
+            if(typeof d.unreadCount==='number'){ approx+=Math.max(0,d.unreadCount); }
+            else if(Array.isArray(d.unreadFor) && d.unreadFor.includes(uid)){ approx+=1; }
+          });
+          handle(approx);
+        },()=>{});
+      }catch(e){ console.warn('watchUnreadMessages fail',e); }
+    }
+
+    // Tam silme (Firestore'dan)
+    async function deleteListing(id){
+      try{
+        const {doc,deleteDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        await deleteDoc(doc(window.__fb.db,'listings',id));
+        const i=(window.listings||[]).findIndex(x=>x.id===id);
+        if(i>-1){ window.listings.splice(i,1); }
+        paintAllPanels();
+        toast('Silindi ✅');
+      }catch(e){
+        console.warn('deleteListing',e);
+        toast('Silinemedi');
+      }
+    }
+
+    // Düzenleme modal state
+    let __editingListing=null;
+    function openListingEditor(listing){
+      __editingListing = listing ? {...listing} : null;
+      const cover = $('#lmCover'); const t=$('#lmTitleIn'); const p=$('#lmPrice'); const d=$('#lmDesc');
+      if(listing){
+        cover.style.backgroundImage=`url('${listing.photo||'/assets/img/avatar-default.png'}')`;
+        t.value = listing.title || '';
+        p.value = listing.price || 0;
+        d.value = listing.description || '';
+      }
+      const m=$('#listingModal'); m.style.display='block'; m.setAttribute('aria-hidden','false');
+    }
+    function closeListingEditor(){
+      const m=$('#listingModal'); m.style.display='none'; m.setAttribute('aria-hidden','true');
+      __editingListing=null;
+    }
+    async function uploadListingCover(file){
+      if(!file) return null;
+      const cfg=window.__CLOUDINARY||{};
+      const cn=cfg.cloudName; const up=cfg.uploadPreset; const folder = cfg.folder || 'avatars';
+      if(!cn||!up){ toast('Cloudinary yapılandırması eksik'); return null; }
+      const url=`https://api.cloudinary.com/v1_1/${cn}/image/upload`;
+      const form=new FormData();
+      form.append('file',file); form.append('upload_preset',up); if(folder) form.append('folder', folder.replace('avatars','listings'));
+      try{
+        const res=await fetch(url,{method:'POST',body:form}); const data=await res.json();
+        if(!res.ok) throw new Error(data?.error?.message||'Upload failed');
+        return data.secure_url||null;
+      }catch(e){ console.warn(e); toast('Görsel yüklenemedi'); return null; }
+    }
+    async function saveListingEdit(){
+      if(!__editingListing) return;
+      const t=$('#lmTitleIn').value.trim();
+      const price=parseInt($('#lmPrice').value||'0',10) || 0;
+      const desc=$('#lmDesc').value.trim();
+      const id=__editingListing.id;
+
+      // mevcut local resmi kullan
+      let photo=__editingListing.photo||'';
+      try{
+        const f=$('#lmFile').files && $('#lmFile').files[0];
+        if(f){
+          const local=URL.createObjectURL(f);
+          $('#lmCover').style.backgroundImage=`url('${local}')`;
+          const up=await uploadListingCover(f);
+          if(up) photo=up;
+        }
+      }catch{}
+
+      try{
+        const {doc,setDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        await setDoc(doc(window.__fb.db,'listings',id),{
+          title:t, price:price, description:desc, coverUrl:photo, updatedAt:serverTimestamp()
+        },{merge:true});
+
+        // local listeyi güncelle
+        const i=(window.listings||[]).findIndex(x=>x.id===id);
+        if(i>-1){ Object.assign(window.listings[i],{title:t,price:price,photo:photo,description:desc}); }
+        paintAllPanels();
+        toast('Kaydedildi ✅');
+        closeListingEditor();
+      }catch(e){
+        console.warn('saveListingEdit',e);
+        toast('Kaydedilemedi');
+      }
     }
 
     function boot(){
@@ -435,6 +588,13 @@
       // Siparişler
       const __ordBtn=document.getElementById('btnOrders');
       if(__ordBtn){ __ordBtn.addEventListener('click',()=>{ location.href='/docs/orders.html'; }); }
+
+      // İlan düzenleme modal butonları
+      $('#lmClose').onclick=closeListingEditor;
+      $('#lmCancel').onclick=closeListingEditor;
+      $('#lmSave').onclick=saveListingEdit;
+      const lmFile=document.getElementById('lmFile');
+      if(lmFile){ lmFile.addEventListener('change',(e)=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; const local=URL.createObjectURL(f); const cover=document.getElementById('lmCover'); if(cover) cover.style.backgroundImage=`url('${local}')`; }); }
     }
 
     (function init(){
@@ -486,6 +646,7 @@
               const b=document.getElementById('btnAdminVerify'); if(b){ b.onclick=adminVerifySeller; }
               try { await loadMyListings(u.uid); } catch(e) { console.warn('loadMyListings fail', e); }
               try { await watchOrders(u.uid); } catch(e) { console.warn('watchOrders start fail', e); }
+              try { await watchUnreadMessages(u.uid); } catch(e) { console.warn('watchUnreadMessages start fail', e); }
             }catch(e){
               console.warn('Profil okuma/oluşturma hatası:',e);
               try{ toast('Profil yüklenemedi'); }catch{}
@@ -503,17 +664,164 @@
       window.autoExpire=function(){ let changed=false; const now=Date.now(); (window.listings||[]).forEach(l=>{ if(l && l.status==='approved' && l.expiresAt){ const t=new Date(l.expiresAt).getTime(); if(!Number.isNaN(t) && t<now){ l.status='expired'; changed=true; } } }); if(changed) window.paintAllPanels(); };
       window.paintAllPanels=function(){ const listings=window.listings||[]; const pending=listings.filter(l=>l.status==='pending'); const approved=listings.filter(l=>l.status==='approved'); const expired=listings.filter(l=>l.status==='expired'); const rejected=listings.filter(l=>l.status==='rejected'); const S=(id,v)=>{const n=document.getElementById(id); if(n) n.textContent=v;}; S('stTotal',listings.length); S('stPending',pending.length); S('stApproved',approved.length); S('stExpired',expired.length); window.paintPanel('pending',pending); window.paintPanel('approved',approved); window.paintPanel('expired',expired); window.paintPanel('rejected',rejected); };
       window.badgeFor=function(l){ const D=window.I18N?.[window.getLang?.()||'tr']||window.I18N?.tr||{}; const b=[]; if(l.status==='pending') b.push(`<span class="badge">${D.awaiting_admin||'Admin onayı bekliyor'}</span>`); if(l.status==='approved'){ const left=l.expiresAt?window.daysLeft(l.expiresAt): (window.LISTING_LIFETIME_DAYS||30); b.push(`<span class="badge">${left} ${(D.days_left||'gün kaldı')}</span>`); if(l.showcase) b.push('<span class="badge star">⭐</span>'); if(l.showcasePending) b.push(`<span class="badge">${D.awaiting_admin||''}</span>`); } if(l.status==='expired') b.push('<span class="badge">'+(D.expired||'Süresi doldu')+'</span>'); if(l.status==='rejected') b.push('<span class="badge">'+(D.rejected||'Reddedildi')+'</span>'); return b.join(''); };
-      window.actionsFor=function(key,l){ const D=window.I18N?.[window.getLang?.()||'tr']||window.I18N?.tr||{}; const go=`<button class="btn ghost" data-act="open" data-id="${l.id}" type="button">${D.my_listings||'İlana Git'}</button>`; if(key==='pending'){return go+`<button class="btn danger" data-act="withdraw" data-id="${l.id}" type="button">${D.rejected||'İptal'}</button>`;} if(key==='approved'){ const can=!l.showcase&&!l.showcasePending; return go+`<button class="btn" ${can?'':'disabled'} data-act="showcase" data-id="${l.id}" type="button">${D.showcase||'Vitrine Öner'}</button>`+`<button class="btn ghost" data-act="renew" data-id="${l.id}" type="button">${D.renew||'Süreyi Yenile'}</button>`;} if(key==='expired'){return go+`<button class="btn primary" data-act="republish" data-id="${l.id}" type="button">${D.republish||'Yeniden Yayınla'}</button>`+`<button class="btn danger" data-act="delete" data-id="${l.id}" type="button">${D.delete||'Sil'}</button>`;} if(key==='rejected'){return go+`<button class="btn primary" data-act="fix" data-id="${l.id}" type="button">${D.fix||'Düzelt & Yeniden Gönder'}</button>`;} return go; };
-      window.paintPanel=function(key,arr){ const host=document.getElementById(`panel-${key}`); if(!host) return; host.innerHTML=''; if(arr.length===0){ const n=document.createElement('div'); n.className='notice mini'; n.textContent=(window.I18N?.[window.getLang?.()||'tr']?.no_records)||'Kayıt yok.'; host.appendChild(n); return; } arr.forEach((l,i)=>{ const card=document.createElement('article'); card.className='card'; card.style.setProperty('--glow',(window.COLORS||['#22d3ee'])[i%(window.COLORS?.length||1)]); card.innerHTML=`<a class="thumb" style="background-image:url('${l.photo||''}')" href="/ilan/${l.id}" aria-label="Listing"></a><div class="meta"><div class="row" style="justify-content:space-between"><div class="title">${l.title||''}</div><div class="price">${(window.fmtPrice||((v)=>v))(l.price||0)}</div></div><div class="row" style="margin-top:.4rem">${window.badgeFor(l)}</div><div class="row" style="margin-top:.5rem">${window.actionsFor(key,l)}</div></div>`; host.appendChild(card); card.querySelectorAll('[data-act]').forEach(btn=>{ btn.addEventListener('click',()=>{ const act=btn.getAttribute('data-act'); if(act==='open'){ location.href=`/ilan/${l.id}`; return; } if(act==='withdraw'){ l.status='rejected'; window.toast&&toast('✓'); } if(act==='renew'){ l.expiresAt=window.daysFrom?daysFrom(window.LISTING_LIFETIME_DAYS||30):null; window.toast&&toast('✓'); } if(act==='republish'){ l.status='pending'; window.toast&&toast('✓'); } if(act==='delete'){ const i=(window.listings||[]).findIndex(x=>x.id===l.id); if(i>-1){ window.listings.splice(i,1); window.toast&&toast('✓'); } } if(act==='fix'){ l.status='pending'; window.toast&&toast('✓'); } if(act==='showcase'){ window.requestShowcase&&requestShowcase(l); } window.paintAllPanels(); window.updateShowcaseSummary&&updateShowcaseSummary(); }); }); }); };
+
+      // Aksiyonlar: İlana Git + Vitrine Öner + Yenile + DÜZENLE + SİL (tam)
+      window.actionsFor=function(key,l){
+        const D=window.I18N?.[window.getLang?.()||'tr']||window.I18N?.tr||{};
+        const go=`<button class="btn ghost" data-act="open" data-id="${l.id}" type="button">${D.my_listings||'İlana Git'}</button>`;
+        const edit=`<button class="btn" data-act="edit" data-id="${l.id}" type="button">Düzenle</button>`;
+        const del=`<button class="btn danger" data-act="delete" data-id="${l.id}" type="button">Sil</button>`;
+        if(key==='pending'){
+          return go + edit + del + `<button class="btn danger" data-act="withdraw" data-id="${l.id}" type="button">${D.rejected||'İptal'}</button>`;
+        }
+        if(key==='approved'){
+          const can=!l.showcase&&!l.showcasePending;
+          return go + edit + del +
+            `<button class="btn" ${can?'':'disabled'} data-act="showcase" data-id="${l.id}" type="button">${D.showcase||'Vitrine Öner'}</button>`+
+            `<button class="btn ghost" data-act="renew" data-id="${l.id}" type="button">${D.renew||'Süreyi Yenile'}</button>`;
+        }
+        if(key==='expired'){
+          return go + edit + del +
+            `<button class="btn primary" data-act="republish" data-id="${l.id}" type="button">${D.republish||'Yeniden Yayınla'}</button>`;
+        }
+        if(key==='rejected'){
+          return go + edit + del +
+            `<button class="btn primary" data-act="fix" data-id="${l.id}" type="button">${D.fix||'Düzelt & Yeniden Gönder'}</button>`;
+        }
+        return go + edit + del;
+      };
+
+      window.paintPanel=function(key,arr){
+        const host=document.getElementById(`panel-${key}`); if(!host) return;
+        host.innerHTML='';
+        if(arr.length===0){
+          const n=document.createElement('div'); n.className='notice mini';
+          n.textContent=(window.I18N?.[window.getLang?.()||'tr']?.no_records)||'Kayıt yok.';
+          host.appendChild(n); return;
+        }
+        arr.forEach((l,i)=>{
+          const card=document.createElement('article');
+          card.className='card';
+          card.style.setProperty('--glow',(window.COLORS||['#22d3ee'])[i%(window.COLORS?.length||1)]);
+          card.innerHTML=
+            `<a class="thumb" style="background-image:url('${l.photo||''}')" href="/ilan/${l.id}" aria-label="Listing"></a>
+             <div class="meta">
+               <div class="row" style="justify-content:space-between">
+                 <div class="title">${l.title||''}</div>
+                 <div class="price">${(window.fmtPrice||((v)=>v))(l.price||0)}</div>
+               </div>
+               <div class="row" style="margin-top:.4rem">${window.badgeFor(l)}</div>
+               <div class="row" style="margin-top:.5rem">${window.actionsFor(key,l)}</div>
+             </div>`;
+          host.appendChild(card);
+          card.querySelectorAll('[data-act]').forEach(btn=>{
+            btn.addEventListener('click',()=>{
+              const act=btn.getAttribute('data-act');
+              if(act==='open'){ location.href=`/ilan/${l.id}`; return; }
+              if(act==='withdraw'){ l.status='rejected'; window.toast&&toast('✓'); }
+              if(act==='renew'){ l.expiresAt=window.daysFrom?daysFrom(window.LISTING_LIFETIME_DAYS||30):null; window.toast&&toast('✓'); }
+              if(act==='republish'){ l.status='pending'; window.toast&&toast('✓'); }
+              if(act==='delete'){
+                if(confirm('Kalıcı olarak silinsin mi? Bu işlem geri alınamaz.')){
+                  deleteListing(l.id);
+                  return;
+                }
+              }
+              if(act==='fix'){ l.status='pending'; window.toast&&toast('✓'); }
+              if(act==='showcase'){ window.requestShowcase&&requestShowcase(l); }
+              if(act==='edit'){ openListingEditor(l); return; }
+              window.paintAllPanels();
+              window.updateShowcaseSummary&&updateShowcaseSummary();
+            });
+          });
+        });
+      };
+
       window.daysLeft=function(date){ const d=new Date(date); const diff=d.getTime()-Date.now(); return Math.max(0, Math.ceil(diff/86400000)); };
-      window.uploadToCloudinary=async function(file){ if(!file) return null; const cfg=window.__CLOUDINARY||{}; const cloudName=cfg.cloudName; const preset=cfg.uploadPreset; if(!cloudName||!preset){ window.toast&&toast('Cloudinary yapılandırması eksik'); return null; } const url=`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`; const form=new FormData(); form.append('file', file); form.append('upload_preset', preset); const folder = cfg.folder || 'avatars'; if (folder) form.append('folder', folder); __uploadingAvatar=true; try{ const res=await fetch(url,{method:'POST',body:form}); const data=await res.json(); if(!res.ok){ throw new Error(data?.error?.message||'Upload failed'); } return data.secure_url||null; }catch(e){ console.error(e); window.toast&&toast('Upload hata: '+e.message); return null; } finally { __uploadingAvatar=false; } };
-      window.handleAvatarFile=async function(e){ const f=e.target.files&&e.target.files[0]; if(!f) return; const local=URL.createObjectURL(f); const edAv=document.getElementById('edAvatar'); if(edAv) edAv.style.backgroundImage=`url('${local}')`; const url=await window.uploadToCloudinary(f); if(url){ window.user.avatar=url; window.cacheSave&&cacheSave(); const av=document.getElementById('avatar'); if(av) av.style.backgroundImage=`url('${url}')`; try{ if(window.__fb?.auth?.currentUser){ const uid=window.__fb.auth.currentUser.uid; const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); await setDoc(doc(window.__fb.db,'users',uid),{avatar:url,updatedAt:serverTimestamp()},{merge:true}); } }catch(err){ console.warn('FS avatar',err); } window.toast&&toast('Avatar yüklendi ✅'); } };
-      window.openEdit=function(){ const g=id=>document.getElementById(id); g('edCity').value=window.user.city||''; g('edDistrict').value=window.user.district||''; g('edOld').value=''; g('edNew1').value=''; g('edNew2').value=''; g('edAvatar').style.backgroundImage=`url('${window.user.avatar||'/assets/img/avatar-default.png'}')`; g('edBio').value=window.user.bio||''; const nm=g('edName'); if(nm) nm.value=window.user.name||''; const m=document.getElementById('editModal'); m.style.display='block'; m.setAttribute('aria-hidden','false'); };
+
+      window.uploadToCloudinary=async function(file){
+        if(!file) return null;
+        const cfg=window.__CLOUDINARY||{};
+        const cloudName=cfg.cloudName; const preset=cfg.uploadPreset; const folder = cfg.folder || 'avatars';
+        if(!cloudName||!preset){ window.toast&&toast('Cloudinary yapılandırması eksik'); return null; }
+        const url=`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+        const form=new FormData(); form.append('file', file); form.append('upload_preset', preset); if (folder) form.append('folder', folder);
+        __uploadingAvatar=true;
+        try{ const res=await fetch(url,{method:'POST',body:form}); const data=await res.json(); if(!res.ok){ throw new Error(data?.error?.message||'Upload failed'); } return data.secure_url||null; }
+        catch(e){ console.error(e); window.toast&&toast('Upload hata: '+e.message); return null; }
+        finally { __uploadingAvatar=false; }
+      };
+
+      window.handleAvatarFile=async function(e){
+        const f=e.target.files&&e.target.files[0]; if(!f) return;
+        const local=URL.createObjectURL(f); const edAv=document.getElementById('edAvatar'); if(edAv) edAv.style.backgroundImage=`url('${local}')`;
+        const url=await window.uploadToCloudinary(f);
+        if(url){
+          window.user.avatar=url; window.cacheSave&&cacheSave();
+          const av=document.getElementById('avatar'); if(av) av.style.backgroundImage=`url('${url}')`;
+          try{
+            if(window.__fb?.auth?.currentUser){
+              const uid=window.__fb.auth.currentUser.uid;
+              const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+              await setDoc(doc(window.__fb.db,'users',uid),{avatar:url,updatedAt:serverTimestamp()},{merge:true});
+            }
+          }catch(err){ console.warn('FS avatar',err); }
+          window.toast&&toast('Avatar yüklendi ✅');
+        }
+      };
+
+      window.openEdit=function(){
+        const g=id=>document.getElementById(id);
+        g('edCity').value=window.user.city||''; g('edDistrict').value=window.user.district||'';
+        g('edOld').value=''; g('edNew1').value=''; g('edNew2').value='';
+        g('edAvatar').style.backgroundImage=`url('${window.user.avatar||'/assets/img/avatar-default.png'}')`;
+        g('edBio').value=window.user.bio||'';
+        const nm=g('edName'); if(nm) nm.value=window.user.name||'';
+        const m=document.getElementById('editModal'); m.style.display='block'; m.setAttribute('aria-hidden','false');
+      };
       window.closeEdit=function(){ const m=document.getElementById('editModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); };
-      window.saveEdit=async function(){ const g=id=>document.getElementById(id); const newName=(g('edName')?.value||'').trim(); if(newName){ window.user.name=newName; const un=g('uName'); if(un) un.textContent=window.user.name; } window.user.city=g('edCity').value; window.user.district=g('edDistrict').value; const uCity=g('uCity'); if(uCity) uCity.textContent=window.user.city||'—'; window.user.bio=g('edBio').value.trim(); const uBio=g('uBio'); if(uBio) uBio.textContent=window.user.bio||'—'; const av=g('avatar'); if(av && window.user.avatar){ av.style.backgroundImage=`url('${window.user.avatar}')`; } window.applyHeaderBadges&&applyHeaderBadges(); window.cacheSave&&cacheSave(); window.toast&&toast((window.I18N?.[window.getLang?.()||'tr']?.save)||'Kaydedildi'); try{ if(window.__fb?.auth?.currentUser){ const uid=window.__fb.auth.currentUser.uid; const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); await setDoc(doc(window.__fb.db,'users',uid),{ name:window.user.name||'', city:window.user.city||'', district:window.user.district||'', phone:window.user.phone||'', bio:window.user.bio||'', isPremium:!!window.user.isPremium, isVerified:!!window.user.isVerified, avatar:window.user.avatar||'/assets/img/avatar-default.png', updatedAt:serverTimestamp() },{merge:true}); } }catch(e){ console.warn('Profil yazma hatası:',e); } window.closeEdit(); };
+      window.saveEdit=async function(){
+        const g=id=>document.getElementById(id);
+        const newName=(g('edName')?.value||'').trim(); if(newName){ window.user.name=newName; const un=g('uName'); if(un) un.textContent=window.user.name; }
+        window.user.city=g('edCity').value; window.user.district=g('edDistrict').value; const uCity=g('uCity'); if(uCity) uCity.textContent=window.user.city||'—';
+        window.user.bio=g('edBio').value.trim(); const uBio=g('uBio'); if(uBio) uBio.textContent=window.user.bio||'—';
+        const av=g('avatar'); if(av && window.user.avatar){ av.style.backgroundImage=`url('${window.user.avatar}')`; }
+        window.applyHeaderBadges&&applyHeaderBadges(); window.cacheSave&&cacheSave(); window.toast&&toast((window.I18N?.[window.getLang?.()||'tr']?.save)||'Kaydedildi');
+        try{
+          if(window.__fb?.auth?.currentUser){
+            const uid=window.__fb.auth.currentUser.uid;
+            const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+            await setDoc(doc(window.__fb.db,'users',uid),{
+              name:window.user.name||'', city:window.user.city||'', district:window.user.district||'', phone:window.user.phone||'',
+              bio:window.user.bio||'', isPremium:!!window.user.isPremium, isVerified:!!window.user.isVerified,
+              avatar:window.user.avatar||'/assets/img/avatar-default.png', updatedAt:serverTimestamp()
+            },{merge:true});
+          }
+        }catch(e){ console.warn('Profil yazma hatası:',e); }
+        window.closeEdit();
+      };
+
       window.openPricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='block'; m.setAttribute('aria-hidden','false'); };
       window.closePricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); };
-      window.openShowcasePicker=function(){ const host=document.getElementById('showList'); host.innerHTML=''; const candidates=(window.listings||[]).filter(l=>l.status==='approved'&&!l.showcase&&!l.showcasePending); if(candidates.length===0){ const n=document.createElement('div'); n.className='notice mini'; n.textContent=(window.I18N?.[window.getLang?.()||'tr']?.no_records)||'Kayıt yok.'; host.appendChild(n);} else { candidates.forEach((l,i)=>{ const card=document.createElement('article'); card.className='card'; card.style.setProperty('--glow',(window.COLORS||['#22d3ee'])[i%(window.COLORS?.length||1)]); card.innerHTML=`<a class="thumb" style="background-image:url('${l.photo||''}')"></a><div class="meta"><div class="row" style="justify-content:space-between"><div class="title">${l.title||''}</div><div class="price">${(window.fmtPrice||((v)=>v))(l.price||0)}</div></div><div class="row" style="margin-top:.5rem"><button class="btn primary" data-act="pick" data-id="${l.id}" type="button">${(window.I18N?.[window.getLang?.()||'tr']?.suggest_showcase)||'Vitrine Öner'}</button></div></div>`; card.querySelector('[data-act="pick"]').addEventListener('click',()=>{ window.requestShowcase&&requestShowcase(l); window.closeShowcase&&closeShowcase(); window.paintAllPanels&&paintAllPanels(); window.updateShowcaseSummary&&updateShowcaseSummary(); }); host.appendChild(card); }); } const modal=document.getElementById('showModal'); modal.style.display='block'; modal.setAttribute('aria-hidden','false'); };
+      window.openShowcasePicker=function(){
+        const host=document.getElementById('showList'); host.innerHTML='';
+        const candidates=(window.listings||[]).filter(l=>l.status==='approved'&&!l.showcase&&!l.showcasePending);
+        if(candidates.length===0){
+          const n=document.createElement('div'); n.className='notice mini'; n.textContent=(window.I18N?.[window.getLang?.()||'tr']?.no_records)||'Kayıt yok.'; host.appendChild(n);
+        } else {
+          candidates.forEach((l,i)=>{
+            const card=document.createElement('article'); card.className='card'; card.style.setProperty('--glow',(window.COLORS||['#22d3ee'])[i%(window.COLORS?.length||1)]);
+            card.innerHTML=`<a class="thumb" style="background-image:url('${l.photo||''}')"></a>
+              <div class="meta"><div class="row" style="justify-content:space-between"><div class="title">${l.title||''}</div><div class="price">${(window.fmtPrice||((v)=>v))(l.price||0)}</div></div>
+              <div class="row" style="margin-top:.5rem"><button class="btn primary" data-act="pick" data-id="${l.id}" type="button">${(window.I18N?.[window.getLang?.()||'tr']?.suggest_showcase)||'Vitrine Öner'}</button></div></div>`;
+            card.querySelector('[data-act="pick"]').addEventListener('click',()=>{
+              window.requestShowcase&&requestShowcase(l); window.closeShowcase&&closeShowcase(); window.paintAllPanels&&paintAllPanels(); window.updateShowcaseSummary&&updateShowcaseSummary();
+            });
+            host.appendChild(card);
+          });
+        }
+        const modal=document.getElementById('showModal'); modal.style.display='block'; modal.setAttribute('aria-hidden','false');
+      };
       window.closeShowcase=function(){ const modal=document.getElementById('showModal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); };
       window.requestShowcase=function(l){ const hasFree=window.user.isPremium&&((window.user.monthlyShowcaseUsed||0)<(window.PREMIUM_FREE_SHOWCASE||1)); const price=window.user.isPremium?(hasFree?0:(window.PRICE_SHOWCASE_PREMIUM_EXTRA||199)):(window.PRICE_SHOWCASE_STANDARD||249); window.toast&&toast(price===0?'OK':(window.fmtPrice?fmtPrice(price):price)); l.showcasePending=true; if(price===0){ window.user.monthlyShowcaseUsed=(window.user.monthlyShowcaseUsed||0)+1; } window.cacheSave&&cacheSave(); };
     })();
@@ -542,7 +850,7 @@
                 expiresAt = base.toISOString();
               }
             }
-            arr.push({ id: docSnap.id, title: d.title || '', price: d.price || 0, status: (d.status||'pending'), showcase: !!d.showcase, showcasePending: !!d.showcasePending, photo, expiresAt });
+            arr.push({ id: docSnap.id, title: d.title || '', price: d.price || 0, status: (d.status||'pending'), showcase: !!d.showcase, showcasePending: !!d.showcasePending, photo, expiresAt, description: d.description||'' });
           });
         }
         arr.sort((a,b)=>{ const ta = a.expiresAt ? new Date(a.expiresAt).getTime() : 0; const tb = b.expiresAt ? new Date(b.expiresAt).getTime() : 0; return tb - ta || (a.id < b.id ? -1 : 1); });
