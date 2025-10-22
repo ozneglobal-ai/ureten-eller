@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ureteneller.com.tr/sitemap.xml
