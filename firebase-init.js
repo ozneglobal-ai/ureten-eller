@@ -138,8 +138,9 @@ if (!self.__ue_notifierBound) {
   self.__ue_notifierBound = true;
 
   // Ses kaynağı (sayfada <audio> etiketi gerektirmez)
-  // Not: projenin kökünde ise '/notify.wav' kullan. Alt klasördeyse './notify.wav' uygundur.
-  const __ue_ding = new Audio('./notify.wav');
+  // Yol tespiti: docs/ altında ise relatif, kökteyse absolute
+  const dingSrc = (location.pathname.startsWith('/docs/')) ? './notify.wav' : '/notify.wav';
+  const __ue_ding = new Audio(dingSrc);
 
   // Autoplay engelini bir defa kaldır (ilk kullanıcı etkileşiminde)
   let __ue_audioUnlocked = false;
@@ -169,7 +170,7 @@ if (!self.__ue_notifierBound) {
   function __ue_desktopNotify(title, body){
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
-    try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: './üreteneller.png' }); }catch{}
+    try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: (location.pathname.startsWith('/docs/')? './üreteneller.png' : '/üreteneller.png') }); }catch{}
   }
   // İzni sessizce iste
   if ('Notification' in window && Notification.permission === 'default'){
@@ -181,19 +182,33 @@ if (!self.__ue_notifierBound) {
     const uid = user?.uid;
     if (!uid || !db) return;
 
-    // Katılımcısı olduğum tüm konuşmalar, son mesaja göre sıralı
+    // === DÜZELTME: orderBy('lastAt','desc') KALDIRILDI ===
+    // Composite index gereksinimini ortadan kaldırıyoruz.
     const qThreads = query(
       collection(db, 'messages'),
-      where('participants','array-contains', uid),
-      orderBy('lastAt','desc')
+      where('participants','array-contains', uid)
+      // orderBy('lastAt','desc')  ❌ KALDIRILDI
     );
 
     onSnapshot(qThreads, async (snap)=>{
       const seen = __ue_loadSeen(uid);
 
-      snap.forEach(async (ds)=>{
+      // Snapshot’tan dizi çıkar -> client-side sırala (lastAt desc)
+      const rows = [];
+      snap.forEach(ds => {
         const d = ds.data()||{};
-        const threadId = ds.id;
+        rows.push({ id: ds.id, data: d });
+      });
+      rows.sort((a,b)=>{
+        const ta = a.data.lastAt?.toMillis ? a.data.lastAt.toMillis() : (a.data.lastAt ? new Date(a.data.lastAt).getTime() : 0);
+        const tb = b.data.lastAt?.toMillis ? b.data.lastAt.toMillis() : (b.data.lastAt ? new Date(b.data.lastAt).getTime() : 0);
+        return (tb||0) - (ta||0);
+      });
+
+      // Sıralı listede tetikleme kontrolü
+      for (const row of rows){
+        const d = row.data;
+        const threadId = row.id;
 
         // pairKey/otherUidMap eksikse mümkünse tamamla (uyumluluk düzeltmesi)
         try{
@@ -240,7 +255,7 @@ if (!self.__ue_notifierBound) {
           seen[threadId] = lastMillis || 0;
           __ue_saveSeen(uid, seen);
         }
-      });
+      }
     }, (err)=> console.warn('[notify] snapshot error:', err));
   }
 
