@@ -15,6 +15,9 @@ import {
 import {
   getStorage, ref as _storageRef, uploadBytes, getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
+import {
+  getMessaging, getToken, onMessage
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
 
 // === PROJE CONFIG (Flutter AI Playground) ===
 // Not: storageBucket yanlışsa URL üretimleri şaşar. Kural olarak `${projectId}.appspot.com` olmalı.
@@ -38,6 +41,44 @@ self.app = app;
 self.auth = auth;
 self.db = db;
 self.storage = storage;
+
+// =================== FCM Messaging (Yeni Eklendi) ===================
+try {
+  const messaging = getMessaging(app);
+  self.messaging = messaging;
+
+  if ('Notification' in window) {
+    Notification.requestPermission().then(async (perm) => {
+      if (perm === 'granted') {
+        try {
+          // 🔸 kendi FCM public VAPID anahtarınla değiştir
+          const vapidKey = 'YOUR_VAPID_PUBLIC_KEY';
+          const token = await getToken(messaging, { vapidKey });
+          if (token && self.auth?.currentUser?.uid) {
+            await setDoc(doc(db, 'fcmTokens', token), {
+              uid: self.auth.currentUser.uid,
+              active: true,
+              createdAt: new Date().toISOString()
+            });
+            console.debug('[fcm] token kaydedildi:', token);
+          }
+        } catch (err) {
+          console.warn('[fcm] token alınamadı', err);
+        }
+      }
+    }).catch(()=>{});
+  }
+
+  onMessage(messaging, (payload) => {
+    console.debug('[fcm] ön plan bildirimi:', payload);
+    const { title, body } = payload.notification || {};
+    if (title || body) {
+      try { new Notification(title || 'Yeni mesaj', { body }); } catch {}
+    }
+  });
+} catch (e) {
+  console.warn('[fcm] başlatılamadı', e);
+}
 
 // =================== Yardımcılar (Auth / Storage / Firestore) ===================
 
@@ -88,10 +129,6 @@ self.__fb = self.__fb || {
 };
 
 // =================== Profil Kısa Bilgi Helper ===================
-/**
- * users/{uid} içinden ad/soyad + avatar bilgisini derler.
- * Global: self.getUserBrief(uid): Promise<{name, avatar}>
- */
 const __briefCache = new Map();
 self.getUserBrief = async function getUserBrief(uid){
   if (!uid) return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
@@ -109,10 +146,6 @@ self.getUserBrief = async function getUserBrief(uid){
 };
 
 // =================== 1-1 Sohbet Anahtarları (pairKey) ===================
-/**
- * Deterministik 1-1 anahtar: [uidA, uidB].sort().join('_')
- * Eski kayıtlar için otherUidMap tamamlama yardımcıları.
- */
 self.computePairKey = (a, b)=> [a||'', b||''].sort().join('_');
 self.resolveOtherUid = (me, participants = [], otherUidMap = {})=>{
   if (otherUidMap && otherUidMap[me]) return otherUidMap[me];
@@ -133,16 +166,12 @@ console.debug('[firebase-init] ready:', app.options.projectId);
 // ========== GLOBAL MESSAGE NOTIFIER (arka plan ses + desktop) ==========
 // ======================================================================
 
-// Birden fazla kez import edilirse tekrar bağlanmayı önle
 if (!self.__ue_notifierBound) {
   self.__ue_notifierBound = true;
 
-  // Ses kaynağı (sayfada <audio> etiketi gerektirmez)
-  // Yol tespiti: docs/ altında ise relatif, kökteyse absolute
   const dingSrc = (location.pathname.startsWith('/docs/')) ? './notify.wav' : '/notify.wav';
   const __ue_ding = new Audio(dingSrc);
 
-  // Autoplay engelini bir defa kaldır (ilk kullanıcı etkileşiminde)
   let __ue_audioUnlocked = false;
   function __ue_unlockAudio(){
     if (__ue_audioUnlocked) return;
@@ -151,49 +180,37 @@ if (!self.__ue_notifierBound) {
       __ue_ding.pause(); __ue_ding.currentTime = 0;
       __ue_ding.muted = false;
       __ue_audioUnlocked = true;
-    }).catch(()=>{ /* kullanıcı etkileşimine kadar kilitli kalabilir */ });
+    }).catch(()=>{});
   }
   ['click','keydown','touchstart','pointerdown'].forEach(ev=>{
     window.addEventListener(ev, __ue_unlockAudio, { once:true, capture:true });
   });
 
-  // LocalStorage anahtarları
-  const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`; // { threadId: lastMillis }
-  function __ue_loadSeen(uid){
-    try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; }
-  }
-  function __ue_saveSeen(uid, obj){
-    try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{}
-  }
+  const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`;
+  function __ue_loadSeen(uid){ try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; } }
+  function __ue_saveSeen(uid, obj){ try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{} }
 
-  // Masaüstü bildirimi (isteğe bağlı)
   function __ue_desktopNotify(title, body){
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
     try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: (location.pathname.startsWith('/docs/')? './üreteneller.png' : '/üreteneller.png') }); }catch{}
   }
-  // İzni sessizce iste
+
   if ('Notification' in window && Notification.permission === 'default'){
     Notification.requestPermission().catch(()=>{});
   }
 
-  // Firestore dinleyicisini başlat
   async function __ue_startGlobalNotifier(user){
     const uid = user?.uid;
     if (!uid || !db) return;
 
-    // === DÜZELTME: orderBy('lastAt','desc') KALDIRILDI ===
-    // Composite index gereksinimini ortadan kaldırıyoruz.
     const qThreads = query(
       collection(db, 'messages'),
       where('participants','array-contains', uid)
-      // orderBy('lastAt','desc')  ❌ KALDIRILDI
     );
 
     onSnapshot(qThreads, async (snap)=>{
       const seen = __ue_loadSeen(uid);
-
-      // Snapshot’tan dizi çıkar -> client-side sırala (lastAt desc)
       const rows = [];
       snap.forEach(ds => {
         const d = ds.data()||{};
@@ -205,42 +222,28 @@ if (!self.__ue_notifierBound) {
         return (tb||0) - (ta||0);
       });
 
-      // Sıralı listede tetikleme kontrolü
       for (const row of rows){
         const d = row.data;
         const threadId = row.id;
-
-        // pairKey/otherUidMap eksikse mümkünse tamamla (uyumluluk düzeltmesi)
         try{
           const participants = Array.isArray(d.participants) ? d.participants : [];
           const me = uid;
           const peer = self.resolveOtherUid(me, participants, d.otherUidMap||{});
-          // pairKey yoksa/set değilse ekle
           let patch = {};
-          if (!d.pairKey && peer) {
-            patch.pairKey = self.computePairKey(me, peer);
-          }
-          // otherUidMap eksikse ekle
-          if ((!d.otherUidMap || !d.otherUidMap[me] || !d.otherUidMap[peer]) && peer) {
+          if (!d.pairKey && peer) patch.pairKey = self.computePairKey(me, peer);
+          if ((!d.otherUidMap || !d.otherUidMap[me] || !d.otherUidMap[peer]) && peer)
             patch.otherUidMap = Object.assign({}, d.otherUidMap||{}, { [me]: peer, [peer]: me });
-          }
-          if (Object.keys(patch).length){
-            // Sessiz güncelleme
+          if (Object.keys(patch).length)
             updateDoc(doc(db,'messages',threadId), patch).catch(()=>{});
-          }
-        }catch{ /* sessiz */ }
+        }catch{}
 
-        // zaman ve tetikleme
         const lastMillis = d.lastAt?.toMillis ? d.lastAt.toMillis()
                           : (d.lastAt ? new Date(d.lastAt).getTime() : 0);
         const prev = seen[threadId] || 0;
 
         if (lastMillis && lastMillis > prev && d.lastText && d.lastFrom && d.lastFrom !== uid){
-          // SES 📣
           __ue_ding.play().catch(()=>{});
-          // Sekme arkadaysa masaüstü bildirimi
           if (document.hidden) {
-            // Başlık için - yazan kişinin kısa adı
             let title = 'Yeni mesaj';
             try{
               const brief = await self.getUserBrief(d.lastFrom);
@@ -251,7 +254,6 @@ if (!self.__ue_notifierBound) {
           seen[threadId] = lastMillis;
           __ue_saveSeen(uid, seen);
         } else if (!seen[threadId]) {
-          // İlk yüklemede başlangıç damgasını yaz
           seen[threadId] = lastMillis || 0;
           __ue_saveSeen(uid, seen);
         }
@@ -259,7 +261,6 @@ if (!self.__ue_notifierBound) {
     }, (err)=> console.warn('[notify] snapshot error:', err));
   }
 
-  // Auth hazır olduğunda notifier’ı bağla (TÜM SAYFALARDA çalışır)
   try{
     self.onAuthStateChanged(auth, (u)=>{
       if (u) __ue_startGlobalNotifier(u);
