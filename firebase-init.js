@@ -10,7 +10,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
-  setDoc, updateDoc, serverTimestamp
+  setDoc, updateDoc, serverTimestamp, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 import {
   getStorage, ref as _storageRef, uploadBytes, getDownloadURL
@@ -39,12 +39,18 @@ self.auth = auth;
 self.db = db;
 self.storage = storage;
 
-// Auth yardımcıları
-self.onAuthStateChanged = (...args) => _onAuthStateChanged(...args); // hem (auth, cb) hem (cb) çalışır
-self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
+// =================== Yardımcılar (Auth / Storage / Firestore) ===================
+
+// onAuthStateChanged köprüsü: hem (cb) hem (auth, cb) destekler
+self.onAuthStateChanged = (a, b) => {
+  if (typeof a === 'function') return _onAuthStateChanged(auth, a); // (cb)
+  return _onAuthStateChanged(a || auth, b);                         // (auth, cb)
+};
+
+self.signInWithEmailAndPassword = (email, pass) => _onAuthStateChanged ? _signInWithEmailAndPassword(auth, email, pass) : Promise.reject('auth not ready');
 self.signOutNow = () => _signOut(auth);
 
-// Storage yardımcıları (ilan görselleri fallback’ı kullanıyor)
+// Storage yardımcıları
 self.storageRef       = (path) => _storageRef(storage, path);
 self._uploadBytes     = (refObj, file) => uploadBytes(refObj, file);
 self._getDownloadURL  = (refObj) => getDownloadURL(refObj);
@@ -81,99 +87,169 @@ self.__fb = self.__fb || {
   onAuthStateChanged: (...args) => _onAuthStateChanged(...args)
 };
 
-// Hazır sinyali (ilanlar bloğu dinliyor)
+// =================== Profil Kısa Bilgi Helper ===================
+/**
+ * users/{uid} içinden ad/soyad + avatar bilgisini derler.
+ * Global: self.getUserBrief(uid): Promise<{name, avatar}>
+ */
+const __briefCache = new Map();
+self.getUserBrief = async function getUserBrief(uid){
+  if (!uid) return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
+  if (__briefCache.has(uid)) return __briefCache.get(uid);
+  try{
+    const snap = await getDoc(doc(db, 'users', uid));
+    const d = snap.exists() ? (snap.data()||{}) : {};
+    const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Kullanıcı';
+    const brief = { name, avatar: d.avatar||d.photoURL||'/assets/img/avatar-default.png' };
+    __briefCache.set(uid, brief);
+    return brief;
+  }catch{
+    return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
+  }
+};
+
+// =================== 1-1 Sohbet Anahtarları (pairKey) ===================
+/**
+ * Deterministik 1-1 anahtar: [uidA, uidB].sort().join('_')
+ * Eski kayıtlar için otherUidMap tamamlama yardımcıları.
+ */
+self.computePairKey = (a, b)=> [a||'', b||''].sort().join('_');
+self.resolveOtherUid = (me, participants = [], otherUidMap = {})=>{
+  if (otherUidMap && otherUidMap[me]) return otherUidMap[me];
+  if (Array.isArray(participants)) {
+    const other = participants.find(x => x && x !== me);
+    if (other) return other;
+  }
+  return '';
+};
+
+// =================== Global Ready Sinyali ===================
 self.__fbReady = true;
 try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
 
 console.debug('[firebase-init] ready:', app.options.projectId);
-/* === GLOBAL MESSAGE NOTIFIER (arka plan ses + opsiyonel desktop bildirim) === */
 
-// Ses kaynağı (sayfada <audio> etiketi gerektirmez)
-const __ue_ding = new Audio('./notify.wav');
+// ======================================================================
+// ========== GLOBAL MESSAGE NOTIFIER (arka plan ses + desktop) ==========
+// ======================================================================
 
-// Autoplay engelini bir defa kaldır (ilk kullanıcı etkileşiminde)
-let __ue_audioUnlocked = false;
-function __ue_unlockAudio(){
-  if (__ue_audioUnlocked) return;
-  __ue_ding.muted = true;
-  __ue_ding.play().then(()=>{
-    __ue_ding.pause(); __ue_ding.currentTime = 0;
-    __ue_ding.muted = false;
-    __ue_audioUnlocked = true;
-  }).catch(()=>{ /* kullanıcı etkileşimine kadar kilitli kalabilir */ });
-}
-['click','keydown','touchstart','pointerdown'].forEach(ev=>{
-  window.addEventListener(ev, __ue_unlockAudio, { once:true, capture:true });
-});
+// Birden fazla kez import edilirse tekrar bağlanmayı önle
+if (!self.__ue_notifierBound) {
+  self.__ue_notifierBound = true;
 
-// LocalStorage anahtarları
-const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`; // { threadId: lastMillis }
-function __ue_loadSeen(uid){
-  try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; }
-}
-function __ue_saveSeen(uid, obj){
-  try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{}
-}
+  // Ses kaynağı (sayfada <audio> etiketi gerektirmez)
+  // Not: projenin kökünde ise '/notify.wav' kullan. Alt klasördeyse './notify.wav' uygundur.
+  const __ue_ding = new Audio('./notify.wav');
 
-// Masaüstü bildirimi (isteğe bağlı)
-function __ue_desktopNotify(title, body){
-  if (!('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-  try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: './üreteneller.png' }); }catch{}
-}
-// İzni sessizce iste (kullanıcı onaylarsa arka planda toast da görebilir)
-if ('Notification' in window && Notification.permission === 'default'){
-  Notification.requestPermission().catch(()=>{});
-}
-
-// Firestore dinleyicisini başlat
-async function __ue_startGlobalNotifier(user){
-  if (!self.db) return;
-  const { collection, query, where, orderBy, onSnapshot } =
-    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-
-  const uid = user.uid;
-  const seen = __ue_loadSeen(uid);
-
-  // Katılımcısı olduğum tüm konuşmalar, son mesaja göre sıralı
-  const q = query(
-    collection(self.db, 'messages'),
-    where('participants','array-contains', uid),
-    orderBy('lastAt','desc')
-  );
-
-  onSnapshot(q, (snap)=>{
-    snap.forEach(ds=>{
-      const d = ds.data()||{};
-      const threadId = ds.id;
-
-      const lastMillis = d.lastAt?.toMillis ? d.lastAt.toMillis()
-                        : (d.lastAt ? new Date(d.lastAt).getTime() : 0);
-      const prev = seen[threadId] || 0;
-
-      // Yeni mesaj ve benden değilse
-      if (lastMillis && lastMillis > prev && d.lastText && d.lastFrom && d.lastFrom !== uid){
-        __ue_ding.play().catch(()=>{});              // SES 📣
-        if (document.hidden) {                       // Sekme arkadaysa opsiyonel desktop bildirimi
-          __ue_desktopNotify(d.otherName || 'Yeni mesaj', d.lastText);
-        }
-        seen[threadId] = lastMillis;
-        __ue_saveSeen(uid, seen);
-      } else if (!seen[threadId]) {
-        // İlk yüklemede başlangıç damgasını yaz
-        seen[threadId] = lastMillis || 0;
-        __ue_saveSeen(uid, seen);
-      }
-    });
-  }, (err)=> console.warn('[notify] snapshot error:', err));
-}
-
-// Auth hazır olduğunda notifier’ı bağla (TÜM SAYFALARDA çalışır)
-try{
-  self.onAuthStateChanged(self.auth, (u)=>{
-    if (u) __ue_startGlobalNotifier(u);
+  // Autoplay engelini bir defa kaldır (ilk kullanıcı etkileşiminde)
+  let __ue_audioUnlocked = false;
+  function __ue_unlockAudio(){
+    if (__ue_audioUnlocked) return;
+    __ue_ding.muted = true;
+    __ue_ding.play().then(()=>{
+      __ue_ding.pause(); __ue_ding.currentTime = 0;
+      __ue_ding.muted = false;
+      __ue_audioUnlocked = true;
+    }).catch(()=>{ /* kullanıcı etkileşimine kadar kilitli kalabilir */ });
+  }
+  ['click','keydown','touchstart','pointerdown'].forEach(ev=>{
+    window.addEventListener(ev, __ue_unlockAudio, { once:true, capture:true });
   });
-}catch(e){
-  console.warn('[notify] onAuthStateChanged bağlanamadı:', e);
-}
 
+  // LocalStorage anahtarları
+  const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`; // { threadId: lastMillis }
+  function __ue_loadSeen(uid){
+    try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; }
+  }
+  function __ue_saveSeen(uid, obj){
+    try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{}
+  }
+
+  // Masaüstü bildirimi (isteğe bağlı)
+  function __ue_desktopNotify(title, body){
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: './üreteneller.png' }); }catch{}
+  }
+  // İzni sessizce iste
+  if ('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission().catch(()=>{});
+  }
+
+  // Firestore dinleyicisini başlat
+  async function __ue_startGlobalNotifier(user){
+    const uid = user?.uid;
+    if (!uid || !db) return;
+
+    // Katılımcısı olduğum tüm konuşmalar, son mesaja göre sıralı
+    const qThreads = query(
+      collection(db, 'messages'),
+      where('participants','array-contains', uid),
+      orderBy('lastAt','desc')
+    );
+
+    onSnapshot(qThreads, async (snap)=>{
+      const seen = __ue_loadSeen(uid);
+
+      snap.forEach(async (ds)=>{
+        const d = ds.data()||{};
+        const threadId = ds.id;
+
+        // pairKey/otherUidMap eksikse mümkünse tamamla (uyumluluk düzeltmesi)
+        try{
+          const participants = Array.isArray(d.participants) ? d.participants : [];
+          const me = uid;
+          const peer = self.resolveOtherUid(me, participants, d.otherUidMap||{});
+          // pairKey yoksa/set değilse ekle
+          let patch = {};
+          if (!d.pairKey && peer) {
+            patch.pairKey = self.computePairKey(me, peer);
+          }
+          // otherUidMap eksikse ekle
+          if ((!d.otherUidMap || !d.otherUidMap[me] || !d.otherUidMap[peer]) && peer) {
+            patch.otherUidMap = Object.assign({}, d.otherUidMap||{}, { [me]: peer, [peer]: me });
+          }
+          if (Object.keys(patch).length){
+            // Sessiz güncelleme
+            updateDoc(doc(db,'messages',threadId), patch).catch(()=>{});
+          }
+        }catch{ /* sessiz */ }
+
+        // zaman ve tetikleme
+        const lastMillis = d.lastAt?.toMillis ? d.lastAt.toMillis()
+                          : (d.lastAt ? new Date(d.lastAt).getTime() : 0);
+        const prev = seen[threadId] || 0;
+
+        if (lastMillis && lastMillis > prev && d.lastText && d.lastFrom && d.lastFrom !== uid){
+          // SES 📣
+          __ue_ding.play().catch(()=>{});
+          // Sekme arkadaysa masaüstü bildirimi
+          if (document.hidden) {
+            // Başlık için - yazan kişinin kısa adı
+            let title = 'Yeni mesaj';
+            try{
+              const brief = await self.getUserBrief(d.lastFrom);
+              title = brief?.name || (d.otherName || 'Yeni mesaj');
+            }catch{}
+            __ue_desktopNotify(title, d.lastText);
+          }
+          seen[threadId] = lastMillis;
+          __ue_saveSeen(uid, seen);
+        } else if (!seen[threadId]) {
+          // İlk yüklemede başlangıç damgasını yaz
+          seen[threadId] = lastMillis || 0;
+          __ue_saveSeen(uid, seen);
+        }
+      });
+    }, (err)=> console.warn('[notify] snapshot error:', err));
+  }
+
+  // Auth hazır olduğunda notifier’ı bağla (TÜM SAYFALARDA çalışır)
+  try{
+    self.onAuthStateChanged(auth, (u)=>{
+      if (u) __ue_startGlobalNotifier(u);
+    });
+  }catch(e){
+    console.warn('[notify] onAuthStateChanged bağlanamadı:', e);
+  }
+}
