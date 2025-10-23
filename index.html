@@ -590,11 +590,11 @@
         if(fb){ fb.style.display='inline-flex'; fb.onclick=()=>window.UE && UE.firebase && UE.firebase.googlePopup(); }
       }
     }
-=======
+
     // === Google Identity Services ===
     function parseJwt(token){ try{ const base = token.split('.')[1]; const json = atob(base.replace(/-/g,'+').replace(/_/g,'/')); const uriDecoded = decodeURIComponent(Array.prototype.map.call(json, c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(uriDecoded); }catch(e){ return {}; } }
     function handleGoogleCredential(resp){ const p = parseJwt(resp.credential||''); const name = p.name || p.given_name || ''; const email = p.email || ''; const msgs = { tr:'Hoş geldin ', en:'Welcome ', de:'Willkommen ', ar:'مرحبا ' }; const el = document.getElementById('lmsg'); if(el) el.textContent = (msgs[LANG]||msgs.tr) + (name||email||''); /* TODO: backend login with resp.credential */ }
->>>>>>> Stashed changes
+
 
     // === Auth panel ===
     function bindAuthPanel(){
