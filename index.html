@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Üreten Eller • Ana Sayfa</title>
+  <title data-i18n="meta.title">Üreten Eller • Ana Sayfa</title>
+  <meta name="description" content="" data-i18n-attr="content:meta.description" />
   <link rel="icon" href="/assets/icons/favicon.png">
   <link rel="stylesheet" href="/css/site.css">
+  <style>
+    /* ==== Tam geniş GOLD paneller: tek tek gelir, 5 sn kalır, sonra diğeri sağdan sola girer ==== */
+    :root{--gold1:#fbbf24;--gold2:#f59e0b;--gold3:#facc15}
+    .lane-wrap{width:100%;margin:0 auto;padding:0}
+    .lane{position:relative;overflow:hidden;width:100%;background:linear-gradient(180deg,#fff,#fff)}
+    .lane-track{display:block;width:100%}
+    .lane .panel{width:100%;min-height:72px; /* mobil için yeterli yükseklik */
+      display:flex;align-items:center;gap:12px;padding:14px 16px;color:#1f2937;
+      background:linear-gradient(90deg,var(--gold1),var(--gold2));
+      box-shadow:0 6px 24px rgba(245, 158, 11, .25), inset 0 0 0 1px rgba(0,0,0,.04);
+      color:#111;}
+    @media(min-width:768px){.lane .panel{min-height:86px;padding:16px 24px}}
+    .panel-ico{font-size:28px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.15))}
+    .panel-body{display:flex;flex-direction:column}
+    .panel-title{font-weight:900;font-size:1.15rem}
+    .panel-slogan{opacity:.95}
+
+    /* Giriş animasyonu: sağdan sola, hızlı */
+    .panel.enter{animation:enterSlide .5s ease both}
+    @keyframes enterSlide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+    /* alt/üst boşluklar */
+    .spacer-lg{height:24px}
+  </style>
 
   <!-- Firebase init (mevcut dosyanız) -->
   <script type="module" src="/firebase-init.js"></script>
@@ -16,15 +41,15 @@
     <div class="header-wrap">
       <a href="/index.html" class="header-logo" aria-label="Anasayfa">
         <img src="/assets/icons/ureteneller.png" alt="logo">
-        <span>Üreten Eller</span>
+        <span data-i18n="brand">Üreten Eller</span>
       </a>
       <div class="header-spacer"></div>
       <div class="header-actions">
-        <button class="btn" data-act="open-login">Giriş Yap</button>
-        <button class="btn primary" data-act="open-signup">Kayıt Ol</button>
-        <label for="langSel" class="sr-only">Dil</label>
+        <button class="btn" data-act="open-login" data-i18n="cta.login">Giriş Yap</button>
+        <button class="btn primary" data-act="open-signup" data-i18n="cta.signup">Kayıt Ol</button>
+        <label for="langSel" class="sr-only" data-i18n="a11y.language">Dil</label>
         <select id="langSel" class="lang-select" aria-label="Dil">
-          <option value="tr" selected>Türkçe</option>
+          <option value="tr">Türkçe</option>
           <option value="en">English</option>
           <option value="de">Deutsch</option>
           <option value="ar">العربية</option>
@@ -33,21 +58,25 @@
     </div>
   </header>
 
-  <!-- KATEGORİ SLIDER (5 sn rotasyon) -->
-  <section class="cat-slider" aria-labelledby="catTitle">
-    <h2 id="catTitle" class="sr-only">Kategoriler</h2>
-    <div id="catSlider"></div>
+  <!-- KIRMIZI/GOLD KAYAN PANEL ŞERİDİ -->
+  <section class="lane-wrap" aria-labelledby="catTitle">
+    <h2 id="catTitle" class="sr-only" data-i18n="cats.title">Kategoriler</h2>
+    <div class="lane">
+      <div id="laneTrack" class="lane-track"></div>
+    </div>
   </section>
+
+  <div class="spacer-lg"></div>
 
   <!-- İLAN PANELİ (TEK PANEL: Üstte her zaman Vitrin) -->
   <main class="listing-wrap" aria-labelledby="listTitle">
     <div class="panel-head">
-      <h2 id="listTitle">Son İlanlar</h2>
+      <h2 id="listTitle" data-i18n="list.title">Son İlanlar</h2>
       <div id="listNote" class="panel-sub"></div>
     </div>
     <div id="listingGrid" class="grid" aria-live="polite"></div>
     <div style="text-align:center;margin-top:.5rem">
-      <button id="btnMore" class="btn" style="display:none">Daha fazla</button>
+      <button id="btnMore" class="btn" style="display:none" data-i18n="list.more">Daha fazla</button>
     </div>
   </main>
 
@@ -56,29 +85,29 @@
   <dialog id="authBox" aria-labelledby="authTitle" style="border:none;border-radius:16px;padding:0;max-width:560px;width:min(560px,95vw)">
     <form method="dialog" style="margin:0">
       <div style="padding:1rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:.5rem">
-        <div id="authTitle" style="font-weight:900">Hesabınla Devam Et</div>
+        <div id="authTitle" style="font-weight:900" data-i18n="auth.title">Hesabınla Devam Et</div>
         <div style="flex:1"></div>
-        <button type="button" class="btn" id="authClose">Kapat</button>
+        <button type="button" class="btn" id="authClose" data-i18n="auth.close">Kapat</button>
       </div>
       <div style="padding:1rem">
         <div role="tablist" aria-label="Giriş/Kayıt" style="display:flex;gap:.5rem;margin-bottom:.6rem">
-          <button type="button" class="btn" id="tabLogin" role="tab" aria-selected="true">Giriş Yap</button>
-          <button type="button" class="btn" id="tabSignup" role="tab" aria-selected="false">Kayıt Ol</button>
+          <button type="button" class="btn" id="tabLogin" role="tab" aria-selected="true" data-i18n="auth.loginTab">Giriş Yap</button>
+          <button type="button" class="btn" id="tabSignup" role="tab" aria-selected="false" data-i18n="auth.signupTab">Kayıt Ol</button>
         </div>
 
         <!-- LOGIN -->
         <div id="paneLogin">
           <div class="meta">
-            <label for="lemail">E‑posta</label>
+            <label for="lemail" data-i18n="auth.email">E‑posta</label>
             <input id="lemail" type="email" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div class="meta" style="margin-top:.5rem">
-            <label for="lpass">Şifre</label>
+            <label for="lpass" data-i18n="auth.password">Şifre</label>
             <input id="lpass" type="password" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div style="display:flex;gap:.5rem;margin-top:.6rem">
-            <button id="loginSubmit" class="btn primary" type="button" style="flex:1">Giriş Yap</button>
-            <button id="forgotBtn" class="btn" type="button">Şifremi Unuttum</button>
+            <button id="loginSubmit" class="btn primary" type="button" style="flex:1" data-i18n="auth.login">Giriş Yap</button>
+            <button id="forgotBtn" class="btn" type="button" data-i18n="auth.forgot">Şifremi Unuttum</button>
           </div>
           <div id="lmsg" class="panel-sub" style="margin-top:.4rem"></div>
         </div>
@@ -86,27 +115,27 @@
         <!-- SIGNUP -->
         <div id="paneSignup" style="display:none">
           <div class="meta">
-            <label for="sname">İsim</label>
+            <label for="sname" data-i18n="auth.name">İsim</label>
             <input id="sname" type="text" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div class="meta" style="margin-top:.5rem">
-            <label for="ssurname">Soyisim</label>
+            <label for="ssurname" data-i18n="auth.surname">Soyisim</label>
             <input id="ssurname" type="text" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div class="meta" style="margin-top:.5rem">
-            <label for="semail">E‑posta</label>
+            <label for="semail" data-i18n="auth.email">E‑posta</label>
             <input id="semail" type="email" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div class="meta" style="margin-top:.5rem">
-            <label for="spass">Şifre (min 6)</label>
+            <label for="spass" data-i18n="auth.password">Şifre (min 6)</label>
             <input id="spass" type="password" minlength="6" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div class="meta" style="margin-top:.5rem">
-            <label for="spass2">Şifre (Tekrar)</label>
+            <label for="spass2" data-i18n="auth.password2">Şifre (Tekrar)</label>
             <input id="spass2" type="password" minlength="6" required style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem">
           </div>
           <div style="display:flex;gap:.5rem;margin-top:.6rem">
-            <button id="signupSubmit" class="btn primary" type="button" style="flex:1">Kayıt Ol</button>
+            <button id="signupSubmit" class="btn primary" type="button" style="flex:1" data-i18n="auth.signup">Kayıt Ol</button>
           </div>
           <div id="smsg" class="panel-sub" style="margin-top:.4rem"></div>
         </div>
@@ -114,42 +143,216 @@
     </form>
   </dialog>
 
-  <!-- FOOTER (siyah legal alan) -->
+  <!-- Siyah legal alan (sayfanın en altında) -->
   <footer class="site-footer" role="contentinfo">
     <div class="legal">
       <div class="legal-grid">
         <div>
-          <a href="/legal/iletisim-impressum.html">İletişim / Impressum</a>
-          <a href="/legal/gizlilik-politikasi.html">Gizlilik Politikası</a>
-          <a href="/legal/kvkk-aydinlatma.html">KVKK Aydınlatma</a>
-          <a href="/legal/cerez-politikasi.html">Çerez Politikası</a>
+          <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim / Impressum</a>
+          <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+          <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+          <a href="/legal/cerez-politikasi.html" data-i18n="legal.cookies">Çerez Politikası</a>
         </div>
         <div>
-          <a href="/legal/kullanim-sartlari.html">Kullanım Şartları</a>
-          <a href="/legal/mesafeli-satis-sozlesmesi.html">Mesafeli Satış Sözleşmesi</a>
-          <a href="/legal/on-bilgilendirme-formu.html">Ön Bilgilendirme Formu</a>
-          <a href="/legal/teslimat-iade-iptal.html">Teslimat & İade</a>
+          <a href="/legal/kullanim-sartlari.html" data-i18n="legal.terms">Kullanım Şartları</a>
+          <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış Sözleşmesi</a>
+          <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.pref">Ön Bilgilendirme Formu</a>
+          <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.delivery">Teslimat & İade</a>
         </div>
         <div>
-          <a href="/legal/topluluk-kurallari.html">Topluluk Kuralları</a>
-          <a href="/legal/yasakli-urunler.html">Yasaklı Ürünler</a>
-          <a href="#">Tüm Yasal Metinler</a>
+          <a href="/legal/topluluk-kurallari.html" data-i18n="legal.rules">Topluluk Kuralları</a>
+          <a href="/legal/yasakli-urunler.html" data-i18n="legal.banned">Yasaklı Ürünler</a>
+          <a href="#" data-i18n="legal.all">Tüm Yasal Metinler</a>
         </div>
         <div>
-          <span class="panel-sub">© <span id="yr"></span> Üreten Eller</span>
+          <span class="panel-sub">© <span id="yr"></span> <span data-i18n="brand">Üreten Eller</span></span>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- SAYFA SCRIPTLERİ -->
+  <!-- SAYFA SCRIPTLERİ: i18n + kayan panel doldurma + auth davranışı -->
   <script>
-    // Yıl
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const y=document.getElementById('yr'); if(y) y.textContent=new Date().getFullYear();
-    });
+    // === I18N — 4 dil (TR varsayılan) ===
+    const I18N = {
+      tr:{
+        meta:{title:'Üreten Eller • Ana Sayfa',description:'El emeği ürünler. Aracısız alışveriş.'},
+        brand:'Üreten Eller',
+        a11y:{language:'Dil'},
+        cta:{login:'Giriş Yap',signup:'Kayıt Ol'},
+        cats:{title:'Kategoriler',
+          items:[
+            {ico:'🍲',title:'Yemekler', slogan:'Ev yapımı lezzet, katkısız'},
+            {ico:'🎂',title:'Pasta & Tatlı', slogan:'Şeker tadında kutlamalar'},
+            {ico:'🫙',title:'Reçel • Turşu • Sos', slogan:'Turşusu tam kıvamında'},
+            {ico:'🌾',title:'Yöresel / Kışlık', slogan:'Sofrada gelenek var'},
+            {ico:'🥗',title:'Diyet / Vegan / Glutensiz', slogan:'Hafif, lezzetli, dengeli'},
+            {ico:'💍',title:'Takı', slogan:'Sade, zarif, kişiye özel'},
+            {ico:'👶',title:'Bebek & Çocuk', slogan:'Montessori ruhu evinde'},
+            {ico:'🧶',title:'Örgü / Triko', slogan:'Kışa hazır kombin'},
+            {ico:'✂️',title:'Dikiş / Terzilik', slogan:'Kostüme el işçiliği'},
+            {ico:'🧵',title:'Makrome & Dekor', slogan:'Duvarda zarafet'},
+            {ico:'🏠',title:'Ev Dekor & Aksesuar', slogan:'El emeği ile sıcak mekan'},
+            {ico:'🕯️',title:'Mum & Kokulu', slogan:'El yapımı hediye hazır'},
+            {ico:'🧼',title:'Doğal Sabun & Kozmetik', slogan:'Katkısız temizlik'},
+            {ico:'🧸',title:'Amigurumi & Oyuncak', slogan:'El emeği karakterler'}
+          ]
+        },
+        trust:[
+          {ico:'🔒',title:'Güvenli Ödeme', slogan:'Paranız güvende — korumalı işlem'},
+          {ico:'📦',title:'Kargo Takip', slogan:'Kargonuz güvende — adım adım takip'},
+          {ico:'🤝',title:'Onaylı Satıcı', slogan:'Rozetli satıcılarla içiniz rahat'},
+          {ico:'🛡️',title:'Alıcı Koruması', slogan:'Sorun olursa yanızdayız'},
+          {ico:'💬',title:'Hızlı İletişim', slogan:'Sipariş öncesi sor, netleş, al'}
+        ],
+        list:{title:'Son İlanlar', more:'Daha fazla'},
+        auth:{title:'Hesabınla Devam Et',close:'Kapat',loginTab:'Giriş Yap',signupTab:'Kayıt Ol',email:'E‑posta',password:'Şifre',password2:'Şifre (Tekrar)',login:'Giriş Yap',signup:'Kayıt Ol',forgot:'Şifremi Unuttum'},
+        legal:{contact:'İletişim / Impressum',privacy:'Gizlilik Politikası',kvkk:'KVKK Aydınlatma',cookies:'Çerez Politikası',terms:'Kullanım Şartları',distance:'Mesafeli Satış Sözleşmesi',pref:'Ön Bilgilendirme Formu',delivery:'Teslimat & İade',rules:'Topluluk Kuralları',banned:'Yasaklı Ürünler',all:'Tüm Yasal Metinler'}
+      },
+      en:{
+        meta:{title:'Ureten Eller • Home',description:'Handmade marketplace. Direct trade.'},
+        brand:'Üreten Eller', a11y:{language:'Language'}, cta:{login:'Log In', signup:'Sign Up'},
+        cats:{title:'Categories',items:[
+          {ico:'🍲',title:'Meals', slogan:'Homemade, additive‑free'},
+          {ico:'🎂',title:'Cakes & Desserts', slogan:'Sweet moments ahead'},
+          {ico:'🫙',title:'Jams • Pickles • Sauces', slogan:'Pickled to perfection'},
+          {ico:'🌾',title:'Local / Pantry', slogan:'Tradition on the table'},
+          {ico:'🥗',title:'Diet / Vegan / Gluten‑free', slogan:'Light, tasty, balanced'},
+          {ico:'💍',title:'Jewelry', slogan:'Simple, elegant, personal'},
+          {ico:'👶',title:'Baby & Kids', slogan:'Montessori at home'},
+          {ico:'🧶',title:'Knit / Crochet', slogan:'Winter‑ready looks'},
+          {ico:'✂️',title:'Sewing / Tailoring', slogan:'Crafted costume work'},
+          {ico:'🧵',title:'Macramé & Decor', slogan:'Elegance on the wall'},
+          {ico:'🏠',title:'Home Decor & Accessories', slogan:'Warmth by handmade'},
+          {ico:'🕯️',title:'Candles & Fragrance', slogan:'Handmade gifts ready'},
+          {ico:'🧼',title:'Natural Soap & Cosmetics', slogan:'Clean without additives'},
+          {ico:'🧸',title:'Amigurumi & Toys', slogan:'Hand‑crafted characters'}
+        ]},
+        trust:[
+          {ico:'🔒',title:'Secure Payment', slogan:'Your money is protected'},
+          {ico:'📦',title:'Trackable Shipping', slogan:'Follow your parcel safely'},
+          {ico:'🤝',title:'Verified Sellers', slogan:'Shop with confidence'},
+          {ico:'🛡️',title:'Buyer Protection', slogan:'We are here if anything goes wrong'},
+          {ico:'💬',title:'Quick Chat', slogan:'Ask before you order'}
+        ],
+        list:{title:'Latest Listings', more:'Load more'},
+        auth:{title:'Continue with your account',close:'Close',loginTab:'Log In',signupTab:'Sign Up',email:'Email',password:'Password',password2:'Password (Repeat)',login:'Log In',signup:'Sign Up',forgot:'Forgot password'},
+        legal:{contact:'Contact / Impressum',privacy:'Privacy Policy',kvkk:'KVKK Notice',cookies:'Cookie Policy',terms:'Terms of Use',distance:'Distance Sales Agreement',pref:'Pre‑Information Form',delivery:'Delivery & Returns',rules:'Community Rules',banned:'Prohibited Products',all:'All Legal Texts'}
+      },
+      de:{
+        meta:{title:'Üreten Eller • Startseite',description:'Handgemachtes, direkter Handel.'},
+        brand:'Üreten Eller', a11y:{language:'Sprache'}, cta:{login:'Anmelden', signup:'Registrieren'},
+        cats:{title:'Kategorien',items:[
+          {ico:'🍲',title:'Gerichte', slogan:'Hausgemacht, ohne Zusätze'},
+          {ico:'🎂',title:'Kuchen & Süßes', slogan:'Süße Feiermomente'},
+          {ico:'🫙',title:'Marmelade • Pickles • Saucen', slogan:'Perfekt eingelegt'},
+          {ico:'🌾',title:'Regional / Vorrat', slogan:'Tradition auf dem Tisch'},
+          {ico:'🥗',title:'Diät / Vegan / Glutenfrei', slogan:'Leicht, lecker, ausgewogen'},
+          {ico:'💍',title:'Schmuck', slogan:'Schlicht, elegant, persönlich'},
+          {ico:'👶',title:'Baby & Kinder', slogan:'Montessori zu Hause'},
+          {ico:'🧶',title:'Strick / Häkeln', slogan:'Bereit für den Winter'},
+          {ico:'✂️',title:'Schneiderei', slogan:'Handwerk im Kostüm'},
+          {ico:'🧵',title:'Makramee & Deko', slogan:'Eleganz an der Wand'},
+          {ico:'🏠',title:'Wohndeko & Accessoires', slogan:'Wärme durch Handarbeit'},
+          {ico:'🕯️',title:'Kerzen & Düfte', slogan:'Handgemachte Geschenke'},
+          {ico:'🧼',title:'Naturseife & Kosmetik', slogan:'Sauber ohne Zusätze'},
+          {ico:'🧸',title:'Amigurumi & Spielzeug', slogan:'Handgefertigte Figuren'}
+        ]},
+        trust:[
+          {ico:'🔒',title:'Sichere Zahlung', slogan:'Ihr Geld ist geschützt'},
+          {ico:'📦',title:'Sendungsverfolgung', slogan:'Paket sicher verfolgen'},
+          {ico:'🤝',title:'Verifizierte Verkäufer', slogan:'Mit Vertrauen einkaufen'},
+          {ico:'🛡️',title:'Käuferschutz', slogan:'Wir helfen bei Problemen'},
+          {ico:'💬',title:'Schnelle Kommunikation', slogan:'Vor der Bestellung fragen'}
+        ],
+        list:{title:'Neueste Anzeigen', more:'Mehr laden'},
+        auth:{title:'Mit deinem Konto fortfahren',close:'Schließen',loginTab:'Anmelden',signupTab:'Registrieren',email:'E‑Mail',password:'Passwort',password2:'Passwort (Wieder)',login:'Anmelden',signup:'Registrieren',forgot:'Passwort vergessen'},
+        legal:{contact:'Kontakt / Impressum',privacy:'Datenschutz',kvkk:'KVKK‑Hinweis',cookies:'Cookie‑Richtlinie',terms:'Nutzungsbedingungen',distance:'Fernabsatzvertrag',pref:'Vorabinformation',delivery:'Lieferung & Rückgabe',rules:'Community‑Regeln',banned:'Verbotene Produkte',all:'Alle Rechtstexte'}
+      },
+      ar:{
+        meta:{title:'يو̈رتن إلّر • الرئيسية',description:'منتجات يدوية. بيع مباشر.'},
+        brand:'Üreten Eller', a11y:{language:'اللغة'}, cta:{login:'دخول', signup:'تسجيل'},
+        cats:{title:'الفئات',items:[
+          {ico:'🍲',title:'أطعمة', slogan:'منزلي خالٍ من الإضافات'},
+          {ico:'🎂',title:'كيك وحلويات', slogan:'لحظات حلوة'},
+          {ico:'🫙',title:'مربيات • مخللات • صلصات', slogan:'مخلل بمذاق متوازن'},
+          {ico:'🌾',title:'مونة / شتوية', slogan:'تقاليد على المائدة'},
+          {ico:'🥗',title:'حمية/نباتي/خالٍ من الغلوتين', slogan:'خفيف ولذيذ ومتوازن'},
+          {ico:'💍',title:'مجوهرات', slogan:'بسيط وأنيق وشخصي'},
+          {ico:'👶',title:'أطفال', slogan:'مونتسوري في البيت'},
+          {ico:'🧶',title:'حياكة', slogan:'جاهز للشتاء'},
+          {ico:'✂️',title:'خياطة', slogan:'حِرفة في الأزياء'},
+          {ico:'🧵',title:'مكرمية وديكور', slogan:'أناقة على الجدار'},
+          {ico:'🏠',title:'ديكور منزلي', slogan:'دفء بلمسة يدوية'},
+          {ico:'🕯️',title:'شموع وروائح', slogan:'هدايا يدوية جاهزة'},
+          {ico:'🧼',title:'صابون طبيعي وتجميل', slogan:'نظافة بلا إضافات'},
+          {ico:'🧸',title:'أميغورومي ولُعب', slogan:'شخصيات مصنوعة يدويًا'}
+        ]},
+        trust:[
+          {ico:'🔒',title:'دفع آمن', slogan:'أموالك في أمان'},
+          {ico:'📦',title:'شحن قابل للتتبع', slogan:'تتبّع طردك بأمان'},
+          {ico:'🤝',title:'بائعون موثوقون', slogan:'تسوق بثقة'},
+          {ico:'🛡️',title:'حماية المشتري', slogan:'نقف معك عند أي مشكلة'},
+          {ico:'💬',title:'تواصل سريع', slogan:'اسأل قبل الطلب'}
+        ],
+        list:{title:'أحدث العروض', more:'المزيد'},
+        auth:{title:'تابع عبر حسابك',close:'إغلاق',loginTab:'تسجيل الدخول',signupTab:'إنشاء حساب',email:'البريد الإلكتروني',password:'كلمة المرور',password2:'تأكيد كلمة المرور',login:'دخول',signup:'تسجيل',forgot:'نسيت كلمة المرور'},
+        legal:{contact:'اتصال / إمبريسوم',privacy:'سياسة الخصوصية',kvkk:'إشعار KVKK',cookies:'سياسة الكوكيز',terms:'شروط الاستخدام',distance:'عقد البيع عن بُعد',pref:'نموذج المعلومات المسبقة',delivery:'التسليم والإرجاع',rules:'قواعد المجتمع',banned:'منتجات محظورة',all:'جميع النصوص القانونية'}
+      }
+    };
 
-    // Auth modal helper
+    let LANG = localStorage.getItem('ue_lang') || 'tr';
+
+    function setDir(){
+      const html=document.documentElement; html.lang=LANG; html.dir=(LANG==='ar')?'rtl':'ltr';
+    }
+    function tget(path){
+      const seg = path.split('.'); let cur = I18N[LANG] || I18N.tr; for(const k of seg){ cur = (cur||{})[k]; }
+      return (cur==null)?'':String(cur);
+    }
+    function applyText(){
+      document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = tget(el.getAttribute('data-i18n')); });
+      document.querySelectorAll('[data-i18n-attr]').forEach(el=>{
+        const pairs = el.getAttribute('data-i18n-attr')?.split(',')||[];
+        pairs.forEach(p=>{ const [attr, key] = p.split(':'); if(attr&&key){ el.setAttribute(attr.trim(), tget(key.trim())); }});
+      });
+      document.title = tget('meta.title') || document.title;
+    }
+
+    function renderLane(){
+      const track = document.getElementById('laneTrack'); if(!track) return; track.innerHTML='';
+      // Kaynaklar: kategori kartları + güven sloganları (interleave)
+      const base = (I18N[LANG]||I18N.tr).cats.items.map(x=>({ico:x.ico,title:x.title,slogan:x.slogan}));
+      const trust = (I18N[LANG]||I18N.tr).trust || [];
+      // Diziyi: cat1, trust1, cat2, trust2 ... şeklinde harmanla
+      const slides=[]; const L=Math.max(base.length, trust.length);
+      for(let i=0;i<L;i++){ if(base[i]) slides.push(base[i]); if(trust[i]) slides.push(trust[i]); }
+      if(!slides.length){ slides.push({ico:'🔒',title:'Güvenli Alışveriş',slogan:'Paranız ve veriniz güvende'}); }
+
+      // Tek panel, içerik her 5 sn değişir
+      const panel=document.createElement('div'); panel.className='panel';
+      panel.innerHTML = `<div class="panel-ico"></div><div class="panel-body"><div class="panel-title"></div><div class="panel-slogan"></div></div>`;
+      track.appendChild(panel);
+      const elIco = panel.querySelector('.panel-ico');
+      const elT   = panel.querySelector('.panel-title');
+      const elS   = panel.querySelector('.panel-slogan');
+
+      let idx=0; const show=(i)=>{
+        const it = slides[i % slides.length];
+        // GOLD daha parlak
+        panel.style.background = `linear-gradient(90deg, var(--gold3), var(--gold1), var(--gold2))`;
+        elIco.textContent = it.ico || '✨';
+        elT.textContent   = it.title || '';
+        elS.textContent   = it.slogan || '';
+        panel.classList.remove('enter'); void panel.offsetWidth; panel.classList.add('enter');
+      };
+
+    function initLangSel(){
+      const sel=document.getElementById('langSel'); if(!sel) return; sel.value = LANG;
+      sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); setDir(); applyText(); renderLane(); };
+    }
+
+    // Auth modal aç/kapat ve TR hata metinleri
     (function(){
       const dlg = document.getElementById('authBox');
       const closeBtn = document.getElementById('authClose');
@@ -158,100 +361,40 @@
       const paneLogin = document.getElementById('paneLogin');
       const paneSignup = document.getElementById('paneSignup');
 
-      function open(which='login'){
-        if(!dlg.open) dlg.showModal();
-        sel(which);
-      }
+      function open(which='login'){ if(!dlg.open) dlg.showModal(); sel(which); }
       function close(){ if(dlg.open) dlg.close(); }
-      function sel(which){
-        const isLogin = which==='login';
-        tabLogin.setAttribute('aria-selected', isLogin);
-        tabSignup.setAttribute('aria-selected', !isLogin);
-        paneLogin.style.display = isLogin ? 'block' : 'none';
-        paneSignup.style.display = isLogin ? 'none' : 'block';
-      }
+      function sel(which){ const login=(which==='login'); tabLogin.setAttribute('aria-selected',login); tabSignup.setAttribute('aria-selected',!login); paneLogin.style.display=login?'block':'none'; paneSignup.style.display=login?'none':'block'; }
 
-      document.addEventListener('ue-open-auth', (e)=>{
-        const which = e.detail?.which || 'login';
-        open(which);
-        // redirect paramını dialog dataset’ine koy
-        if(e.detail?.redirect) dlg.dataset.redirect = e.detail.redirect;
-      });
+      document.addEventListener('ue-open-auth',(e)=>{ open(e.detail?.which||'login'); if(e.detail?.redirect) dlg.dataset.redirect=e.detail.redirect; });
+      document.querySelector('[data-act="open-login"]').onclick=()=>open('login');
+      document.querySelector('[data-act="open-signup"]').onclick=()=>open('signup');
+      tabLogin.onclick=()=>sel('login'); tabSignup.onclick=()=>sel('signup'); closeBtn.onclick=close;
 
-      document.querySelector('[data-act="open-login"]').onclick = ()=> open('login');
-      document.querySelector('[data-act="open-signup"]').onclick = ()=> open('signup');
-      tabLogin.onclick = ()=> sel('login');
-      tabSignup.onclick = ()=> sel('signup');
-      closeBtn.onclick = close;
+      const TR_ERR={
+        'auth/invalid-email':'E‑posta geçersiz.','auth/user-disabled':'Hesap devre dışı.','auth/user-not-found':'Bu e‑posta ile kullanıcı bulunamadı.','auth/wrong-password':'Şifre hatalı.','auth/too-many-requests':'Çok fazla deneme. Lütfen sonra tekrar deneyin.','default':'İşlem başarısız. Lütfen tekrar deneyin.'};
+      const mapErr=(e)=>TR_ERR[e?.code]||e?.message||TR_ERR.default;
 
-      // URL param ile açılış
-      const u = new URL(location.href);
-      const pAuth = u.searchParams.get('auth');
-      const pRed = u.searchParams.get('redirect');
-      if(pAuth){
-        const ev = new CustomEvent('ue-open-auth',{ detail:{ which:pAuth, redirect:pRed }});
-        document.dispatchEvent(ev);
-      }
-
-      // TR hata mesajları
-      const TR_ERR = {
-        'auth/invalid-email': 'E‑posta geçersiz.',
-        'auth/user-disabled': 'Hesap devre dışı.',
-        'auth/user-not-found': 'Bu e‑posta ile kullanıcı bulunamadı.',
-        'auth/wrong-password': 'Şifre hatalı.',
-        'auth/too-many-requests': 'Çok fazla deneme. Lütfen sonra tekrar deneyin.',
-        'default': 'İşlem başarısız. Lütfen tekrar deneyin.'
+      document.getElementById('loginSubmit').onclick=async()=>{
+        const email=document.getElementById('lemail').value.trim();
+        const pass=document.getElementById('lpass').value; const box=document.getElementById('lmsg'); box.textContent='…';
+        try{ const { signInWithEmailAndPassword }=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js'); await signInWithEmailAndPassword(auth,email,pass); box.textContent='Giriş başarılı ✔︎'; const back=dlg.dataset.redirect||new URL(location.href).searchParams.get('redirect'); setTimeout(()=>{ location.href= back || location.href.split('?')[0]; },300);}catch(err){ box.textContent=mapErr(err); }
       };
-      const mapErr = (e)=> TR_ERR[e?.code] || e?.message || TR_ERR.default;
-
-      // Giriş
-      document.getElementById('loginSubmit').onclick = async ()=>{
-        const email = document.getElementById('lemail').value.trim();
-        const pass  = document.getElementById('lpass').value;
-        const box   = document.getElementById('lmsg'); box.textContent='…';
-        try{
-          const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-          await signInWithEmailAndPassword(auth, email, pass);
-          box.textContent='Giriş başarılı ✔︎';
-          const back = document.getElementById('authBox').dataset.redirect || new URL(location.href).searchParams.get('redirect');
-          setTimeout(()=>{ location.href = back || location.href.split('?')[0]; }, 300);
-        }catch(err){ box.textContent = mapErr(err); }
+      document.getElementById('forgotBtn').onclick=async()=>{
+        const email=document.getElementById('lemail').value.trim(); const box=document.getElementById('lmsg'); if(!email){ box.textContent='E‑posta giriniz.'; return; }
+        try{ const { sendPasswordResetEmail }=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js'); await sendPasswordResetEmail(auth,email); box.textContent='Sıfırlama e‑postası gönderildi.'; }catch(err){ box.textContent=mapErr(err); }
       };
-
-      // Şifre sıfırlama
-      document.getElementById('forgotBtn').onclick = async ()=>{
-        const email = document.getElementById('lemail').value.trim();
-        const box   = document.getElementById('lmsg');
-        if(!email){ box.textContent='E‑posta giriniz.'; return; }
-        try{
-          const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-          await sendPasswordResetEmail(auth, email);
-          box.textContent='Sıfırlama e‑postası gönderildi.';
-        }catch(err){ box.textContent = mapErr(err); }
-      };
-
-      // Kayıt
-      document.getElementById('signupSubmit').onclick = async ()=>{
-        const name = document.getElementById('sname').value.trim();
-        const surname = document.getElementById('ssurname').value.trim();
-        const email = document.getElementById('semail').value.trim();
-        const pass  = document.getElementById('spass').value;
-        const pass2 = document.getElementById('spass2').value;
-        const box   = document.getElementById('smsg');
-        if(pass!==pass2){ box.textContent='Şifreler eşleşmiyor.'; return; }
-        box.textContent='…';
-        try{
-          const { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-          const res = await createUserWithEmailAndPassword(auth, email, pass);
-          await updateProfile(res.user, { displayName: `${name} ${surname}`.trim() });
-          try{ await sendEmailVerification(res.user); }catch{}
-          box.textContent='Kayıt başarılı. Lütfen e‑posta doğrulamasını tamamlayınız.';
-        }catch(err){ box.textContent = mapErr(err); }
+      document.getElementById('signupSubmit').onclick=async()=>{
+        const name=document.getElementById('sname').value.trim(); const surname=document.getElementById('ssurname').value.trim(); const email=document.getElementById('semail').value.trim(); const pass=document.getElementById('spass').value; const pass2=document.getElementById('spass2').value; const box=document.getElementById('smsg'); if(pass!==pass2){ box.textContent='Şifreler eşleşmiyor.'; return; }
+        try{ box.textContent='…'; const { createUserWithEmailAndPassword, updateProfile, sendEmailVerification }=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js'); const res=await createUserWithEmailAndPassword(auth,email,pass); await updateProfile(res.user,{ displayName:`${name} ${surname}`.trim()}); try{ await sendEmailVerification(res.user);}catch{} box.textContent='Kayıt başarılı. Lütfen e‑posta doğrulamasını tamamlayınız.'; }catch(err){ box.textContent=mapErr(err); }
       };
     })();
+
+    // Başlat
+    function boot(){ setDir(); applyText(); initLangSel(); renderLane(); const y=document.getElementById('yr'); if(y) y.textContent=new Date().getFullYear(); }
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else boot();
   </script>
 
-  <!-- Sayfa davranışları (kategori/ilanlar) -->
+  <!-- İlan ve kategori davranışları (liste çekme, vitrin önceliği, redirect) -->
   <script src="/js/index.page.js"></script>
 </body>
 </html>
