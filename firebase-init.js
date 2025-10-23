@@ -1,6 +1,6 @@
-// firebase-init.js (ESM CDN, idempotent init + global köprüler + helperlar)
+// firebase-init.js (ESM, idempotent init + Cloudinary helpers) — 2025-10-23
 
-// === Firebase CDN (ESM) ===
+// === Firebase (CDN ESM) ===
 import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
 import {
   getAuth,
@@ -16,11 +16,11 @@ import {
   getStorage, ref as _storageRef, uploadBytes, getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
 import {
-  getMessaging, getToken, onMessage
+  getMessaging, getToken, onMessage, isSupported as messagingIsSupported
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
 
-// === PROJE CONFIG ===
-const firebaseConfig = {
+// === Firebase Config (istersen window.__FIREBASE_CONFIG ile override edebilirsin)
+const firebaseConfig = (window.__FIREBASE_CONFIG) || {
   apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
   authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
   projectId: "flutter-ai-playground-38ddf",
@@ -29,80 +29,140 @@ const firebaseConfig = {
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
 
-// === Init ===
+// === Init (idempotent) ===
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-self.app = app;
-self.auth = auth;
-self.db = db;
-self.storage = storage;
+// Global fallbacks (index.html kodun self.* bekliyor)
+self.app = app; self.auth = auth; self.db = db; self.storage = storage;
 
-// =================== FCM Messaging ===================
-try {
-  const messaging = getMessaging(app);
-  self.messaging = messaging;
+// =================== Cloudinary (ozneglobal) ===================
+// Not: API SECRET asla frontend'e konulmaz.
+// Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
+const CLOUD_NAME = 'ozneglobal';        // Cloud name (hesabında gözüken)
+const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
+const UPLOAD_PRESET = 'ue_unsigned';    // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
-  if ('Notification' in window) {
-    Notification.requestPermission().then(async (perm) => {
-      if (perm === 'granted') {
-        try {
-          // 🔸 senin gerçek VAPID Public Key’in
-          const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
+// Yardımcı sabitler
+const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
+const CL_IMAGE = `${CL_BASE}/image`;
+const CL_FETCH = `${CL_IMAGE}/fetch`;
+const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
 
-          // 🔧 Service Worker docs/ altında
-          let swReg = null;
-          try {
-            if ('serviceWorker' in navigator) {
-              swReg = await navigator.serviceWorker.register('/docs/firebase-messaging-sw.js', { scope: '/docs/' });
-              console.debug('[fcm] service worker registered (docs):', swReg);
-            }
-          } catch (swErr) {
-            console.warn('[fcm] service worker register failed (docs):', swErr);
-          }
-
-          const token = await getToken(messaging, {
-            vapidKey,
-            serviceWorkerRegistration: swReg || undefined
-          });
-
-          if (token && self.auth?.currentUser?.uid) {
-            await setDoc(doc(db, 'fcmTokens', token), {
-              uid: self.auth.currentUser.uid,
-              active: true,
-              createdAt: new Date().toISOString()
-            });
-            console.debug('[fcm] token kaydedildi:', token);
-          } else {
-            console.debug('[fcm] token alınamadı veya kullanıcı yok');
-          }
-        } catch (err) {
-          console.warn('[fcm] token alınamadı', err);
-        }
-      }
-    }).catch(()=>{});
-  }
-
-  onMessage(messaging, (payload) => {
-    console.debug('[fcm] ön plan bildirimi:', payload);
-    const { title, body } = payload.notification || {};
-    if (title || body) {
-      try { new Notification(title || 'Yeni mesaj', { body }); } catch {}
-    }
-  });
-} catch (e) {
-  console.warn('[fcm] başlatılamadı', e);
-}
-
-// =================== Yardımcılar ===================
-self.onAuthStateChanged = (a, b) => {
-  if (typeof a === 'function') return _onAuthStateChanged(auth, a);
-  return _onAuthStateChanged(a || auth, b);
+// Global'e aktar (mevcut kodunla uyumlu)
+self.CLOUDINARY_CLOUD = CLOUD_NAME;
+self.CLOUDINARY = {
+  cloud: CLOUD_NAME,
+  apiKey: CLOUD_API_KEY,
+  uploadPreset: UPLOAD_PRESET,
+  base: CL_BASE,
+  imageBase: CL_IMAGE,
+  fetchBase: CL_FETCH,
+  uploadEndpoint: CL_UPLOAD
 };
 
-self.signInWithEmailAndPassword = (email, pass) => _onAuthStateChanged ? _signInWithEmailAndPassword(auth, email, pass) : Promise.reject('auth not ready');
+// Basit dönüştürme string'i üret (ör: "c_fill,w_600,h_600,q_auto,f_auto")
+function clTx(opts = {}) {
+  const {
+    w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr,
+    radius, ar, bg
+  } = opts;
+  const parts = [];
+  if (c) parts.push(`c_${c}`);
+  if (w) parts.push(`w_${w}`);
+  if (h) parts.push(`h_${h}`);
+  if (ar) parts.push(`ar_${ar}`);
+  if (g) parts.push(`g_${g}`);
+  if (radius) parts.push(`r_${radius}`);
+  if (bg) parts.push(`b_${bg}`);
+  if (dpr) parts.push(`dpr_${dpr}`);
+  if (q) parts.push(`q_${q}`);
+  if (f) parts.push(`f_${f}`);
+  return parts.join(',');
+}
+
+// Public ID ile URL (image/upload)
+self.clUrl = function clUrl(publicId, opts = {}) {
+  const tx = clTx(opts);
+  return tx ? `${CL_IMAGE}/upload/${tx}/${publicId}` : `${CL_IMAGE}/upload/${publicId}`;
+};
+
+// Harici URL’i fetch ile dönüştür (image/fetch)
+self.clFetch = function clFetch(srcUrl, opts = {}) {
+  const tx = clTx(opts);
+  const encoded = encodeURIComponent(srcUrl);
+  return tx ? `${CL_FETCH}/${tx}/${encoded}` : `${CL_FETCH}/${encoded}`;
+};
+
+// UNSIGNED upload (form file veya blob)
+self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'uploads') {
+  const form = new FormData();
+  form.append('upload_preset', UPLOAD_PRESET);
+  form.append('file', fileOrBlob);
+  if (folder) form.append('folder', folder);
+  // Opsiyonel: public_id, tags, context vs. ekleyebilirsin
+  const res = await fetch(CL_UPLOAD, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
+  return res.json(); // { public_id, secure_url, ... }
+};
+
+// === Örnek kullanımlar ===
+// Profil resmi public_id'den 600x600 kare görsel:
+self.avatarUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:600, h:600, q:'auto', f:'auto', radius:'max' });
+// İlân kapak görseli (uzun kenarı 1000, otomatik kalite/format):
+self.coverUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:1000, h:1000, q:'auto', f:'auto' });
+// Harici URL'den (S3/GDrive vb.) dönüştürerek sun:
+self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto', f:'auto' });
+
+// =================== FCM (guard'lı) ===================
+(async () => {
+  try {
+    const supported = await messagingIsSupported();
+    if (!supported) return;
+    if ('Notification' in window && Notification.permission === 'default') {
+      try { await Notification.requestPermission(); } catch {}
+    }
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const messaging = getMessaging(app);
+    self.messaging = messaging;
+
+    // Service Worker register (docs/ sonra kök)
+    let swReg = null;
+    if ('serviceWorker' in navigator) {
+      try {
+        swReg = await navigator.serviceWorker.register('/docs/firebase-messaging-sw.js', { scope: '/docs/' });
+      } catch {
+        try { swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js'); } catch {}
+      }
+    }
+
+    // VAPID Key — kendi public key’in
+    const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
+    let token = null;
+    try { token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined }); } catch {}
+    if (token && auth?.currentUser?.uid) {
+      try {
+        await setDoc(doc(db, 'fcmTokens', token), {
+          uid: auth.currentUser.uid, active: true, createdAt: new Date().toISOString()
+        });
+      } catch {}
+    }
+
+    try {
+      onMessage(messaging, (payload) => {
+        const { title, body } = payload?.notification || {};
+        if (title || body) { try { new Notification(title || 'Yeni mesaj', { body }); } catch {} }
+      });
+    } catch {}
+  } catch {}
+})();
+
+// =================== Yardımcılar ===================
+self.onAuthStateChanged = (a, b) => (typeof a === 'function' ? _onAuthStateChanged(auth, a) : _onAuthStateChanged(a || auth, b));
+self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
 self.signOutNow = () => _signOut(auth);
 
 self.storageRef       = (path) => _storageRef(storage, path);
@@ -110,135 +170,17 @@ self._uploadBytes     = (refObj, file) => uploadBytes(refObj, file);
 self._getDownloadURL  = (refObj) => getDownloadURL(refObj);
 
 self.firebase = Object.assign(self.firebase || {}, {
-  setDoc: (refOrPath, data, opts) => {
-    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
-    return setDoc(r, data, opts);
-  },
-  updateDoc: (refOrPath, data) => {
-    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
-    return updateDoc(r, data);
-  },
-  getDoc: (refOrPath) => {
-    const r = (typeof refOrPath === 'string') ? doc(db, ...refOrPath.split('/')) : refOrPath;
-    return getDoc(r);
-  },
+  setDoc: (refOrPath, data, opts) => setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
+  updateDoc: (refOrPath, data)    => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
+  getDoc: (refOrPath)             => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
   serverTimestamp: () => serverTimestamp(),
   col: (path) => collection(db, ...path.split('/')),
   q:   (...args) => query(...args),
   where, orderBy, limit,
 });
-
 self.getDocs = getDocs;
-self.CLOUDINARY_CLOUD = self.CLOUDINARY_CLOUD || 'YOUR_CLOUD_NAME';
-self.__fb = self.__fb || {
-  app, auth, db, storage,
-  onAuthStateChanged: (...args) => _onAuthStateChanged(...args)
-};
 
-const __briefCache = new Map();
-self.getUserBrief = async function getUserBrief(uid){
-  if (!uid) return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
-  if (__briefCache.has(uid)) return __briefCache.get(uid);
-  try{
-    const snap = await getDoc(doc(db, 'users', uid));
-    const d = snap.exists() ? (snap.data()||{}) : {};
-    const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Kullanıcı';
-    const brief = { name, avatar: d.avatar||d.photoURL||'/assets/img/avatar-default.png' };
-    __briefCache.set(uid, brief);
-    return brief;
-  }catch{
-    return { name:'Kullanıcı', avatar:'/assets/img/avatar-default.png' };
-  }
-};
-
-self.computePairKey = (a, b)=> [a||'', b||''].sort().join('_');
-self.resolveOtherUid = (me, participants = [], otherUidMap = {})=>{
-  if (otherUidMap && otherUidMap[me]) return otherUidMap[me];
-  if (Array.isArray(participants)) {
-    const other = participants.find(x => x && x !== me);
-    if (other) return other;
-  }
-  return '';
-};
-
+// Ready bayrağı
 self.__fbReady = true;
 try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
-
 console.debug('[firebase-init] ready:', app.options.projectId);
-
-if (!self.__ue_notifierBound) {
-  self.__ue_notifierBound = true;
-  const dingSrc = (location.pathname.startsWith('/docs/')) ? './notify.wav' : '/notify.wav';
-  const __ue_ding = new Audio(dingSrc);
-  let __ue_audioUnlocked = false;
-  function __ue_unlockAudio(){
-    if (__ue_audioUnlocked) return;
-    __ue_ding.muted = true;
-    __ue_ding.play().then(()=>{
-      __ue_ding.pause(); __ue_ding.currentTime = 0;
-      __ue_ding.muted = false;
-      __ue_audioUnlocked = true;
-    }).catch(()=>{});
-  }
-  ['click','keydown','touchstart','pointerdown'].forEach(ev=>{
-    window.addEventListener(ev, __ue_unlockAudio, { once:true, capture:true });
-  });
-
-  const __UE_LS_SEEN = (uid)=> `ue.lastSeen.${uid}`;
-  function __ue_loadSeen(uid){ try{ return JSON.parse(localStorage.getItem(__UE_LS_SEEN(uid))||'{}'); }catch{ return {}; } }
-  function __ue_saveSeen(uid, obj){ try{ localStorage.setItem(__UE_LS_SEEN(uid), JSON.stringify(obj)); }catch{} }
-
-  function __ue_desktopNotify(title, body){
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-    try{ new Notification(title || 'Yeni mesaj', { body: body||'', icon: (location.pathname.startsWith('/docs/')? './üreteneller.png' : '/üreteneller.png') }); }catch{}
-  }
-
-  if ('Notification' in window && Notification.permission === 'default'){
-    Notification.requestPermission().catch(()=>{});
-  }
-
-  async function __ue_startGlobalNotifier(user){
-    const uid = user?.uid;
-    if (!uid || !db) return;
-    const qThreads = query(
-      collection(db, 'messages'),
-      where('participants','array-contains', uid)
-    );
-    onSnapshot(qThreads, async (snap)=>{
-      const seen = __ue_loadSeen(uid);
-      const rows = [];
-      snap.forEach(ds => {
-        const d = ds.data()||{};
-        rows.push({ id: ds.id, data: d });
-      });
-      rows.sort((a,b)=>{
-        const ta = a.data.lastAt?.toMillis ? a.data.lastAt.toMillis() : (a.data.lastAt ? new Date(a.data.lastAt).getTime() : 0);
-        const tb = b.data.lastAt?.toMillis ? b.data.lastAt.toMillis() : (b.data.lastAt ? new Date(b.data.lastAt).getTime() : 0);
-        return (tb||0) - (ta||0);
-      });
-
-      for (const row of rows){
-        const d = row.data;
-        const threadId = row.id;
-        try{
-          const participants = Array.isArray(d.participants) ? d.participants : [];
-          const me = uid;
-          const peer = self.resolveOtherUid(me, participants, d.otherUidMap||{});
-          let patch = {};
-          if (!d.pairKey && peer) patch.pairKey = self.computePairKey(me, peer);
-          if ((!d.otherUidMap || !d.otherUidMap[me] || !d.otherUidMap[peer]) && peer)
-            patch.otherUidMap = Object.assign({}, d.otherUidMap||{}, { [me]: peer, [peer]: me });
-          if (Object.keys(patch).length)
-            updateDoc(doc(db,'messages',threadId), patch).catch(()=>{});
-        }catch{}
-      }
-    });
-  }
-
-  try{
-    self.onAuthStateChanged(auth, (u)=>{ if (u) __ue_startGlobalNotifier(u); });
-  }catch(e){
-    console.warn('[notify] onAuthStateChanged bağlanamadı:', e);
-  }
-}
