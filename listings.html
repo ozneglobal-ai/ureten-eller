@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İlanlar • Üreten Eller</title>
+  <meta name="description" content="Üreten Eller ilanları: kategori/alt kategori, il/ilçe, akıllı fiyat aralığı ve arama ile filtreleyin. Vitrin ilk 20, toplam 40 ilan gösterilir." />
+  <link rel="icon" href="/assets/icons/favicon.png" />
+
+  <style>
+    :root{
+      --bg:#ffffff;           /* Beyaz arka plan */
+      --ink:#111111;          /* Temel metin */
+      --muted:#6b7280;        /* Açıklama */
+      --line:#e5e7eb;         /* Kenarlık */
+      --soft:#f8fafc;         /* Yumuşak arka plan */
+      --chip:#eef2ff;
+      --trust1:#0f172a;       /* Kayan panel koyu zemin */
+      --trust2:#111827;
+
+      /* Gerçek altın parlak buton */
+      --gold1:#D4AF37;  /* altın */
+      --gold2:#FFD700;  /* canlı altın */
+      --gold3:#FFB000;  /* sıcak parıltı */
+      --goldShadow: 0 6px 20px rgba(212,175,55,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1400px;margin:0 auto;padding:0 1rem}
+
+    /* Üst çubuk */
+    .top{display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
+    .logo{display:flex;align-items:center;gap:.6rem;font-weight:900}
+    .logo img{width:32px;height:32px}
+    .spacer{flex:1}
+    .commission{font-weight:900;color:#111;background:linear-gradient(90deg,#fff, #fff);padding:.25rem .5rem;border-radius:8px;white-space:nowrap}
+    .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem .95rem;border-radius:12px;border:0;cursor:pointer;font-weight:900;letter-spacing:.2px;color:#fff;user-select:none}
+    .btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold1));box-shadow:var(--goldShadow)}
+    .btn.gold:before{content:"";position:absolute;inset:0;border-radius:12px;background:linear-gradient(120deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-100%);}
+    .btn.gold:hover:before{animation:shine 1.2s ease}
+    @keyframes shine{to{transform:translateX(100%)}}
+
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:1rem;margin:1rem 0}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+    /* Sol panel (arama/filtre) */
+    .sidebar{border:1px solid var(--line);border-radius:16px;padding:1rem;background:#fff;position:sticky;top:.75rem;height:fit-content}
+    .side-title{font-weight:900;margin:0 0 .25rem}
+    .field{display:flex;flex-direction:column;gap:.35rem;margin:.55rem 0}
+    input,select{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.55rem .6rem;color:var(--ink)}
+    .cat-list{display:flex;flex-direction:column;gap:.25rem;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.5rem}
+    .cat-link{padding:.4rem .5rem;border-radius:8px;cursor:pointer}
+    .cat-link:hover{background:var(--soft)}
+    .cat-link.active{background:linear-gradient(180deg,var(--gold2),var(--gold1));color:#111;border:1px solid var(--gold1);box-shadow:var(--goldShadow);transform:translateX(2px)}
+    .cat-link.active::after{content:'✓';float:right;font-weight:900}
+
+    /* Ana bölüm */
+    .main{display:flex;flex-direction:column;gap:1rem}
+
+    /* Sağdan sola kayan bilgi paneli */
+    .slidewrap{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,var(--trust1),var(--trust2));color:#fff}
+    .slide-track{display:flex;will-change:transform;transition:transform .6s ease}
+    .slide{min-width:100%;padding:1rem 1.25rem;display:grid;gap:.25rem}
+    .slide h3{margin:.1rem 0 0;color:#fff}
+    .slide p{margin:.2rem 0;color:#e5e7eb}
+    .dots{position:absolute;right:.6rem;bottom:.6rem;display:flex;gap:.3rem}
+    .dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;opacity:.8}
+    .dot[aria-current="true"]{background:#fff}
+
+    /* İlan grid (toplam 40, mobil 2, tablet/masaüstü 4) */
+    .listGrid{display:grid;gap:.85rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media(max-width:1100px){.listGrid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:740px){.listGrid{grid-template-columns:repeat(2,1fr)}}
+    .item{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+    .thumbwrap{position:relative}
+    .thumb{aspect-ratio:1/1;background:#f3f4f6;background-size:cover;background-position:center}
+    .badge{position:absolute;left:.55rem;top:.55rem;background:linear-gradient(180deg,var(--gold2),var(--gold1));color:#111;border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:900;box-shadow:var(--goldShadow)}
+    .meta{padding:.6rem .7rem}
+    .title{font-weight:900}
+    .mini{color:var(--muted)}
+
+    footer{margin:1.25rem 0 0;background:#f9fafb;border-top:1px solid var(--line)}
+    .foot{max-width:1200px;margin:0 auto;padding:1rem}
+    .legal{display:grid;gap:.6rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(min-width:760px){.legal{grid-template-columns:repeat(5,1fr)}}
+    .legal a{display:block;color:#374151}
+  </style>
+
+  <!-- Firebase init (senin dosyan) -->
+  <script type="module" src="/firebase-init.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <!-- ÜST BAR -->
+    <div class="top">
+      <div class="logo">
+        <img src="/assets/icons/ureteneller.png" alt="Üreten Eller" />
+        <span style="color:#111">Üreten Eller</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="commission">Üreten Eller <u>kesinlikle</u> sizlerden komisyon almaz</div>
+      <button class="btn gold" id="openSignup">Ücretsiz Kaydol</button>
+      <button class="btn gold" id="openLogin">Giriş Yap</button>
+    </div>
+
+    <!-- SAYFA YAPISI -->
+    <div class="layout">
+      <!-- SOL: Arama & filtre -->
+      <aside class="sidebar">
+        <h3 class="side-title">Arama & Filtre</h3>
+        <div class="field">
+          <label for="q">Ne arıyorsun?</label>
+          <input id="q" placeholder="örn. cheesecake, bebek battaniyesi" />
+        </div>
+
+        <div class="field">
+          <label>Kategori</label>
+          <div class="cat-list" id="sideCats"></div>
+        </div>
+
+        <div class="field">
+          <label for="subcatSel">Alt kategori</label>
+          <select id="subcatSel"><option value="">Seçiniz</option></select>
+        </div>
+
+        <div class="field">
+          <label for="citySel">İl</label>
+          <select id="citySel"><option value="">Tümü</option></select>
+        </div>
+
+        <div class="field">
+          <label for="districtInput">İlçe</label>
+          <input id="districtInput" placeholder="İlçeyi yazın" />
+        </div>
+
+        <div class="field">
+          <label>Akıllı Fiyat Aralığı</label>
+          <div style="display:flex;gap:.4rem">
+            <select id="minPrice">
+              <option value="">Min</option>
+              <option value="50">50₺</option><option value="100">100₺</option>
+              <option value="250">250₺</option><option value="500">500₺</option>
+            </select>
+            <select id="maxPrice">
+              <option value="">Max</option>
+              <option value="250">250₺</option><option value="500">500₺</option>
+              <option value="1000">1000₺</option><option value="2500">2500₺</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn gold" id="applyFilters">Filtrele</button>
+      </aside>
+
+      <!-- SAĞ: İçerik -->
+      <main class="main">
+        <!-- Sağdan sola kayan panel -->
+        <section class="slidewrap" aria-label="Bilgi Paneli">
+          <div class="slide-track" id="slideTrack"></div>
+          <div class="dots" id="slideDots"></div>
+        </section>
+
+        <!-- İlanlar -->
+        <section>
+          <div id="listGrid" class="listGrid" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Basit giriş/kayıt açıcı (index ile uyumlu çalışırsa) -->
+  <script>
+    document.getElementById('openSignup').onclick=()=>{ const e=new CustomEvent('ue-open-auth',{detail:'signup'}); window.dispatchEvent(e); };
+    document.getElementById('openLogin').onclick=()=>{ const e=new CustomEvent('ue-open-auth',{detail:'login'}); window.dispatchEvent(e); };
+  </script>
+
+  <!-- Veri & UI -->
+  <script>
+  (function(){
+    'use strict';
+    const $ = (id)=> document.getElementById(id);
+
+    /* === Kategoriler (ilan oluştur sayfasındaki ile UYUMLU) === */
+    const CATS = [
+      {id:'yemek', name:'🍲 Yemekler', subs:[
+        ['evyemek','Ev yemekleri'],['borek','Börek-çörek'],['corba','Çorba'],['zeytiny','Zeytinyağlı'],['pilav','Pilav-makarna'],['et','Et-tavuk'],['kahvalti','Kahvaltılık'],['meze','Meze'],['dondur','Dondurulmuş'],['cocuk','Çocuk öğünleri'],['diyetvegf','Diyet/vegan/gf']
+      ]},
+      {id:'pasta', name:'🎂 Pasta & Tatlı', subs:[
+        ['yaspasta','Yaş pasta'],['kek','Kek-cupcake'],['kurabiye','Kurabiye'],['serbetli','Şerbetli'],['sutlu','Sütlü'],['cheese','Cheesecake'],['diyettat','Diyet tatlı'],['cikolata','Çikolata/şekerleme'],['dogumset','Doğum günü setleri']
+      ]},
+      {id:'sos', name:'🫙 Reçel • Turşu • Sos', subs:[
+        ['recel','Reçel-marmelat'],['pekmez','Pekmez'],['tursu','Turşu'],['dom','Domates/biber sos'],['acios','Acı sos'],['salca','Salça'],['sirke','Sirke'],['konserve','Konserve']
+      ]},
+      {id:'yoresel', name:'🌾 Yöresel / Kışlık', subs:[
+        ['eriste','Erişte'],['tarhana','Tarhana'],['yufka','Yufka'],['manti','Mantı'],['kurut','Kurutulmuş sebze-meyve'],['salca2','Salça'],['sirke2','Sirke'],['konserve2','Konserve']
+      ]},
+      {id:'diet', name:'🥗 Diyet / Vegan / Glutensiz', subs:[
+        ['fit','Fit tabaklar'],['vegan','Vegan yemekler'],['gf','GF unlu mamuller'],['sekersiz','Şekersiz tatlı'],['keto','Keto ürün'],['protein','Protein atıştırmalık']
+      ]},
+      {id:'taki', name:'💍 Takı', subs:[['bileklik','Bileklik'],['kolye','Kolye'],['kupe','Küpe'],['yuzuk','Yüzük'],['halhal','Halhal'],['bros','Broş'],['set','Setler'],['isimli','İsimli/kişiye özel'],['makrome','Makrome'],['dogaltas','Doğal taş'],['recine','Reçine'],['telsarma','Tel sarma']]},
+      {id:'bebek', name:'👶 Bebek & Çocuk', subs:[['fig','Hayvan/bebek figürleri'],['cingirak','Çıngırak'],['dis','Diş kaşıyıcı örgü'],['bezoy','Bez oyuncak/kitap'],['montessori','Montessori oyuncak'],['set2','Setler'],['patik','Örgü patik-bere'],['battaniye','Bebek battaniyesi'],['onluk','Önlük-ağız bezi'],['lohusa','Lohusa seti'],['sac','Saç aksesuarı'],['giyim','El emeği kıyafet']]},
+      {id:'orgu', name:'🧶 Örgü / Triko', subs:[['hirka','Hırka'],['kazak','Kazak'],['atkibere','Atkı-bere'],['panco','Panço'],['sal','Şal'],['corap','Çorap'],['lif','Lif takımı'],['bebektk','Bebek takımı'],['yelek','Yelek'],['kirlen','Kırlent-örtü'],['igneoyasi','İğne oyası']]},
+      {id:'terzi', name:'✂️ Dikiş / Terzilik', subs:[['paca','Paça/onarım'],['fermuar','Fermuar değişimi'],['perde','Perde dikişi'],['nevresim','Nevresim-yastık'],['masa','Masa örtüsü'],['ozel','Özel dikim'],['kostum','Kostüm']]},
+      {id:'makrome', name:'🧵 Makrome & Dekor', subs:[['duvar','Duvar süsü'],['saksi','Saksı askısı'],['anahtar','Anahtarlık'],['avize','Avize'],['runner','Amerikan servis/runner'],['sepet','Sepet'],['raf','Raf/duvar dekoru']]},
+      {id:'evdekor', name:'🏠 Ev Dekor & Aksesuar', subs:[['kece','Keçe işleri'],['kirlent','Kırlent'],['kapi','Kapı süsü'],['tepsi','Tepsi süsleme'],['cerceve','Çerçeve'],['ruya','Rüya kapanı'],['tablo','Tablo']]},
+      {id:'mum', name:'🕯️ Mum & Kokulu Ürünler', subs:[['soya','Soya/balmumu mum'],['tas','Kokulu taş'],['sprey','Oda spreyi'],['tutsu','Tütsü'],['jel','Jel mum'],['hediye','Hediye seti']]},
+      {id:'kozmetik', name:'🧼 Doğal Sabun & Kozmetik', subs:[['zeytin','Zeytinyağlı sabun'],['bitkisel','Bitkisel sabunlar'],['sampuan','Katı şampuan'],['balm','Dudak balmı'],['krem','Krem/merhem'],['banyotuzu','Banyo tuzu'],['lavanta','Lavanta kesesi']]},
+      {id:'amigurumi', name:'🧸 Amigurumi & Oyuncak (dekor)', subs:[['anahtar2','Anahtarlık'],['magnet','Magnet'],['kolek','Koleksiyon figürü'],['dekorbebek','Dekor bebek/karakter']]}
+    ];
+
+    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
+
+    /* === Sol paneli doldur === */
+    const sideCats = $('sideCats');
+    function buildSideCats(){
+      sideCats.innerHTML = CATS.map(c=>`<div class="cat-link" data-id="${c.id}">${c.name}</div>`).join('');
+      sideCats.onclick = (e)=>{
+        const el = e.target.closest('.cat-link'); if(!el) return;
+        const id = el.getAttribute('data-id');
+        const cat = CATS.find(x=>x.id===id);
+        const subSel = $('subcatSel');
+        subSel.innerHTML = `<option value="">Seçiniz</option>` + (cat? cat.subs.map(s=>`<option value="${s[0]}">${s[1]}</option>`).join('') : '');
+        subSel.dataset.cat = id;
+        [...sideCats.querySelectorAll('.cat-link')].forEach(n=>n.classList.toggle('active', n===el));
+        // Aynı zamanda filtre uygula
+        applyFilters();
+      };
+    }
+
+    function fillProvinces(){
+      const citySel = $('citySel');
+      citySel.innerHTML = `<option value="">Tümü</option>` + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join('');
+    }
+
+    /* === Kayan Bilgi Paneli (15 sn) === */
+    const slides = [
+      {title:'Güven & Şeffaflık', text:'Üreten Eller kesinlikle komisyon almaz. Üretici ile alıcı doğrudan iletişim kurar.'},
+      {title:'Kategoriler', text:'Binlerce el emeği ürün: Yemekler, Pasta & Tatlı, Takı, Örgü, Makrome, Ev Dekor ve daha fazlası.'},
+      {title:'İpuçları', text:'Ürün açıklamasında malzemeyi, ölçüyü ve teslim süresini belirtin. Alıcıların güvenini artırır.'},
+      {title:'Kışlık & Yöresel', text:'Erişte, tarhana, reçel, turşu… Yerel üreticiden sofranıza.'}
+    ];
+    const track = $('slideTrack'); const dots = $('slideDots');
+    let slideIndex = 0; let slideTimer;
+    function renderSlides(){
+      track.innerHTML = slides.map(s=>`<article class="slide"><h3>${s.title}</h3><p>${s.text}</p></article>`).join('');
+      dots.innerHTML = slides.map((_,i)=>`<div class="dot" data-i="${i}" aria-current="${i===0}"></div>`).join('');
+      [...dots.children].forEach(d=>d.addEventListener('click',()=>goSlide(parseInt(d.dataset.i,10)||0)));
+    }
+    function goSlide(i){ slideIndex = (i+slides.length)%slides.length; track.style.transform = `translateX(-${slideIndex*100}%)`; [...dots.children].forEach((d,di)=>d.setAttribute('aria-current', di===slideIndex)); }
+    function startSlide(){ clearInterval(slideTimer); slideTimer = setInterval(()=>{ goSlide(slideIndex+1); }, 15000); }
+
+    /* === Firestore'dan ilan çekme === */
+    let FIRE_OK = false, app=null, db=null;
+
+    async function ensureFirebase(){
+      try{
+        // firebase-init.js bazı yardımcıları set etmiş olabilir
+        if(window.firebase && window.firebase.app){ app = window.firebase.app; }
+        if(window.firebase && window.firebase.db){ db = window.firebase.db; }
+        if(db){ FIRE_OK = true; return; }
+        // Yedek: CDN'den modülleri çekip mevcut app ile kullan
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+        const {
+          getFirestore, collection, getDocs, query, where, orderBy, limit
+        } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+        // Eğer init dosyası global config verdiyse kullanır; aksi halde hata atar
+        const cfg = window.UE_FIREBASE_CONFIG || window.firebaseConfig;
+        app = (window.firebaseApp) || (cfg ? initializeApp(cfg) : null);
+        if(!app) throw new Error('Firebase yapılandırması yok (firebase-init.js kontrol edin)');
+        db = getFirestore(app);
+        window.__ffns = { collection, getDocs, query, where, orderBy, limit };
+        FIRE_OK = true;
+      }catch(e){ console.warn('Firebase yok/başarısız (mock veri kullanılacak):', e); FIRE_OK=false; }
+    }
+
+    function byShowcaseFirstThenRecent(a,b){
+      const sa = !!a.showcase, sb = !!b.showcase; if(sa!==sb) return sa? -1:1;
+      const ta = (a.createdAt && a.createdAt.seconds) ? a.createdAt.seconds : a.createdAt || 0;
+      const tb = (b.createdAt && b.createdAt.seconds) ? b.createdAt.seconds : b.createdAt || 0;
+      return tb - ta; // yeni önce
+    }
+
+    function applyLocalFilters(all){
+      const q = $('q').value.trim().toLowerCase();
+      const cat = $('subcatSel').dataset.cat || '';
+      const sub = $('subcatSel').value || '';
+      const city = $('citySel').value || '';
+      const dist = ($('districtInput')?.value||'').trim().toLowerCase();
+      const min = parseInt(($('minPrice').value||''),10) || -Infinity;
+      const max = parseInt(($('maxPrice').value||''),10) || Infinity;
+      return all.filter(x=>{
+        if(q && !(`${x.title||''} ${x.description||''}`.toLowerCase().includes(q))) return false;
+        if(cat && x.category!==cat) return false;
+        if(sub && x.subcategory!==sub) return false;
+        if(city && x.province!==city) return false;
+        if(dist && !(`${(x.district||'')}`.toLowerCase().includes(dist))) return false;
+        if((x.price||0) < min) return false;
+        if((x.price||0) > max) return false;
+        return true;
+      });
+    }
+
+    function renderListings(items){
+      const grid = $('listGrid');
+      if(!items || !items.length){ grid.innerHTML = ""; return; }
+      grid.innerHTML = items.map(x=>{
+        const cover = x.coverUrl || (x.photos && x.photos[0]) || '/assets/placeholder.png';
+        const badge = x.showcase ? '<div class="badge">Vitrin</div>' : '';
+        const city = x.province || '';
+        const price = (x.price!=null) ? `${x.price.toLocaleString('tr-TR')}₺` : '';
+        return `
+          <article class="item">
+            <div class="thumbwrap">${badge}<div class="thumb" style="background-image:url('${cover}')"></div></div>
+            <div class="meta">
+              <div class="title">${(x.title||'İlan')}</div>
+              <div class="mini">${city} • ${price}</div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    async function fetchAndRender(){
+      await ensureFirebase();
+      let all = [];
+      if(FIRE_OK && db){
+        try{
+          // Mümkün olduğunca çok çekip (ör. 200), yerelde filtreleyip 40'a indiriyoruz
+          const { collection, getDocs, query, where, orderBy, limit } = window.__ffns || {};
+          if(collection){
+            const col = collection(db,'listings');
+            // Aktif/pending ayrımı projene göre değişebilir; burada status=='active' tercih edildi
+            let qref;
+            try{
+              qref = query(col, where('status','==','active'), orderBy('createdAt','desc'), limit(200));
+            }catch(_){
+              // Eğer indeks yoksa: sadece limit(200)
+              qref = query(col, limit(200));
+            }
+            const snap = await getDocs(qref);
+            snap.forEach(d=>{ const x=d.data(); x.id=d.id; all.push(x); });
+          }
+        }catch(e){ console.warn('Firestore sorgu hatası, mock kullanılıyor', e); all=[]; }
+      }
+      if(!all.length){
+        // MOCK veri (UI bozulmasın) — 40 örnek
+        all = Array.from({length:40}).map((_,i)=>({
+          id:'mock'+i,
+          title: i%3? 'El yapımı ürün '+(i+1) : 'Glutensiz kurabiye '+(i+1),
+          description:'…',
+          category: (i%2?'pasta':'yemek'),
+          subcategory: (i%2?'kurabiye':'evyemek'),
+          province: ['İstanbul','Ankara','İzmir','Bursa'][i%4],
+          price: (i%7+1)*50,
+          showcase: i<20,
+          photos:[],
+          coverUrl:'/assets/sample'+((i%5)+1)+'.jpg',
+          createdAt: Date.now()-i*3600*1000
+        }));
+      }
+
+      // Vitrin ilk 20, toplam 40
+      all.sort(byShowcaseFirstThenRecent);
+      const filtered = applyLocalFilters(all);
+      const final = filtered.slice(0,40);
+      renderListings(final);
+    }
+
+    /* === 10 dakikada bir yenile === */
+    function startAutoRefresh(){ setInterval(fetchAndRender, 10*60*1000); }
+
+    /* === Filtre düğmesi === */
+    function applyFilters(){ fetchAndRender(); }
+    $('applyFilters').addEventListener('click', applyFilters);
+    $('q').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); applyFilters(); } });
+
+    /* === Başlat === */
+    function boot(){
+      buildSideCats(); fillProvinces(); renderSlides(); startSlide(); fetchAndRender(); startAutoRefresh();
+    }
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+
+  })();
+  </script>
+
+  <footer>
+    <div class="foot">
+      <div class="legal">
+        <div>
+          <a href="/legal/iletisim-impressum.html">İletişim / Impressum</a>
+          <a href="/legal/gizlilik-politikasi.html">Gizlilik Politikası</a>
+          <a href="/legal/kvkk-aydinlatma.html">KVKK Aydınlatma</a>
+          <a href="/legal/cerez-politikasi.html">Çerez Politikası</a>
+        </div>
+        <div>
+          <a href="/legal/kullanim-sartlari.html">Kullanım Şartları</a>
+          <a href="/legal/mesafeli-satis-sozlesmesi.html">Mesafeli Satış Sözleşmesi</a>
+          <a href="/legal/on-bilgilendirme-formu.html">Ön Bilgilendirme Formu</a>
+          <a href="/legal/teslimat-iade-iptal.html">Teslimat & İade</a>
+        </div>
+        <div>
+          <a href="/legal/topluluk-kurallari.html">Topluluk Kuralları</a>
+          <a href="/legal/yasakli-urunler.html">Yasaklı Ürünler</a>
+          <a href="#">Tüm Yasal Metinler</a>
+        </div>
+        <div>
+          <span class="mini">© <span id="yr"></span> Üreten Eller</span>
+        </div>
+      </div>
+    </div>
+    <script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+  </footer>
+</body>
+</html>
