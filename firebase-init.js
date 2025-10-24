@@ -1,4 +1,4 @@
-// firebase-init.js (ESM, backward-compatible init + Cloudinary + FCM guards) — 2025-10-24
+// firebase-init.js (ESM, idempotent init + Cloudinary helpers) — 2025-10-23
 
 // === Firebase (CDN ESM) ===
 import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
@@ -19,13 +19,12 @@ import {
   getMessaging, getToken, onMessage, isSupported as messagingIsSupported
 } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
 
-// === Firebase Config (window.__FIREBASE_CONFIG ile override edilebilir)
+// === Firebase Config (istersen window.__FIREBASE_CONFIG ile override edebilirsin)
 const firebaseConfig = (window.__FIREBASE_CONFIG) || {
   apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
   authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
   projectId: "flutter-ai-playground-38ddf",
-  // ÖNEMLİ: Storage bucket domain'i appspot.com olmalı
-  storageBucket: "flutter-ai-playground-38ddf.appspot.com",
+  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.com",
   messagingSenderId: "4688234885",
   appId: "1:4688234885:web:a3cead37ea580495ca5cec"
 };
@@ -36,28 +35,29 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// === Global fallbacks (eski kod uyumluluğu: home.html dâhil) ===
-self.app = app;
-self.auth = auth;
-self.db = db;
+// Global fallbacks (index/home kodu self.* bekliyor)
+self.app = app; 
+self.auth = auth; 
+self.db = db; 
 self.storage = storage;
 
-// Birden fazla farklı “ready” bayrağına uyumluluk
-self.__fbReady = true;             // mevcut
-self.firebaseReady = true;         // olası eski kontrol
-self.__FIREBASE_READY__ = true;    // olası eski kontrol
+// >>> EKLENDİ: home.html’in beklediği nesne
+self.__fb = { app, auth, db, storage };
 
-// === Cloudinary (ozneglobal) ===
-// NOT: API SECRET asla frontend'e konmaz. UNSIGNED PRESET kullanın.
-const CLOUD_NAME = 'ozneglobal';
-const CLOUD_API_KEY = '321492881526576'; // SECRET değil
-const UPLOAD_PRESET = 'ue_unsigned';
+// =================== Cloudinary (ozneglobal) ===================
+// Not: API SECRET asla frontend'e konulmaz.
+// Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
+const CLOUD_NAME = 'ozneglobal';        // Cloud name (hesabında gözüken)
+const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
+const UPLOAD_PRESET = 'ue_unsigned';    // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
-const CL_BASE  = `https://res.cloudinary.com/${CLOUD_NAME}`;
+// Yardımcı sabitler
+const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
 const CL_IMAGE = `${CL_BASE}/image`;
 const CL_FETCH = `${CL_IMAGE}/fetch`;
 const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
 
+// Global'e aktar (mevcut kodunla uyumlu)
 self.CLOUDINARY_CLOUD = CLOUD_NAME;
 self.CLOUDINARY = {
   cloud: CLOUD_NAME,
@@ -69,8 +69,12 @@ self.CLOUDINARY = {
   uploadEndpoint: CL_UPLOAD
 };
 
+// Basit dönüştürme string'i üret (ör: "c_fill,w_600,h_600,q_auto,f_auto")
 function clTx(opts = {}) {
-  const { w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr, radius, ar, bg } = opts;
+  const {
+    w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr,
+    radius, ar, bg
+  } = opts;
   const parts = [];
   if (c) parts.push(`c_${c}`);
   if (w) parts.push(`w_${w}`);
@@ -85,51 +89,41 @@ function clTx(opts = {}) {
   return parts.join(',');
 }
 
+// Public ID ile URL (image/upload)
 self.clUrl = function clUrl(publicId, opts = {}) {
   const tx = clTx(opts);
   return tx ? `${CL_IMAGE}/upload/${tx}/${publicId}` : `${CL_IMAGE}/upload/${publicId}`;
 };
 
+// Harici URL’i fetch ile dönüştür (image/fetch)
 self.clFetch = function clFetch(srcUrl, opts = {}) {
   const tx = clTx(opts);
   const encoded = encodeURIComponent(srcUrl);
   return tx ? `${CL_FETCH}/${tx}/${encoded}` : `${CL_FETCH}/${encoded}`;
 };
 
+// UNSIGNED upload (form file veya blob)
 self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'uploads') {
   const form = new FormData();
   form.append('upload_preset', UPLOAD_PRESET);
   form.append('file', fileOrBlob);
   if (folder) form.append('folder', folder);
+  // Opsiyonel: public_id, tags, context vs. ekleyebilirsin
   const res = await fetch(CL_UPLOAD, { method: 'POST', body: form });
   if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
-  return res.json();
+  return res.json(); // { public_id, secure_url, ... }
 };
 
-// === Örnek kısa yardımcılar ===
-self.avatarUrl = (publicId) => self.clUrl(publicId, { c: 'fill', w: 600, h: 600, q: 'auto', f: 'auto', radius: 'max' });
-self.coverUrl  = (publicId) => self.clUrl(publicId, { c: 'fill', w: 1000, h: 1000, q: 'auto', f: 'auto' });
-self.fetchThumb = (src)     => self.clFetch(src, { c: 'fill', w: 600, h: 600, q: 'auto', f: 'auto' });
+// === Örnek kullanımlar ===
+self.avatarUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:600, h:600, q:'auto', f:'auto', radius:'max' });
+self.coverUrl  = (publicId) => self.clUrl(publicId, { c:'fill', w:1000, h:1000, q:'auto', f:'auto' });
+self.fetchThumb = (src)    => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto', f:'auto' });
 
-// === Firestore yardımcı yüzeyi (global) ===
-self.firebase = Object.assign(self.firebase || {}, {
-  setDoc: (refOrPath, data, opts) => setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
-  updateDoc: (refOrPath, data)    => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
-  getDoc: (refOrPath)             => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
-  serverTimestamp: () => serverTimestamp(),
-  col: (path) => collection(db, ...path.split('/')),
-  q:   (...args) => query(...args),
-  where, orderBy, limit,
-});
-self.getDocs = getDocs;
-self.onSnapshot = onSnapshot;
-
-// === FCM (destek varsa; tamamen guard'lı) ===
+// =================== FCM (guard'lı) ===================
 (async () => {
   try {
     const supported = await messagingIsSupported();
     if (!supported) return;
-
     if ('Notification' in window && Notification.permission === 'default') {
       try { await Notification.requestPermission(); } catch {}
     }
@@ -138,7 +132,7 @@ self.onSnapshot = onSnapshot;
     const messaging = getMessaging(app);
     self.messaging = messaging;
 
-    // Service Worker register (önce /docs, olmazsa kök)
+    // Service Worker register (docs/ sonra kök)
     let swReg = null;
     if ('serviceWorker' in navigator) {
       try {
@@ -148,17 +142,14 @@ self.onSnapshot = onSnapshot;
       }
     }
 
-    // VAPID Public Key (senin public key’in)
+    // VAPID Key — kendi public key’in
     const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
     let token = null;
     try { token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined }); } catch {}
-
     if (token && auth?.currentUser?.uid) {
       try {
         await setDoc(doc(db, 'fcmTokens', token), {
-          uid: auth.currentUser.uid,
-          active: true,
-          createdAt: new Date().toISOString()
+          uid: auth.currentUser.uid, active: true, createdAt: new Date().toISOString()
         });
       } catch {}
     }
@@ -172,11 +163,27 @@ self.onSnapshot = onSnapshot;
   } catch {}
 })();
 
-// === Hazır sinyali: event + <html data-firebase="ready"> ===
-try { document.dispatchEvent(new Event('fb-ready')); } catch {}
-try { document.documentElement.setAttribute('data-firebase', 'ready'); } catch {}
-console.debug('[firebase-init] ready:', app?.options?.projectId);
+// =================== Yardımcılar ===================
+self.onAuthStateChanged = (a, b) => (typeof a === 'function' ? _onAuthStateChanged(auth, a) : _onAuthStateChanged(a || auth, b));
+self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
+self.signOutNow = () => _signOut(auth);
 
-// === (İSTEĞE BAĞLI) ESM export’ları — import { db } from './firebase-init.js' şeklinde kullanmak istersen diye
-export { app, auth, db, storage, getDocs, onSnapshot };
-export const FIREBASE_READY = true;
+self.storageRef       = (path) => _storageRef(storage, path);
+self._uploadBytes     = (refObj, file) => uploadBytes(refObj, file);
+self._getDownloadURL  = (refObj) => getDownloadURL(refObj);
+
+self.firebase = Object.assign(self.firebase || {}, {
+  setDoc: (refOrPath, data, opts) => setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
+  updateDoc: (refOrPath, data)    => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
+  getDoc: (refOrPath)             => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
+  serverTimestamp: () => serverTimestamp(),
+  col: (path) => collection(db, ...path.split('/')),
+  q:   (...args) => query(...args),
+  where, orderBy, limit,
+});
+self.getDocs = getDocs;
+
+// Ready bayrağı
+self.__fbReady = true;
+try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
+console.debug('[firebase-init] ready:', app.options.projectId);
