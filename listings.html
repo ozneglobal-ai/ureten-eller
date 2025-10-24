@@ -4,6 +4,604 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>İlanlar • Üreten Eller</title>
+  <meta name="description" content="Kategori/alt kategori, il/ilçe, akıllı fiyat aralığı ve arama ile filtreleyin. Vitrin ilk 20; sayfa başı 20, toplam 40 ilan. Çok dilli arayüz." />
+  <link rel="icon" href="/docs/üreteneller.png" />
+
+  <style>
+    :root{
+      --bg:#ffffff; --ink:#111111; --muted:#6b7280; --line:#e5e7eb; --soft:#f8fafc;
+      --trust1:#0f172a; --trust2:#111827; --chip:#eef2ff;
+      --gold1:#D4AF37; --gold2:#FFD700; --goldShadow:0 6px 20px rgba(212,175,55,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1400px;margin:0 auto;padding:0 1rem}
+
+    /* Üst bar */
+    .top{display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
+    .logo{display:flex;align-items:center;gap:.6rem;font-weight:900}
+    .logo img{width:32px;height:32px}
+    .spacer{flex:1}
+    .commission{font-weight:900;color:#111;padding:.25rem .5rem;border-radius:8px;white-space:nowrap}
+    .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem .95rem;border-radius:12px;border:0;cursor:pointer;font-weight:900;letter-spacing:.2px;color:#111;background:linear-gradient(180deg,var(--gold2),var(--gold1));box-shadow:var(--goldShadow)}
+    .btn:hover{opacity:.92}
+
+    /* Sayfa düzeni */
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:1rem;margin:1rem 0}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+    /* Sol panel */
+    .sidebar{border:1px solid var(--line);border-radius:16px;padding:1rem;background:#fff;position:sticky;top:.75rem;height:fit-content}
+    .side-title{font-weight:900;margin:0 0 .25rem}
+    .field{display:flex;flex-direction:column;gap:.35rem;margin:.55rem 0}
+    input,select{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.55rem .6rem;color:var(--ink)}
+    .cat-list{display:flex;flex-direction:column;gap:.25rem;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.5rem}
+    .cat-link{padding:.45rem .55rem;border-radius:8px;cursor:pointer}
+    .cat-link:hover{background:var(--soft)}
+    .cat-link.active{background:linear-gradient(180deg,var(--gold2),var(--gold1));color:#111;border:1px solid var(--gold1);box-shadow:var(--goldShadow)}
+    .cat-link.active::after{content:'✓';float:right;font-weight:900}
+
+    /* Kayar bilgi paneli */
+    .slidewrap{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,var(--trust1),var(--trust2));color:#fff}
+    .slide-track{display:flex;transition:transform .6s ease}
+    .slide{min-width:100%;padding:1rem 1.25rem;display:grid;gap:.25rem}
+    .slide h3{margin:.1rem 0 0;color:#fff}
+    .slide p{margin:.2rem 0;color:#e5e7eb}
+    .dots{position:absolute;right:.6rem;bottom:.6rem;display:flex;gap:.3rem}
+    .dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;opacity:.8}
+    .dot[aria-current="true"]{background:#fff}
+
+    /* İlan grid */
+    .listHead{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
+    .listGrid{display:grid;gap:.85rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media(max-width:1100px){.listGrid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:740px){.listGrid{grid-template-columns:repeat(2,1fr)}}
+    .item{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
+    .thumbwrap{position:relative}
+    .thumb{aspect-ratio:1/1;background:#f3f4f6;background-size:cover;background-position:center}
+    .badge{position:absolute;left:.55rem;top:.55rem;background:linear-gradient(180deg,var(--gold2),var(--gold1));color:#111;border-radius:999px;padding:.2rem .6rem;font-size:.72rem;font-weight:900;box-shadow:var(--goldShadow)}
+    .meta{padding:.6rem .7rem}
+    .title{font-weight:900}
+    .mini{color:var(--muted)}
+
+    /* Kart içi aksiyonlar */
+    .actions{display:flex;gap:.4rem;padding:.55rem .7rem .75rem}
+    .btn.sm{font-size:.86rem;padding:.4rem .65rem;border-radius:10px}
+
+    /* Sayfalama */
+    .pager{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin:1rem 0}
+    .pagebtn{border:1px solid var(--line);background:#fff;padding:.35rem .65rem;border-radius:10px;cursor:pointer}
+    .pagebtn.active{background:linear-gradient(180deg,var(--gold2),var(--gold1));border-color:var(--gold1)}
+  </style>
+
+  <!-- Firebase init (senin dosyan) -->
+  <script type="module" src="/firebase-init.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <!-- ÜST BAR -->
+    <div class="top">
+      <div class="logo">
+        <img src="/docs/üreteneller.png" alt="Üreten Eller" />
+        <span style="color:#111">Üreten Eller</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="commission" id="t_commission">Üreten Eller <u>kesinlikle</u> sizlerden komisyon almaz</div>
+      <select id="langSel" aria-label="Dil" style="border:1px solid var(--line);border-radius:10px;padding:.4rem .55rem;background:#fff;color:#111;margin-right:.4rem">
+        <option value="tr">Türkçe</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+        <option value="ar">العربية</option>
+      </select>
+      <button class="btn" id="openSignup"><span id="t_signup">Ücretsiz Kaydol</span></button>
+      <button class="btn" id="openLogin"><span id="t_login">Giriş Yap</span></button>
+    </div>
+
+    <!-- SAYFA YAPISI -->
+    <div class="layout">
+      <!-- SOL: Arama & filtre -->
+      <aside class="sidebar">
+        <h3 class="side-title" id="t_side_title">Arama & Filtre</h3>
+        <div class="field">
+          <label for="q" id="t_search_label">Ne arıyorsun?</label>
+          <input id="q" placeholder="örn. cheesecake, bebek battaniyesi" />
+        </div>
+
+        <div class="field">
+          <label id="t_cat_label">Kategori</label>
+          <div class="cat-list" id="sideCats"></div>
+        </div>
+
+        <div class="field">
+          <label for="subcatSel" id="t_subcat_label">Alt kategori</label>
+          <select id="subcatSel"><option value="">Seçiniz</option></select>
+        </div>
+
+        <div class="field">
+          <label for="citySel" id="t_city_label">İl</label>
+          <select id="citySel"><option value="">Tümü</option></select>
+        </div>
+
+        <div class="field">
+          <label for="districtInput" id="t_district_label">İlçe</label>
+          <input id="districtInput" placeholder="İlçeyi yazın" />
+        </div>
+
+        <div class="field">
+          <label id="t_price_label">Akıllı Fiyat Aralığı</label>
+          <div style="display:flex;gap:.4rem">
+            <select id="minPrice">
+              <option value="">Min</option>
+              <option value="50">50₺</option><option value="100">100₺</option>
+              <option value="250">250₺</option><option value="500">500₺</option>
+            </select>
+            <select id="maxPrice">
+              <option value="">Max</option>
+              <option value="250">250₺</option><option value="500">500₺</option>
+              <option value="1000">1000₺</option><option value="2500">2500₺</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn" id="applyFilters"><span id="t_apply">Filtrele</span></button>
+      </aside>
+
+      <!-- SAĞ: İçerik -->
+      <main class="main">
+        <!-- Sağdan sola kayan panel -->
+        <section class="slidewrap" aria-label="Bilgi Paneli">
+          <div class="slide-track" id="slideTrack"></div>
+          <div class="dots" id="slideDots"></div>
+        </section>
+
+        <!-- Liste başlık + sayfalama -->
+        <div class="listHead">
+          <div id="resultInfo" class="mini"></div>
+          <div class="pager" id="pagerTop"></div>
+        </div>
+
+        <!-- İlanlar -->
+        <section>
+          <div id="listGrid" class="listGrid" aria-live="polite"></div>
+        </section>
+
+        <div class="pager" id="pagerBottom"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Basit giriş/kayıt açıcı -->
+  <script>
+    document.getElementById('openSignup').onclick=()=>{ window.dispatchEvent(new CustomEvent('ue-open-auth',{detail:'signup'})); };
+    document.getElementById('openLogin').onclick=()=>{ window.dispatchEvent(new CustomEvent('ue-open-auth',{detail:'login'})); };
+  </script>
+
+  <!-- Veri & UI -->
+  <script>
+  (function(){
+    'use strict';
+    const $ = (id)=> document.getElementById(id);
+
+    /* === Çok dilli metinler === */
+    const I18N = {
+      tr:{ commission:'Üreten Eller <u>kesinlikle</u> sizlerden komisyon almaz', signup:'Ücretsiz Kaydol', login:'Giriş Yap',
+           side_title:'Arama & Filtre', search_label:'Ne arıyorsun?', placeholder:'örn. cheesecake, bebek battaniyesi',
+           cat_label:'Kategori', subcat_label:'Alt kategori', city_label:'İl', district_label:'İlçe', district_ph:'İlçeyi yazın',
+           price_label:'Akıllı Fiyat Aralığı', apply:'Filtrele', choose:'Seçiniz', all:'Tümü', badge_showcase:'Vitrin',
+           results:(n)=>`${n} sonuç` },
+      en:{ commission:'Üreten Eller takes <u>no</u> commission', signup:'Sign up free', login:'Log in',
+           side_title:'Search & Filter', search_label:'What are you looking for?', placeholder:'e.g. cheesecake, baby blanket',
+           cat_label:'Category', subcat_label:'Subcategory', city_label:'Province', district_label:'District', district_ph:'Type district',
+           price_label:'Smart Price Range', apply:'Apply', choose:'Select', all:'All', badge_showcase:'Showcase',
+           results:(n)=>`${n} results` },
+      de:{ commission:'Üreten Eller nimmt <u>keine</u> Provision', signup:'Kostenlos registrieren', login:'Anmelden',
+           side_title:'Suche & Filter', search_label:'Wonach suchst du?', placeholder:'z. B. Cheesecake, Babydecke',
+           cat_label:'Kategorie', subcat_label:'Unterkategorie', city_label:'Provinz', district_label:'Bezirk', district_ph:'Bezirk eingeben',
+           price_label:'Smart-Preisspanne', apply:'Filtern', choose:'Auswählen', all:'Alle', badge_showcase:'Vitrine',
+           results:(n)=>`${n} Treffer` },
+      ar:{ commission:'Üreten Eller <u>لا يأخذ</u> عمولة', signup:'سجّل مجانًا', login:'تسجيل الدخول',
+           side_title:'بحث وتصنيف', search_label:'ماذا تبحث؟', placeholder:'مثال: تشيزكيك، بطانية أطفال',
+           cat_label:'الفئة', subcat_label:'الفئة الفرعية', city_label:'الولاية', district_label:'القضاء', district_ph:'اكتب اسم القضاء',
+           price_label:'نطاق السعر الذكي', apply:'تصفية', choose:'اختر', all:'الكل', badge_showcase:'واجهة',
+           results:(n)=>`${n} نتيجة` }
+    };
+    let LANG = localStorage.getItem('ue_lang') || 'tr';
+    function dirFor(l){ return l==='ar'?'rtl':'ltr'; }
+    function t(key){ return (I18N[LANG] && I18N[LANG][key]) || (I18N.tr[key]||''); }
+
+    /* === Kategoriler (ilan oluştur ile uyumlu) === */
+    const CATS = [
+      {id:'yemek', names:{tr:'🍲 Yemekler', en:'🍲 Meals', de:'🍲 Gerichte', ar:'🍲 أطعمة'}, subs:[
+        ['evyemek','Ev yemekleri','Home-cooked','Hausmannskost','وجبات منزلية'],
+        ['borek','Börek-çörek','Savory pastries','Herzhaftes Gebäck','فطائر مالحة'],
+        ['corba','Çorba','Soup','Suppe','شوربة'],
+        ['zeytiny','Zeytinyağlı','Olive-oil dishes','Gerichte mit Olivenöl','أطباق بزيت الزيتون'],
+        ['pilav','Pilav-makarna','Rice & pasta','Reis & Pasta','أرز ومعكرونة'],
+        ['et','Et-tavuk','Meat & chicken','Fleisch & Huhn','لحوم ودجاج'],
+        ['kahvalti','Kahvaltılık','Breakfast','Frühstück','مأكولات الإفطار'],
+        ['meze','Meze','Mezes','Vorspeisen','مقبلات'],
+        ['dondur','Dondurulmuş','Frozen','Tiefgekühlt','مجمد'],
+        ['cocuk','Çocuk öğünleri','Kids meals','Kindergerichte','وجبات الأطفال'],
+        ['diyetvegf','Diyet/vegan/gf','Diet/Vegan/GF','Diät/Vegan/GF','حمية/نباتي/خالٍ من الغلوتين']
+      ]},
+      {id:'pasta', names:{tr:'🎂 Pasta & Tatlı', en:'🎂 Cakes & Desserts', de:'🎂 Kuchen & Süßes', ar:'🎂 كيك وحلويات'}, subs:[
+        ['yaspasta','Yaş pasta','Birthday cake','Torte','كيك طازج'],
+        ['kek','Kek-cupcake','Cakes & cupcakes','Kuchen & Cupcakes','كيك وكب كيك'],
+        ['kurabiye','Kurabiye','Cookies','Kekse','بسكويت'],
+        ['serbetli','Şerbetli','Syrupy','Sirupgebäck','حلويات شرقية'],
+        ['sutlu','Sütlü','Milk desserts','Milchdesserts','حلويات بالحليب'],
+        ['cheese','Cheesecake','Cheesecake','Käsekuchen','تشيزكيك'],
+        ['diyettat','Diyet tatlı','Diet dessert','Diät-Dessert','حلويات للحمية'],
+        ['cikolata','Çikolata/şekerleme','Chocolate/Candy','Schokolade/Bonbon','شوكولاتة/حلويات'],
+        ['dogumset','Doğum günü setleri','Birthday sets','Geburtstags-Sets','مجموعات عيد ميلاد']
+      ]},
+      {id:'sos', names:{tr:'🫙 Reçel • Turşu • Sos', en:'🫙 Jams • Pickles • Sauces', de:'🫙 Marmelade • Eingelegtes • Saucen', ar:'🫙 مربى • مخللات • صلصات'}, subs:[
+        ['recel','Reçel-marmelat','Jam/Marmalade','Marmelade','مربى'],
+        ['pekmez','Pekmez','Molasses','Traubensirup','دبس'],
+        ['tursu','Turşu','Pickles','Eingelegtes','مخلل'],
+        ['dom','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika-Soße','صلصة طماطم/فلفل'],
+        ['acios','Acı sos','Hot sauce','Scharfe Soße','صلصة حارة'],
+        ['salca','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke','Sirke','Vinegar','Essig','خل'],
+        ['konserve','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'yoresel', names:{tr:'🌾 Yöresel / Kışlık', en:'🌾 Local / Winter Pantry', de:'🌾 Regional / Wintervorrat', ar:'🌾 مؤن منزلية/شتوية'}, subs:[
+        ['eriste','Erişte','Noodles','Bandnudeln','نودلز'],
+        ['tarhana','Tarhana','Tarhana','Tarhana','طرخانة'],
+        ['yufka','Yufka','Yufka','Yufka','يوفكا'],
+        ['manti','Mantı','Manti dumplings','Manti','مانتي'],
+        ['kurut','Kurutulmuş sebze-meyve','Dried veg/fruit','Getrocknetes Obst/Gemüse','مجففات'],
+        ['salca2','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke2','Sirke','Vinegar','Essig','خل'],
+        ['konserve2','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'diet', names:{tr:'🥗 Diyet / Vegan / Glutensiz', en:'🥗 Diet / Vegan / Gluten-Free', de:'🥗 Diät / Vegan / Glutenfrei', ar:'🥗 حمية / نباتي / خالٍ من الغلوتين'}, subs:[
+        ['fit','Fit tabaklar','Fit plates','Fitness-Teller','أطباق صحية'],
+        ['vegan','Vegan yemekler','Vegan meals','Vegane Gerichte','أطعمة نباتية'],
+        ['gf','GF unlu mamuller','GF bakery','Glutenfreie Backwaren','مخبوزات GF'],
+        ['sekersiz','Şekersiz tatlı','Sugar-free dessert','Zuckerfreie Desserts','حلويات بدون سكر'],
+        ['keto','Keto ürün','Keto products','Keto-Produkte','منتجات كيتو'],
+        ['protein','Protein atıştırmalık','Protein snacks','Protein-Snacks','وجبات بروتين']
+      ]},
+      {id:'taki', names:{tr:'💍 Takı', en:'💍 Jewelry', de:'💍 Schmuck', ar:'💍 مجوهرات'}, subs:[
+        ['bileklik','Bileklik','Bracelet','Armband','سوار'],
+        ['kolye','Kolye','Necklace','Halskette','عقد'],
+        ['kupe','Küpe','Earrings','Ohrringe','أقراط'],
+        ['yuzuk','Yüzük','Ring','Ring','خاتم'],
+        ['halhal','Halhal','Anklet','Fußkettchen','خلخال'],
+        ['bros','Broş','Brooch','Brosche','بروش'],
+        ['set','Setler','Sets','Sets','أطقم'],
+        ['isimli','İsimli/kişiye özel','Personalized','Personalisiert','مخصص'],
+        ['makrome','Makrome','Macramé','Makramee','مكرمية'],
+        ['dogaltas','Doğal taş','Gemstone','Edelstein','أحجار طبيعية'],
+        ['recine','Reçine','Resin','Harz','ريزن'],
+        ['telsarma','Tel sarma','Wire wrap','Drahtwicklung','سلك ملتف']
+      ]},
+      {id:'bebek', names:{tr:'👶 Bebek & Çocuk', en:'👶 Baby & Kids', de:'👶 Baby & Kinder', ar:'👶 أطفال'}, subs:[
+        ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby-Figuren','مجسمات'],
+        ['cingirak','Çıngırak','Rattle','Rassel','خشخيشة'],
+        ['dis','Diş kaşıyıcı örgü','Teether crochet','Beißring-Häkel','عضاضة كروشيه'],
+        ['bezoy','Bez oyuncak/kitap','Cloth toy/book','Stoffspielzeug/Buch','دمى/كتب قماش'],
+        ['montessori','Montessori oyuncak','Montessori toys','Montessori-Spielzeug','ألعاب منتسوري'],
+        ['set2','Setler','Sets','Sets','أطقم'],
+        ['patik','Örgü patik-bere','Knit booties/beanie','Gehäkelte Schühchen/Mütze','قبعات وجوارب'],
+        ['battaniye','Bebek battaniyesi','Baby blanket','Babydecke','بطانية'],
+        ['onluk','Önlük-ağız bezi','Bib/burp cloth','Lätzchen/Spucktuch','مريلة/منديل'],
+        ['lohusa','Lohusa seti','Maternity set','Wochenbett-Set','عدة نفاس'],
+        ['sac','Saç aksesuarı','Hair accessory','Haaraccessoire','اكسسوار شعر'],
+        ['giyim','El emeği kıyafet','Handmade clothing','Handgemachte Kleidung','ملابس يدوية']
+      ]},
+      {id:'orgu', names:{tr:'🧶 Örgü / Triko', en:'🧶 Knit / Crochet', de:'🧶 Strick / Häkeln', ar:'🧶 حياكة / كروشيه'}, subs:[
+        ['hirka','Hırka','Cardigan','Strickjacke','كارديغان'],
+        ['kazak','Kazak','Sweater','Pullover','كنزة'],
+        ['atkibere','Atkı-bere','Scarf/Beanie','Schal/Mütze','وشاح/قبعة'],
+        ['panco','Panço','Poncho','Poncho','بونشو'],
+        ['sal','Şal','Shawl','Schal','شال'],
+        ['corap','Çorap','Socks','Socken','جوارب'],
+        ['lif','Lif takımı','Bath set','Badeset','طقم حمّام'],
+        ['bebektk','Bebek takımı','Baby set','Baby-Set','طقم أطفال'],
+        ['yelek','Yelek','Vest','Weste','صديري'],
+        ['kirlen','Kırlent-örtü','Cushion/Cover','Kissen/Decke','وسادة/غطاء'],
+        ['igneoyasi','İğne oyası','Needle lace','Nadelspitze','أويا']
+      ]},
+      {id:'terzi', names:{tr:'✂️ Dikiş / Terzilik', en:'✂️ Sewing / Tailoring', de:'✂️ Nähen / Schneiderei', ar:'✂️ خياطة / تفصيل'}, subs:[
+        ['paca','Paça/onarım','Hem/repair','Saum/Reparatur','ثني/تصليح'],
+        ['fermuar','Fermuar değişimi','Zipper change','Reißverschluss-Wechsel','تبديل سحاب'],
+        ['perde','Perde dikişi','Curtain sewing','Vorhang-Nähen','خياطة ستائر'],
+        ['nevresim','Nevresim-yastık','Bedding & pillows','Bettwäsche/Kissen','مفارش ووسائد'],
+        ['masa','Masa örtüsü','Tablecloth','Tischtuch','مفرش طاولة'],
+        ['ozel','Özel dikim','Custom tailoring','Maßanfertigung','تفصيل خاص'],
+        ['kostum','Kostüm','Costume','Kostüm','زيّ']
+      ]},
+      {id:'makrome', names:{tr:'🧵 Makrome & Dekor', en:'🧵 Macramé & Decor', de:'🧵 Makramee & Deko', ar:'🧵 مكرمية وديكور'}, subs:[
+        ['duvar','Duvar süsü','Wall hanging','Wandbehang','ديكور جداري'],
+        ['saksi','Saksı askısı','Plant hanger','Pflanzenhänger','حامل نباتات'],
+        ['anahtar','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['avize','Avize','Chandelier','Deckenleuchte','ثريا'],
+        ['runner','Amerikan servis/runner','Placemat/runner','Tischset/Runner','رانر'],
+        ['sepet','Sepet','Basket','Korb','سلة'],
+        ['raf','Raf/duvar dekoru','Shelf/wall decor','Regal/Wanddeko','رف/ديكور']
+      ]},
+      {id:'evdekor', names:{tr:'🏠 Ev Dekor & Aksesuar', en:'🏠 Home Decor & Accessories', de:'🏠 Wohndeko & Accessoires', ar:'🏠 ديكور المنزل وإكسسوارات'}, subs:[
+        ['kece','Keçe işleri','Felt crafts','Filzarbeiten','أعمال لباد'],
+        ['kirlent','Kırlent','Cushion','Kissen','وسادة'],
+        ['kapi','Kapı süsü','Door wreath','Türkranz','زينة باب'],
+        ['tepsi','Tepsi süsleme','Tray decoration','Tablett-Deko','تزيين صينية'],
+        ['cerceve','Çerçeve','Frame','Rahmen','إطار'],
+        ['ruya','Rüya kapanı','Dreamcatcher','Traumfänger','صائد أحلام'],
+        ['tablo','Tablo','Painting','Bild','لوحة']
+      ]},
+      {id:'mum', names:{tr:'🕯️ Mum & Kokulu Ürünler', en:'🕯️ Candles & Fragrances', de:'🕯️ Kerzen & Düfte', ar:'🕯️ شموع وروائح'}, subs:[
+        ['soya','Soya/balmumu mum','Soy/Beeswax candle','Soja/Bienenwachs-Kerze','شموع صويا/عسل'],
+        ['tas','Kokulu taş','Aroma stone','Duftstein','حجر عطري'],
+        ['sprey','Oda spreyi','Room spray','Raumspray','معطر جو'],
+        ['tutsu','Tütsü','Incense','Räucherwerk','بخور'],
+        ['jel','Jel mum','Gel candle','Gelkerze','شمعة جل'],
+        ['hediye','Hediye seti','Gift set','Geschenkset','طقم هدايا']
+      ]},
+      {id:'kozmetik', names:{tr:'🧼 Doğal Sabun & Kozmetik', en:'🧼 Natural Soap & Cosmetics', de:'🧼 Natürliche Seife & Kosmetik', ar:'🧼 صابون طبيعي ومستحضرات'}, subs:[
+        ['zeytin','Zeytinyağlı sabun','Olive-oil soap','Olivenölseife','صابون زيت زيتون'],
+        ['bitkisel','Bitkisel sabunlar','Herbal soaps','Kräuterseifen','صوابين عشبية'],
+        ['sampuan','Katı şampuan','Solid shampoo','Festes Shampoo','شامبو صلب'],
+        ['balm','Dudak balmı','Lip balm','Lippenbalsam','بلسم شفاه'],
+        ['krem','Krem/merhem','Cream/ointment','Creme/Salbe','كريم/مرهم'],
+        ['banyotuzu','Banyo tuzu','Bath salt','Badesalz','ملح الاستحمام'],
+        ['lavanta','Lavanta kesesi','Lavender sachet','Lavendelsäckchen','كيس لافندر']
+      ]},
+      {id:'amigurumi', names:{tr:'🧸 Amigurumi & Oyuncak (dekor)', en:'🧸 Amigurumi & Toys (decor)', de:'🧸 Amigurumi & Deko-Spielzeug', ar:'🧸 أميغورومي وألعاب (ديكور)'}, subs:[
+        ['anahtar2','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['magnet','Magnet','Magnet','Magnet','مغناطيس'],
+        ['kolek','Koleksiyon figürü','Collector figure','Sammelfigur','مجسّم'],
+        ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko-Puppe/Charakter','دمية/شخصية']
+      ]}
+    ];
+
+    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
+
+    /* === Dil uygula === */
+    function applyLang(){
+      document.documentElement.lang = LANG; document.documentElement.dir = (LANG==='ar')?'rtl':'ltr';
+      $('t_commission').innerHTML = t('commission');
+      $('t_signup').textContent = t('signup');
+      $('t_login').textContent = t('login');
+      $('t_side_title').textContent = t('side_title');
+      $('t_search_label').textContent = t('search_label');
+      $('q').placeholder = t('placeholder');
+      $('t_cat_label').textContent = t('cat_label');
+      $('t_subcat_label').textContent = t('subcat_label');
+      $('t_city_label').textContent = t('city_label');
+      $('t_district_label').textContent = t('district_label');
+      $('districtInput').placeholder = t('district_ph');
+      $('t_price_label').textContent = t('price_label');
+      $('t_apply').textContent = t('apply');
+      buildSideCats(); fillProvinces(); renderSlides();
+    }
+    function bindLang(){ const sel=$('langSel'); sel.value=LANG; sel.onchange=()=>{ LANG=sel.value; localStorage.setItem('ue_lang',LANG); applyLang(); fetchAndRender(true); }; }
+
+    /* === Kategoriler sol panel === */
+    function buildSideCats(){
+      const list = $('sideCats'); const idx = {tr:1,en:2,de:3,ar:4}[LANG] || 1;
+      list.innerHTML = CATS.map(c=>`<div class="cat-link" data-id="${c.id}">${c.names[LANG]||c.names.tr}</div>`).join('');
+      list.onclick = (e)=>{
+        const el = e.target.closest('.cat-link'); if(!el) return;
+        const id = el.getAttribute('data-id');
+        const cat = CATS.find(x=>x.id===id);
+        const subSel = $('subcatSel');
+        subSel.dataset.cat = id;
+        subSel.innerHTML = `<option value="">${t('choose')}</option>` + (cat? cat.subs.map(s=>`<option value="${s[0]}">${s[idx]}</option>`).join('') : '');
+        [...list.children].forEach(n=>n.classList.toggle('active', n===el));
+        currentPage = 1; fetchAndRender(true);
+      };
+    }
+
+    function fillProvinces(){
+      const citySel=$('citySel'); citySel.innerHTML = `<option value="">${t('all')}</option>` + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join('');
+    }
+
+    /* === Kayan Bilgi Paneli (15 sn) === */
+    const slidesByLang = {
+      tr:[
+        {title:'Güven & Şeffaflık', text:'Üreten Eller kesinlikle komisyon almaz. Üretici ile alıcı doğrudan iletişim kurar.'},
+        {title:'Kategoriler', text:'Binlerce el emeği ürün: Yemekler, Pasta & Tatlı, Takı, Örgü, Makrome, Ev Dekor ve daha fazlası.'},
+        {title:'İpuçları', text:'Ürün açıklamasında malzeme, ölçü ve teslim süresini belirtin. Güveni artırır.'},
+        {title:'Kışlık & Yöresel', text:'Erişte, tarhana, reçel, turşu… Yerel üreticiden sofranıza.'}
+      ],
+      en:[
+        {title:'Trust & Transparency', text:'Üreten Eller takes no commission. Buyers contact makers directly.'},
+        {title:'Categories', text:'Thousands of handmade items: Meals, Cakes, Jewelry, Knit, Macramé, Home Decor and more.'},
+        {title:'Tips', text:'State materials, sizes and delivery time in description. Builds trust.'},
+        {title:'Local Pantry', text:'Noodles, tarhana, jams, pickles… From local makers to your table.'}
+      ],
+      de:[
+        {title:'Vertrauen & Transparenz', text:'Üreten Eller nimmt keine Provision. Direkter Kontakt zwischen Käufer und Hersteller.'},
+        {title:'Kategorien', text:'Tausende Handarbeiten: Gerichte, Kuchen, Schmuck, Strick, Makramee, Wohndeko u.v.m.'},
+        {title:'Tipps', text:'Material, Maße und Lieferzeit angeben – schafft Vertrauen.'},
+        {title:'Vorrat & Regional', text:'Bandnudeln, Tarhana, Marmelade, Pickles… Direkt vom Hersteller.'}
+      ],
+      ar:[
+        {title:'الثقة والشفافية', text:'Üreten Eller لا يأخذ عمولة. تواصل مباشر بين المشتري والمنتِج.'},
+        {title:'الفئات', text:'آلاف المنتجات اليدوية: أطعمة، حلويات، مجوهرات، حياكة، مكرمية، ديكور منزلي والمزيد.'},
+        {title:'نصائح', text:'اذكر المواد والمقاسات ومدة التسليم في الوصف.'},
+        {title:'المونة المحلية', text:'شعيرية، طرخانة، مربيات، مخللات… من المنتج المحلي إلى مائدتك.'}
+      ]
+    };
+    function renderSlides(){
+      const slides = slidesByLang[LANG] || slidesByLang.tr;
+      const track=$('slideTrack'); const dots=$('slideDots');
+      track.innerHTML = slides.map(s=>`<article class="slide"><h3>${s.title}</h3><p>${s.text}</p></article>`).join('');
+      dots.innerHTML = slides.map((_,i)=>`<div class="dot" data-i="${i}" aria-current="${i===0}"></div>`).join('');
+      let slideIndex=0; clearInterval(window.__slideInt);
+      window.__slideInt=setInterval(()=>{ slideIndex=(slideIndex+1)%slides.length; track.style.transform=`translateX(-${slideIndex*100}%)`; [...dots.children].forEach((d,di)=>d.setAttribute('aria-current', di===slideIndex)); },15000);
+      [...dots.children].forEach(d=>d.addEventListener('click',()=>{ slideIndex=parseInt(d.dataset.i,10)||0; track.style.transform=`translateX(-${slideIndex*100}%)`; [...dots.children].forEach((x,di)=>x.setAttribute('aria-current', di===slideIndex)); }));
+    }
+
+    /* === Firestore === */
+    let FIRE_OK=false, app=null, db=null, ffns=null;
+    async function ensureFirebase(){
+      try{
+        if(window.firebase && window.firebase.app){ app=window.firebase.app; }
+        if(window.firebase && window.firebase.db){ db=window.firebase.db; }
+        if(window.__ffns){ ffns=window.__ffns; }
+        if(db && ffns){ FIRE_OK=true; return; }
+        // Yedek: CDN yükle
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+        const { getFirestore, collection, getDocs, query, where, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+        const cfg = window.UE_FIREBASE_CONFIG || window.firebaseConfig;
+        app = (window.firebaseApp) || (cfg ? initializeApp(cfg) : null);
+        if(!app) throw new Error('Firebase yapılandırması yok (firebase-init.js)');
+        db = getFirestore(app);
+        ffns = { collection, getDocs, query, where, orderBy, limit }; window.__ffns=ffns;
+        FIRE_OK=true;
+      }catch(e){ console.warn('Firebase init başarısız:', e); FIRE_OK=false; }
+    }
+
+    /* === Filtreler === */
+    function getFilters(){
+      return {
+        q: $('q').value.trim().toLowerCase(),
+        cat: $('subcatSel').dataset.cat || '',
+        sub: $('subcatSel').value || '',
+        city: $('citySel').value || '',
+        dist: ($('districtInput')?.value||'').trim().toLowerCase(),
+        min: parseInt(($('minPrice').value||''),10) || -Infinity,
+        max: parseInt(($('maxPrice').value||''),10) || Infinity
+      };
+    }
+
+    function applyLocalFilters(all){
+      const F = getFilters();
+      return all.filter(x=>{
+        if(F.q && !(`${x.title||''} ${x.description||''}`.toLowerCase().includes(F.q))) return false;
+        if(F.cat && x.category!==F.cat) return false;
+        if(F.sub && x.subcategory!==F.sub) return false;
+        if(F.city && x.province!==F.city) return false;
+        if(F.dist && !(`${(x.district||'')}`.toLowerCase().includes(F.dist))) return false;
+        const price = Number(x.price||0);
+        if(price < F.min) return false;
+        if(price > F.max) return false;
+        return true;
+      });
+    }
+
+    function byShowcaseFirstThenRecent(a,b){
+      const sa=!!a.showcase, sb=!!b.showcase; if(sa!==sb) return sa?-1:1;
+      const ta=(a.createdAt&&a.createdAt.seconds)?a.createdAt.seconds:(a.createdAt||0);
+      const tb=(b.createdAt&&b.createdAt.seconds)?b.createdAt.seconds:(b.createdAt||0);
+      return tb-ta;
+    }
+
+    /* === Sayfalama === */
+    const PER_PAGE = 20; let currentPage = 1; let currentAll = [];
+    function renderPager(total){
+      const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+      const make = (id)=>{
+        const p = $(id); p.innerHTML = '';
+        for(let i=1;i<=pages;i++){
+          const b = document.createElement('button'); b.className='pagebtn'+(i===currentPage?' active':''); b.textContent=String(i);
+          b.onclick=()=>{ currentPage=i; renderNow(); window.scrollTo({top:0, behavior:'smooth'}); };
+          p.appendChild(b);
+        }
+      };
+      make('pagerTop'); make('pagerBottom');
+    }
+
+    function renderNow(){
+      const grid=$('listGrid'); const info=$('resultInfo');
+      const filtered = applyLocalFilters(currentAll).sort(byShowcaseFirstThenRecent);
+      const limited = filtered.slice(0,40);
+      renderPager(limited.length);
+      const start=(currentPage-1)*PER_PAGE, end=start+PER_PAGE;
+      const pageItems = limited.slice(start,end);
+      info.textContent = (I18N[LANG].results||I18N.tr.results)(filtered.length);
+      grid.innerHTML = pageItems.map(x=>{
+        const cover=x.coverUrl || (x.photos&&x.photos[0]) || '/assets/placeholder.png';
+        const badge = x.showcase ? `<div class="badge">${t('badge_showcase')}</div>` : '';
+        const city = x.province || '';
+        const price = (x.price!=null) ? `${Number(x.price).toLocaleString('tr-TR')}₺` : '';
+        const canAct = !!(window.UE?.firebase?.auth?.currentUser || window.firebase?.auth?.currentUser);
+        return `
+          <article class="item">
+            <div class="thumbwrap">${badge}<div class="thumb" style="background-image:url('${cover}')"></div></div>
+            <div class="meta">
+              <div class="title">${(x.title||'İlan')}</div>
+              <div class="mini">${city} • ${price}</div>
+            </div>
+            <div class="actions">
+              <button class="btn sm" data-act="order" data-id="${x.id}">${LANG==='en'?'Order':'Sipariş Ver'}</button>
+              <button class="btn sm" data-act="profile" data-id="${x.userId||''}">${LANG==='en'?'View Profile':'Profil İncele'}</button>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function bindCardActions(){
+      document.addEventListener('click',(e)=>{
+        const b = e.target.closest('[data-act]'); if(!b) return;
+        const act=b.getAttribute('data-act');
+        const requireAuth=()=>{
+          const u = window.UE?.firebase?.auth?.currentUser || window.firebase?.auth?.currentUser;
+          if(!u){ alert(LANG==='en'? 'Lütfen giriş yapın.' : (LANG==='de'?'Bitte anmelden.':(LANG==='ar'?'يُرجى تسجيل الدخول.':'Lütfen giriş yapın.')));
+            window.dispatchEvent(new CustomEvent('ue-open-auth',{detail:'login'}));
+            return false; }
+          return true;
+        };
+        if(act==='order'){
+          if(!requireAuth()) return;
+          const id=b.getAttribute('data-id');
+          window.location.href = `docs/orders.html?listing=${encodeURIComponent(id)}`;
+        }else if(act==='profile'){
+          if(!requireAuth()) return;
+          const uid=b.getAttribute('data-id')||'';
+          window.location.href = `docs/seller.html?uid=${encodeURIComponent(uid)}`;
+        }
+      });
+    }
+
+    /* === Veri çek === */
+    async function fetchAndRender(force){
+      await ensureFirebase(); if(!FIRE_OK||!db||!ffns){ $('listGrid').innerHTML=''; renderPager(0); return; }
+      try{
+        const { collection, getDocs, query, where, orderBy, limit } = ffns;
+        const col = collection(db,'listings');
+        let qref;
+        try{ qref = query(col, where('status','==','active'), orderBy('createdAt','desc'), limit(300)); }
+        catch(_){ qref = query(col, limit(300)); }
+        const snap = await getDocs(qref);
+        const arr = []; snap.forEach(d=>{ const x=d.data(); x.id=d.id; arr.push(x); });
+        currentAll = arr;
+      }catch(e){ console.warn('Liste çekilemedi', e); currentAll = []; }
+      currentPage = 1; renderNow();
+    }
+
+    function bindFilters(){
+      $('applyFilters').addEventListener('click', ()=>{ currentPage=1; renderNow(); });
+      $('q').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); currentPage=1; renderNow(); } });
+      $('citySel').addEventListener('change', ()=>{ currentPage=1; renderNow(); });
+      $('subcatSel').addEventListener('change', ()=>{ currentPage=1; renderNow(); });
+      $('minPrice').addEventListener('change', ()=>{ currentPage=1; renderNow(); });
+      $('maxPrice').addEventListener('change', ()=>{ currentPage=1; renderNow(); });
+      $('districtInput').addEventListener('input', ()=>{ /* canlı yazımda filtre uygulamayalım */ });
+    }
+
+    /* === Otomatik yenile (10 dk) === */
+    function startAutoRefresh(){ setInterval(()=>fetchAndRender(false), 10*60*1000); }
+
+    function boot(){
+      bindLang(); applyLang(); buildSideCats(); fillProvinces(); renderSlides(); bindFilters(); bindCardActions(); fetchAndRender(true); startAutoRefresh();
+    }
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+
+  })();
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İlanlar • Üreten Eller</title>
   <meta name="description" content="Üreten Eller ilanları: kategori/alt kategori, il/ilçe, akıllı fiyat aralığı ve arama ile filtreleyin. Vitrin ilk 20, toplam 40 ilan gösterilir." />
   <link rel="icon" href="/assets/icons/favicon.png" />
 
