@@ -461,38 +461,99 @@
       const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
       const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
 
-      const CLOUD = (window.CLOUDINARY_CLOUD||'ozneglobal');
-      const isHttp = (u)=>/^https?:\/\//i.test(u||'');
-      const isPid  = (u)=> u && !isHttp(u) && /[\/_\.-]/.test(String(u));
-      const cdn = (pid,{w,h,crop='fill',fmt='auto',q='auto'}={})=>`https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`,fmt&&`f_${fmt}`,w&&`w_${w}`,h&&`h_${h}`,crop&&`c_${crop}`].filter(Boolean).join(',')}/`+String(pid).replace(/^image\/upload\//,'');
-      async function resolveURL(raw){ if(!raw) return ''; if(isHttp(raw)) return raw; if(isPid(raw)) return cdn(raw,{w:600,h:450}); try{ if(self.storageRef && self._getDownloadURL){ return await self._getDownloadURL(self.storageRef(raw)); } }catch(_){ } return raw; }
-      async function resolveCover(d){ const arr=[]; if(d.cover)arr.push(d.cover); if(d.coverUrl)arr.push(d.coverUrl); if(Array.isArray(d.photos))arr.push(...d.photos); if(Array.isArray(d.images))arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); const first=arr.find(Boolean); return await resolveURL(first)||'/assets/icons/ureteneller.png'; }
-      async function resolveImages(d){ const arr=[]; if(Array.isArray(d.images)) arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); if(Array.isArray(d.photos)) arr.push(...d.photos); if(d.cover) arr.unshift(d.cover); if(d.coverUrl) arr.unshift(d.coverUrl); const uniq=[...new Set(arr.filter(Boolean))]; const urls=[]; for(const u of uniq){ urls.push(await resolveURL(u)); } return urls.length?urls:['/assets/icons/ureteneller.png']; }
+      // ==== Cloudinary yardımcıları + kart render ==== 
+const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
 
-      const cardHTML = (d,id,cover)=>`<a class="card" href="#" data-id="${id}">
+const isHttp = (u) => /^https?:\/\//i.test(u || '');
+const isPid  = (u) => u && !isHttp(u) && /[\/_\.-]/.test(String(u));
+const cdn = (pid, { w, h, crop='fill', fmt='auto', q='auto' } = {}) =>
+  `https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`, fmt&&`f_${fmt}`, w&&`w_${w}`, h&&`h_${h}`, crop&&`c_${crop}`].filter(Boolean).join(',')}/` +
+  String(pid).replace(/^image\/upload\//,'');
+
+async function resolveURL(raw){
+  if (!raw) return '';
+  if (isHttp(raw)) return raw;
+  if (isPid(raw))  return cdn(raw, { w:600, h:450 });
+  try {
+    if (self.storageRef && self._getDownloadURL) {
+      return await self._getDownloadURL(self.storageRef(raw));
+    }
+  } catch(_) {}
+  return raw;
+}
+
+async function resolveCover(d){
+  const arr = [];
+  if (d.cover)    arr.push(d.cover);
+  if (d.coverUrl) arr.push(d.coverUrl);
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  const first = arr.find(Boolean);
+  return await resolveURL(first) || '/assets/icons/ureteneller.png';
+}
+
+async function resolveImages(d){
+  const arr = [];
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (d.cover)    arr.unshift(d.cover);
+  if (d.coverUrl) arr.unshift(d.coverUrl);
+  const uniq = [...new Set(arr.filter(Boolean))];
+  const urls = [];
+  for (const u of uniq) { urls.push(await resolveURL(u)); }
+  return urls.length ? urls : ['/assets/icons/ureteneller.png'];
+}
+// openListingDetail başka scope'taysa erişsin:
+window.resolveImages = resolveImages;
+
+const cardHTML = (d, id, cover) => `
+<a class="card" href="#" data-id="${id}">
   <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center"></div>
   <div class="body">
-    <h3 class="title">${(d.title||d.name||'İlan')}</h3>
-    <div class="meta">${(d.city||'')}${(d.city&&d.price)?' · ':''}${d.price?fmtPrice(d.price,(d.currency||d.cur||'TRY')):''}</div>
+    <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
+    <div class="meta">${(d.city || '')}${(d.city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}</div>
   </div>
-</a>`;
-      function renderList(gridId, list){ const grid=document.getElementById(gridId); if(!grid) return; grid.innerHTML=''; const frag=document.createDocumentFragment(); list.forEach(x=>{ const wrap=document.createElement('div'); wrap.innerHTML=cardHTML(x.data,x.id,x.data.__cover||'/assets/icons/ureteneller.png'); frag.appendChild(wrap.firstElementChild); }); grid.appendChild(frag); }
+</a>`.trim();
 
-      async function fetchAndPaint(){
-        try{
-          const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
-          const ref = col('listings');
-          let snap; try{ snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200))); }catch(e){ snap = await getDocs(q(ref, limit(200))); }
-          const now=Date.now(); const vip=[], std=[];
-          snap.forEach(doc=>{ const d=doc.data()||{}; (isVipDoc(d,now)?vip:std).push({id:doc.id, data:d}); });
-          await Promise.all([...vip, ...std].map(async x=>{ x.data.__cover = await resolveCover(x.data); }));
-          const sortBy=(a,b)=> toMillis(b.data.createdAt)-toMillis(a.data.createdAt);
-          vip.sort(sortBy); std.sort(sortBy);
-          const combined = vip.slice(0,20).concat(std);
-          renderList('allGrid', combined);
-          window.__UE_LISTINGS = Object.fromEntries(combined.map(x=>[x.id,x]));
-        }catch(e){ console.warn('İlan yüklenemedi:', e); }
-      }
+function renderList(gridId, list){
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  list.forEach(x => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = cardHTML(x.data, x.id, x.data.__cover || '/assets/icons/ureteneller.png');
+    frag.appendChild(wrap.firstElementChild);
+  });
+  grid.appendChild(frag);
+}
+
+async function fetchAndPaint(){
+  try{
+    const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
+    const ref = col('listings');
+    let snap;
+    try {
+      snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200)));
+    } catch(e) {
+      snap = await getDocs(q(ref, limit(200)));
+    }
+    const now = Date.now();
+    const vip = [], std = [];
+    snap.forEach(doc => {
+      const d = doc.data() || {};
+      (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
+    });
+    await Promise.all([...vip, ...std].map(async x => { x.data.__cover = await resolveCover(x.data); }));
+    const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
+    vip.sort(sortBy); std.sort(sortBy);
+    const combined = vip.slice(0,20).concat(std);
+    renderList('allGrid', combined);
+    window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
+  } catch(e) {
+    console.warn('İlan yüklenemedi:', e);
+  }
+}
 
       function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
       if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
