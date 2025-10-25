@@ -40,10 +40,10 @@ const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
 const UPLOAD_PRESET = 'ue_unsigned'; // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
 // Yardımcı sabitler
-const CL_BASE = https://res.cloudinary.com/${CLOUD_NAME};
-const CL_IMAGE = ${CL_BASE}/image;
-const CL_FETCH = ${CL_IMAGE}/fetch;
-const CL_UPLOAD = https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload;
+const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
+const CL_IMAGE = `${CL_BASE}/image`;
+const CL_FETCH = `${CL_IMAGE}/fetch`;
+const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
 
 // Global'e aktar (mevcut kodunla uyumlu)
 self.CLOUDINARY_CLOUD = CLOUD_NAME;
