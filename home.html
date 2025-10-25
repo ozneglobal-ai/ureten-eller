@@ -385,7 +385,33 @@
 
     // ===== Events / navigation =====
     document.getElementById('postBtn')?.addEventListener('click', ()=> location.href='/ilan-ver.html');
-    document.getElementById('logoutBtn')?.addEventListener('click', ()=> location.href='/index.html');
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  try {
+    // Firebase Auth (modüler veya compat ikisini de dener)
+    const fb = self.firebase || window.firebase;
+    let auth;
+    if (fb?.getAuth) {
+      // modüler
+      auth = fb.getAuth(self.__fb?.app);
+      await fb.signOut(auth);
+    } else if (fb?.auth) {
+      // compat
+      auth = fb.auth();
+      await auth.signOut();
+    }
+  } catch (e) {
+    console.warn('signOut hata:', e);
+  }
+
+  // Uygulamada tuttuğunuz yerel oturum verileri varsa temizleyin
+  try {
+    ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k));
+  } catch(_) {}
+  try { sessionStorage.clear(); } catch(_) {}
+
+  // Geri tuşu/yenile ile “home”a dönmesin
+  location.replace('/index.html');
+});
     document.getElementById('searchBtn')?.addEventListener('click', ()=>{
       const q=(document.getElementById('q')?.value||'').trim();
       const url=q?`/listings.html?q=${encodeURIComponent(q)}`:'/listings.html';
