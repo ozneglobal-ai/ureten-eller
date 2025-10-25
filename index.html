@@ -60,10 +60,9 @@
 
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
-    /* GRID: Masaüstü + Tablet = 4 sütun, Mobil = 2 sütun */
+    /* GRID: Masaüstü+Tablet 4, Mobil 2 */
     .grid{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
     @media (max-width: 980px){.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
-
     .card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
     .card .ph{aspect-ratio:16/11;background:linear-gradient(180deg,#f3f4f6,#fff)}
     .card .body{padding:12px}
@@ -82,19 +81,17 @@
     .auth-badge{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:999px}
     .avatar{width:28px;height:28px;border-radius:50%;background:#f3f4f6;overflow:hidden}
 
+    /* Modal */
     .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.32);z-index:60;padding:16px}
     .modal[open]{display:grid}
-    .sheet{width:min(520px,96vw);background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 30px 60px rgba(0,0,0,.15);overflow:hidden}
-    .sheet header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
+    .sheet{width:min(520px,96vw);max-height:94vh;background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 30px 60px rgba(0,0,0,.15);overflow:hidden}
+    .sheet header{position:sticky;top:0;background:#fff;z-index:1;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
     .sheet header h3{margin:0;font-size:18px}
-    .sheet .inner{padding:16px}
-
-    /* Mobil uyumlu modal: kayma yapmasın */
-    @media (max-width: 560px){
-      .modal{padding:0}
-      .sheet{width:100vw;height:100vh;border-radius:0}
-      .sheet header{position:sticky;top:0;background:#fff;z-index:1}
-      .sheet .inner{height:calc(100vh - 50px);overflow:auto;padding:14px}
+    .sheet .inner{padding:16px;overflow:auto;max-height:calc(94vh - 54px)}
+    @media (max-width: 520px){
+      .sheet{width:96vw;border-radius:14px}
+      .sheet .inner{padding:12px}
+      .btn{padding:10px 12px}
     }
 
     .form{display:grid;gap:10px}
@@ -157,7 +154,9 @@
     .mcat-chip[aria-selected="true"]{background:#111;color:#fff;border-color:#111}
     .mcat-chip .ico{font-size:16px;line-height:1}
     .mcat-sub{margin-top:8px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:6px;box-shadow:0 6px 20px rgba(0,0,0,.05)}
-    .mcat-sub .head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;padding:2px 8px}
+    .mcat-sub .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .mcat-sub .head .title{font-size:12px;font-weight:800;text-transform:uppercase;color:#6b7280;padding:2px 8px}
+    .mcat-sub .head button{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:4px 8px;font-weight:700;cursor:pointer}
     .mcat-sub a{display:block;margin:6px 0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;color:#374151;font-size:14px;background:#fafafa}
     .mcat-sub a:active{transform:translateY(1px)}
 
@@ -468,6 +467,7 @@
           fit:'Fit-Teller', vegan:'Vegane Speisen', gf:'GF-Backwaren', sekersiz:'Zuckerfreie Desserts', keto:'Keto-Produkte', protein:'Protein-Snacks',
           bileklik:'Armbänder', kolye:'Ketten', kupe:'Ohrringe', yuzuk:'Ringe', halhal:'Fußkettchen', bros:'Brosche', set:'Sets', isimli:'Personalisierte', makrome:'Makramé', dogaltas:'Edelstein', recine:'Harz', telsarma:'Draht gewickelt',
           fig:'Figuren', cingirak:'Rassel', dis:'Beißring', bezoy:'Stoffspielzeug/-buch', montessori:'Montessori', set2:'Sets', patik:'Schühchen-Mütze', battaniye:'Decke', onluk:'Lätzchen', lohusa:'Wochenbett-Set', sac:'Haar-Accessoire', giyim:'Handgemachte Kleidung',
+          hirka:'Hırka', kazak:'Kazak', atkibere:'Atkı-bere', panco:'Panço', sal:'Şal', corap:'Çorap', lif:'Lif takımı', bebektk:'Bebek takımı', yelek:'Yelek', kirlen:'Kırlent-örtü', igneoyasi:'İğne oyası',
           paca:'Saum/Reparatur', fermuar:'Reißverschlusswechsel', perde:'Vorhänge', nevresim:'Bettwäsche', masa:'Tischdecke', ozel:'Maßarbeit', kostum:'Kostüm',
           duvar:'Wandbehang', saksı:'Pflanzenhänger', anahtar:'Schlüsselanhänger', avize:'Kronleuchter', runner:'Läufer', sepet:'Korb', raf:'Regal/Deko',
           kece:'Filzarbeiten', kirlent:'Kissen', kapi:'Türkranz', tepsi:'Tablettdekor', cerceve:'Rahmen', ruya:'Traumfänger', tablo:'Bild',
@@ -556,25 +556,35 @@
       const sub  = document.getElementById('mcatSub');
       if (!wrap || !bar || !sub) return;
       bar.innerHTML = ''; sub.innerHTML = ''; sub.hidden = true;
+      let current = null; // seçili chip id
       CATS.forEach((cat, idx)=>{
         const chip = document.createElement('button');
         chip.type = 'button'; chip.className = 'mcat-chip'; chip.setAttribute('role','tab'); chip.setAttribute('aria-selected','false'); chip.setAttribute('data-cat', cat.id);
         const label = t('cat.'+cat.id) || cat.id; const icon = CAT_ICONS[cat.id] || '📦';
         chip.innerHTML = `<span class="ico" aria-hidden="true">${icon}</span><span>${label}</span>`;
         chip.addEventListener('click', ()=>{
-          const isSelected = chip.getAttribute('aria-selected')==='true';
-          if (isSelected){
-            // tekrar basınca kapansın
-            chip.setAttribute('aria-selected','false');
-            sub.hidden = true; sub.innerHTML = '';
+          // Aynı butona tekrar basılırsa kapat
+          if (current === cat.id) {
+            bar.querySelectorAll('.mcat-chip').forEach(c=>c.setAttribute('aria-selected','false'));
+            current = null; sub.hidden = true; sub.innerHTML = '';
             return;
           }
+          // Yeni seçim
+          current = cat.id;
           bar.querySelectorAll('.mcat-chip').forEach(c=>c.setAttribute('aria-selected','false'));
           chip.setAttribute('aria-selected','true');
-          const links = cat.subs.map(([sid, sLabel])=>{ const text = t('sub.'+sid) || sLabel; const href = `/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}`; return `<a href="${href}" data-cat="${cat.id}" data-sub="${sid}">${text}</a>`; }).join('');
-          sub.innerHTML = `<div class="head"><span>${label}</span><button id="mcatClose" class="btn ghost" type="button" aria-label="Kapat">✕</button></div>${links}`; sub.hidden = false;
-          // X'e basınca kapansın
-          document.getElementById('mcatClose')?.addEventListener('click', ()=>{ chip.setAttribute('aria-selected','false'); sub.hidden = true; sub.innerHTML=''; });
+          const links = cat.subs.map(([sid, sLabel])=>{
+            const text = t('sub.'+sid) || sLabel;
+            const href = `/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}`;
+            return `<a href="${href}" data-cat="${cat.id}" data-sub="${sid}">${text}</a>`;
+          }).join('');
+          sub.innerHTML = `<div class="head"><div class="title">${label}</div><button id="mcatClose" type="button" aria-label="Kapat">✕</button></div>${links}`;
+          sub.hidden = false;
+          // X ile kapat
+          sub.querySelector('#mcatClose')?.addEventListener('click', ()=>{
+            bar.querySelectorAll('.mcat-chip').forEach(c=>c.setAttribute('aria-selected','false'));
+            current = null; sub.hidden = true; sub.innerHTML = '';
+          });
         });
         bar.appendChild(chip);
         if (idx === 0){ setTimeout(()=>chip.click(), 0); }
@@ -585,8 +595,8 @@
     // ===== Search & Navigation =====
     $('#searchBtn')?.addEventListener('click', ()=>{ const q = ($('#q')?.value||'').trim(); const url = q ? `/listings.html?q=${encodeURIComponent(q)}` : '/listings.html'; location.href = url; });
     $('#browseBtn')?.addEventListener('click', ()=>{ const first = CATS[0]?.id || ''; location.href = first ? `/listings.html?cat=${first}` : '/listings.html'; });
-    // İlan Ver: giriş panelini aç
-    $('#postBtn')?.addEventListener('click', ()=>{ openAuth(''); });
+    // İLAN VER: Giriş panelini aç
+    $('#postBtn')?.addEventListener('click', ()=> openAuth(''));
 
     // ===== Auth Modal helpers =====
     function openAuth(msg){
@@ -672,7 +682,7 @@
       setLang(getLang());
       applyI18n();
       buildCatsMobile();
-      // SAHTE İLANLAR KALDIRILDI -> hiçbir otomatik kart ekleme yok
+      // SAHTE İLANLAR KALDIRILDI — liste boş bırakıldı
     })();
 
   </script>
