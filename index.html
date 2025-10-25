@@ -10,7 +10,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; /* --- FIX: mobile yatay kayma koruması --- */ overflow-x:hidden}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
@@ -26,21 +26,21 @@
 
     /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch; /* --- FIX: mobilde hesaplı scrollbar --- */ scrollbar-gutter:stable both-edges}
     .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
 
     .catdrops{background:#fff}
     .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
-    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 16px;background:#fff}
+    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
     .catdrops .panel.open{display:block}
 
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
-    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%)}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px}
-    .hero p{margin:0 0 16px 0;color:#4b5563}
+    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
+    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
+    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
     /* Buttons */
@@ -75,6 +75,22 @@
     .legal .inner{max-width:1200px;margin:0 auto;padding:16px}
     .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+
+    /* === RESPONSIVE DOKUNUŞLAR (mevcudu bozmadan) === */
+    @media (max-width:768px){
+      .topbar-inner{padding:12px 12px}
+      .catnav-inner{padding:8px 12px}
+      .hero{margin:12px 12px;padding:18px 14px}
+      .hero h2{font-size:24px;line-height:1.25}
+      .hero p{font-size:14px;line-height:1.5}
+    }
+
+    @media (max-width:420px){
+      .brand h1{font-size:16px}
+      .actions{gap:6px}
+      .lang{padding:6px 8px}
+      .hero h2{font-size:22px}
+    }
   </style>
 </head>
 <body>
@@ -244,7 +260,7 @@
         'fields.email':'البريد الإلكتروني','fields.password':'كلمة المرور','fields.password2':'تأكيد كلمة المرور','fields.username':'اسم المستخدم','fields.fullname':'الاسم الكامل','fields.province':'الولاية','fields.district':'المنطقة',
         'register.summary':'ليس لديك حساب؟ سجّل الآن',
         'hints.verify':'سيتم إرسال <strong>رسالة تفعيل</strong>. يرجى فحص الوارد و<strong>الرسائل غير المرغوبة</strong>.',
-        'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','legal.delivery':'التسليم/الإرجاع','legal.contact':'التواصل'
+        'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','التسليم/الإرجاع':'التسليم/الإرجاع','legal.contact':'التواصل'
       }
     };
 
