@@ -1,779 +1,188 @@
-<!DOCTYPE html>
-<html lang="tr" dir="ltr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Üreten Eller • Ana Sayfa</title>
-  <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Kategorilere göz atın, arayın, ilan verin." />
-  <link rel="icon" href="/assets/icons/favicon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
-  <style>
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; /* --- FIX: mobile yatay kayma koruması --- */ overflow-x:hidden}
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block}
+// firebase-init.js (ESM, idempotent init + Cloudinary helpers) — 2025-10-23
 
-    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
-    .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
-    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:10px}
-    .brand .logo{width:36px;height:36px;border-radius:10px;background:#000 url('/assets/icons/favicon.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
-    .actions{display:flex;align-items:center;gap:8px}
-    .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
-    .lang select{border:0;background:transparent;font-weight:700}
+// === Firebase (CDN ESM) ===
+import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+import { getAuth, onAuthStateChanged as _onAuthStateChanged, signInWithEmailAndPassword as _signInWithEmailAndPassword, signOut as _signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+import { getStorage, ref as _storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
+import { getMessaging, getToken, onMessage, isSupported as messagingIsSupported } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
 
-    /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
-    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch; /* --- FIX: mobilde hesaplı scrollbar --- */ scrollbar-gutter:stable both-edges}
-    .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
-    .catnav .chip:hover{background:#fafafa}
-    .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
+// === Firebase Config (istersen window.__FIREBASE_CONFIG ile override edebilirsin)
+const firebaseConfig = (window.__FIREBASE_CONFIG) || {
+  apiKey: "AIzaSyBqYJBZ95AOV-ojKGV0MZn42-OnJYQkdAo",
+  authDomain: "flutter-ai-playground-38ddf.firebaseapp.com",
+  projectId: "flutter-ai-playground-38ddf",
+  storageBucket: "flutter-ai-playground-38ddf.firebasestorage.com",
+  messagingSenderId: "4688234885",
+  appId: "1:4688234885:web:a3cead37ea580495ca5cec"
+};
 
-    .catdrops{background:#fff}
-    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
-    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
-    .catdrops .panel.open{display:block}
+// === Init (idempotent) ===
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-    /* Hero */
-    .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
-    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
-    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
-    .cta-row{display:flex;flex-wrap:wrap;gap:8px}
+// Global fallbacks (index/home kodu self.* bekliyor)
+self.app = app;
+self.auth = auth;
+self.db = db;
+self.storage = storage;
 
-    /* Buttons */
-    .btn{--gold:#caa552;--shine:rgba(255,255,255,.7);--ink:#0b1220;appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;position:relative;isolation:isolate;transition:transform .06s ease, box-shadow .2s ease;user-select:none}
-    .btn:active{transform:translateY(1px)}
-    .btn.gold{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 var(--shine), 0 4px 18px rgba(202,165,82,.35)}
-    .btn.ghost{background:#fff;border:1px solid #e5e7eb}
+// >>> EKLENDİ: home.html’in beklediği nesne
+self.__fb = { app, auth, db, storage };
 
-    /* Auth badge */
-    .auth-badge{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:999px}
-    .avatar{width:28px;height:28px;border-radius:50%;background:#f3f4f6;overflow:hidden}
+// =================== Cloudinary (ozneglobal) ===================
+// Not: API SECRET asla frontend'e konulmaz.
+// Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
+const CLOUD_NAME = 'ozneglobal'; // Cloud name (hesabında gözüken)
+const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
+const UPLOAD_PRESET = 'ue_unsigned'; // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
-    /* Modal */
-    dialog.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.32);z-index:60;padding:16px}
-    dialog[open].modal{display:grid}
-    .sheet{width:min(560px,96vw);background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 30px 60px rgba(0,0,0,.15);overflow:hidden}
-    .sheet header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
-    .sheet header h3{margin:0;font-size:18px}
-    .sheet .inner{padding:16px}
-    .form{display:grid;gap:10px}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:560px){.row2{grid-template-columns:1fr}}
-    .input{display:flex;flex-direction:column;gap:6px}
-    .input label{font-size:12px;color:#6b7280}
-    .input input, .input select{border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px}
-    .pw{position:relative}
-    .pw input{padding-right:38px}
-    .pw .toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer}
+// Yardımcı sabitler
+const CL_BASE = https://res.cloudinary.com/${CLOUD_NAME};
+const CL_IMAGE = ${CL_BASE}/image;
+const CL_FETCH = ${CL_IMAGE}/fetch;
+const CL_UPLOAD = https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload;
 
-    /* Footer */
-    .legal{background:#000;color:#fff}
-    .legal .inner{max-width:1200px;margin:0 auto;padding:16px}
-    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+// Global'e aktar (mevcut kodunla uyumlu)
+self.CLOUDINARY_CLOUD = CLOUD_NAME;
+self.CLOUDINARY = {
+  cloud: CLOUD_NAME,
+  apiKey: CLOUD_API_KEY,
+  uploadPreset: UPLOAD_PRESET,
+  base: CL_BASE,
+  imageBase: CL_IMAGE,
+  fetchBase: CL_FETCH,
+  uploadEndpoint: CL_UPLOAD
+};
 
-    /* === RESPONSIVE DOKUNUŞLAR (mevcudu bozmadan) === */
-    @media (max-width:768px){
-      .topbar-inner{padding:12px 12px}
-      .catnav-inner{padding:8px 12px}
-      .hero{margin:12px 12px;padding:18px 14px}
-      .hero h2{font-size:24px;line-height:1.25}
-      .hero p{font-size:14px;line-height:1.5}
+// Basit dönüştürme string'i üret (ör: "c_fill,w_600,h_600,q_auto,f_auto")
+function clTx(opts = {}) {
+  const { w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr, radius, ar, bg } = opts;
+  const parts = [];
+  if (c) parts.push(c_${c});
+  if (w) parts.push(w_${w});
+  if (h) parts.push(h_${h});
+  if (ar) parts.push(ar_${ar});
+  if (g) parts.push(g_${g});
+  if (radius) parts.push(r_${radius});
+  if (bg) parts.push(b_${bg});
+  if (dpr) parts.push(dpr_${dpr});
+  if (q) parts.push(q_${q});
+  if (f) parts.push(f_${f});
+  return parts.join(',');
+}
+
+// Public ID ile URL (image/upload)
+self.clUrl = function clUrl(publicId, opts = {}) {
+  const tx = clTx(opts);
+  return tx ? ${CL_IMAGE}/upload/${tx}/${publicId} : ${CL_IMAGE}/upload/${publicId};
+};
+
+// Harici URL’i fetch ile dönüştür (image/fetch)
+self.clFetch = function clFetch(srcUrl, opts = {}) {
+  const tx = clTx(opts);
+  const encoded = encodeURIComponent(srcUrl);
+  return tx ? ${CL_FETCH}/${tx}/${encoded} : ${CL_FETCH}/${encoded};
+};
+
+// UNSIGNED upload (form file veya blob)
+self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'uploads') {
+  const form = new FormData();
+  form.append('upload_preset', UPLOAD_PRESET);
+  form.append('file', fileOrBlob);
+  if (folder) form.append('folder', folder);
+  // Opsiyonel: public_id, tags, context vs. ekleyebilirsin
+  const res = await fetch(CL_UPLOAD, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(Cloudinary upload failed: ${res.status});
+  return res.json(); // { public_id, secure_url, ... }
+};
+
+// === Örnek kullanımlar ===
+self.avatarUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:600, h:600, q:'auto', f:'auto', radius:'max' });
+self.coverUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:1000, h:1000, q:'auto', f:'auto' });
+self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto', f:'auto' });
+
+// =================== FCM (guard'lı) ===================
+(async () => {
+  try {
+    const supported = await messagingIsSupported();
+    if (!supported) return;
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      try { await Notification.requestPermission(); } catch {}
     }
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-    @media (max-width:420px){
-      .brand h1{font-size:16px}
-      .actions{gap:6px}
-      .lang{padding:6px 8px}
-      .hero h2{font-size:22px}
-    }
-      /* === İLAN KARTLARI === */
-    .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
-    .listings-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
-    .listings-head h3{margin:0;font-size:18px}
-    .listings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-    .card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
-    .card .ph{position:relative;aspect-ratio:1/1;background:#f5f6f7}
-    .card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .card .body{padding:10px;display:grid;gap:6px}
-    .card .title{font-weight:800;font-size:14px;line-height:1.3}
-    .card .desc{color:#6b7280;font-size:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .price{font-weight:900}
-    .seller{display:flex;gap:8px;align-items:center}
-    .seller .av{width:22px;height:22px;border-radius:50%;background:#eee;overflow:hidden}
-    .seller .av img{width:100%;height:100%;object-fit:cover}
-    .seller .name{font-size:12px}
-    .badge{font-size:10px;border:1px solid #10b981;color:#065f46;padding:2px 6px;border-radius:999px;background:#ecfdf5;margin-left:auto}
-    .card .actions{display:flex;gap:8px;margin-top:8px}
-    .card .actions .btn{flex:1}
-    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff;font-size:12px}
-    .paging{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    const messaging = getMessaging(app);
+    self.messaging = messaging;
 
-    /* Showcase simgesi */
-    .ribbon{position:absolute;top:8px;left:8px;background:#caa552;color:#111;font-weight:900;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #b18a37;box-shadow:0 4px 14px rgba(202,165,82,.25)}
-
-    /* Responsive isteklerine göre: mobil 2, tablet/desktop 4 sütun */
-    @media (max-width:768px){
-      .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <h1 data-i18n="app.name">Üreten Eller</h1>
-        </div>
-        <div class="actions">
-          <div class="lang">
-            <span>🌐</span>
-            <select id="langSel" aria-label="Dil">
-              <option value="tr" selected>Türkçe</option>
-              <option value="en">English</option>
-              <option value="de">Deutsch</option>
-              <option value="ar">العربية</option>
-            </select>
-          </div>
-          <button class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
-          <div id="authArea" class="auth-badge" style="display:none">
-            <div class="avatar"><img id="uAvatar" alt="" /></div>
-            <div id="uName" class="hint">Kullanıcı</div>
-            <button class="btn ghost" id="signOutBtn" data-i18n="buttons.signout">Çıkış</button>
-          </div>
-          <button class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
-        </div>
-      </div>
-
-      <!-- Üstte Yatay Kategori Şeritleri (hepsi yan yana, kaydırmalı) -->
-      <nav id="catNav" class="catnav" aria-label="Kategoriler">
-        <div class="catnav-inner"></div>
-      </nav>
-      <div id="catDrops" class="catdrops">
-        <div class="catdrops-inner"></div>
-      </div>
-    </div>
-
-    <main>
-      <section class="content">
-        <div class="hero">
-          <h2 id="heroTitle" data-i18n="hero.title">El emeği & yerel lezzetler tek çatı altında</h2>
-          <p id="heroDesc" data-i18n="hero.desc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
-          <div class="cta-row">
-            <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
-          </div>
-        </div>
-              </div>
-      </section>
-
-      <!-- === İLANLAR === -->
-      <section class="listings-section">
-        <div class="listings-head">
-          <h3>Yeni İlanlar</h3>
-          <div class="pill" id="listInfo">Yükleniyor…</div>
-        </div>
-        <div class="listings-grid" id="listGrid" aria-live="polite"></div>
-        <div class="paging">
-          <button class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
-          <button class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
-        </div>
-      </section>
-    </main>
-
-    <footer class="legal">
-      <div class="inner">
-        <div class="row">
-          <div class="links">
-            <a href="/legal/kullanim-sartlari.html" data-i18n="legal.tos">Kullanım Şartları</a>
-            <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
-            <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
-            <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
-            <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
-            <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
-            <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
-            <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.delivery">Teslimat/İade</a>
-            <a href="/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
-          </div>
-          <div class="hint">© <span id="y"></span> <span data-i18n="app.name">Üreten Eller</span></div>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <!-- ===== Auth Modal ===== -->
-  <dialog class="modal" id="authModal" aria-labelledby="authTitle">
-    <div class="sheet">
-      <header>
-        <h3 id="authTitle" data-i18n="auth.title">Giriş Yap / Kayıt Ol</h3>
-        <button class="btn ghost" data-close aria-label="Kapat">✕</button>
-      </header>
-      <div class="inner">
-        <div class="form" style="margin-bottom:16px">
-          <div class="input"><label for="li_email" data-i18n="fields.email">E‑posta</label><input id="li_email" type="email" placeholder="ornek@mail.com" autocomplete="username"/></div>
-          <div class="input pw"><label for="li_pass" data-i18n="fields.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
-          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
-              <button class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
-            </div>
-            <button class="btn gold" id="googleBtn" type="button" aria-label="Google" data-i18n="buttons.google">Google ile Giriş</button>
-          </div>
-        </div>
-        <hr style="border:0;border-top:1px solid #eee;margin:8px 0 14px">
-        <details>
-          <summary style="cursor:pointer;font-weight:700" data-i18n="register.summary">Hesabın yok mu? Kayıt ol</summary>
-          <div class="form" style="margin-top:10px">
-            <div class="row2">
-              <div class="input"><label for="su_username" data-i18n="fields.username">Kullanıcı Adı</label><input id="su_username" maxlength="24" placeholder="@kullanici"/></div>
-              <div class="input"><label for="su_name" data-i18n="fields.fullname">Ad Soyad</label><input id="su_name" placeholder="Adınız Soyadınız"/></div>
-            </div>
-            <div class="row2">
-              <div class="input"><label for="su_province" data-i18n="fields.province">İl</label>
-                <select id="su_province"></select>
-              </div>
-              <div class="input"><label for="su_district" data-i18n="fields.district">İlçe</label><input id="su_district" placeholder="İlçeniz"/></div>
-            </div>
-            <div class="row2">
-              <div class="input"><label for="su_email" data-i18n="fields.email">E‑posta</label><input id="su_email" type="email" placeholder="ornek@mail.com" autocomplete="email"/></div>
-              <div class="input pw"><label for="su_pass" data-i18n="fields.password">Şifre</label><input id="su_pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass" aria-label="Şifreyi göster">👁️</button></div>
-            </div>
-            <div class="input pw"><label for="su_pass2" data-i18n="fields.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
-            <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
-              <button class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
-              <div class="hint" data-i18n="hints.verify">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
-            </div>
-          </div>
-        </details>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- ===== Listing Detail Modal ===== -->
-  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
-    <div class="sheet">
-      <header>
-        <h3 id="listingTitle">İlan Detayı</h3>
-        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
-      </header>
-      <div class="inner" id="listingBody">
-        <!-- JS ile doldurulacak -->
-      </div>
-    </div>
-  </dialog>
-<!-- Firebase init (kökten) -->
-  <script type="module" src="/firebase-init.js"></script>
-
-  <script type="module">
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-
-    // ===== i18n – Metinler =====
-    const I18N = {
-      tr: {
-        'app.name':'Üreten Eller',
-        'buttons.post':'İlan Ver','buttons.signin':'Giriş / Kayıt','buttons.signout':'Çıkış','buttons.browse':'Kategorileri Keşfet','buttons.login':'Giriş Yap','buttons.forgot':'Şifremi Unuttum','buttons.google':'Google ile Giriş','buttons.register':'Kayıt Ol',
-        'hero.title':'El emeği & yerel lezzetler tek çatı altında',
-        'hero.desc':'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.',
-        'auth.title':'Giriş Yap / Kayıt Ol',
-        'fields.email':'E‑posta','fields.password':'Şifre','fields.password2':'Şifre (Tekrar)','fields.username':'Kullanıcı Adı','fields.fullname':'Ad Soyad','fields.province':'İl','fields.district':'İlçe',
-        'register.summary':'Hesabın yok mu? Kayıt ol',
-        'hints.verify':'Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.',
-        'legal.tos':'Kullanım Şartları','legal.privacy':'Gizlilik Politikası','legal.kvkk':'KVKK Aydınlatma','legal.community':'Topluluk Kuralları','legal.prohibited':'Yasaklı Ürünler','legal.distance':'Mesafeli Satış','legal.preinfo':'Ön Bilgilendirme','legal.delivery':'Teslimat/İade','legal.contact':'İletişim'
-      },
-      en: {
-        'app.name':'Productive Hands',
-        'buttons.post':'Post an Ad','buttons.signin':'Sign in / Register','buttons.signout':'Sign out','buttons.browse':'Browse Categories','buttons.login':'Sign In','buttons.forgot':'Forgot Password','buttons.google':'Sign in with Google','buttons.register':'Register',
-        'hero.title':'Handmade & local tastes under one roof',
-        'hero.desc':'Shop from women producers: homemade foods and handmade designs. Search by your location or explore by categories.',
-        'auth.title':'Sign In / Register',
-        'fields.email':'Email','fields.password':'Password','fields.password2':'Password (Again)','fields.username':'Username','fields.fullname':'Full Name','fields.province':'Province','fields.district':'District',
-        'register.summary':'No account? Create one',
-        'hints.verify':'A <strong>verification email</strong> will be sent. Check your inbox and <strong>SPAM</strong> folder.',
-        'legal.tos':'Terms of Use','legal.privacy':'Privacy Policy','legal.kvkk':'KVKK Notice','legal.community':'Community Rules','legal.prohibited':'Prohibited Items','legal.distance':'Distance Sales','legal.preinfo':'Pre-Information','legal.delivery':'Delivery/Return','legal.contact':'Contact'
-      },
-      de: {
-        'app.name':'Fleißige Hände',
-        'buttons.post':'Anzeige aufgeben','buttons.signin':'Anmelden / Registrieren','buttons.signout':'Abmelden','buttons.browse':'Kategorien entdecken','buttons.login':'Anmelden','buttons.forgot':'Passwort vergessen','buttons.google':'Mit Google anmelden','buttons.register':'Registrieren',
-        'hero.title':'Handgemachtes & lokale Köstlichkeiten unter einem Dach',
-        'hero.desc':'Einkaufen bei Produzentinnen: Hausgemachtes und Handarbeiten. Nach Standort suchen oder Kategorien entdecken.',
-        'auth.title':'Anmelden / Registrieren',
-        'fields.email':'E‑Mail','fields.password':'Passwort','fields.password2':'Passwort (erneut)','fields.username':'Benutzername','fields.fullname':'Vollständiger Name','fields.province':'Provinz','fields.district':'Bezirk',
-        'register.summary':'Kein Konto? Jetzt registrieren',
-        'hints.verify':'Eine <strong>Bestätigungs‑E‑Mail</strong> wird gesendet. Posteingang und <strong>SPAM</strong> prüfen.',
-        'legal.tos':'Nutzungsbedingungen','legal.privacy':'Datenschutz','legal.kvkk':'KVKK Hinweis','legal.community':'Community‑Regeln','legal.prohibited':'Verbotene Artikel','legal.distance':'Fernabsatz','legal.preinfo':'Vorab‑Information','legal.delivery':'Lieferung/Rückgabe','legal.contact':'Kontakt'
-      },
-      ar: {
-        'app.name':'الأيادي المُنتِجة',
-        'buttons.post':'أنشئ إعلانًا','buttons.signin':'تسجيل الدخول / إنشاء حساب','buttons.signout':'تسجيل الخروج','buttons.browse':'استكشف الفئات','buttons.login':'تسجيل الدخول','buttons.forgot':'نسيت كلمة المرور','buttons.google':'الدخول عبر Google','buttons.register':'إنشاء حساب',
-        'hero.title':'منتجات يدوية ونكهات محلية تحت سقف واحد',
-        'hero.desc':'تسوّق من السيّدات المُنتِجات: أطعمة منزلية وأعمال يدوية. ابحث حسب موقعك أو استكشف حسب الفئات.',
-        'auth.title':'تسجيل الدخول / إنشاء حساب',
-        'fields.email':'البريد الإلكتروني','fields.password':'كلمة المرور','fields.password2':'تأكيد كلمة المرور','fields.username':'اسم المستخدم','fields.fullname':'الاسم الكامل','fields.province':'الولاية','fields.district':'المنطقة',
-        'register.summary':'ليس لديك حساب؟ سجّل الآن',
-        'hints.verify':'سيتم إرسال <strong>رسالة تفعيل</strong>. يرجى فحص الوارد و<strong>الرسائل غير المرغوبة</strong>.',
-        'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','التسليم/الإرجاع':'التسليم/الإرجاع','legal.contact':'التواصل'
+    // Service Worker register (docs/ sonra kök)
+    let swReg = null;
+    if ('serviceWorker' in navigator) {
+      try {
+        swReg = await navigator.serviceWorker.register('/docs/firebase-messaging-sw.js', { scope: '/docs/' });
+      } catch {
+        try { swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js'); } catch {}
       }
-    };
-
-    // ===== i18n – Kategori/Sousözlükleri =====
-    const CAT_I18N = {
-      tr: {
-        titles: {
-          yemek:'🍲 Yemekler', pasta:'🎂 Pasta & Tatlı', sos:'🫙 Reçel • Turşu • Sos', yoresel:'🌾 Yöresel / Kışlık',
-          diet:'🥗 Diyet / Vegan / GF', taki:'💍 Takı', bebek:'👶 Bebek & Çocuk', orgu:'🧶 Örgü / Triko',
-          terzi:'✂️ Dikiş / Terzilik', makrome:'🧵 Makrome & Dekor', evdekor:'🏠 Ev Dekor & Aksesuar',
-          mum:'🕯️ Mum & Kokulu', kozmetik:'🧼 Doğal Sabun & Kozmetik', amigurumi:'🧸 Amigurumi & Oyuncak'
-        },
-        subs: {
-          evyemek:'Ev yemekleri', borek:'Börek-çörek', corba:'Çorba', zeytiny:'Zeytinyağlı', pilav:'Pilav-makarna', et:'Et-tavuk', kahvalti:'Kahvaltılık', meze:'Meze', dondur:'Dondurulmuş', cocuk:'Çocuk öğünleri', diyetvegf:'Diyet/vegan/gf',
-          yaspasta:'Yaş pasta', kek:'Kek-cupcake', kurabiye:'Kurabiye', serbetli:'Şerbetli', sutlu:'Sütlü', cheese:'Cheesecake', diyettat:'Diyet tatlı', cikolata:'Çikolata/şekerleme', dogumset:'Doğum günü setleri',
-          recel:'Reçel-marmelat', pekmez:'Pekmez', tursu:'Turşu', dom:'Domates/biber sos', acios:'Acı sos', salca:'Salça', sirke:'Sirke', konserve:'Konserve',
-          eriste:'Erişte', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Kurutulmuş', salca2:'Salça', sirke2:'Sirke', konserve2:'Konserve',
-          fit:'Fit tabaklar', vegan:'Vegan yemekler', gf:'GF unlu mamuller', sekersiz:'Şekersiz tatlı', keto:'Keto ürün', protein:'Protein atıştırmalık',
-          bileklik:'Bileklik', kolye:'Kolye', kupe:'Küpe', yuzuk:'Yüzük', halhal:'Halhal', bros:'Broş', set:'Setler', isimli:'Kişiye özel', makrome:'Makrome', dogaltas:'Doğal taş', recine:'Reçine', telsarma:'Tel sarma',
-          fig:'Figürler', cingirak:'Çıngırak', dis:'Diş kaşıyıcı', bezoy:'Bez oyuncak/kitap', montessori:'Montessori', set2:'Setler', patik:'Patik-bere', battaniye:'Battaniye', onluk:'Önlük', lohusa:'Lohusa seti', sac:'Saç aksesuarı', giyim:'El emeği kıyafet',
-          hirka:'Hırka', kazak:'Kazak', atkibere:'Atkı-bere', panco:'Panço', sal:'Şal', corap:'Çorap', lif:'Lif takımı', bebektk:'Bebek takımı', yelek:'Yelek', kirlen:'Kırlent-örtü', igneoyasi:'İğne oyası',
-          paca:'Paça/onarım', fermuar:'Fermuar değişimi', perde:'Perde', nevresim:'Nevresim', masa:'Masa örtüsü', ozel:'Özel dikim', kostum:'Kostüm',
-          duvar:'Duvar süsü', saksi:'Saksı askısı', anahtar:'Anahtarlık', avize:'Avize', runner:'Runner', sepet:'Sepet', raf:'Raf/dekor',
-          kece:'Keçe işleri', kirlent:'Kırlent', kapi:'Kapı süsü', tepsi:'Tepsi süs', cerceve:'Çerçeve', ruya:'Rüya kapanı', tablo:'Tablo',
-          soya:'Soya/balmumu', tas:'Kokulu taş', sprey:'Oda spreyi', tutsu:'Tütsü', jel:'Jel mum', hediye:'Hediye seti',
-          zeytin:'Zeytinyağlı sabun', bitkisel:'Bitkisel sabun', sampuan:'Katı şampuan', balm:'Dudak balmı', krem:'Krem/merhem', banyotuzu:'Banyo tuzu', lavanta:'Lavanta kesesi',
-          anahtar2:'Anahtarlık', magnet:'Magnet', kolek:'Koleksiyon', dekorbebek:'Dekor bebek'
-        }
-      },
-      en: {
-        titles: {
-          yemek:'🍲 Meals', pasta:'🎂 Cakes & Sweets', sos:'🫙 Jam • Pickles • Sauces', yoresel:'🌾 Local / Pantry',
-          diet:'🥗 Diet / Vegan / GF', taki:'💍 Jewelry', bebek:'👶 Baby & Kids', orgu:'🧶 Knitwear',
-          terzi:'✂️ Sewing / Tailor', makrome:'🧵 Macramé & Decor', evdekor:'🏠 Home Decor & Accessories',
-          mum:'🕯️ Candles & Fragrance', kozmetik:'🧼 Natural Soap & Cosmetics', amigurumi:'🧸 Amigurumi & Toys'
-        },
-        subs: {
-          evyemek:'Home-cooked meals', borek:'Börek & pastries', corba:'Soup', zeytiny:'Olive-oil dishes', pilav:'Rice & pasta', et:'Meat & chicken', kahvalti:'Breakfast items', meze:'Meze', dondur:'Frozen', cocuk:'Kids meals', diyetvegf:'Diet/vegan/gf',
-          yaspasta:'Cream cakes', kek:'Cake & cupcake', kurabiye:'Cookies', serbetli:'Syrupy desserts', sutlu:'Milk desserts', cheese:'Cheesecake', diyettat:'Diet desserts', cikolata:'Chocolate/candy', dogumset:'Birthday sets',
-          recel:'Jam & marmalade', pekmez:'Molasses', tursu:'Pickles', dom:'Tomato/pepper sauce', acios:'Hot sauce', salca:'Paste', sirke:'Vinegar', konserve:'Canned',
-          eriste:'Noodles (erişte)', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Dried foods', salca2:'Paste', sirke2:'Vinegar', konserve2:'Canned',
-          fit:'Fit plates', vegan:'Vegan dishes', gf:'Gluten‑free bakery', sekersiz:'Sugar‑free desserts', keto:'Keto products', protein:'Protein snacks',
-          bileklik:'Bracelet', kolye:'Necklace', kupe:'Earrings', yuzuk:'Ring', halhal:'Anklet', bros:'Brooch', set:'Sets', isimli:'Personalized', makrome:'Macramé', dogaltas:'Gemstone', recine:'Resin', telsarma:'Wire wrap',
-          fig:'Figures', cingirak:'Rattle', dis:'Teether', bezoy:'Cloth toy/book', montessori:'Montessori', set2:'Sets', patik:'Booties & beanie', battaniye:'Blanket', onluk:'Bib', lohusa:'Maternity set', sac:'Hair accessory', giyim:'Handmade clothing',
-          hirka:'Cardigan', kazak:'Sweater', atkibere:'Scarf & beanie', panco:'Poncho', sal:'Shawl', corap:'Socks', lif:'Bath mitt set', bebektk:'Baby set', yelek:'Vest', kirlen:'Cushion/cover', igneoyasi:'Needle lace',
-          paca:'Hem/repair', fermuar:'Zipper change', perde:'Curtain', nevresim:'Duvet set', masa:'Tablecloth', ozel:'Custom tailoring', kostum:'Costume',
-          duvar:'Wall hanging', saksi:'Plant hanger', anahtar:'Keychain', avize:'Chandelier', runner:'Runner', sepet:'Basket', raf:'Shelf/decor',
-          kece:'Felt crafts', kirlent:'Cushion', kapi:'Door wreath', tepsi:'Tray decor', cerceve:'Frame', ruya:'Dreamcatcher', tablo:'Painting',
-          soya:'Soy/beeswax', tas:'Aroma stone', sprey:'Room spray', tutsu:'Incense', jel:'Gel candle', hediye:'Gift set',
-          zeytin:'Olive oil soap', bitkisel:'Herbal soap', sampuan:'Solid shampoo', balm:'Lip balm', krem:'Cream/ointment', banyotuzu:'Bath salt', lavanta:'Lavender sachet',
-          anahtar2:'Keychain', magnet:'Magnet', kolek:'Collection', dekorbebek:'Decor doll'
-        }
-      },
-      de: {
-        titles: {
-          yemek:'🍲 Gerichte', pasta:'🎂 Kuchen & Süßes', sos:'🫙 Marmelade • Pickles • Soßen', yoresel:'🌾 Regional / Vorrat',
-          diet:'🥗 Diät / Vegan / GF', taki:'💍 Schmuck', bebek:'👶 Baby & Kinder', orgu:'🧶 Strick',
-          terzi:'✂️ Nähen / Schneiderei', makrome:'🧵 Makramee & Deko', evdekor:'🏠 Wohndeko & Accessoires',
-          mum:'🕯️ Kerzen & Düfte', kozmetik:'🧼 Naturseife & Kosmetik', amigurumi:'🧸 Amigurumi & Spielzeug'
-        },
-        subs: {
-          evyemek:'Hausmannskost', borek:'Börek & Gebäck', corba:'Suppe', zeytiny:'Olivenöldgerichte', pilav:'Reis & Pasta', et:'Fleisch & Huhn', kahvalti:'Frühstück', meze:'Meze', dondur:'Tiefgekühlt', cocuk:'Kindermahlzeiten', diyetvegf:'Diät/vegan/gf',
-          yaspasta:'Sahnetorten', kek:'Kuchen & Cupcake', kurabiye:'Kekse', serbetli:'Sirup‑Desserts', sutlu:'Milchdesserts', cheese:'Käsekuchen', diyettat:'Diät‑Desserts', cikolata:'Schokolade/Süßwaren', dogumset:'Geburtstags‑Sets',
-          recel:'Marmelade', pekmez:'Melasse', tursu:'Eingelegtes', dom:'Tomaten/Paprika‑Soße', acios:'Scharfe Soße', salca:'Mark', sirke:'Essig', konserve:'Konserven',
-          eriste:'Erişte‑Nudeln', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Getrocknetes', salca2:'Mark', sirke2:'Essig', konserve2:'Konserven',
-          fit:'Fit‑Teller', vegan:'Vegane Gerichte', gf:'Glutenfreie Backwaren', sekersiz:'Zuckerfreie Desserts', keto:'Keto‑Produkte', protein:'Protein‑Snacks',
-          bileklik:'Armband', kolye:'Kette', kupe:'Ohrringe', yuzuk:'Ring', halhal:'Fußkettchen', bros:'Brosche', set:'Sets', isimli:'Personalisiert', makrome:'Makramee', dogaltas:'Edelstein', recine:'Harz', telsarma:'Drahtwicklung',
-          fig:'Figuren', cingirak:'Rassel', dis:'Beißring', bezoy:'Stoffspielzeug/Buch', montessori:'Montessori', set2:'Sets', patik:'Schühchen & Mütze', battaniye:'Decke', onluk:'Lätzchen', lohusa:'Wochenbett‑Set', sac:'Haaraccessoire', giyim:'Handgemachte Kleidung',
-          hirka:'Cardigan', kazak:'Pullover', atkibere:'Schal & Mütze', panco:'Poncho', sal:'Tuch', corap:'Socken', lif:'Badeset', bebektk:'Baby‑Set', yelek:'Weste', kirlen:'Kissen/Decke', igneoyasi:'Nadelspitze',
-          paca:'Saum/Reparatur', fermuar:'Reißverschlusswechsel', perde:'Vorhang', nevresim:'Bettwäsche‑Set', masa:'Tischdecke', ozel:'Maßanfertigung', kostum:'Kostüm',
-          duvar:'Wanddeko', saksi:'Pflanzenhänger', anahtar:'Schlüsselanhänger', avize:'Krone/Leuchte', runner:'Läufer', sepet:'Korb', raf:'Regal/Deko',
-          kece:'Filzarbeiten', kirlent:'Kissen', kapi:'Türkranz', tepsi:'Tablett‑Deko', cerceve:'Rahmen', ruya:'Traumfänger', tablo:'Bild',
-          soya:'Soja/Bienenwachs', tas:'Duftstein', sprey:'Raumspray', tutsu:'Weihrauch', jel:'Gelkerze', hediye:'Geschenkset',
-          zeytin:'Olivenölseife', bitkisel:'Kräuterseife', sampuan:'Festes Shampoo', balm:'Lippenbalsam', krem:'Creme/Salbe', banyotuzu:'Badesalz', lavanta:'Lavendelsäckchen',
-          anahtar2:'Schlüsselanhänger', magnet:'Magnet', kolek:'Sammlung', dekorbebek:'Deko‑Puppe'
-        }
-      },
-      ar: {
-        titles: {
-          yemek:'🍲 وجبات', pasta:'🎂 كعكات وحلويات', sos:'🫙 مربّى • مخللات • صلصات', yoresel:'🌾 محلي / مؤونة',
-          diet:'🥗 حمية / نباتي / خالٍ من الغلوتين', taki:'💍 مجوهرات', bebek:'👶 أطفال ورضّع', orgu:'🧶 حياكة',
-          terzi:'✂️ خياطة / تفصيل', makrome:'🧵 مكرمية وديكور', evdekor:'🏠 ديكور منزلي وإكسسوارات',
-          mum:'🕯️ شموع وروائح', kozmetik:'🧼 صابون طبيعي ومستحضرات', amigurumi:'🧸 أميغورومي وألعاب'
-        },
-        subs: {
-          evyemek:'أطباق منزلية', borek:'بورك ومعجّنات', corba:'شوربة', zeytiny:'أطباق بزيت الزيتون', pilav:'أرز ومكرونة', et:'لحوم ودجاج', kahvalti:'فطور', meze:'مقبلات', dondur:'مجمّدة', cocuk:'وجبات أطفال', diyetvegf:'حمية/نباتي/خالٍ من الغلوتين',
-          yaspasta:'كيك بالكريمة', kek:'كيك وكب كيك', kurabiye:'بسكويت', serbetli:'حلويات قطر', sutlu:'حلويات بالحليب', cheese:'تشيزكيك', diyettat:'حلويات حمية', cikolata:'شوكولا/حلويات', dogumset:'مجموعات عيد ميلاد',
-          recel:'مربّى', pekmez:'دبس', tursu:'مخللات', dom:'صلصة طماطم/فلفل', acios:'صلصة حارة', salca:'معجون', sirke:'خل', konserve:'معلّبات',
-          eriste:'نودلز (إريشته)', tarhana:'ترخانة', yufka:'يفكة', manti:'مانطي', kurut:'مجففات', salca2:'معجون', sirke2:'خل', konserve2:'معلّبات',
-          fit:'أطباق خفيفة', vegan:'أطباق نباتية', gf:'مخبوزات خالية من الغلوتين', sekersiz:'حلويات بدون سكر', keto:'منتجات كيتو', protein:'سناكات بروتين',
-          bileklik:'سوار', kolye:'عقد', kupe:'أقراط', yuzuk:'خاتم', halhal:'خلخال', bros:'بروش', set:'طقم', isimli:'مخصص بالاسم', makrome:'مكرمية', dogaltas:'أحجار طبيعية', recine:'ريزن', telsarma:'سلك مجدول',
-          fig:'مجسّمات', cingirak:'خشخيشة', dis:'عضّاضة', bezoy:'لعبة/كتاب قماشي', montessori:'مونتيسوري', set2:'أطقم', patik:'حذاء/قبعة', battaniye:'بطانية', onluk:'مريلة', lohusa:'طقم نفاس', sac:'إكسسوار شعر', giyim:'ملابس يدوية',
-          hirka:'كارديغان', kazak:'كنزة', atkibere:'وشاح وقبعة', panco:'بونشو', sal:'شال', corap:'جوارب', lif:'طقم استحمام', bebektk:'طقم طفل', yelek:'صدرية', kirlen:'وسادة/غطاء', igneoyasi:'دانتيلا بالإبرة',
-          paca:'تقريب/إصلاح', fermuar:'تغيير سحاب', perde:'ستارة', nevresim:'طقم مفارش', masa:'مفرش طاولة', ozel:'تفصيل خاص', kostum:'زي تنكري',
-          duvar:'تعليق جداري', saksi:'حامل نباتات', anahtar:'ميدالية مفاتيح', avize:'ثريا', runner:'رانر', sepet:'سلة', raf:'رف/ديكور',
-          kece:'أعمال لباد', kirlent:'وسادة', kapi:'إكليل باب', tepsi:'تزيين صينية', cerceve:'إطار', ruya:'ماسِك أحلام', tablo:'لوحة',
-          soya:'شمع صويا/نحل', tas:'حجر عطري', sprey:'معطّر غرف', tutsu:'بخور', jel:'شمعة جل', hediye:'طقم هدية',
-          zeytin:'صابون زيت زيتون', bitkisel:'صابون عشبي', sampuan:'شامبو صلب', balm:'مرهَم شفاه', krem:'كريم/مرهم', banyotuzu:'ملح استحمام', lavanta:'كيس لافندر',
-          anahtar2:'ميدالية مفاتيح', magnet:'مغناطيس', kolek:'مجموعة', dekorbebek:'دمية ديكور'
-        }
-      }
-    };
-
-    function applyI18n(lang){
-      const dict = I18N[lang] || I18N.tr;
-      document.querySelectorAll('[data-i18n]').forEach(el=>{
-        const key = el.getAttribute('data-i18n');
-        if (dict[key] != null){ el.innerHTML = dict[key]; }
-      });
-      // html lang & dir
-      document.documentElement.lang = lang;
-      document.documentElement.dir = (lang==='ar') ? 'rtl' : 'ltr';
-      // Placeholders
-      document.getElementById('li_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
-      document.getElementById('su_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
-      document.getElementById('su_username')?.setAttribute('placeholder', lang==='en'?'@username':(lang==='de'?'@benutzer':(lang==='ar'?'@username':'@kullanici')));
-      document.getElementById('su_name')?.setAttribute('placeholder', lang==='en'?'Your full name':(lang==='de'?'Vollständiger Name':(lang==='ar'?'الاسم الكامل':'Adınız Soyadınız')));
-      document.getElementById('su_district')?.setAttribute('placeholder', lang==='en'?'Your district':(lang==='de'?'Bezirk':(lang==='ar'?'المنطقة':'İlçeniz')));
-      // Kategorileri de yeniden kur
-      buildTopCats(lang);
     }
 
-    // Yıl
-    document.getElementById('y').textContent = new Date().getFullYear();
+    // VAPID Key — kendi public key’in
+    const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
 
-    // TR İller
-    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
-    const suProv = document.getElementById('su_province');
-    if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
+    let token = null;
+    try {
+      token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined });
+    } catch {}
 
-    // Kategoriler – id tabanlı yapı (mevcudu bozmadan)
-    const CATS = [
-      {id:'yemek', subs:[["evyemek"],["borek"],["corba"],["zeytiny"],["pilav"],["et"],["kahvalti"],["meze"],["dondur"],["cocuk"],["diyetvegf"]]},
-      {id:'pasta', subs:[["yaspasta"],["kek"],["kurabiye"],["serbetli"],["sutlu"],["cheese"],["diyettat"],["cikolata"],["dogumset"]]},
-      {id:'sos', subs:[["recel"],["pekmez"],["tursu"],["dom"],["acios"],["salca"],["sirke"],["konserve"]]},
-      {id:'yoresel', subs:[["eriste"],["tarhana"],["yufka"],["manti"],["kurut"],["salca2"],["sirke2"],["konserve2"]]},
-      {id:'diet', subs:[["fit"],["vegan"],["gf"],["sekersiz"],["keto"],["protein"]]},
-      {id:'taki', subs:[["bileklik"],["kolye"],["kupe"],["yuzuk"],["halhal"],["bros"],["set"],["isimli"],["makrome"],["dogaltas"],["recine"],["telsarma"]]},
-      {id:'bebek', subs:[["fig"],["cingirak"],["dis"],["bezoy"],["montessori"],["set2"],["patik"],["battaniye"],["onluk"],["lohusa"],["sac"],["giyim"]]},
-      {id:'orgu', subs:[["hirka"],["kazak"],["atkibere"],["panco"],["sal"],["corap"],["lif"],["bebektk"],["yelek"],["kirlen"],["igneoyasi"]]},
-      {id:'terzi', subs:[["paca"],["fermuar"],["perde"],["nevresim"],["masa"],["ozel"],["kostum"]]},
-      {id:'makrome', subs:[["duvar"],["saksi"],["anahtar"],["avize"],["runner"],["sepet"],["raf"]]},
-      {id:'evdekor', subs:[["kece"],["kirlent"],["kapi"],["tepsi"],["cerceve"],["ruya"],["tablo"]]},
-      {id:'mum', subs:[["soya"],["tas"],["sprey"],["tutsu"],["jel"],["hediye"]]},
-      {id:'kozmetik', subs:[["zeytin"],["bitkisel"],["sampuan"],["balm"],["krem"],["banyotuzu"],["lavanta"]]},
-      {id:'amigurumi', subs:[["anahtar2"],["magnet"],["kolek"],["dekorbebek"]]},
-    ];
-
-    const catBar = document.querySelector('#catNav .catnav-inner');
-    const drops = document.querySelector('#catDrops .catdrops-inner');
-
-    function localizeCat(cat, lang){
-      const L = CAT_I18N[lang] || CAT_I18N.tr;
-      const title = L.titles[cat.id] || cat.id;
-      const subs = cat.subs.map(([sid])=>[sid, (L.subs[sid]||sid)]);
-      return { id: cat.id, title, subs };
-    }
-
-    function buildTopCats(lang){
-      const currentLang = lang || (localStorage.getItem('ue_lang') || 'tr');
-      catBar.innerHTML = '';
-      drops.innerHTML = '';
-      CATS.forEach((cat)=>{
-        const LCat = localizeCat(cat, currentLang);
-        const chip = document.createElement('button');
-        chip.className = 'chip';
-        chip.type = 'button';
-        chip.textContent = LCat.title;
-        chip.dataset.target = `p_${LCat.id}`;
-
-        const panel = document.createElement('div');
-        panel.className = 'panel';
-        panel.id = `p_${LCat.id}`;
-        panel.innerHTML = LCat.subs.map(([id,label])=>`<a href="#" data-open-auth style="display:inline-block;margin:4px 6px;padding:8px 10px;border-radius:8px;border:1px solid #eee">${label}</a>`).join('');
-        panel.addEventListener('click',(e)=>{ if(e.target.matches('a[data-open-auth]')){ e.preventDefault(); openAuth(); }});
-
-        chip.addEventListener('click',()=>{
-          const wasOpen = panel.classList.contains('open');
-          // Kapat tüm paneller ve aktif chipleri
-          document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
-          document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
-          if (!wasOpen){
-            panel.classList.add('open');
-            chip.classList.add('active');
-          }
+    if (token && auth?.currentUser?.uid) {
+      try {
+        await setDoc(doc(db, 'fcmTokens', token), {
+          uid: auth.currentUser.uid,
+          active: true,
+          createdAt: new Date().toISOString()
         });
-
-        catBar.appendChild(chip);
-        drops.appendChild(panel);
-      });
+      } catch {}
     }
 
-    buildTopCats(localStorage.getItem('ue_lang')||'tr');
-
-    // Auth Modal helpers + güvenli açıcı (dialog destek yoksa fallback)
-    const authModal = document.getElementById('authModal');
-    function openAuth(){
-      if (typeof authModal.showModal === 'function'){
-        authModal.showModal();
-      } else {
-        authModal.setAttribute('open',''); // fallback
-        authModal.style.display='grid';
-      }
-    }
-    function closeAuth(){
-      if (typeof authModal.close === 'function') authModal.close();
-      authModal.removeAttribute('open');
-      authModal.style.display='none';
-    }
-    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{
-      closeAuth();
-    }));
-
-    document.getElementById('signInBtn')?.addEventListener('click', openAuth);
-
-    // Dil seçici
-    const langSel = document.getElementById('langSel');
-    langSel?.addEventListener('change', (e)=>{
-      const v = e.target.value; applyI18n(v); localStorage.setItem('ue_lang', v);
-    });
-    applyI18n(localStorage.getItem('ue_lang')||'tr');
-
-    // Password visibility toggles
-    document.querySelectorAll('.toggle').forEach(b=>b.addEventListener('click',()=>{
-      const id = b.getAttribute('data-toggle'); const inp = document.getElementById(id);
-      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
-    }));
-
-    // Firebase Auth
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-
-    // === GİRİŞ SONRASI YÖNLENDİRME: /home.html ===
-    function redirectHome(){ window.location.href = '/home.html'; }
-
-    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, provider); redirectHome(); }
-      catch(err){ alert('Google ile giriş başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      const pass = document.getElementById('li_pass').value;
-      if(!email || pass.length<6){ alert('E‑posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
-      catch(err){ alert('Giriş başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      if(!email){ alert('Şifre sıfırlamak için e‑posta girin.'); return; }
-      try{ await sendPasswordResetEmail(auth, email); alert('Şifre sıfırlama e‑postası gönderildi. Gelen kutusu ve SPAM klasörünü kontrol edin.'); }
-      catch(err){ alert('İşlem başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('registerBtn')?.addEventListener('click', async ()=>{
-      const username = document.getElementById('su_username').value.trim();
-      const name = document.getElementById('su_name').value.trim();
-      const province = document.getElementById('su_province').value;
-      const district = document.getElementById('su_district').value.trim();
-      const email = document.getElementById('su_email').value.trim();
-      const pass = document.getElementById('su_pass').value;
-      const pass2 = document.getElementById('su_pass2').value;
-      if(!username || !name || !province || !district || !email || pass.length<6 || pass!==pass2){ alert('Lütfen tüm alanları doğru doldurun.'); return; }
-      try{
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: name });
-        try{ await sendEmailVerification(cred.user); }catch{}
-        alert('Kayıt tamamlandı. Doğrulama e‑postası gönderildi. SPAM klasörünü de kontrol edin.');
-        redirectHome();
-      }catch(err){ alert('Kayıt başarısız: '+(err?.message||err)); }
-    });
-
-    onAuthStateChanged(auth, (u)=>{
-      const authArea = document.getElementById('authArea');
-      const signBtn = document.getElementById('signInBtn');
-      if (u){
-        authArea.style.display='flex'; signBtn.style.display='none';
-        document.getElementById('uName').textContent = u.displayName || u.email || 'Kullanıcı';
-        document.getElementById('uAvatar').src = u.photoURL || '/assets/img/avatar-default.png';
-      } else {
-        authArea.style.display='none'; signBtn.style.display='inline-flex';
-      }
-    });
-
-    document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
-
-    // CTA – bu iki buton giriş penceresini AÇACAK
-    document.getElementById('browseBtn')?.addEventListener('click', openAuth);
-    document.getElementById('postBtn')?.addEventListener('click', openAuth);
-    </script>
-
-  <script type="module">
-    // === İLANLARI ÇEK & GÖSTER ===
-    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
-
-    const db2 = (self.__fb?.db) || getFirestore();
-    const grid = document.getElementById('listGrid');
-    const info = document.getElementById('listInfo');
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
-
-    const PAGE_SIZE = 4; // her sayfada 4 ilan
-    let allListings = [];
-    let page = 0;
-
-    function formatPrice(tryAmount){
-      try{
-        return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
-      }catch{ return tryAmount + ' TL'; }
-    }
-
-    function timeValid(d){
-      try{ const ex = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return ex >= new Date(); }catch{ return true; }
-    }
-
-    async function fetchSeller(uid){
-      if(!uid) return null;
-      try{
-        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const snap = await getDoc(doc(db2,'users',uid));
-        return snap.exists()? snap.data(): null;
-      }catch{ return null; }
-    }
-
-    function cardTpl(it){
-      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
-      const showcase = !!it.showcase;
-      const price = (typeof it.price==='number')? formatPrice(it.price): '';
-      const title = it.title || 'İlan';
-      const desc = it.description || '';
-      const id = it.id;
-      return `
-        <article class="card" data-id="${id}">
-          <div class="ph">
-            ${showcase?'<span class="ribbon">Vitrin</span>':''}
-            <img alt="${title}" loading="lazy" src="${img}">
-          </div>
-          <div class="body">
-            <div class="title">${title}</div>
-            <div class="desc">${desc}</div>
-            <div class="seller" data-seller>
-              <div class="av"><img alt="" src="/assets/img/avatar-default.png"></div>
-              <div class="name">Satıcı</div>
-              <span class="badge" style="display:none">Onaylı</span>
-            </div>
-            <div class="price">${price}</div>
-            <div class="actions">
-              <button class="btn gold" data-do="order">Sipariş Ver</button>
-              <button class="btn ghost" data-do="msg">Satıcıya Yaz</button>
-            </div>
-          </div>
-        </article>`;
-    }
-
-    function render(){
-      const start = page * PAGE_SIZE;
-      const slice = allListings.slice(start, start + PAGE_SIZE);
-      grid.innerHTML = slice.map(cardTpl).join('');
-      info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
-      prevBtn.disabled = page===0;
-      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
-    }
-
-    function attachCardEvents(){
-      grid.addEventListener('click', async (e)=>{
-        const card = e.target.closest('.card');
-        if(!card) return;
-        const id = card.getAttribute('data-id');
-        const listing = allListings.find(x=>x.id===id);
-        if(!listing) return;
-
-        if (e.target.matches('[data-do="order"], [data-do="msg"]')){
-          // giriş panelini aç
-          openAuth();
-          return;
+    try {
+      onMessage(messaging, (payload) => {
+        const { title, body } = payload?.notification || {};
+        if (title || body) {
+          try { new Notification(title || 'Yeni mesaj', { body }); } catch {}
         }
-        // Kart tıklanınca detay modal aç
-        openListingDetail(listing, card.querySelector('.ph img')?.src);
       });
-    }
+    } catch {}
+  } catch {}
+})();
 
-    async function openListingDetail(it, imgSrc){
-      const modal = document.getElementById('listingModal');
-      const body = document.getElementById('listingBody');
-      let seller = null;
-      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
-      const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
-      try{ seller = await fetchSeller(sellerId); }catch{}
-      const av = seller?.photoURL || '/assets/img/avatar-default.png';
-      const name = seller?.displayName || seller?.name || 'Satıcı';
-      const verified = !!(seller?.verifiedSeller || seller?.verified);
-      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+// =================== Yardımcılar ===================
+self.onAuthStateChanged = (a, b) => (typeof a === 'function' ? _onAuthStateChanged(auth, a) : _onAuthStateChanged(a || auth, b));
+self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
+self.signOutNow = () => _signOut(auth);
+self.storageRef = (path) => _storageRef(storage, path);
+self._uploadBytes = (refObj, file) => uploadBytes(refObj, file);
+self._getDownloadURL = (refObj) => getDownloadURL(refObj);
 
-      body.innerHTML = `
-        <div style="display:grid;gap:12px">
-          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
-            <div style="font-weight:700">${name}</div>
-            ${verified?'<span class="badge">Onaylı</span>':''}
-          </div>
-          <div>
-            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
-            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
-          </div>
-          <div style="font-size:18px;font-weight:900">${price}</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn gold" id="detailOrder">Sipariş Ver</button>
-            <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
-          </div>
-        </div>`;
+self.firebase = Object.assign(self.firebase || {}, {
+  setDoc: (refOrPath, data, opts) =>
+    setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
+  updateDoc: (refOrPath, data) =>
+    updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
+  getDoc: (refOrPath) =>
+    getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
+  serverTimestamp: () => serverTimestamp(),
+  col: (path) => collection(db, ...path.split('/')),
+  q: (...args) => query(...args),
+  where,
+  orderBy,
+  limit,
+});
 
-      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
-      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+self.getDocs = getDocs;
 
-      if (typeof modal.showModal === 'function') modal.showModal();
-      else { modal.setAttribute('open',''); modal.style.display='grid'; }
-    }
-
-    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
-      const modal = document.getElementById('listingModal');
-      if (typeof modal.close === 'function') modal.close();
-      modal.removeAttribute('open'); modal.style.display='none';
-    });
-
-    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
-    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
-
-    async function loadListings(){
-      try{
-        info.textContent = 'Yükleniyor…';
-        const col = collection(db2,'listings');
-        const q = query(col, orderBy('updatedAt','desc'));
-        const snap = await getDocs(q);
-        const now = Date.now();
-        const rows = [];
-        snap.forEach(d=>{
-          const data = d.data();
-          // filtre: status approved, süresi dolmamış
-          if (data?.status === 'approved'){
-            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
-            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
-          }
-        });
-        // Öncelik: showcase true olanlar
-        const showcase = rows.filter(r=>!!r.showcase);
-        const standard = rows.filter(r=>!r.showcase);
-        allListings = [...showcase, ...standard];
-        page = 0;
-        render();
-        attachCardEvents();
-      }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
-    }
-
-    // FB hazır olduğunda yükle
-    if (self.__fbReady) loadListings();
-    else document.addEventListener('fb-ready', loadListings, { once:true });
-  </script>
-</body>
-</html>
+// Ready bayrağı
+self.__fbReady = true;
+try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
+console.debug('[firebase-init] ready:', app.options.projectId);
