@@ -56,6 +56,10 @@
     .sublist a:hover{background:#f3f4f6}
 
     /* ==== CONTENT ==== */
+    /* Mobilde yatay kaymayı kesin önlemek için min-width sıfırlamaları */
+    .wrap,.content,.topcats,.grid{min-width:0}
+    .page{overflow-x:hidden}
+
     .hero{border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa;min-width:0}
     @media (max-width: 900px){.hero{grid-template-columns:1fr}}
     /* Başlık ve açıklamayı mobilde küçült */
@@ -92,7 +96,7 @@
 
     .grid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width: 1100px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width: 640px){.grid{grid-template-columns:1fr}}
+    @media (max-width: 640px){.grid{grid-template-columns:repeat(2,1fr)}}
     .card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
     .card .ph{aspect-ratio:16/11;background:linear-gradient(180deg,#f3f4f6,#fff)}
     .card .body{padding:12px}
