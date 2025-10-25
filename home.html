@@ -469,7 +469,13 @@
       async function resolveCover(d){ const arr=[]; if(d.cover)arr.push(d.cover); if(d.coverUrl)arr.push(d.coverUrl); if(Array.isArray(d.photos))arr.push(...d.photos); if(Array.isArray(d.images))arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); const first=arr.find(Boolean); return await resolveURL(first)||'/assets/icons/ureteneller.png'; }
       async function resolveImages(d){ const arr=[]; if(Array.isArray(d.images)) arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); if(Array.isArray(d.photos)) arr.push(...d.photos); if(d.cover) arr.unshift(d.cover); if(d.coverUrl) arr.unshift(d.coverUrl); const uniq=[...new Set(arr.filter(Boolean))]; const urls=[]; for(const u of uniq){ urls.push(await resolveURL(u)); } return urls.length?urls:['/assets/icons/ureteneller.png']; }
 
-      const cardHTML = (d,id,cover)=>`<a class="card" href="#" data-id="${id}"><span class="thumb" style="background-image:url('${cover}');aspect-ratio:16/11;background-size:cover;background-position:center"></span><div class="body"><h3 class="title">${(d.title||d.name||'İlan')}</h3><div class="meta">${(d.city||'')} · ${d.price?fmtPrice(d.price,(d.currency||d.cur||'TRY')):''}</div></div></a>`;
+      const cardHTML = (d,id,cover)=>`<a class="card" href="#" data-id="${id}">
+  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center"></div>
+  <div class="body">
+    <h3 class="title">${(d.title||d.name||'İlan')}</h3>
+    <div class="meta">${(d.city||'')}${(d.city&&d.price)?' · ':''}${d.price?fmtPrice(d.price,(d.currency||d.cur||'TRY')):''}</div>
+  </div>
+</a>`;
       function renderList(gridId, list){ const grid=document.getElementById(gridId); if(!grid) return; grid.innerHTML=''; const frag=document.createDocumentFragment(); list.forEach(x=>{ const wrap=document.createElement('div'); wrap.innerHTML=cardHTML(x.data,x.id,x.data.__cover||'/assets/icons/ureteneller.png'); frag.appendChild(wrap.firstElementChild); }); grid.appendChild(frag); }
 
       async function fetchAndPaint(){
