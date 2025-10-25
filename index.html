@@ -29,7 +29,14 @@
     .lang{border:1px solid #e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600;background:#fff}
 
     .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:280px 1fr;gap:16px}
-    @media (max-width: 980px){.wrap{grid-template-columns:1fr}.sidebar{order:1}.content{order:2}}
+
+    /* ===== Mobile left-sidebar layout ===== */
+    @media (max-width: 980px){
+      /* Switch to a fixed left sidebar and push content to the right */
+      .wrap{display:block}
+      .sidebar{position:fixed;left:0;top:112px;width:min(280px,84vw);height:calc(100vh - 112px);background:#fff;border-right:1px solid #e5e7eb;z-index:45;overflow:auto;padding:8px}
+      .content{margin-left:min(280px,84vw);padding-left:12px}
+    }
 
     .sidebar{position:relative}
     .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
@@ -37,7 +44,12 @@
 
     .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}
     .cathead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;padding:10px 14px;background:#fafafa;border-bottom:1px solid #eee}
+
+    /* Keep category list comfortably scrollable on both desktop and mobile */
     .catlist{max-height:68vh;overflow:auto}
+    @media (max-width:980px){
+      .catlist{max-height:calc(100vh - 112px - 120px)} /* viewport minus header and search */
+    }
 
     .cat{border-bottom:1px dashed #eee}
     .cat:last-child{border-bottom:0}
@@ -46,6 +58,9 @@
     .cat-title{display:flex;align-items:center;gap:8px}
     .chev{transition:transform .2s ease}
     .cat[aria-expanded="true"] .chev{transform:rotate(90deg)}
+
+    /* ===== NEW: Category icon styling ===== */
+    .cat-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;line-height:1}
 
     .sublist{display:none;padding:8px 10px 14px 38px}
     .sublist a{display:block;padding:6px 4px;border-radius:8px;font-size:14px;color:#374151}
@@ -114,7 +129,7 @@
 </head>
 <body>
   <div class="page">
-    <div class="notice-bar">ÜRETENELLER.COM KESİNLİKLE KOMİSYON ALMAZ</div>
+    <div class="notice-bar" data-i18n="notice">ÜRETENELLER.COM KESİNLİKLE KOMİSYON ALMAZ</div>
     <div class="topbar">
       <div class="topbar-inner">
         <div class="brand">
@@ -156,8 +171,8 @@
       <section class="content">
         <div class="hero">
           <div>
-            <h2 id="heroTitle">El emeği & yerel lezzetler tek çatı altında</h2>
-            <p id="heroDesc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
+            <h2 id="heroTitle" data-i18n="hero.title">El emeği & yerel lezzetler tek çatı altında</h2>
+            <p id="heroDesc" data-i18n="hero.desc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
             <div class="cta-row">
               <button class="btn gold" id="browseBtn" data-i18n="browse">Kategorileri Keşfet</button>
             </div>
@@ -201,8 +216,8 @@
       <div class="inner">
         <div class="hint" style="margin-bottom:10px" data-i18n="auth.hint">Sipariş vermek veya profilleri ziyaret etmek için giriş yapmalısınız.</div>
         <div class="form" style="margin-bottom:16px">
-          <div class="input"><label data-i18n="auth.email">E-posta</label><input id="li_email" type="email" placeholder="ornek@mail.com" autocomplete="username"/></div>
-          <div class="input pw"><label data-i18n="auth.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
+          <div class="input"><label data-i18n="auth.email">E-posta</label><input id="li_email" type="email" placeholder="ornek@mail.com" autocomplete="username" data-i18n-placeholder="auth.placeholder.email"/></div>
+          <div class="input pw"><label data-i18n="auth.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password" data-i18n-placeholder="auth.placeholder.password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
           <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
             <button class="btn gold" id="loginBtn" data-i18n="auth.login">Giriş Yap</button>
             <button class="btn ghost" id="forgotBtn" type="button" data-i18n="auth.forgot">Şifremi Unuttum</button>
@@ -216,23 +231,23 @@
           <summary style="cursor:pointer;font-weight:700" data-i18n="auth.noAccount">Hesabın yok mu? Kayıt ol</summary>
           <div class="form" style="margin-top:10px">
             <div class="row2">
-              <div class="input"><label data-i18n="auth.username">Kullanıcı Adı</label><input id="su_username" maxlength="24" placeholder="@kullanici"/></div>
-              <div class="input"><label data-i18n="auth.name">Ad Soyad</label><input id="su_name" placeholder="Adınız Soyadınız"/></div>
+              <div class="input"><label data-i18n="auth.username">Kullanıcı Adı</label><input id="su_username" maxlength="24" placeholder="@kullanici" data-i18n-placeholder="auth.placeholder.username"/></div>
+              <div class="input"><label data-i18n="auth.name">Ad Soyad</label><input id="su_name" placeholder="Adınız Soyadınız" data-i18n-placeholder="auth.placeholder.name"/></div>
             </div>
             <div class="row2">
               <div class="input"><label data-i18n="auth.province">İl</label>
                 <select id="su_province"></select>
               </div>
-              <div class="input"><label data-i18n="auth.district">İlçe</label><input id="su_district" placeholder="İlçeniz"/></div>
+              <div class="input"><label data-i18n="auth.district">İlçe</label><input id="su_district" placeholder="İlçeniz" data-i18n-placeholder="auth.placeholder.district"/></div>
             </div>
             <div class="row2">
-              <div class="input"><label data-i18n="auth.email">E-posta</label><input id="su_email" type="email" placeholder="ornek@mail.com" autocomplete="email"/></div>
-              <div class="input pw"><label data-i18n="auth.password">Şifre</label><input id="su_pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass" aria-label="Şifreyi göster">👁️</button></div>
+              <div class="input"><label data-i18n="auth.email">E-posta</label><input id="su_email" type="email" placeholder="ornek@mail.com" autocomplete="email" data-i18n-placeholder="auth.placeholder.email"/></div>
+              <div class="input pw"><label data-i18n="auth.password">Şifre</label><input id="su_pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password" data-i18n-placeholder="auth.placeholder.newPassword"/><button class="toggle" data-toggle="su_pass" aria-label="Şifreyi göster">👁️</button></div>
             </div>
-            <div class="input pw"><label data-i18n="auth.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
+            <div class="input pw"><label data-i18n="auth.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password" data-i18n-placeholder="auth.placeholder.repeatPassword"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
             <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
               <button class="btn gold" id="registerBtn" data-i18n="auth.register">Kayıt Ol</button>
-              <div class="hint" id="verifyHint">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
+              <div class="hint" id="verifyHint" data-i18n="auth.verifyHint">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
             </div>
           </div>
         </details>
@@ -266,8 +281,161 @@
 
     let auth; try { auth = app ? getAuth(app) : null; } catch(e){ console.error('getAuth error', e); auth = null; }
 
-    // ===== I18N (unchanged) =====
-    const I18N = {/* trimmed for brevity in this canvas version; keep your original I18N block here */};
+    // ===== I18N =====
+    const I18N = {
+      tr: {
+        notice: 'URETENELLER.COM KESİNLİKLE KOMİSYON ALMAZ',
+        brand: 'Üreten Eller',
+        post: 'İlan Ver',
+        signIn: 'Giriş / Kayıt',
+        signOut: 'Çıkış',
+        search: 'Ara',
+        searchPlaceholder: 'Ara: ürün, kategori, ilçe…',
+        categories: 'Kategoriler',
+        browse: 'Kategorileri Keşfet',
+        'empty.listings': 'Şimdilik gösterilecek ilan yok. Kategorilerden keşfedin veya arama yapın.',
+        hero: {
+          title: 'El emeği & yerel lezzetler tek çatı altında',
+          desc: 'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.'
+        },
+        legal: {
+          terms: 'Kullanım Şartları', privacy: 'Gizlilik Politikası', kvkk: 'KVKK Aydınlatma', community: 'Topluluk Kuralları', prohibited: 'Yasaklı Ürünler', distance: 'Mesafeli Satış', preinfo: 'Ön Bilgilendirme', return: 'Teslimat/İade', contact: 'İletişim'
+        },
+        auth: {
+          title: 'Giriş Yap / Kayıt Ol',
+          hint: 'Sipariş vermek veya profilleri ziyaret etmek için giriş yapmalısınız.',
+          email: 'E-posta', password: 'Şifre', password2: 'Şifre (Tekrar)',
+          login: 'Giriş Yap', forgot: 'Şifremi Unuttum', google: 'Google ile Giriş',
+          noAccount: 'Hesabın yok mu? Kayıt ol', username: 'Kullanıcı Adı', name: 'Ad Soyad', province: 'İl', district: 'İlçe', register: 'Kayıt Ol',
+          verifyHint: 'Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.',
+          placeholder: {
+            email: 'ornek@mail.com', password: '••••••••', newPassword: 'En az 6 karakter', repeatPassword: 'Şifreyi tekrar yazın', username: '@kullanici', name: 'Adınız Soyadınız', district: 'İlçeniz'
+          }
+        },
+        cat: {
+          yemek: 'Yemek', pasta: 'Pasta & Tatlı', sos: 'Soslar & Konserveler', yoresel: 'Yöresel', diet: 'Diyet/Vegan/GF', taki: 'Takı', bebek: 'Bebek', orgu: 'Örgü', terzi: 'Terzilik', makrome: 'Makrome', evdekor: 'Ev Dekor', mum: 'Mum & Koku', kozmetik: 'Doğal Kozmetik', amigurumi: 'Amigurumi'
+        },
+        sub: {
+          evyemek:'Ev yemekleri', borek:'Börek-çörek', corba:'Çorba', zeytiny:'Zeytinyağlı', pilav:'Pilav-makarna', et:'Et-tavuk', kahvalti:'Kahvaltılık', meze:'Meze', dondur:'Dondurulmuş', cocuk:'Çocuk öğünleri', diyetvegf:'Diyet/vegan/gf',
+          yaspasta:'Yaş pasta', kek:'Kek-cupcake', kurabiye:'Kurabiye', serbetli:'Şerbetli', sutlu:'Sütlü', cheese:'Cheesecake', diyettat:'Diyet tatlı', cikolata:'Çikolata/şekerleme', dogumset:'Doğum günü setleri',
+          recel:'Reçel-marmelat', pekmez:'Pekmez', tursu:'Turşu', dom:'Domates/biber sos', acios:'Acı sos', salca:'Salça', sirke:'Sirke', konserve:'Konserve',
+          eriste:'Erişte', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Kurutulmuş', salca2:'Salça', sirke2:'Sirke', konserve2:'Konserve',
+          fit:'Fit tabaklar', vegan:'Vegan yemekler', gf:'GF unlu mamuller', sekersiz:'Şekersiz tatlı', keto:'Keto ürün', protein:'Protein atıştırmalık',
+          bileklik:'Bileklik', kolye:'Kolye', kupe:'Küpe', yuzuk:'Yüzük', halhal:'Halhal', bros:'Broş', set:'Setler', isimli:'Kişiye özel', makrome:'Makrome', dogaltas:'Doğal taş', recine:'Reçine', telsarma:'Tel sarma',
+          fig:'Figürler', cingirak:'Çıngırak', dis:'Diş kaşıyıcı', bezoy:'Bez oyuncak/kitap', montessori:'Montessori', set2:'Setler', patik:'Patik-bere', battaniye:'Battaniye', onluk:'Önlük', lohusa:'Lohusa seti', sac:'Saç aksesuarı', giyim:'El emeği kıyafet',
+          hirka:'Hırka', kazak:'Kazak', atkibere:'Atkı-bere', panco:'Panço', sal:'Şal', corap:'Çorap', lif:'Lif takımı', bebektk:'Bebek takımı', yelek:'Yelek', kirlen:'Kırlent-örtü', igneoyasi:'İğne oyası',
+          paca:'Paça/onarım', fermuar:'Fermuar değişimi', perde:'Perde', nevresim:'Nevresim', masa:'Masa örtüsü', ozel:'Özel dikim', kostum:'Kostüm',
+          duvar:'Duvar süsü', saksi:'Saksı askısı', anahtar:'Anahtarlık', avize:'Avize', runner:'Runner', sepet:'Sepet', raf:'Raf/dekor',
+          kece:'Keçe işleri', kirlent:'Kırlent', kapi:'Kapı süsü', tepsi:'Tepsi süs', cerceve:'Çerçeve', ruya:'Rüya kapanı', tablo:'Tablo',
+          soya:'Soya/balmumu', tas:'Kokulu taş', sprey:'Oda spreyi', tutsu:'Tütsü', jel:'Jel mum', hediye:'Hediye seti',
+          zeytin:'Zeytinyağlı sabun', bitkisel:'Bitkisel sabun', sampuan:'Katı şampuan', balm:'Dudak balmı', krem:'Krem/merhem', banyotuzu:'Banyo tuzu', lavanta:'Lavanta kesesi',
+          anahtar2:'Anahtarlık', magnet:'Magnet', kolek:'Koleksiyon', dekorbebek:'Dekor bebek'
+        }
+      },
+      en: {
+        notice: 'URETENELLER.COM NEVER TAKES COMMISSION',
+        brand: 'Ureten Eller',
+        post: 'Post Listing',
+        signIn: 'Sign In / Register',
+        signOut: 'Sign Out',
+        search: 'Search',
+        searchPlaceholder: 'Search: product, category, district…',
+        categories: 'Categories',
+        browse: 'Browse Categories',
+        'empty.listings': 'No listings yet. Browse categories or search.',
+        hero: {
+          title: 'Handmade & local flavors under one roof',
+          desc: 'Shop from makers: homemade foods and crafts. Search by location or explore by category.'
+        },
+        legal: { terms:'Terms of Use', privacy:'Privacy Policy', kvkk:'KVKK Notice', community:'Community Rules', prohibited:'Prohibited Items', distance:'Distance Sales', preinfo:'Pre-Information', return:'Delivery/Returns', contact:'Contact' },
+        auth: {
+          title: 'Sign In / Register', hint:'You need to sign in to order or view profiles.', email:'Email', password:'Password', password2:'Password (Repeat)', login:'Sign In', forgot:'Forgot Password', google:'Sign in with Google', noAccount:'No account? Create one', username:'Username', name:'Full Name', province:'Province', district:'District', register:'Register', verifyHint:'A <strong>verification email</strong> will be sent. Check inbox and <strong>SPAM</strong>.', placeholder:{ email:'name@example.com', password:'••••••••', newPassword:'At least 6 characters', repeatPassword:'Type password again', username:'@username', name:'Your full name', district:'Your district' }
+        },
+        cat: { yemek:'Food', pasta:'Cakes & Desserts', sos:'Sauces & Preserves', yoresel:'Local', diet:'Diet/Vegan/GF', taki:'Jewelry', bebek:'Baby', orgu:'Knit/Crochet', terzi:'Tailoring', makrome:'Macramé', evdekor:'Home Decor', mum:'Candles & Scents', kozmetik:'Natural Cosmetics', amigurumi:'Amigurumi' },
+        sub: {
+          evyemek:'Home-cooked meals', borek:'Börek & pastries', corba:'Soup', zeytiny:'Olive oil dishes', pilav:'Rice & pasta', et:'Meat & chicken', kahvalti:'Breakfast', meze:'Meze', dondur:'Frozen', cocuk:"Kids' meals", diyetvegf:'Diet/vegan/gf',
+          yaspasta:'Cakes', kek:'Cake & cupcakes', kurabiye:'Cookies', serbetli:'Syrup desserts', sutlu:'Milk desserts', cheese:'Cheesecake', diyettat:'Diet desserts', cikolata:'Chocolate/candy', dogumset:'Birthday sets',
+          recel:'Jam & marmalade', pekmez:'Molasses', tursu:'Pickles', dom:'Tomato/pepper sauce', acios:'Hot sauce', salca:'Paste', sirke:'Vinegar', konserve:'Canned',
+          eriste:'Noodles', tarhana:'Tarhana', yufka:'Yufka', manti:'Manti', kurut:'Dried foods', salca2:'Paste', sirke2:'Vinegar', konserve2:'Canned',
+          fit:'Fit plates', vegan:'Vegan meals', gf:'GF baked goods', sekersiz:'Sugar-free desserts', keto:'Keto products', protein:'Protein snacks',
+          bileklik:'Bracelets', kolye:'Necklaces', kupe:'Earrings', yuzuk:'Rings', halhal:'Anklets', bros:'Brooch', set:'Sets', isimli:'Personalized', makrome:'Macramé', dogaltas:'Gemstone', recine:'Resin', telsarma:'Wire wrap',
+          fig:'Figures', cingirak:'Rattle', dis:'Teether', bezoy:'Cloth toy/book', montessori:'Montessori', set2:'Sets', patik:'Booties-hat', battaniye:'Blanket', onluk:'Bib', lohusa:'Maternity set', sac:'Hair accessory', giyim:'Handmade clothing',
+          hirka:'Cardigan', kazak:'Sweater', atkibere:'Scarf-hat', panco:'Poncho', sal:'Shawl', corap:'Socks', lif:'Bath set', bebektk:'Baby set', yelek:'Vest', kirlen:'Cushion/cover', igneoyasi:'Needle lace',
+          paca:'Hem/repair', fermuar:'Zipper change', perde:'Curtains', nevresim:'Bedding', masa:'Tablecloth', ozel:'Custom sewing', kostum:'Costume',
+          duvar:'Wall hanging', saksı:'Plant hanger', anahtar:'Keychain', avize:'Chandelier', runner:'Runner', sepet:'Basket', raf:'Shelf/decor',
+          kece:'Felt crafts', kirlent:'Cushion', kapi:'Door wreath', tepsi:'Tray decor', cerceve:'Frame', ruya:'Dreamcatcher', tablo:'Painting',
+          soya:'Soy/beeswax', tas:'Aroma stone', sprey:'Room spray', tutsu:'Incense', jel:'Gel candle', hediye:'Gift set',
+          zeytin:'Olive oil soap', bitkisel:'Herbal soap', sampuan:'Solid shampoo', balm:'Lip balm', krem:'Cream/ointment', banyotuzu:'Bath salt', lavanta:'Lavender sachet',
+          anahtar2:'Keychain', magnet:'Magnet', kolek:'Collection', dekorbebek:'Decor doll'
+        }
+      },
+      ar: {
+        notice: 'لا تأخذ URETENELLER.COM أي عمولة',
+        brand: 'أوريتين إلير',
+        post: 'أضف إعلانًا',
+        signIn: 'تسجيل الدخول / إنشاء حساب',
+        signOut: 'تسجيل الخروج',
+        search: 'بحث',
+        searchPlaceholder: 'ابحث: منتج، فئة، حي…',
+        categories: 'الفئات',
+        browse: 'تصفح الفئات',
+        'empty.listings': 'لا توجد إعلانات حاليًا. تصفح الفئات أو ابحث.',
+        hero: { title: 'منتجات يدوية ونكهات محلية تحت سقف واحد', desc: 'تسوق من الصانعات: أطعمة منزلية وحرف يدوية. ابحث حسب الموقع أو تصفح حسب الفئة.' },
+        legal: { terms:'شروط الاستخدام', privacy:'سياسة الخصوصية', kvkk:'إشعار KVKK', community:'قواعد المجتمع', prohibited:'المنتجات المحظورة', distance:'البيع عن بُعد', preinfo:'معلومات أولية', return:'التسليم/الإرجاع', contact:'اتصال' },
+        auth: {
+          title:'تسجيل الدخول / إنشاء حساب', hint:'يجب تسجيل الدخول للطلب أو عرض الملفات الشخصية.', email:'البريد الإلكتروني', password:'كلمة المرور', password2:'تأكيد كلمة المرور', login:'تسجيل الدخول', forgot:'نسيت كلمة المرور', google:'الدخول عبر Google', noAccount:'لا تملك حسابًا؟ أنشئ واحدًا', username:'اسم المستخدم', name:'الاسم الكامل', province:'الولاية', district:'الحي', register:'إنشاء حساب', verifyHint:'سيتم إرسال <strong>بريد تحقق</strong>. تحقق من الوارد و<strong>الرسائل المزعجة</strong>.', placeholder:{ email:'name@example.com', password:'••••••••', newPassword:'6 أحرف على الأقل', repeatPassword:'أعد كتابة كلمة المرور', username:'@اسم_المستخدم', name:'اسمك الكامل', district:'حيّك' }
+        },
+        cat:{ yemek:'طعام', pasta:'كعك وحلويات', sos:'صلصات ومحفوظات', yoresel:'محلي', diet:'حمية/نباتي/خالٍ من الغلوتين', taki:'إكسسوارات', bebek:'رضّع', orgu:'حياكة', terzi:'خياطة', makrome:'مكرمية', evdekor:'ديكور منزلي', mum:'شموع وروائح', kozmetik:'مستحضرات طبيعية', amigurumi:'أميغورومي' },
+        sub:{
+          evyemek:'وجبات منزلية', borek:'بورك ومعجنات', corba:'شوربة', zeytiny:'أطباق بزيت الزيتون', pilav:'أرز ومكرونة', et:'لحوم ودجاج', kahvalti:'فطور', meze:'مقبلات', dondur:'مجمدات', cocuk:'وجبات أطفال', diyetvegf:'حمية/نباتي/خالٍ من الغلوتين',
+          yaspasta:'كاتوه', kek:'كيك وكب كيك', kurabiye:'بسكويت', serbetli:'حلويات شراب', sutlu:'حلويات بالحليب', cheese:'تشيزكيك', diyettat:'حلويات حمية', cikolata:'شوكولاتة/حلوى', dogumset:'مجموعات عيد ميلاد',
+          recel:'مربى', pekmez:'دبس', tursu:'مخللات', dom:'صلصة طماطم/فلفل', acios:'صلصة حارة', salca:'معجون', sirke:'خل', konserve:'معلبات',
+          eriste:'نودلز', tarhana:'طرحنة', yufka:'يوفكا', manti:'مانتي', kurut:'مجففات', salca2:'معجون', sirke2:'خل', konserve2:'معلبات',
+          fit:'أطباق خفيفة', vegan:'وجبات نباتية', gf:'مخبوزات خالية من الغلوتين', sekersiz:'حلويات بدون سكر', keto:'منتجات كيتو', protein:'وجبات بروتينية',
+          bileklik:'أساور', kolye:'قلائد', kupe:'أقراط', yuzuk:'خواتم', halhal:'خلخال', bros:'بروش', set:'مجموعات', isimli:'مخصص', makrome:'مكرمية', dogaltas:'أحجار طبيعية', recine:'ريزين', telsarma:'لف سلك',
+          fig:'مجسمات', cingirak:'خشخيشة', dis:'عضاضة', bezoy:'لعبة/كتاب قماشي', montessori:'مونتيسوري', set2:'مجموعات', patik:'جوارب/قبعة', battaniye:'بطانية', onluk:'مريلة', lohusa:'طقم نفاس', sac:'اكسسوار شعر', giyim:'ملابس يدوية',
+          hirka:'كارديغان', kazak:'بلوفر', atkibere:'وشاح/قبعة', panco:'بونشو', sal:'شال', corap:'جوارب', lif:'طقم حمام', bebektk:'طقم مواليد', yelek:'صديري', kirlen:'وسادة/غطاء', igneoyasi:'تطريز بالإبرة',
+          paca:'ثني/تصليح', fermuar:'تغيير سحّاب', perde:'ستائر', nevresim:'مفروشات', masa:'مفرش طاولة', ozel:'تفصيل خاص', kostum:'زيّ',
+          duvar:'تعليق جداري', saksı:'حاملة نبات', anahtar:'ميدالية', avize:'ثريا', runner:'رانر', sepet:'سلة', raf:'رف/ديكور',
+          kece:'أعمال لباد', kirlent:'وسادة', kapi:'زينة باب', tepsi:'صينية مزينة', cerceve:'إطار', ruya:'صائد أحلام', tablo:'لوحة',
+          soya:'صويا/شمع نحل', tas:'حجر عطري', sprey:'معطر جو', tutsu:'بخور', jel:'شمعة جل', hediye:'طقم هدية',
+          zeytin:'صابون زيت الزيتون', bitkisel:'صابون عشبي', sampuan:'شامبو صلب', balm:'مرهم شفاه', krem:'كريم/مرهم', banyotuzu:'ملح حمام', lavanta:'كيس خزامى',
+          anahtar2:'ميدالية', magnet:'مغناطيس', kolek:'مجموعة', dekorbebek:'دمية ديكور'
+        }
+      },
+      de: {
+        notice: 'URETENELLER.COM NIMMT KEINE PROVISION',
+        brand: 'Üreten Eller',
+        post: 'Anzeige aufgeben',
+        signIn: 'Anmelden / Registrieren',
+        signOut: 'Abmelden',
+        search: 'Suchen',
+        searchPlaceholder: 'Suche: Produkt, Kategorie, Bezirk…',
+        categories: 'Kategorien',
+        browse: 'Kategorien entdecken',
+        'empty.listings': 'Noch keine Anzeigen. Kategorien durchsuchen oder suchen.',
+        hero: { title:'Handgemachtes & lokale Köstlichkeiten unter einem Dach', desc:'Kaufe von Macher*innen: Hausgemachtes und Handarbeiten. Nach Standort suchen oder Kategorien erkunden.' },
+        legal: { terms:'Nutzungsbedingungen', privacy:'Datenschutz', kvkk:'KVKK-Hinweis', community:'Community-Regeln', prohibited:'Verbotene Artikel', distance:'Fernabsatz', preinfo:'Vorabinformation', return:'Lieferung/Retoure', contact:'Kontakt' },
+        auth: { title:'Anmelden / Registrieren', hint:'Zum Bestellen oder Anzeigen der Profile bitte anmelden.', email:'E-Mail', password:'Passwort', password2:'Passwort (Wiederholung)', login:'Anmelden', forgot:'Passwort vergessen', google:'Mit Google anmelden', noAccount:'Kein Konto? Registrieren', username:'Benutzername', name:'Vollständiger Name', province:'Provinz', district:'Bezirk', register:'Registrieren', verifyHint:'Eine <strong>Bestätigungs-E-Mail</strong> wird gesendet. Posteingang und <strong>SPAM</strong> prüfen.', placeholder:{ email:'name@beispiel.de', password:'••••••••', newPassword:'Mind. 6 Zeichen', repeatPassword:'Passwort erneut', username:'@benutzer', name:'Ihr voller Name', district:'Ihr Bezirk' } },
+        cat:{ yemek:'Essen', pasta:'Kuchen & Desserts', sos:'Soßen & Eingemachtes', yoresel:'Regional', diet:'Diät/Vegan/GF', taki:'Schmuck', bebek:'Baby', orgu:'Strick/Häkel', terzi:'Schneiderei', makrome:'Makramé', evdekor:'Wohndeko', mum:'Kerzen & Düfte', kozmetik:'Naturkosmetik', amigurumi:'Amigurumi' },
+        sub:{
+          evyemek:'Hausmannskost', borek:'Börek & Gebäck', corba:'Suppe', zeytiny:'Olivenölspeisen', pilav:'Reis & Pasta', et:'Fleisch & Huhn', kahvalti:'Frühstück', meze:'Meze', dondur:'Tiefkühl', cocuk:'Kindergerichte', diyetvegf:'Diät/Vegan/GF',
+          yaspasta:'Torten', kek:'Kuchen & Cupcakes', kurabiye:'Kekse', serbetli:'Sirupdesserts', sutlu:'Milchdesserts', cheese:'Käsekuchen', diyettat:'Diät-Desserts', cikolata:'Schokolade/Süßes', dogumset:'Geburtstag-Sets',
+          recel:'Marmelade', pekmez:'Melasse', tursu:'Eingelegtes', dom:'Tomaten-/Paprikasoße', acios:'Scharfe Soße', salca:'Mark', sirke:'Essig', konserve:'Konserven',
+          eriste:'Bandnudeln', tarhana:'Tarhana', yufka:'Yufka', manti:'Manti', kurut:'Getrocknetes', salca2:'Mark', sirke2:'Essig', konserve2:'Konserven',
+          fit:'Fit-Teller', vegan:'Vegane Speisen', gf:'GF-Backwaren', sekersiz:'Zuckerfreie Desserts', keto:'Keto-Produkte', protein:'Protein-Snacks',
+          bileklik:'Armbänder', kolye:'Ketten', kupe:'Ohrringe', yuzuk:'Ringe', halhal:'Fußkettchen', bros:'Brosche', set:'Sets', isimli:'Personalisierte', makrome:'Makramé', dogaltas:'Edelstein', recine:'Harz', telsarma:'Draht gewickelt',
+          fig:'Figuren', cingirak:'Rassel', dis:'Beißring', bezoy:'Stoffspielzeug/-buch', montessori:'Montessori', set2:'Sets', patik:'Schühchen-Mütze', battaniye:'Decke', onluk:'Lätzchen', lohusa:'Wochenbett-Set', sac:'Haar-Accessoire', giyim:'Handgemachte Kleidung',
+          hirka:'Cardigan', kazak:'Pullover', atkibere:'Schal-Mütze', panco:'Poncho', sal:'Tuch', corap:'Socken', lif:'Badeset', bebektk:'Baby-Set', yelek:'Weste', kirlen:'Kissen/Überwurf', igneoyasi:'Nadelspitze',
+          paca:'Saum/Reparatur', fermuar:'Reißverschlusswechsel', perde:'Vorhänge', nevresim:'Bettwäsche', masa:'Tischdecke', ozel:'Maßarbeit', kostum:'Kostüm',
+          duvar:'Wandbehang', saksı:'Pflanzenhänger', anahtar:'Schlüsselanhänger', avize:'Kronleuchter', runner:'Läufer', sepet:'Korb', raf:'Regal/Deko',
+          kece:'Filzarbeiten', kirlent:'Kissen', kapi:'Türkranz', tepsi:'Tablettdekor', cerceve:'Rahmen', ruya:'Traumfänger', tablo:'Bild',
+          soya:'Soja/Bienenwachs', tas:'Aromastein', sprey:'Raumspray', tutsu:'Räucherwerk', jel:'Gelierkerze', hediye:'Geschenkset',
+          zeytin:'Olivenölseife', bitkisel:'Kräuterseife', sampuan:'Festes Shampoo', balm:'Lippenbalsam', krem:'Creme/Salbe', banyotuzu:'Badesalz', lavanta:'Lavendelsäckchen',
+          anahtar2:'Schlüsselanhänger', magnet:'Magnet', kolek:'Sammlung', dekorbebek:'Deko-Puppe'
+        }
+      }
+    };
 
     // Provinces (TR)
     const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
@@ -304,23 +472,54 @@
     // ===== Language helpers =====
     const langSel = $('#lang');
     const getLang = ()=>localStorage.getItem('ue_lang')||'tr';
-    const setLang = l=>{ localStorage.setItem('ue_lang', l); document.documentElement.lang = l; document.documentElement.dir = (l==='ar'?'rtl':'ltr'); };
+    const setLang = l=>{ localStorage.setItem('ue_lang', l); document.documentElement.lang = l; document.documentElement.dir = (l==='ar'?'rtl':'ltr'); if(langSel) langSel.value = l; };
 
     function tLookup(obj, path){ return path.split('.').reduce((o,k)=>o&&o[k], obj); }
+    function t(key){ const lng=getLang(); return tLookup(I18N[lng]||I18N.tr, key) || tLookup(I18N.tr,key) || key; }
 
     function applyI18n(){
-      // NOTE: supply full I18N object in production; shortened here in canvas
+      // text nodes
+      $$('[data-i18n]').forEach(el=>{ const key=el.getAttribute('data-i18n'); const val=t(key); if (typeof val==='string'){ el.innerHTML = val; } });
+      // placeholders
+      $$('[data-i18n-placeholder]').forEach(el=>{ const key=el.getAttribute('data-i18n-placeholder'); const val=t(key); if (typeof val==='string'){ el.setAttribute('placeholder', val); } });
+      // aria-label for search button
+      const sb = $('#searchBtn'); if(sb){ sb.setAttribute('aria-label', t('search')); }
+      // rebuild categories for current language
+      buildCats();
     }
 
-    // ===== Build Categories =====
+    // ===== NEW: Category icons map =====
+    const CAT_ICONS = {
+      yemek: '🍽️',
+      pasta: '🎂',
+      sos: '🥫',
+      yoresel: '🧺',
+      diet: '🥗',
+      taki: '💍',
+      bebek: '👶',
+      orgu: '🧶',
+      terzi: '✂️',
+      makrome: '🪢',
+      evdekor: '🏠',
+      mum: '🕯️',
+      kozmetik: '🧴',
+      amigurumi: '🧸'
+    };
+
+    // ===== Build Categories (now i18n aware + icons) =====
     function buildCats(){
       catlist.innerHTML = '';
       CATS.forEach(cat=>{
         const row = document.createElement('div'); row.className='cat'; row.setAttribute('aria-expanded','false');
         const btn = document.createElement('button');
-        btn.innerHTML = `<span class="cat-title">${cat.id}</span><span class="chev">▶</span>`;
+        const catLabel = t('cat.'+cat.id) || cat.id;
+        const icon = CAT_ICONS[cat.id] || '📦';
+        btn.innerHTML = `<span class="cat-title"><span class="cat-icon" aria-hidden="true">${icon}</span><span>${catLabel}</span></span><span class="chev">▶</span>`;
         const sub = document.createElement('div'); sub.className='sublist';
-        sub.innerHTML = cat.subs.map(([id,label])=>`<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${label}</a>`).join('');
+        sub.innerHTML = cat.subs.map(([id,label])=>{
+          const l = t('sub.'+id) || label;
+          return `<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${l}</a>`;
+        }).join('');
         btn.addEventListener('click',()=>{ const exp=row.getAttribute('aria-expanded')==='true'; row.setAttribute('aria-expanded', String(!exp)); sub.style.display = exp?'none':'block'; });
         row.append(btn, sub); catlist.append(row);
       });
@@ -348,6 +547,9 @@
 
     // Toggle password visibility
     $$('.toggle').forEach(b=>b.addEventListener('click',()=>{ const id=b.getAttribute('data-toggle'); const inp=document.getElementById(id); if(!inp) return; inp.type = (inp.type==='password'?'text':'password'); }));
+
+    // Language switch handler
+    langSel?.addEventListener('change', ()=>{ setLang(langSel.value); applyI18n(); });
 
     // ===== Firebase Auth wiring (only if auth exists) =====
     if (auth){
@@ -410,13 +612,15 @@
 
     // ===== Hero Rotator (15s) =====
     let heroIndex = 0; const heroTitle = document.getElementById('heroTitle'); const heroDesc = document.getElementById('heroDesc');
-    function setHero(){ heroTitle.textContent='El emeği & yerel lezzetler tek çatı altında'; heroDesc.textContent='Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.'; }
+    function setHero(){ heroTitle.textContent=t('hero.title'); heroDesc.textContent=t('hero.desc'); }
     setInterval(()=>{ heroIndex++; setHero(); }, 15000); setHero();
 
     // ===== Init =====
     (function init(){
       const y = document.getElementById('y'); if (y) y.textContent = new Date().getFullYear();
-      buildCats();
+      // set lang from storage on load
+      setLang(getLang());
+      applyI18n();
     })();
 
   </script>
