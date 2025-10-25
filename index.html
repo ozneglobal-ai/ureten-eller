@@ -104,6 +104,12 @@
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
     .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
     @media (max-width:800px){.legal .row{flex-direction:column;align-items:flex-start}}
+
+    /* Empty state for listings */
+    .empty{
+      border:1px dashed #e5e7eb; border-radius:16px; padding:18px; text-align:center; color:#6b7280;
+      background:linear-gradient(180deg,#fafafa,#fff)
+    }
   </style>
 </head>
 <body>
@@ -160,40 +166,9 @@
           </div>
         </div>
 
+        <!-- Showcase: removed placeholder/fake listings. Keep container for future dynamic content. -->
         <div class="grid" id="showcase">
-          <article class="card">
-            <div class="ph"></div>
-            <div class="body">
-              <h3 class="title" data-i18n="item.manti.title">Ev Yapımı Mantı</h3>
-              <div class="meta" data-i18n="item.manti.meta">Kadıköy • 350 TL</div>
-              <div class="row">
-                <button class="btn gold" data-need-auth data-i18n="actions.order">Sipariş Ver</button>
-                <a class="btn ghost" href="#" data-need-auth data-i18n="actions.visit">Profili Ziyaret Et</a>
-              </div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="ph"></div>
-            <div class="body">
-              <h3 class="title" data-i18n="item.makrome.title">Makrome Duvar Süsü</h3>
-              <div class="meta" data-i18n="item.makrome.meta">Konya • 420 TL</div>
-              <div class="row">
-                <button class="btn gold" data-need-auth data-i18n="actions.add">Sepete Ekle</button>
-                <a class="btn ghost" href="#" data-need-auth data-i18n="actions.visit">Profili Ziyaret Et</a>
-              </div>
-            </div>
-          </article>
-          <article class="card">
-            <div class="ph"></div>
-            <div class="body">
-              <h3 class="title" data-i18n="item.sabun.title">Zeytinyağlı Sabun</h3>
-              <div class="meta" data-i18n="item.sabun.meta">Ayvalık • 95 TL</div>
-              <div class="row">
-                <button class="btn gold" data-need-auth data-i18n="actions.buy">Satın Al</button>
-                <a class="btn ghost" href="#" data-need-auth data-i18n="actions.visit">Profili Ziyaret Et</a>
-              </div>
-            </div>
-          </article>
+          <div class="empty" data-i18n="empty.listings">Şimdilik gösterilecek ilan yok. Kategorilerden keşfedin veya arama yapın.</div>
         </div>
       </section>
     </main>
@@ -354,13 +329,14 @@
       $$('[data-i18n]').forEach(el=>{ const key = el.getAttribute('data-i18n'); const val = tLookup(L, key); if (typeof val==='string') el.textContent = val; if (key==='brand') document.title = `${val} • Ana Sayfa`; });
       $$('[data-i18n-placeholder]').forEach(el=>{ const key = el.getAttribute('data-i18n-placeholder'); const val = tLookup(L, key); if (typeof val==='string') el.setAttribute('placeholder', val); });
       const vh = $('#verifyHint'); if (vh){ const val=L.auth?.verifyHint; if (val) vh.innerHTML = val; }
-      // Showcase sample items
-      const map = L.item||{}; $('[data-i18n="item.manti.title"]').textContent = map.manti?.title||'Ev Yapımı Mantı';
-      $('[data-i18n="item.manti.meta"]').textContent = map.manti?.meta||'Kadıköy • 350 TL';
-      $('[data-i18n="item.makrome.title"]').textContent = map.makrome?.title||'Makrome Duvar Süsü';
-      $('[data-i18n="item.makrome.meta"]').textContent = map.makrome?.meta||'Konya • 420 TL';
-      $('[data-i18n="item.sabun.title"]').textContent = map.sabun?.title||'Zeytinyağlı Sabun';
-      $('[data-i18n="item.sabun.meta"]').textContent = map.sabun?.meta||'Ayvalık • 95 TL';
+      // Showcase sample items REMOVED -> guard against nulls (no fake cards in DOM)
+      const m1 = $('[data-i18n="item.manti.title"]'); if (m1) m1.textContent = L.item?.manti?.title||'Ev Yapımı Mantı';
+      const m1m = $('[data-i18n="item.manti.meta"]'); if (m1m) m1m.textContent = L.item?.manti?.meta||'Kadıköy • 350 TL';
+      const m2 = $('[data-i18n="item.makrome.title"]'); if (m2) m2.textContent = L.item?.makrome?.title||'Makrome Duvar Süsü';
+      const m2m = $('[data-i18n="item.makrome.meta"]'); if (m2m) m2m.textContent = L.item?.makrome?.meta||'Konya • 420 TL';
+      const m3 = $('[data-i18n="item.sabun.title"]'); if (m3) m3.textContent = L.item?.sabun?.title||'Zeytinyağlı Sabun';
+      const m3m = $('[data-i18n="item.sabun.meta"]'); if (m3m) m3m.textContent = L.item?.sabun?.meta||'Ayvalık • 95 TL';
+      const empty = $('[data-i18n="empty.listings"]'); if (empty && L.empty?.listings) empty.textContent = L.empty.listings;
     }
 
     // ===== Build Categories (titles translated; subs translated via I18N.sub if available) =====
