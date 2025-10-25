@@ -7,29 +7,19 @@
   <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Arayın, keşfedin, ilan verin." />
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
-    /* ====== RESET ====== */
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;padding-bottom:64px}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
-    /* ====== LAYOUT TOKENS ====== */
-    :root{
-      --page-w: 1200px;
-      --sidebar-w: 280px;              /* Mobilde de sabit genişlik */
-      --topbar-h: 58px;                 /* Topbar yaklaşık yüksekliği */
-      --bbar-h: 56px;                   /* Alt bar yüksekliği */
-      --gap: 16px;
-      --card-r: 16px;
-    }
-
     .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
 
-    /* ====== TOPBAR ====== */
+    /* Topbar */
     .topbar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e5e7eb}
-    .topbar-inner{max-width:var(--page-w);margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:10px}
+    /* LOGO STYLES LEFT INTENTIONALLY UNUSED — LOGO ELEMENT REMOVED */
     .brand .logo{display:none}
     .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
     .actions{display:flex;align-items:center;gap:8px}
@@ -39,17 +29,18 @@
     .btn.ghost{background:#fff;border:1px solid #e5e7eb}
     .lang{border:1px solid #e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600;background:#fff}
 
-    /* ====== MAIN WRAP ====== */
-    .wrap{max-width:var(--page-w);margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:var(--sidebar-w) 1fr;gap:var(--gap)}
+    /* Layout */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:clamp(220px,38vw,280px) 1fr;gap:16px}
+@media (max-width: 640px){.wrap{grid-template-columns:220px 1fr}}.sidebar{position:sticky;top:70px;align-self:start}.content{order:1}}
 
-    /* ====== SIDEBAR ====== */
+    /* Sidebar */
     .sidebar{position:relative}
-    .search{position:sticky;top:10px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+    .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
     .search input{flex:1;border:0;outline:0;background:transparent;font-size:14px}
 
-    .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff}
+    .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}
     .cathead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;padding:10px 14px;background:#fafafa;border-bottom:1px solid #eee}
-    .catlist{max-height:68vh;overflow:auto}
+    .catlist{max-height:calc(100dvh - 220px);overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
     .cat{border-bottom:1px dashed #eee}
     .cat:last-child{border-bottom:0}
     .cat > button{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#fff;border:0;cursor:pointer;font-weight:700}
@@ -61,8 +52,7 @@
     .sublist a{display:block;padding:6px 4px;border-radius:8px;font-size:14px;color:#374151}
     .sublist a:hover{background:#f3f4f6}
 
-    /* ====== CONTENT ====== */
-    .content{min-width:0}
+    /* Content */
     .hero{border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa}
     @media (max-width: 900px){.hero{grid-template-columns:1fr}}
     .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px}
@@ -72,55 +62,35 @@
     .grid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width: 1100px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media (max-width: 640px){.grid{grid-template-columns:1fr}}
-    .card{border:1px solid #e5e7eb;border-radius:var(--card-r);overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
+    .card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
     .card .ph{aspect-ratio:16/11;background:linear-gradient(180deg,#f3f4f6,#fff)}
     .card .body{padding:12px}
     .card .title{font-weight:700;margin:0 0 4px 0}
     .card .meta{font-size:12px;color:#6b7280}
 
-    /* ====== LEGAL FOOTER ====== */
+    /* Legal footer */
     .legal{background:#000;color:#fff;padding:20px 0;margin-top:30px}
-    .legal .inner{max-width:var(--page-w);margin:auto;padding:0 16px}
+    .legal .inner{max-width:1200px;margin:auto;padding:0 16px}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
     .legal a{color:#fff;opacity:.9;text-decoration:none}
     .legal a:hover{opacity:1;text-decoration:underline}
     .legal .copy{text-align:center;margin-top:10px;font-size:14px;color:#aaa}
 
-    /* ====== BOTTOM BAR ====== */
+    /* Bottom bar */
     .bottomBar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;z-index:100}
     .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
     .bbtn[aria-current="page"]{border-color:#e5e7eb;background:#fafafa}
     .bicon{width:22px;height:22px;display:block}
 
-    /* ====== LIVE CHAT ====== */
-    .chatBubble{position:fixed;right:16px;bottom:calc(var(--bbar-h) + 20px);width:56px;height:56px;border-radius:50%;border:1px solid #e5e7eb;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.15);cursor:pointer;z-index:120}
-    .chatPanel{position:fixed;right:16px;bottom:calc(var(--bbar-h) + 84px);width:min(380px,92vw);border:1px solid #e5e7eb;border-radius:16px;background:#fff;color:#000;display:none;z-index:121;box-shadow:0 16px 48px rgba(0,0,0,.2);overflow:hidden}
+    /* Live chat bubble */
+    .chatBubble{position:fixed;right:16px;bottom:76px;width:56px;height:56px;border-radius:50%;border:1px solid #e5e7eb;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.15);cursor:pointer;z-index:120}
+    .chatPanel{position:fixed;right:16px;bottom:140px;width:min(380px,92vw);border:1px solid #e5e7eb;border-radius:16px;background:#fff;color:#000;display:none;z-index:121;box-shadow:0 16px 48px rgba(0,0,0,.2);overflow:hidden}
     .chatHead{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;border-bottom:1px solid #e5e7eb;background:#fafafa}
     .chatBody{max-height:42vh;overflow:auto;padding:.6rem}
     .chatMsg{border:1px solid #e5e7eb;border-radius:12px;padding:.45rem .6rem;margin:.3rem 0;max-width:80%;background:#f3f4f6}
     .chatMsg.me{margin-left:auto;background:#111;color:#fff;border-color:#111}
     .chatFoot{display:flex;gap:.4rem;padding:.6rem;border-top:1px solid #e5e7eb;background:#fff}
     .chatFoot input{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem}
-
-    /* ====== MOBILE: SOL SABİT KATEGORİ ======
-       - Sidebar solda sabit (fixed) kalır
-       - İçerik, sidebar genişliği kadar soldan boşluk alır
-       - Ezilme/taşma/kayma önlenir
-    */
-    @media (max-width: 980px){
-      /* Sidebar'ı akıştan çıkar ve sabitle */
-      .sidebar{position:fixed;left:0;top:calc(var(--topbar-h) + env(safe-area-inset-top));bottom:calc(var(--bbar-h) + env(safe-area-inset-bottom));width:var(--sidebar-w);padding:8px;border-right:1px solid #e5e7eb;background:#fff;overflow:auto;z-index:30}
-      /* Sidebar içindeki arama üstte yapışık kalsın */
-      .search{position:sticky;top:0}
-      /* İçeriği sağa kaydır */
-      .wrap{grid-template-columns:1fr;padding-left:calc(var(--sidebar-w) + var(--gap))}
-      .content{min-width:320px}
-    }
-
-    /* Çok dar cihazlar için (ör. 360px) sidebar genişliğini biraz azalt */
-    @media (max-width: 420px){
-      :root{ --sidebar-w: 240px; }
-    }
   </style>
   <script type="module" src="/firebase-init.js"></script>
 </head>
@@ -130,6 +100,7 @@
     <div class="topbar">
       <div class="topbar-inner">
         <div class="brand">
+          <!-- LOGO REMOVED FROM TOPBAR PER REQUEST -->
           <h1 id="brandTitle">Üreten Eller</h1>
         </div>
         <div class="actions">
@@ -147,7 +118,7 @@
 
     <!-- Main -->
     <main class="wrap">
-      <aside class="sidebar" aria-label="Sol Kategori Paneli">
+      <aside class="sidebar">
         <div class="search" role="search">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15.5 15.5L21 21" stroke="#111" stroke-width="1.6" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="#111" stroke-width="1.6"/></svg>
           <input id="q" data-i18n-placeholder="searchPlaceholder" placeholder="Ara: ürün, kategori, ilçe…" />
@@ -161,7 +132,7 @@
         </div>
       </aside>
 
-      <section class="content" aria-label="İçerik">
+      <section class="content">
         <div class="hero">
           <div>
             <h2 id="heroTitle">El emeği & yerel lezzetler tek çatı altında</h2>
@@ -174,7 +145,6 @@
         <section aria-label="İlanlar">
           <div class="grid listGrid" id="allGrid"></div>
         </section>
-      </section>
     </main>
 
     <!-- Siyah Legal Panel -->
@@ -281,6 +251,16 @@
       $('#chatTitle').textContent = L.chat?.title || '🛎️ Canlı Destek';
       // hero lines (first)
       const it=(L.heroLines||I18N.tr.heroLines)[0]; $('#heroTitle').textContent=it.t; $('#heroDesc').textContent=it.d;
+      // sample items (guarded — elements may not exist on this page)
+      const map=L.item||{};
+      const mTitle=$('[data-i18n="item.manti.title"]'); if(mTitle) mTitle.textContent=map.manti?.title||'Ev Yapımı Mantı';
+      const mMeta =$('[data-i18n="item.manti.meta"]'); if(mMeta)  mMeta.textContent =map.manti?.meta ||'Kadıköy • 350 TL';
+      const kTitle=$('[data-i18n=\"item.makrome.title\"]'); if(kTitle) kTitle.textContent=map.makrome?.title||'Makrome Duvar Süsü';
+      const kMeta =$('[data-i18n=\"item.makrome.meta\"]'); if(kMeta)  kMeta.textContent =map.makrome?.meta ||'Konya • 420 TL';
+      const sTitle=$('[data-i18n=\"item.sabun.title\"]'); if(sTitle) sTitle.textContent=map.sabun?.title||'Zeytinyağlı Sabun';
+      const sMeta =$('[data-i18n=\"item.sabun.meta\"]'); if(sMeta)  sMeta.textContent =map.sabun?.meta ||'Ayvalık • 95 TL';
+      // legal links
+      const LL=L.legal||{}; $$('footer .links a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
     }
 
     function buildCats(){
@@ -314,8 +294,9 @@
     // Lang init
     (function init(){
       const y=document.getElementById('yfoot'); if(y) y.textContent=new Date().getFullYear();
-      const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); if(sel){ sel.value=initial; sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); }); }
+      const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); sel.value=initial;
       applyI18n(); buildCats();
+      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); });
     })();
 
     // ===== Live Chat (local echo) =====
@@ -325,7 +306,55 @@
     chatBubble?.addEventListener('click', ()=>{ if(chatPanel.style.display==='block'){ chatPanel.style.display='none'; } else { openChat(); }});
     document.getElementById('chatMin')?.addEventListener('click', ()=> chatPanel.style.display='none');
     document.getElementById('chatClose')?.addEventListener('click', ()=>{ chatPanel.style.display='none'; chatBody.innerHTML=''; delete chatBody.dataset.welcome; });
-    document.getElementById('chatSend')?.addEventListener('click', ()=>{ const v=(chatInput?.value||'').trim(); if(!v) return; chatPush(v,true); if(chatInput) chatInput.value=''; setTimeout(()=>{ chatPush('✓'); }, 300); });
+    document.getElementById('chatSend')?.addEventListener('click', ()=>{ const v=(chatInput.value||'').trim(); if(!v) return; chatPush(v,true); chatInput.value=''; setTimeout(()=>{ const L=I18N[getLang()]||I18N.tr; chatPush('✓'); }, 300); });
+  
+    // ==== İLANLAR: Tek panel (üst 20 vitrin + sonrası standart) ====
+    (function(){
+      const allGrid = document.getElementById('allGrid');
+      if(!allGrid) return;
+
+      function ensureFirebaseReady(){
+        if (!self.__fb || !self.__fb.db || !self.firebase || !self.getDocs){
+          throw new Error('Firebase hazır değil. Lütfen /firebase-init.js yüklü olsun.');
+        }
+        const { db } = self.__fb;
+        const { col, q, orderBy, limit } = self.firebase;
+        const { getDocs } = self;
+        return { db, col, q, orderBy, limit, getDocs };
+      }
+
+      const fmtPrice = (v, cur='TRY')=>{ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v)); }catch(_){ return (v||'')+' '+cur; } };
+      const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
+      const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
+
+      const CLOUD = (window.CLOUDINARY_CLOUD||'ozneglobal');
+      const isHttp = (u)=>/^https?:\/\//i.test(u||'');
+      const isPid  = (u)=> u && !isHttp(u) && /[\/_.-]/.test(String(u));
+      const cdn = (pid,{w,h,crop='fill',fmt='auto',q='auto'}={})=>`https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`,fmt&&`f_${fmt}`,w&&`w_${w}`,h&&`h_${h}`,crop&&`c_${crop}`].filter(Boolean).join(',')}/`+String(pid).replace(/^image\/upload\//,'');
+      async function resolveURL(raw){ if(!raw) return ''; if(isHttp(raw)) return raw; if(isPid(raw)) return cdn(raw,{w:600,h:450}); try{ if(self.storageRef && self._getDownloadURL){ return await self._getDownloadURL(self.storageRef(raw)); } }catch(_){ } return raw; }
+      async function resolveCover(d){ const arr=[]; if(d.cover)arr.push(d.cover); if(d.coverUrl)arr.push(d.coverUrl); if(Array.isArray(d.photos))arr.push(...d.photos); if(Array.isArray(d.images))arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); const first=arr.find(Boolean); return await resolveURL(first)||'/assets/icons/ureteneller.png'; }
+
+      const cardHTML = (d,id,cover)=>`<a class="card" href="/ilan/${id}"><span class="thumb" style="background-image:url('${cover}');aspect-ratio:16/11;background-size:cover;background-position:center"></span><div class="body"><h3 class="title">${(d.title||d.name||'İlan')}</h3><div class="meta">${(d.city||'')} · ${d.price?fmtPrice(d.price,(d.currency||d.cur||'TRY')):''}</div></div></a>`;
+      function renderList(gridId, list){ const grid=document.getElementById(gridId); if(!grid) return; grid.innerHTML=''; const frag=document.createDocumentFragment(); list.forEach(x=>{ const wrap=document.createElement('div'); wrap.innerHTML=cardHTML(x.data,x.id,x.data.__cover||'/assets/icons/ureteneller.png'); frag.appendChild(wrap.firstElementChild); }); grid.appendChild(frag); }
+
+      async function fetchAndPaint(){
+        try{
+          const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
+          const ref = col('listings');
+          let snap; try{ snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200))); }catch(e){ snap = await getDocs(q(ref, limit(200))); }
+          const now=Date.now(); const vip=[], std=[];
+          snap.forEach(doc=>{ const d=doc.data()||{}; (isVipDoc(d,now)?vip:std).push({id:doc.id, data:d}); });
+          await Promise.all([...vip, ...std].map(async x=>{ x.data.__cover = await resolveCover(x.data); }));
+          const sortBy=(a,b)=> toMillis(b.data.createdAt)-toMillis(a.data.createdAt);
+          vip.sort(sortBy); std.sort(sortBy);
+          const combined = vip.slice(0,20).concat(std);
+          renderList('allGrid', combined);
+        }catch(e){ console.warn('İlan yüklenemedi:', e); }
+      }
+
+      function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
+    })();
   </script>
 </body>
 </html>
