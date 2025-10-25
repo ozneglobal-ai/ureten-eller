@@ -61,16 +61,16 @@ self.CLOUDINARY = {
 function clTx(opts = {}) {
   const { w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr, radius, ar, bg } = opts;
   const parts = [];
-  if (c) parts.push(c_${c});
-  if (w) parts.push(w_${w});
-  if (h) parts.push(h_${h});
-  if (ar) parts.push(ar_${ar});
-  if (g) parts.push(g_${g});
-  if (radius) parts.push(r_${radius});
-  if (bg) parts.push(b_${bg});
-  if (dpr) parts.push(dpr_${dpr});
-  if (q) parts.push(q_${q});
-  if (f) parts.push(f_${f});
+  if (c) parts.push(`c_${c}`);
+if (w) parts.push(`w_${w}`);
+if (h) parts.push(`h_${h}`);
+if (ar) parts.push(`ar_${ar}`);
+if (g) parts.push(`g_${g}`);
+if (radius) parts.push(`r_${radius}`);
+if (bg) parts.push(`b_${bg}`);
+if (dpr) parts.push(`dpr_${dpr}`);
+if (q) parts.push(`q_${q}`);
+if (f) parts.push(`f_${f}`);
   return parts.join(',');
 }
 
