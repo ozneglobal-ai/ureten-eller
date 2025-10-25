@@ -125,6 +125,90 @@
 
     /* Empty state for listings */
     .empty{border:1px dashed #e5e7eb; border-radius:16px; padding:18px; text-align:center; color:#6b7280; background:linear-gradient(180deg,#fafafa,#fff)}
+
+    /* ===== Mobile overflow & layout fixes (drop-in overrides) ===== */
+    :root{
+      /* mobilde sidebar ve üst toplam yükseklik için değişkenler */
+      --sidebar-w: 78vw;       /* önce 84vw idi: daralttık */
+      --header-h: 112px;       /* notice(40) + topbar ~72 = 112px */
+    }
+
+    /* global güvenlik önlemleri */
+    html, body, .page{overflow-x:hidden}
+    *{min-width:0} /* flex/grid çocuklarının taşmasını engelle */
+    a, button, input, select{max-width:100%}
+    img{height:auto}
+
+    /* tipografi esnemesi: uzun metinlerde kırma/hyphen */
+    .sublist a,
+    .legal .links a,
+    .btn,
+    .brand h1{
+      word-break: break-word;
+      hyphens: auto;
+    }
+
+    /* hero ve başlıkların mobil boyutları */
+    @media (max-width: 900px){
+      .hero h2{font-size:22px}
+      .hero p{font-size:14px}
+    }
+
+    /* === 980px ve altı: mobil düzen === */
+    @media (max-width: 980px){
+      /* notice-topbar çakışmasını engelle: notice sabit olmasın */
+      .notice-bar{position:relative}
+      .topbar{top:0} /* topbar daima ekranın üstünden başlasın */
+
+      /* ana düzen: sabit sol panel + sağda içerik, taşmasız */
+      .wrap{display:block}
+      .sidebar{
+        position:fixed;
+        left:0;
+        top:var(--header-h);
+        width:var(--sidebar-w);
+        height:calc(100dvh - var(--header-h));
+        background:#fff;
+        border-right:1px solid #e5e7eb;
+        z-index:45;
+        overflow:auto;
+        padding:8px;
+      }
+      .content{
+        margin-left:var(--sidebar-w);
+        padding-left:12px;
+      }
+
+      /* sidebar içi: daha kompakt, yapışkan arama paneli çatışmasız */
+      .search{
+        position:sticky;
+        top:8px; /* 70px yerine; küçük ekranlarda taşma yapmasın */
+        z-index:1;
+      }
+      .catlist{
+        max-height:calc(100dvh - var(--header-h) - 120px);
+        overflow:auto;
+      }
+      .cat > button{padding:12px 12px}
+      .sublist{padding:8px 10px 14px 28px}
+      .sublist a{display:block;padding:6px 4px;border-radius:8px}
+
+      /* üst kısımda sıkışmayı azalt */
+      .brand h1{font-size:16px}
+      .btn{white-space:normal; min-width:0; padding:10px 12px}
+
+      /* kart ve gridlerin genişlik taşmasını önle */
+      .grid{grid-template-columns:1fr; min-width:0}
+    }
+
+    /* footer linkleri satır kaydırmalı & taşmasız */
+    .legal .links{
+      display:flex; flex-wrap:wrap; gap:12px;
+      overflow:auto; -webkit-overflow-scrolling:touch;
+    }
+
+    /* kart/flex satırlarında taşmayı önle */
+    .card .row{min-width:0}
   </style>
 </head>
 <body>
