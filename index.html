@@ -10,12 +10,11 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    /* --- FIX: mobil yatay kayma koruması + içte tut --- */
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto;overflow-x:clip}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; /* --- FIX: mobile yatay kayma koruması --- */ overflow-x:hidden}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
+    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
     .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:10px}
@@ -26,10 +25,9 @@
     .lang select{border:0;background:transparent;font-weight:700}
 
     /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
-    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff;overflow:clip}
-    /* --- FIX: yalnızca içte yatay scroll; sayfa kaymasın --- */
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-gutter:stable both-edges;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
-    .catnav .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap;scroll-snap-align:start}
+    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch; /* --- FIX: mobilde hesaplı scrollbar --- */ scrollbar-gutter:stable both-edges}
+    .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
 
@@ -38,21 +36,12 @@
     .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
     .catdrops .panel.open{display:block}
 
-    /* CatNav başlığı (mevcudu bozmadan) */
-    .catnav-title{max-width:1200px;margin:0 auto;padding:10px 16px 4px;font-weight:900;font-size:14px;letter-spacing:.2px;color:#374151}
-    @media (max-width:768px){.catnav-title{padding:10px 12px 4px;font-size:13px}}
-
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
     .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px;overflow-wrap:anywhere;word-break:break-word}
-    .hero p{margin:0 0 16px 0;color:#4b5563;overflow-wrap:anywhere;word-break:break-word}
+    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
+    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
-
-    /* --- FIX: mobilde hero metinleri 2 satırı aşmasın --- */
-    @media (max-width:480px){
-      .hero h2,.hero p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-    }
 
     /* Buttons */
     .btn{--gold:#caa552;--shine:rgba(255,255,255,.7);--ink:#0b1220;appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;position:relative;isolation:isolate;transition:transform .06s ease, box-shadow .2s ease;user-select:none}
@@ -84,7 +73,7 @@
     /* Footer */
     .legal{background:#000;color:#fff}
     .legal .inner{max-width:1200px;margin:0 auto;padding:16px}
-    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 
     /* === RESPONSIVE DOKUNUŞLAR (mevcudu bozmadan) === */
@@ -102,8 +91,7 @@
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
     }
-
-    /* === İLAN KARTLARI === */
+      /* === İLAN KARTLARI === */
     .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
     .listings-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
     .listings-head h3{margin:0;font-size:18px}
@@ -129,26 +117,8 @@
     .ribbon{position:absolute;top:8px;left:8px;background:#caa552;color:#111;font-weight:900;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #b18a37;box-shadow:0 4px 14px rgba(202,165,82,.25)}
 
     /* Responsive isteklerine göre: mobil 2, tablet/desktop 4 sütun */
-    @media (max-width:1024px){
-      .listings-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-    }
     @media (max-width:768px){
       .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    }
-  
-    /* === KARTLARI MOBİLDE KISALT — görüntü oranı & tipografi === */
-    @media (max-width:1024px){
-      /* tablet ve aşağısı: görseli biraz yataylaştır (daha kısa kart) */
-      .card .ph{aspect-ratio:4/3}
-    }
-    @media (max-width:480px){
-      .listings-section{padding:8px 12px 18px}
-      .listings-grid{gap:8px}
-      .card .body{padding:8px;gap:4px}
-      .card .title{font-size:13px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
-      .card .desc{font-size:12px;-webkit-line-clamp:1}
-      .price{font-size:13px}
-      .card .actions .btn{padding:8px 10px;font-weight:700}
     }
   </style>
 </head>
@@ -170,19 +140,18 @@
               <option value="ar">العربية</option>
             </select>
           </div>
-          <button type="button" class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
+          <button class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
           <div id="authArea" class="auth-badge" style="display:none">
             <div class="avatar"><img id="uAvatar" alt="" /></div>
             <div id="uName" class="hint">Kullanıcı</div>
             <button class="btn ghost" id="signOutBtn" data-i18n="buttons.signout">Çıkış</button>
           </div>
-          <button type="button" class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
+          <button class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
         </div>
       </div>
 
       <!-- Üstte Yatay Kategori Şeritleri (hepsi yan yana, kaydırmalı) -->
       <nav id="catNav" class="catnav" aria-label="Kategoriler">
-        <div class="catnav-title">Kategoriler</div>
         <div class="catnav-inner"></div>
       </nav>
       <div id="catDrops" class="catdrops">
@@ -199,10 +168,10 @@
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
         </div>
-        <!-- NOTE: Fazladan kapanan div kaldırıldı (layout boşluğunu engeller) -->
+              </div>
       </section>
 
-      <!-- === İLANLAR: Hero'nun hemen altında başlasın === -->
+      <!-- === İLANLAR === -->
       <section class="listings-section">
         <div class="listings-head">
           <h3>Yeni İlanlar</h3>
@@ -210,8 +179,8 @@
         </div>
         <div class="listings-grid" id="listGrid" aria-live="polite"></div>
         <div class="paging">
-          <button type="button" class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
-          <button type="button" class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
+          <button class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
+          <button class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
         </div>
       </section>
     </main>
@@ -241,7 +210,7 @@
     <div class="sheet">
       <header>
         <h3 id="authTitle" data-i18n="auth.title">Giriş Yap / Kayıt Ol</h3>
-        <button type="button" class="btn ghost" data-close aria-label="Kapat">✕</button>
+        <button class="btn ghost" data-close aria-label="Kapat">✕</button>
       </header>
       <div class="inner">
         <div class="form" style="margin-bottom:16px">
@@ -249,8 +218,8 @@
           <div class="input pw"><label for="li_pass" data-i18n="fields.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
           <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
-              <button type="button" class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
+              <button class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
+              <button class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
             </div>
             <button class="btn gold" id="googleBtn" type="button" aria-label="Google" data-i18n="buttons.google">Google ile Giriş</button>
           </div>
@@ -275,7 +244,7 @@
             </div>
             <div class="input pw"><label for="su_pass2" data-i18n="fields.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
             <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
-              <button type="button" class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
+              <button class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
               <div class="hint" data-i18n="hints.verify">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
             </div>
           </div>
@@ -296,16 +265,8 @@
       </div>
     </div>
   </dialog>
-  <!-- Firebase init (kökten) -->
+<!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
-
-  <script>
-    // Sayfa genelinde href="#" linklerinin gezinmesini durdur (tek tık sorunu için güvenli)
-    document.addEventListener('click', (e)=>{
-      const a = e.target.closest('a[href="#"]');
-      if(a){ e.preventDefault(); }
-    });
-  </script>
 
   <script type="module">
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
@@ -508,17 +469,15 @@
 
     function localizeCat(cat, lang){
       const L = CAT_I18N[lang] || CAT_I18N.tr;
-      const title = (L.titles && L.titles[cat.id]) ? L.titles[cat.id] : cat.id;
-      const subs = (cat.subs||[]).map(([sid])=>[sid, (L.subs && L.subs[sid]) ? L.subs[sid] : sid]);
+      const title = L.titles[cat.id] || cat.id;
+      const subs = cat.subs.map(([sid])=>[sid, (L.subs[sid]||sid)]);
       return { id: cat.id, title, subs };
     }
 
     function buildTopCats(lang){
       const currentLang = lang || (localStorage.getItem('ue_lang') || 'tr');
-      if(!catBar || !drops) return;
       catBar.innerHTML = '';
       drops.innerHTML = '';
-
       CATS.forEach((cat)=>{
         const LCat = localizeCat(cat, currentLang);
         const chip = document.createElement('button');
@@ -531,73 +490,290 @@
         panel.className = 'panel';
         panel.id = `p_${LCat.id}`;
         panel.innerHTML = LCat.subs.map(([id,label])=>`<a href="#" data-open-auth style="display:inline-block;margin:4px 6px;padding:8px 10px;border-radius:8px;border:1px solid #eee">${label}</a>`).join('');
-        panel.addEventListener('click',(e)=>{
-          const a = e.target.closest('a[data-open-auth]');
-          if(a){ e.preventDefault(); if(typeof openAuth === 'function'){ openAuth(); } }
-        });
+        panel.addEventListener('click',(e)=>{ if(e.target.matches('a[data-open-auth]')){ e.preventDefault(); openAuth(); }});
 
         chip.addEventListener('click',()=>{
           const wasOpen = panel.classList.contains('open');
+          // Kapat tüm paneller ve aktif chipleri
           document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
           document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
-          if (!wasOpen){ panel.classList.add('open'); chip.classList.add('active'); }
+          if (!wasOpen){
+            panel.classList.add('open');
+            chip.classList.add('active');
+          }
         });
 
         catBar.appendChild(chip);
         drops.appendChild(panel);
       });
-
-      // yatay kaydırmayı kolaylaştır (mouse tekeri ile)
-      catBar.addEventListener('wheel', (e)=>{
-        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-          catBar.scrollLeft += e.deltaY; e.preventDefault();
-        }
-      }, { passive:false });
     }
 
-    // Basit openAuth (modali aç) — eğer daha önce tanımlıysa onu kullanır
-    function openAuth(){
-      const authModal = document.getElementById('authModal');
-      if(!authModal) return;
-      if (typeof authModal.showModal === 'function') authModal.showModal();
-      else { authModal.setAttribute('open',''); authModal.style.display='grid'; }
-    }
+    buildTopCats(localStorage.getItem('ue_lang')||'tr');
 
-    // Modal kapatma yardımcıları
-    function closeDialog(dlg){
-      if(!dlg) return;
-      if(typeof dlg.close === 'function') dlg.close();
-      dlg.removeAttribute('open');
-      dlg.style.display='';
-    }
-
+    // Auth Modal helpers + güvenli açıcı (dialog destek yoksa fallback)
     const authModal = document.getElementById('authModal');
-    const listingModal = document.getElementById('listingModal');
+    function openAuth(){
+      if (typeof authModal.showModal === 'function'){
+        authModal.showModal();
+      } else {
+        authModal.setAttribute('open',''); // fallback
+        authModal.style.display='grid';
+      }
+    }
+    function closeAuth(){
+      if (typeof authModal.close === 'function') authModal.close();
+      authModal.removeAttribute('open');
+      authModal.style.display='none';
+    }
+    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{
+      closeAuth();
+    }));
 
-    // Auth modal — X butonu, arka plan tıkı ve ESC
-    authModal?.querySelector('[data-close]')?.addEventListener('click', ()=>closeDialog(authModal));
-    authModal?.addEventListener('click', (e)=>{ if(e.target === authModal) closeDialog(authModal); });
-    authModal?.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDialog(authModal); });
-
-    // Listing modal — X butonu, arka plan tıkı ve ESC
-    listingModal?.querySelector('[data-close-listing]')?.addEventListener('click', ()=>closeDialog(listingModal));
-    listingModal?.addEventListener('click', (e)=>{ if(e.target === listingModal) closeDialog(listingModal); });
-    listingModal?.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDialog(listingModal); });
-
-    // Açma butonları
     document.getElementById('signInBtn')?.addEventListener('click', openAuth);
-    document.getElementById('postBtn')?.addEventListener('click', openAuth);
 
-    // Dil seçim dinleyicisi ve ilk kurulum
-    const savedLang = localStorage.getItem('ue_lang')||'tr';
+    // Dil seçici
     const langSel = document.getElementById('langSel');
-    if (langSel){
-      langSel.value = savedLang;
-      langSel.addEventListener('change', (e)=>{
-        const v = e.target.value; localStorage.setItem('ue_lang', v); applyI18n(v);
+    langSel?.addEventListener('change', (e)=>{
+      const v = e.target.value; applyI18n(v); localStorage.setItem('ue_lang', v);
+    });
+    applyI18n(localStorage.getItem('ue_lang')||'tr');
+
+    // Password visibility toggles
+    document.querySelectorAll('.toggle').forEach(b=>b.addEventListener('click',()=>{
+      const id = b.getAttribute('data-toggle'); const inp = document.getElementById(id);
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    }));
+
+    // Firebase Auth
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+
+    // === GİRİŞ SONRASI YÖNLENDİRME: /home.html ===
+    function redirectHome(){ window.location.href = '/home.html'; }
+
+    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
+      try{ await signInWithPopup(auth, provider); redirectHome(); }
+      catch(err){ alert('Google ile giriş başarısız: '+(err?.message||err)); }
+    });
+
+    document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
+      const email = document.getElementById('li_email').value.trim();
+      const pass = document.getElementById('li_pass').value;
+      if(!email || pass.length<6){ alert('E‑posta ve şifreyi kontrol edin.'); return; }
+      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
+      catch(err){ alert('Giriş başarısız: '+(err?.message||err)); }
+    });
+
+    document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
+      const email = document.getElementById('li_email').value.trim();
+      if(!email){ alert('Şifre sıfırlamak için e‑posta girin.'); return; }
+      try{ await sendPasswordResetEmail(auth, email); alert('Şifre sıfırlama e‑postası gönderildi. Gelen kutusu ve SPAM klasörünü kontrol edin.'); }
+      catch(err){ alert('İşlem başarısız: '+(err?.message||err)); }
+    });
+
+    document.getElementById('registerBtn')?.addEventListener('click', async ()=>{
+      const username = document.getElementById('su_username').value.trim();
+      const name = document.getElementById('su_name').value.trim();
+      const province = document.getElementById('su_province').value;
+      const district = document.getElementById('su_district').value.trim();
+      const email = document.getElementById('su_email').value.trim();
+      const pass = document.getElementById('su_pass').value;
+      const pass2 = document.getElementById('su_pass2').value;
+      if(!username || !name || !province || !district || !email || pass.length<6 || pass!==pass2){ alert('Lütfen tüm alanları doğru doldurun.'); return; }
+      try{
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(cred.user, { displayName: name });
+        try{ await sendEmailVerification(cred.user); }catch{}
+        alert('Kayıt tamamlandı. Doğrulama e‑postası gönderildi. SPAM klasörünü de kontrol edin.');
+        redirectHome();
+      }catch(err){ alert('Kayıt başarısız: '+(err?.message||err)); }
+    });
+
+    onAuthStateChanged(auth, (u)=>{
+      const authArea = document.getElementById('authArea');
+      const signBtn = document.getElementById('signInBtn');
+      if (u){
+        authArea.style.display='flex'; signBtn.style.display='none';
+        document.getElementById('uName').textContent = u.displayName || u.email || 'Kullanıcı';
+        document.getElementById('uAvatar').src = u.photoURL || '/assets/img/avatar-default.png';
+      } else {
+        authArea.style.display='none'; signBtn.style.display='inline-flex';
+      }
+    });
+
+    document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
+
+    // CTA – bu iki buton giriş penceresini AÇACAK
+    document.getElementById('browseBtn')?.addEventListener('click', openAuth);
+    document.getElementById('postBtn')?.addEventListener('click', openAuth);
+    </script>
+
+  <script type="module">
+    // === İLANLARI ÇEK & GÖSTER ===
+    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+    const db2 = (self.__fb?.db) || getFirestore();
+    const grid = document.getElementById('listGrid');
+    const info = document.getElementById('listInfo');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+
+    const PAGE_SIZE = 4; // her sayfada 4 ilan
+    let allListings = [];
+    let page = 0;
+
+    function formatPrice(tryAmount){
+      try{
+        return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
+      }catch{ return tryAmount + ' TL'; }
+    }
+
+    function timeValid(d){
+      try{ const ex = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return ex >= new Date(); }catch{ return true; }
+    }
+
+    async function fetchSeller(uid){
+      if(!uid) return null;
+      try{
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const snap = await getDoc(doc(db2,'users',uid));
+        return snap.exists()? snap.data(): null;
+      }catch{ return null; }
+    }
+
+    function cardTpl(it){
+      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
+      const showcase = !!it.showcase;
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+      const title = it.title || 'İlan';
+      const desc = it.description || '';
+      const id = it.id;
+      return `
+        <article class="card" data-id="${id}">
+          <div class="ph">
+            ${showcase?'<span class="ribbon">Vitrin</span>':''}
+            <img alt="${title}" loading="lazy" src="${img}">
+          </div>
+          <div class="body">
+            <div class="title">${title}</div>
+            <div class="desc">${desc}</div>
+            <div class="seller" data-seller>
+              <div class="av"><img alt="" src="/assets/img/avatar-default.png"></div>
+              <div class="name">Satıcı</div>
+              <span class="badge" style="display:none">Onaylı</span>
+            </div>
+            <div class="price">${price}</div>
+            <div class="actions">
+              <button class="btn gold" data-do="order">Sipariş Ver</button>
+              <button class="btn ghost" data-do="msg">Satıcıya Yaz</button>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function render(){
+      const start = page * PAGE_SIZE;
+      const slice = allListings.slice(start, start + PAGE_SIZE);
+      grid.innerHTML = slice.map(cardTpl).join('');
+      info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
+      prevBtn.disabled = page===0;
+      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+    }
+
+    function attachCardEvents(){
+      grid.addEventListener('click', async (e)=>{
+        const card = e.target.closest('.card');
+        if(!card) return;
+        const id = card.getAttribute('data-id');
+        const listing = allListings.find(x=>x.id===id);
+        if(!listing) return;
+
+        if (e.target.matches('[data-do="order"], [data-do="msg"]')){
+          // giriş panelini aç
+          openAuth();
+          return;
+        }
+        // Kart tıklanınca detay modal aç
+        openListingDetail(listing, card.querySelector('.ph img')?.src);
       });
     }
 
-    // İlk yüklemede dil uygula ve kategorileri kur
-    applyI18n(savedLang);
+    async function openListingDetail(it, imgSrc){
+      const modal = document.getElementById('listingModal');
+      const body = document.getElementById('listingBody');
+      let seller = null;
+      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
+      const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+      try{ seller = await fetchSeller(sellerId); }catch{}
+      const av = seller?.photoURL || '/assets/img/avatar-default.png';
+      const name = seller?.displayName || seller?.name || 'Satıcı';
+      const verified = !!(seller?.verifiedSeller || seller?.verified);
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+
+      body.innerHTML = `
+        <div style="display:grid;gap:12px">
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
+            <div style="font-weight:700">${name}</div>
+            ${verified?'<span class="badge">Onaylı</span>':''}
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
+            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
+          </div>
+          <div style="font-size:18px;font-weight:900">${price}</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn gold" id="detailOrder">Sipariş Ver</button>
+            <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
+          </div>
+        </div>`;
+
+      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
+      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+
+      if (typeof modal.showModal === 'function') modal.showModal();
+      else { modal.setAttribute('open',''); modal.style.display='grid'; }
+    }
+
+    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
+      const modal = document.getElementById('listingModal');
+      if (typeof modal.close === 'function') modal.close();
+      modal.removeAttribute('open'); modal.style.display='none';
+    });
+
+    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
+    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
+
+    async function loadListings(){
+      try{
+        info.textContent = 'Yükleniyor…';
+        const col = collection(db2,'listings');
+        const q = query(col, orderBy('updatedAt','desc'));
+        const snap = await getDocs(q);
+        const now = Date.now();
+        const rows = [];
+        snap.forEach(d=>{
+          const data = d.data();
+          // filtre: status approved, süresi dolmamış
+          if (data?.status === 'approved'){
+            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
+            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
+          }
+        });
+        // Öncelik: showcase true olanlar
+        const showcase = rows.filter(r=>!!r.showcase);
+        const standard = rows.filter(r=>!r.showcase);
+        allListings = [...showcase, ...standard];
+        page = 0;
+        render();
+        attachCardEvents();
+      }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
+    }
+
+    // FB hazır olduğunda yükle
+    if (self.__fbReady) loadListings();
+    else document.addEventListener('fb-ready', loadListings, { once:true });
   </script>
+</body>
+</html>
