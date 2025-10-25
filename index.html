@@ -91,6 +91,35 @@
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
     }
+      /* === İLAN KARTLARI === */
+    .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
+    .listings-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
+    .listings-head h3{margin:0;font-size:18px}
+    .listings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+    .card .ph{position:relative;aspect-ratio:1/1;background:#f5f6f7}
+    .card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .card .body{padding:10px;display:grid;gap:6px}
+    .card .title{font-weight:800;font-size:14px;line-height:1.3}
+    .card .desc{color:#6b7280;font-size:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .price{font-weight:900}
+    .seller{display:flex;gap:8px;align-items:center}
+    .seller .av{width:22px;height:22px;border-radius:50%;background:#eee;overflow:hidden}
+    .seller .av img{width:100%;height:100%;object-fit:cover}
+    .seller .name{font-size:12px}
+    .badge{font-size:10px;border:1px solid #10b981;color:#065f46;padding:2px 6px;border-radius:999px;background:#ecfdf5;margin-left:auto}
+    .card .actions{display:flex;gap:8px;margin-top:8px}
+    .card .actions .btn{flex:1}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff;font-size:12px}
+    .paging{display:flex;gap:8px;justify-content:center;margin-top:12px}
+
+    /* Showcase simgesi */
+    .ribbon{position:absolute;top:8px;left:8px;background:#caa552;color:#111;font-weight:900;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #b18a37;box-shadow:0 4px 14px rgba(202,165,82,.25)}
+
+    /* Responsive isteklerine göre: mobil 2, tablet/desktop 4 sütun */
+    @media (max-width:768px){
+      .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    }
   </style>
 </head>
 <body>
@@ -138,6 +167,20 @@
           <div class="cta-row">
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
+        </div>
+              </div>
+      </section>
+
+      <!-- === İLANLAR === -->
+      <section class="listings-section">
+        <div class="listings-head">
+          <h3>Yeni İlanlar</h3>
+          <div class="pill" id="listInfo">Yükleniyor…</div>
+        </div>
+        <div class="listings-grid" id="listGrid" aria-live="polite"></div>
+        <div class="paging">
+          <button class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
+          <button class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
         </div>
       </section>
     </main>
@@ -210,7 +253,19 @@
     </div>
   </dialog>
 
-  <!-- Firebase init (kökten) -->
+  <!-- ===== Listing Detail Modal ===== -->
+  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="listingTitle">İlan Detayı</h3>
+        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner" id="listingBody">
+        <!-- JS ile doldurulacak -->
+      </div>
+    </div>
+  </dialog>
+<!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
 
   <script type="module">
@@ -551,6 +606,174 @@
     // CTA – bu iki buton giriş penceresini AÇACAK
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
+    </script>
+
+  <script type="module">
+    // === İLANLARI ÇEK & GÖSTER ===
+    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+    const db2 = (self.__fb?.db) || getFirestore();
+    const grid = document.getElementById('listGrid');
+    const info = document.getElementById('listInfo');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+
+    const PAGE_SIZE = 4; // her sayfada 4 ilan
+    let allListings = [];
+    let page = 0;
+
+    function formatPrice(tryAmount){
+      try{
+        return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
+      }catch{ return tryAmount + ' TL'; }
+    }
+
+    function timeValid(d){
+      try{ const ex = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return ex >= new Date(); }catch{ return true; }
+    }
+
+    async function fetchSeller(uid){
+      if(!uid) return null;
+      try{
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const snap = await getDoc(doc(db2,'users',uid));
+        return snap.exists()? snap.data(): null;
+      }catch{ return null; }
+    }
+
+    function cardTpl(it){
+      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
+      const showcase = !!it.showcase;
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+      const title = it.title || 'İlan';
+      const desc = it.description || '';
+      const id = it.id;
+      return `
+        <article class="card" data-id="${id}">
+          <div class="ph">
+            ${showcase?'<span class="ribbon">Vitrin</span>':''}
+            <img alt="${title}" loading="lazy" src="${img}">
+          </div>
+          <div class="body">
+            <div class="title">${title}</div>
+            <div class="desc">${desc}</div>
+            <div class="seller" data-seller>
+              <div class="av"><img alt="" src="/assets/img/avatar-default.png"></div>
+              <div class="name">Satıcı</div>
+              <span class="badge" style="display:none">Onaylı</span>
+            </div>
+            <div class="price">${price}</div>
+            <div class="actions">
+              <button class="btn gold" data-do="order">Sipariş Ver</button>
+              <button class="btn ghost" data-do="msg">Satıcıya Yaz</button>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function render(){
+      const start = page * PAGE_SIZE;
+      const slice = allListings.slice(start, start + PAGE_SIZE);
+      grid.innerHTML = slice.map(cardTpl).join('');
+      info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
+      prevBtn.disabled = page===0;
+      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+    }
+
+    function attachCardEvents(){
+      grid.addEventListener('click', async (e)=>{
+        const card = e.target.closest('.card');
+        if(!card) return;
+        const id = card.getAttribute('data-id');
+        const listing = allListings.find(x=>x.id===id);
+        if(!listing) return;
+
+        if (e.target.matches('[data-do="order"], [data-do="msg"]')){
+          // giriş panelini aç
+          openAuth();
+          return;
+        }
+        // Kart tıklanınca detay modal aç
+        openListingDetail(listing, card.querySelector('.ph img')?.src);
+      });
+    }
+
+    async function openListingDetail(it, imgSrc){
+      const modal = document.getElementById('listingModal');
+      const body = document.getElementById('listingBody');
+      let seller = null;
+      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
+      const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+      try{ seller = await fetchSeller(sellerId); }catch{}
+      const av = seller?.photoURL || '/assets/img/avatar-default.png';
+      const name = seller?.displayName || seller?.name || 'Satıcı';
+      const verified = !!(seller?.verifiedSeller || seller?.verified);
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+
+      body.innerHTML = `
+        <div style="display:grid;gap:12px">
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
+            <div style="font-weight:700">${name}</div>
+            ${verified?'<span class="badge">Onaylı</span>':''}
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
+            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
+          </div>
+          <div style="font-size:18px;font-weight:900">${price}</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn gold" id="detailOrder">Sipariş Ver</button>
+            <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
+          </div>
+        </div>`;
+
+      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
+      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+
+      if (typeof modal.showModal === 'function') modal.showModal();
+      else { modal.setAttribute('open',''); modal.style.display='grid'; }
+    }
+
+    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
+      const modal = document.getElementById('listingModal');
+      if (typeof modal.close === 'function') modal.close();
+      modal.removeAttribute('open'); modal.style.display='none';
+    });
+
+    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
+    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
+
+    async function loadListings(){
+      try{
+        info.textContent = 'Yükleniyor…';
+        const col = collection(db2,'listings');
+        const q = query(col, orderBy('updatedAt','desc'));
+        const snap = await getDocs(q);
+        const now = Date.now();
+        const rows = [];
+        snap.forEach(d=>{
+          const data = d.data();
+          // filtre: status approved, süresi dolmamış
+          if (data?.status === 'approved'){
+            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
+            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
+          }
+        });
+        // Öncelik: showcase true olanlar
+        const showcase = rows.filter(r=>!!r.showcase);
+        const standard = rows.filter(r=>!r.showcase);
+        allListings = [...showcase, ...standard];
+        page = 0;
+        render();
+        attachCardEvents();
+      }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
+    }
+
+    // FB hazır olduğunda yükle
+    if (self.__fbReady) loadListings();
+    else document.addEventListener('fb-ready', loadListings, { once:true });
   </script>
 </body>
 </html>
