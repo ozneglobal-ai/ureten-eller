@@ -16,13 +16,14 @@
 
     .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
-    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:10px}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between; /* MOBIL FIX */ min-width:0}
+    .brand{display:flex;align-items:center;gap:10px; /* MOBIL FIX */ min-width:0;flex:1}
     .brand .logo{width:36px;height:36px;border-radius:10px;background:#000 url('/assets/icons/favicon.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
-    .actions{display:flex;align-items:center;gap:8px}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800; /* MOBIL FIX */ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+    .actions{display:flex;align-items:center;gap:8px; /* MOBIL FIX */ flex-shrink:0;flex-wrap:nowrap}
+    .btn{white-space:nowrap} /* MOBIL FIX: buton metinleri tek satır */
     .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
-    .lang select{border:0;background:transparent;font-weight:700}
+    .lang select{border:0;background:transparent;font-weight:700; /* MOBIL FIX */ max-width:28ch}
 
     /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
@@ -39,8 +40,8 @@
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
     .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
-    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
+    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word; /* MOBIL FIX: 2 satır clamp */ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word; /* MOBIL FIX: 2 satır clamp */ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
     /* Buttons */
@@ -83,10 +84,13 @@
       .hero{margin:12px 12px;padding:18px 14px}
       .hero h2{font-size:24px;line-height:1.25}
       .hero p{font-size:14px;line-height:1.5}
+      /* MOBIL FIX: sağ üst butonlar ezilmesin */
+      .actions{gap:6px}
+      .brand h1{max-width:36vw}
     }
 
     @media (max-width:420px){
-      .brand h1{font-size:16px}
+      .brand h1{font-size:16px;max-width:46vw}
       .actions{gap:6px}
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
@@ -249,19 +253,6 @@
             </div>
           </div>
         </details>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- ===== Listing Detail Modal ===== -->
-  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
-    <div class="sheet">
-      <header>
-        <h3 id="listingTitle">İlan Detayı</h3>
-        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
-      </header>
-      <div class="inner" id="listingBody">
-        <!-- JS ile doldurulacak -->
       </div>
     </div>
   </dialog>
