@@ -29,17 +29,13 @@
     .btn.ghost{background:#fff;border:1px solid #e5e7eb}
     .lang{border:1px solid #e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600;background:#fff}
 
-    /* ==== LAYOUT (SOL KATEGORİ HER EKRANDA) ==== */
-    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;gap:16px;
-      /* Sol kolon tüm ekranlarda görünür ve taşma yapmaz */
-      grid-template-columns:clamp(130px, 36vw, 220px) 1fr;
-    }
-    /* Çok dar ekranlarda biraz daha sıkıştır */
-    @media (max-width:480px){
-      .wrap{grid-template-columns:clamp(120px, 40vw, 200px) 1fr}
-    }
+    /* ==== LAYOUT (SOL KATEGORİ MASAÜSTÜ/TABLET, MOBİLDE ÜSTTE) ==== */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;gap:16px;grid-template-columns:280px 1fr}
+    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
 
     /* ==== SIDEBAR ==== */
+    .sidebar{position:relative;min-width:0}
+    @media (max-width:980px){.sidebar{display:none}}
     .sidebar{position:relative;min-width:0}
 
     .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03);min-width:0}
@@ -60,11 +56,39 @@
     .sublist a:hover{background:#f3f4f6}
 
     /* ==== CONTENT ==== */
-    .hero{border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa;min-width:0}
+    .hero{border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa;min-width:0}
     @media (max-width: 900px){.hero{grid-template-columns:1fr}}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px}
-    .hero p{margin:0 0 16px 0;color:#4b5563}
+    /* Başlık ve açıklamayı mobilde küçült */
+    .hero h2{font-size:clamp(16px,4.3vw,20px);margin:0 0 6px 0;letter-spacing:.1px;line-height:1.18}
+    .hero p{margin:0 0 10px 0;color:#4b5563;font-size:clamp(11.5px,3.6vw,13.5px);line-height:1.45}
+    @media (max-width:640px){.hero{padding:12px 10px}.cta-row .btn{padding:7px 10px;font-size:13px}}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
+    @media (max-width:480px){
+      .hero{padding:10px 8px}
+      .hero h2{font-size:clamp(15px,3.9vw,18px)}
+      .hero p{font-size:clamp(11px,3.2vw,13px)}
+      .cta-row .btn{padding:6px 9px;font-size:12.5px}
+    }
+
+    /* Üst kategori şeridi: sadece mobil/tablet (≤980px) görünsün */
+    .topcats{display:none}
+    @media (max-width:980px){
+      .topcats{display:flex;gap:8px;overflow:auto;padding:8px 2px 6px;scroll-snap-type:x mandatory}
+      .topcats::-webkit-scrollbar{height:6px}
+      .topcats .chip{flex:0 0 auto;scroll-snap-align:start;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
+      .topcats .chip:active{transform:translateY(1px)}
+    }
+    @media (max-width:640px){.topcats{padding:6px 2px 4px}.topcats .chip{padding:7px 10px;font-size:13px}}
+    @media (max-width:480px){.topcats .chip{padding:6px 9px;font-size:12.5px}}
+
+    /* Üstte tıklanan kategoriye ait alt kategoriler bloğu */
+    .topsubs{display:none;margin-top:6px}
+    @media (max-width:980px){.topsubs{display:block}}
+    .topsubs .subwrap{border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff}
+    .topsubs .subwrap h4{margin:0 0 6px 0;font-size:14px}
+    .topsubs .subs{display:flex;flex-direction:column;gap:6px}
+    .topsubs .subs a{display:block;padding:8px 10px;border-radius:10px;font-size:14px;color:#374151;border:1px solid #f1f1f1}
+    .topsubs .subs a:hover{background:#f9fafb}
 
     .grid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width: 1100px){.grid{grid-template-columns:repeat(2,1fr)}}
@@ -98,6 +122,7 @@
     .chatMsg.me{margin-left:auto;background:#111;color:#fff;border-color:#111}
     .chatFoot{display:flex;gap:.4rem;padding:.6rem;border-top:1px solid #e5e7eb;background:#fff}
     .chatFoot input{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem}
+
     /* ==== İLAN DETAY MODAL ==== */
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:200;align-items:center;justify-content:center;padding:16px}
     .modal[open]{display:flex}
@@ -122,22 +147,6 @@
     .cta{display:flex;flex-wrap:wrap;gap:8px}
     .btn.primary{background:#111;color:#fff;border:1px solid #111}
     .btn.secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
-
-    /* ==== MOBİL ÜST KATEGORİ ŞERİDİ (YENİ) ==== */
-    .mobileCats{display:none;margin:0 0 12px 0}
-    .catScroller{display:flex;gap:8px;overflow-x:auto; -webkit-overflow-scrolling:touch; padding:8px 2px}
-    .catPill{flex:0 0 auto;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;white-space:nowrap;cursor:pointer}
-    .catPill[aria-current="true"]{background:#111;color:#fff;border-color:#111}
-    .mobileSub{display:none;border:1px solid #e5e7eb;border-radius:14px;padding:8px 10px;background:#fafafa}
-    .mobileSub.open{display:block}
-    .mobileSub a{display:inline-block;margin:6px 6px 0 0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:14px}
-    .mobileSub a:active{transform:translateY(1px)}
-    .mobileCatsHead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;margin:0 0 6px 2px}
-
-    /* Sadece mobilde göster */
-    @media (max-width:640px){
-      .mobileCats{display:block}
-    }
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
@@ -181,13 +190,8 @@
       </aside>
 
       <section class="content">
-        <!-- === MOBİL: Üstte yatay kategori şeridi (yeni) === -->
-        <div class="mobileCats" aria-label="Mobil Kategoriler" id="mobileCats">
-          <div class="mobileCatsHead" id="mobileCatsHead">Kategoriler</div>
-          <div class="catScroller" id="catScroller" role="tablist" aria-label="Üst Kategoriler"></div>
-          <div class="mobileSub" id="mobileSub" aria-live="polite"></div>
-        </div>
-
+        <div class="topcats" id="topCats" aria-label="Kategoriler"></div>
+        <div id="topSubs" class="topsubs" aria-live="polite"></div>
         <div class="hero">
           <div>
             <h2 id="heroTitle">El emeği & yerel lezzetler tek çatı altında</h2>
@@ -231,7 +235,7 @@
         <span class="mini" id="navMsgLabel" data-i18n="nav.msg">Mesajlar</span>
       </button>
       <button class="bbtn" id="navNoti">
-        <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <svg class="bicon" viewBox="0 0 24 24  fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
         <span class="mini" id="navNotiLabel" data-i18n="nav.noti">Bildirimler</span>
       </button>
     </nav>
@@ -316,8 +320,6 @@
       const sMeta =$('[data-i18n=\"item.sabun.meta\"]'); if(sMeta)  sMeta.textContent =map.sabun?.meta ||'Ayvalık • 95 TL';
       // legal links
       const LL=L.legal||{}; $$('footer .links a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
-      // mobile cats head
-      const mHead=$('#mobileCatsHead'); if(mHead) mHead.textContent=L.categories || 'Kategoriler';
     }
 
     function buildCats(){
@@ -332,41 +334,18 @@
       });
     }
 
-    /* === MOBİL YATAY KATEGORİ ŞERİDİ === */
-    function buildMobileCats(){
-      const scroller = $('#catScroller'); const subWrap = $('#mobileSub'); if(!scroller||!subWrap) return;
-      const L = I18N[getLang()]||I18N.tr;
-      scroller.innerHTML=''; subWrap.innerHTML=''; subWrap.classList.remove('open');
-
-      CATS.forEach((cat, i)=>{
-        const btn=document.createElement('button');
-        btn.className='catPill';
-        btn.setAttribute('role','tab');
-        btn.setAttribute('aria-selected','false');
-        btn.setAttribute('data-id',cat.id);
-        btn.textContent = L.cats?.[cat.id] || cat.id;
-        btn.addEventListener('click', ()=>{
-          // aktifliği güncelle
-          $$('.catPill', scroller).forEach(b=>{ b.removeAttribute('aria-current'); b.setAttribute('aria-selected','false'); });
-          btn.setAttribute('aria-current','true');
-          btn.setAttribute('aria-selected','true');
-          // alt kategorileri boya
-          subWrap.innerHTML = '';
-          const frag=document.createDocumentFragment();
-          cat.subs.forEach(([sid, fallback])=>{
-            const a=document.createElement('a');
-            a.href=`/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}`;
-            a.textContent=L.sub?.[sid]||fallback;
-            frag.appendChild(a);
-          });
-          subWrap.appendChild(frag);
-          subWrap.classList.add('open');
-          // ekrana sığmayan altlar için kaydırmayı en başa getir
-          subWrap.scrollTop=0; subWrap.scrollLeft=0;
-        });
-        scroller.appendChild(btn);
-        // İlk buton varsayılan seçili olsun
-        if(i===0){ setTimeout(()=>btn.click(),0); }
+    function buildTopCats(){
+      const L = I18N[getLang()]||I18N.tr; const top=$('#topCats'); const subsBox=$('#topSubs'); if(!top||!subsBox) return;
+      top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\">${title}</button>`; }).join('');
+      top.addEventListener('click',(e)=>{
+        const b=e.target.closest('.chip'); if(!b) return; const id=b.getAttribute('data-cat');
+        const cat=CATS.find(c=>c.id===id); if(!cat){ subsBox.innerHTML=''; return; }
+        const title=L.cats?.[cat.id]||cat.id;
+        const subHtml = cat.subs.map(([sid,label])=>{
+          const name=(L.sub?.[sid]||label);
+          return `<a href=\"/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
+        }).join('');
+        subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
       });
     }
 
@@ -390,8 +369,8 @@
     (function init(){
       const y=document.getElementById('yfoot'); if(y) y.textContent=new Date().getFullYear();
       const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); sel.value=initial;
-      applyI18n(); buildCats(); buildMobileCats();
-      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); buildMobileCats(); });
+      applyI18n(); buildCats(); buildTopCats();
+      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); });
     })();
 
     // ===== Live Chat (local echo) =====
@@ -424,7 +403,7 @@
 
       const CLOUD = (window.CLOUDINARY_CLOUD||'ozneglobal');
       const isHttp = (u)=>/^https?:\/\//i.test(u||'');
-      const isPid  = (u)=> u && !isHttp(u) && /[\/_.-]/.test(String(u));
+      const isPid  = (u)=> u && !isHttp(u) && /[\/_\.-]/.test(String(u));
       const cdn = (pid,{w,h,crop='fill',fmt='auto',q='auto'}={})=>`https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`,fmt&&`f_${fmt}`,w&&`w_${w}`,h&&`h_${h}`,crop&&`c_${crop}`].filter(Boolean).join(',')}/`+String(pid).replace(/^image\/upload\//,'');
       async function resolveURL(raw){ if(!raw) return ''; if(isHttp(raw)) return raw; if(isPid(raw)) return cdn(raw,{w:600,h:450}); try{ if(self.storageRef && self._getDownloadURL){ return await self._getDownloadURL(self.storageRef(raw)); } }catch(_){ } return raw; }
       async function resolveCover(d){ const arr=[]; if(d.cover)arr.push(d.cover); if(d.coverUrl)arr.push(d.coverUrl); if(Array.isArray(d.photos))arr.push(...d.photos); if(Array.isArray(d.images))arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); const first=arr.find(Boolean); return await resolveURL(first)||'/assets/icons/ureteneller.png'; }
