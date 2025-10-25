@@ -317,10 +317,102 @@
 
     // ===== i18n – Kategori/Sözlük =====
     const CAT_I18N = {
-      tr: { /* ... aynı içerik ... */ },
-      en: { /* ... aynı içerik ... */ },
-      de: { /* ... aynı içerik ... */ },
-      ar: { /* ... aynı içerik ... */ }
+      tr: {
+        titles: {
+          yemek:'🍲 Yemekler', pasta:'🎂 Pasta & Tatlı', sos:'🫙 Reçel • Turşu • Sos', yoresel:'🌾 Yöresel / Kışlık',
+          diet:'🥗 Diyet / Vegan / GF', taki:'💍 Takı', bebek:'👶 Bebek & Çocuk', orgu:'🧶 Örgü / Triko',
+          terzi:'✂️ Dikiş / Terzilik', makrome:'🧵 Makrome & Dekor', evdekor:'🏠 Ev Dekor & Aksesuar',
+          mum:'🕯️ Mum & Kokulu', kozmetik:'🧼 Doğal Sabun & Kozmetik', amigurumi:'🧸 Amigurumi & Oyuncak'
+        },
+        subs: {
+          evyemek:'Ev yemekleri', borek:'Börek-çörek', corba:'Çorba', zeytiny:'Zeytinyağlı', pilav:'Pilav-makarna', et:'Et-tavuk', kahvalti:'Kahvaltılık', meze:'Meze', dondur:'Dondurulmuş', cocuk:'Çocuk öğünleri', diyetvegf:'Diyet/vegan/gf',
+          yaspasta:'Yaş pasta', kek:'Kek-cupcake', kurabiye:'Kurabiye', serbetli:'Şerbetli', sutlu:'Sütlü', cheese:'Cheesecake', diyettat:'Diyet tatlı', cikolata:'Çikolata/şekerleme', dogumset:'Doğum günü setleri',
+          recel:'Reçel-marmelat', pekmez:'Pekmez', tursu:'Turşu', dom:'Domates/biber sos', acios:'Acı sos', salca:'Salça', sirke:'Sirke', konserve:'Konserve',
+          eriste:'Erişte', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Kurutulmuş', salca2:'Salça', sirke2:'Sirke', konserve2:'Konserve',
+          fit:'Fit tabaklar', vegan:'Vegan yemekler', gf:'GF unlu mamuller', sekersiz:'Şekersiz tatlı', keto:'Keto ürün', protein:'Protein atıştırmalık',
+          bileklik:'Bileklik', kolye:'Kolye', kupe:'Küpe', yuzuk:'Yüzük', halhal:'Halhal', bros:'Broş', set:'Setler', isimli:'Kişiye özel', makrome:'Makrome', dogaltas:'Doğal taş', recine:'Reçine', telsarma:'Tel sarma',
+          fig:'Figürler', cingirak:'Çıngırak', dis:'Diş kaşıyıcı', bezoy:'Bez oyuncak/kitap', montessori:'Montessori', set2:'Setler', patik:'Patik-bere', battaniye:'Battaniye', onluk:'Önlük', lohusa:'Lohusa seti', sac:'Saç aksesuarı', giyim:'El emeği kıyafet',
+          hirka:'Hırka', kazak:'Kazak', atkibere:'Atkı-bere', panco:'Panço', sal:'Şal', corap:'Çorap', lif:'Lif takımı', bebektk:'Bebek takımı', yelek:'Yelek', kirlen:'Kırlent-örtü', igneoyasi:'İğne oyası',
+          paca:'Paça/onarım', fermuar:'Fermuar değişimi', perde:'Perde', nevresim:'Nevresim', masa:'Masa örtüsü', ozel:'Özel dikim', kostum:'Kostüm',
+          duvar:'Duvar süsü', saksi:'Saksı askısı', anahtar:'Anahtarlık', avize:'Avize', runner:'Runner', sepet:'Sepet', raf:'Raf/dekor',
+          kece:'Keçe işleri', kirlent:'Kırlent', kapi:'Kapı süsü', tepsi:'Tepsi süs', cerceve:'Çerçeve', ruya:'Rüya kapanı', tablo:'Tablo',
+          soya:'Soya/balmumu', tas:'Kokulu taş', sprey:'Oda spreyi', tutsu:'Tütsü', jel:'Jel mum', hediye:'Hediye seti',
+          zeytin:'Zeytinyağlı sabun', bitkisel:'Bitkisel sabun', sampuan:'Katı şampuan', balm:'Dudak balmı', krem:'Krem/merhem', banyotuzu:'Banyo tuzu', lavanta:'Lavanta kesesi',
+          anahtar2:'Anahtarlık', magnet:'Magnet', kolek:'Koleksiyon', dekorbebek:'Dekor bebek'
+        }
+      },
+      en: {
+        titles: {
+          yemek:'🍲 Meals', pasta:'🎂 Cakes & Sweets', sos:'🫙 Jam • Pickles • Sauces', yoresel:'🌾 Local / Pantry',
+          diet:'🥗 Diet / Vegan / GF', taki:'💍 Jewelry', bebek:'👶 Baby & Kids', orgu:'🧶 Knitwear',
+          terzi:'✂️ Sewing / Tailor', makrome:'🧵 Macramé & Decor', evdekor:'🏠 Home Decor & Accessories',
+          mum:'🕯️ Candles & Fragrance', kozmetik:'🧼 Natural Soap & Cosmetics', amigurumi:'🧸 Amigurumi & Toys'
+        },
+        subs: {
+          evyemek:'Home-cooked meals', borek:'Börek & pastries', corba:'Soup', zeytiny:'Olive-oil dishes', pilav:'Rice & pasta', et:'Meat & chicken', kahvalti:'Breakfast items', meze:'Meze', dondur:'Frozen', cocuk:'Kids meals', diyetvegf:'Diet/vegan/gf',
+          yaspasta:'Cream cakes', kek:'Cake & cupcake', kurabiye:'Cookies', serbetli:'Syrupy desserts', sutlu:'Milk desserts', cheese:'Cheesecake', diyettat:'Diet desserts', cikolata:'Chocolate/candy', dogumset:'Birthday sets',
+          recel:'Jam & marmalade', pekmez:'Molasses', tursu:'Pickles', dom:'Tomato/pepper sauce', acios:'Hot sauce', salca:'Paste', sirke:'Vinegar', konserve:'Canned',
+          eriste:'Noodles (erişte)', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Dried foods', salca2:'Paste', sirke2:'Vinegar', konserve2:'Canned',
+          fit:'Fit plates', vegan:'Vegan dishes', gf:'Gluten‑free bakery', sekersiz:'Sugar‑free desserts', keto:'Keto products', protein:'Protein snacks',
+          bileklik:'Bracelet', kolye:'Necklace', kupe:'Earrings', yuzuk:'Ring', halhal:'Anklet', bros:'Brooch', set:'Sets', isimli:'Personalized', makrome:'Macramé', dogaltas:'Gemstone', recine:'Resin', telsarma:'Wire wrap',
+          fig:'Figures', cingirak:'Rattle', dis:'Teether', bezoy:'Cloth toy/book', montessori:'Montessori', set2:'Sets', patik:'Booties & beanie', battaniye:'Blanket', onluk:'Bib', lohusa:'Maternity set', sac:'Hair accessory', giyim:'Handmade clothing',
+          hirka:'Cardigan', kazak:'Sweater', atkibere:'Scarf & beanie', panco:'Poncho', sal:'Shawl', corap:'Socks', lif:'Bath mitt set', bebektk:'Baby set', yelek:'Vest', kirlen:'Cushion/cover', igneoyasi:'Needle lace',
+          paca:'Hem/repair', fermuar:'Zipper change', perde:'Curtain', nevresim:'Duvet set', masa:'Tablecloth', ozel:'Custom tailoring', kostum:'Costume',
+          duvar:'Wall hanging', saksi:'Plant hanger', anahtar:'Keychain', avize:'Chandelier', runner:'Runner', sepet:'Basket', raf:'Shelf/decor',
+          kece:'Felt crafts', kirlent:'Cushion', kapi:'Door wreath', tepsi:'Tray decor', cerceve:'Frame', ruya:'Dreamcatcher', tablo:'Painting',
+          soya:'Soy/beeswax', tas:'Aroma stone', sprey:'Room spray', tutsu:'Incense', jel:'Gel candle', hediye:'Gift set',
+          zeytin:'Olive oil soap', bitkisel:'Herbal soap', sampuan:'Solid shampoo', balm:'Lip balm', krem:'Cream/ointment', banyotuzu:'Bath salt', lavanta:'Lavender sachet',
+          anahtar2:'Keychain', magnet:'Magnet', kolek:'Collection', dekorbebek:'Decor doll'
+        }
+      },
+      de: {
+        titles: {
+          yemek:'🍲 Gerichte', pasta:'🎂 Kuchen & Süßes', sos:'🫙 Marmelade • Pickles • Soßen', yoresel:'🌾 Regional / Vorrat',
+          diet:'🥗 Diät / Vegan / GF', taki:'💍 Schmuck', bebek:'👶 Baby & Kinder', orgu:'🧶 Strick',
+          terzi:'✂️ Nähen / Schneiderei', makrome:'🧵 Makramee & Deko', evdekor:'🏠 Wohndeko & Accessoires',
+          mum:'🕯️ Kerzen & Düfte', kozmetik:'🧼 Naturseife & Kosmetik', amigurumi:'🧸 Amigurumi & Spielzeug'
+        },
+        subs: {
+          evyemek:'Hausmannskost', borek:'Börek & Gebäck', corba:'Suppe', zeytiny:'Olivenöldgerichte', pilav:'Reis & Pasta', et:'Fleisch & Huhn', kahvalti:'Frühstück', meze:'Meze', dondur:'Tiefgekühlt', cocuk:'Kindermahlzeiten', diyetvegf:'Diät/vegan/gf',
+          yaspasta:'Sahnetorten', kek:'Kuchen & Cupcake', kurabiye:'Kekse', serbetli:'Sirup‑Desserts', sutlu:'Milchdesserts', cheese:'Käsekuchen', diyettat:'Diät‑Desserts', cikolata:'Schokolade/Süßwaren', dogumset:'Geburtstags‑Sets',
+          recel:'Marmelade', pekmez:'Melasse', tursu:'Eingelegtes', dom:'Tomaten/Paprika‑Soße', acios:'Scharfe Soße', salca:'Mark', sirke:'Essig', konserve:'Konserven',
+          eriste:'Erişte‑Nudeln', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Getrocknetes', salca2:'Mark', sirke2:'Essig', konserve2:'Konserven',
+          fit:'Fit‑Teller', vegan:'Vegane Gerichte', gf:'Glutenfreie Backwaren', sekersiz:'Zuckerfreie Desserts', keto:'Keto‑Produkte', protein:'Protein‑Snacks',
+          bileklik:'Armband', kolye:'Kette', kupe:'Ohrringe', yuzuk:'Ring', halhal:'Fußkettchen', bros:'Brosche', set:'Sets', isimli:'Personalisiert', makrome:'Makramee', dogaltas:'Edelstein', recine:'Harz', telsarma:'Drahtwicklung',
+          fig:'Figuren', cingirak:'Rassel', dis:'Beißring', bezoy:'Stoffspielzeug/Buch', montessori:'Montessori', set2:'Sets', patik:'Schühchen & Mütze', battaniye:'Decke', onluk:'Lätzchen', lohusa:'Wochenbett‑Set', sac:'Haaraccessoire', giyim:'Handgemachte Kleidung',
+          hirka:'Cardigan', kazak:'Pullover', atkibere:'Schal & Mütze', panco:'Poncho', sal:'Tuch', corap:'Socken', lif:'Badeset', bebektk:'Baby‑Set', yelek:'Weste', kirlen:'Kissen/Decke', igneoyasi:'Nadelspitze',
+          paca:'Saum/Reparatur', fermuar:'Reißverschlusswechsel', perde:'Vorhang', nevresim:'Bettwäsche‑Set', masa:'Tischdecke', ozel:'Maßanfertigung', kostum:'Kostüm',
+          duvar:'Wanddeko', saksi:'Pflanzenhänger', anahtar:'Schlüsselanhänger', avize:'Krone/Leuchte', runner:'Läufer', sepet:'Korb', raf:'Regal/Deko',
+          kece:'Filzarbeiten', kirlent:'Kissen', kapi:'Türkranz', tepsi:'Tablett‑Deko', cerceve:'Rahmen', ruya:'Traumfänger', tablo:'Bild',
+          soya:'Soja/Bienenwachs', tas:'Duftstein', sprey:'Raumspray', tutsu:'Weihrauch', jel:'Gelkerze', hediye:'Geschenkset',
+          zeytin:'Olivenölseife', bitkisel:'Kräuterseife', sampuan:'Festes Shampoo', balm:'Lippenbalsam', krem:'Creme/Salbe', banyotuzu:'Badesalz', lavanta:'Lavendelsäckchen',
+          anahtar2:'Schlüsselanhänger', magnet:'Magnet', kolek:'Sammlung', dekorbebek:'Deko‑Puppe'
+        }
+      },
+      ar: {
+        titles: {
+          yemek:'🍲 وجبات', pasta:'🎂 كعكات وحلويات', sos:'🫙 مربّى • مخللات • صلصات', yoresel:'🌾 محلي / مؤونة',
+          diet:'🥗 حمية / نباتي / خالٍ من الغلوتين', taki:'💍 مجوهرات', bebek:'👶 أطفال ورضّع', orgu:'🧶 حياكة',
+          terzi:'✂️ خياطة / تفصيل', makrome:'🧵 مكرمية وديكور', evdekor:'🏠 ديكور منزلي وإكسسوارات',
+          mum:'🕯️ شموع وروائح', kozmetik:'🧼 صابون طبيعي ومستحضرات', amigurumi:'🧸 أميغورومي وألعاب'
+        },
+        subs: {
+          evyemek:'أطباق منزلية', borek:'بورك ومعجّنات', corba:'شوربة', zeytiny:'أطباق بزيت الزيتون', pilav:'أرز ومكرونة', et:'لحوم ودجاج', kahvalti:'فطور', meze:'مقبلات', dondur:'مجمّدة', cocuk:'وجبات أطفال', diyetvegf:'حمية/نباتي/خالٍ من الغلوتين',
+          yaspasta:'كيك بالكريمة', kek:'كيك وكب كيك', kurabiye:'بسكويت', serbetli:'حلويات قطر', sutlu:'حلويات بالحليب', cheese:'تشيزكيك', diyettat:'حلويات حمية', cikolata:'شوكولا/حلويات', dogumset:'مجموعات عيد ميلاد',
+          recel:'مربّى', pekmez:'دبس', tursu:'مخللات', dom:'صلصة طماطم/فلفل', acios:'صلصة حارة', salca:'معجون', sirke:'خل', konserve:'معلّبات',
+          eriste:'نودلز (إريشته)', tarhana:'ترخانة', yufka:'يفكة', manti:'مانطي', kurut:'مجففات', salca2:'معجون', sirke2:'خل', konserve2:'معلّبات',
+          fit:'أطباق خفيفة', vegan:'أطباق نباتية', gf:'مخبوزات خالية من الغلوتين', sekersiz:'حلويات بدون سكر', keto:'منتجات كيتو', protein:'سناكات بروتين',
+          bileklik:'سوار', kolye:'عقد', kupe:'أقراط', yuzuk:'خاتم', halhal:'خلخال', bros:'بروش', set:'طقم', isimli:'مخصص بالاسم', makrome:'مكرمية', dogaltas:'أحجار طبيعية', recine:'ريزن', telsarma:'سلك مجدول',
+          fig:'مجسّمات', cingirak:'خشخيشة', dis:'عضّاضة', bezoy:'لعبة/كتاب قماشي', montessori:'مونتيسوري', set2:'أطقم', patik:'حذاء/قبعة', battaniye:'بطانية', onluk:'مريلة', lohusa:'طقم نفاس', sac:'إكسسوار شعر', giyim:'ملابس يدوية',
+          hirka:'كارديغان', kazak:'كنزة', atkibere:'وشاح وقبعة', panco:'بونشو', sal:'شال', corap:'جوارب', lif:'طقم استحمام', bebektk:'طقم طفل', yelek:'صدرية', kirlen:'وسادة/غطاء', igneoyasi:'دانتيلا بالإبرة',
+          paca:'تقريب/إصلاح', fermuar:'تغيير سحاب', perde:'ستارة', nevresim:'طقم مفارش', masa:'مفرش طاولة', ozel:'تفصيل خاص', kostum:'زي تنكري',
+          duvar:'تعليق جداري', saksi:'حامل نباتات', anahtar:'ميدالية مفاتيح', avize:'ثريا', runner:'رانر', sepet:'سلة', raf:'رف/ديكور',
+          kece:'أعمال لباد', kirlent:'وسادة', kapi:'إكليل باب', tepsi:'تزيين صينية', cerceve:'إطار', ruya:'ماسِك أحلام', tablo:'لوحة',
+          soya:'شمع صويا/نحل', tas:'حجر عطري', sprey:'معطّر غرف', tutsu:'بخور', jel:'شمعة جل', hediye:'طقم هدية',
+          zeytin:'صابون زيت زيتون', bitkisel:'صابون عشبي', sampuan:'شامبو صلب', balm:'مرهَم شفاه', krem:'كريم/مرهم', banyotuzu:'ملح استحمام', lavanta:'كيس لافندر',
+          anahtar2:'ميدالية مفاتيح', magnet:'مغناطيس', kolek:'مجموعة', dekorbebek:'دمية ديكور'
+        }
+      }
     };
 
     function applyI18n(lang){
@@ -346,7 +438,22 @@
     if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
 
     // Kategoriler (orijinal veri)
-    const CATS = [ /* ... aynı içerik ... */ ];
+    const CATS = [
+      {id:'yemek', subs:[["evyemek"],["borek"],["corba"],["zeytiny"],["pilav"],["et"],["kahvalti"],["meze"],["dondur"],["cocuk"],["diyetvegf"]]},
+      {id:'pasta', subs:[["yaspasta"],["kek"],["kurabiye"],["serbetli"],["sutlu"],["cheese"],["diyettat"],["cikolata"],["dogumset"]]},
+      {id:'sos', subs:[["recel"],["pekmez"],["tursu"],["dom"],["acios"],["salca"],["sirke"],["konserve"]]},
+      {id:'yoresel', subs:[["eriste"],["tarhana"],["yufka"],["manti"],["kurut"],["salca2"],["sirke2"],["konserve2"]]},
+      {id:'diet', subs:[["fit"],["vegan"],["gf"],["sekersiz"],["keto"],["protein"]]},
+      {id:'taki', subs:[["bileklik"],["kolye"],["kupe"],["yuzuk"],["halhal"],["bros"],["set"],["isimli"],["makrome"],["dogaltas"],["recine"],["telsarma"]]},
+      {id:'bebek', subs:[["fig"],["cingirak"],["dis"],["bezoy"],["montessori"],["set2"],["patik"],["battaniye"],["onluk"],["lohusa"],["sac"],["giyim"]]},
+      {id:'orgu', subs:[["hirka"],["kazak"],["atkibere"],["panco"],["sal"],["corap"],["lif"],["bebektk"],["yelek"],["kirlen"],["igneoyasi"]]},
+      {id:'terzi', subs:[["paca"],["fermuar"],["perde"],["nevresim"],["masa"],["ozel"],["kostum"]]},
+      {id:'makrome', subs:[["duvar"],["saksi"],["anahtar"],["avize"],["runner"],["sepet"],["raf"]]},
+      {id:'evdekor', subs:[["kece"],["kirlent"],["kapi"],["tepsi"],["cerceve"],["ruya"],["tablo"]]},
+      {id:'mum', subs:[["soya"],["tas"],["sprey"],["tutsu"],["jel"],["hediye"]]},
+      {id:'kozmetik', subs:[["zeytin"],["bitkisel"],["sampuan"],["balm"],["krem"],["banyotuzu"],["lavanta"]]},
+      {id:'amigurumi', subs:[["anahtar2"],["magnet"],["kolek"],["dekorbebek"]]},
+    ];
 
     const catBar = document.querySelector('#catNav .catnav-inner');
     const drops = document.querySelector('#catDrops .catdrops-inner');
