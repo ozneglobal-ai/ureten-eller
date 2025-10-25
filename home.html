@@ -21,7 +21,7 @@
     .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:10px}
     .brand .logo{display:none}
-    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800;cursor:pointer}
     .actions{display:flex;align-items:center;gap:8px}
     .btn{appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;transition:transform .06s ease, box-shadow .2s ease}
     .btn:active{transform:translateY(1px)}
@@ -155,6 +155,15 @@
     .cta{display:flex;flex-wrap:wrap;gap:8px}
     .btn.primary{background:#111;color:#fff;border:1px solid #111}
     .btn.secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
+
+    /* ==== ALT SİYAH HIZLI LEGAL PANEL (YENİ) ==== */
+    .legal-fixed{position:fixed;left:0;right:0;bottom:64px;background:#000;color:#fff;border-top:1px solid #111;z-index:140}
+    @media (min-width:981px){.legal-fixed{bottom:64px}}
+    .legal-fixed .inner{max-width:1200px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;gap:10px}
+    .lf-close{margin-left:auto;background:transparent;border:1px solid #333;color:#fff;border-radius:10px;padding:4px 8px;cursor:pointer}
+    .lf-track{display:flex;gap:14px;overflow:auto;padding:4px 0}
+    .lf-track a{color:#fff;opacity:.9;white-space:nowrap}
+    .lf-track a:hover{opacity:1;text-decoration:underline}
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
@@ -226,7 +235,7 @@
           <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
           <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
           <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
-          <a href="/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+          <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
         </div>
         <div class="copy">© <span id="yfoot"></span> <span data-i18n="brand">Üreten Eller</span></div>
       </div>
@@ -243,11 +252,28 @@
         <span class="mini" id="navMsgLabel" data-i18n="nav.msg">Mesajlar</span>
       </button>
       <button class="bbtn" id="navNoti">
-        <!-- viewBox hatası düzeltilmiş (fazladan fill ifadesi kaldırıldı) -->
         <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
         <span class="mini" id="navNotiLabel" data-i18n="nav.noti">Bildirimler</span>
       </button>
     </nav>
+  </div>
+
+  <!-- Alt siyah Hızlı Legal (fixed) -->
+  <div id="legalFixed" class="legal-fixed" role="region" aria-label="Hızlı Yasal Linkler">
+    <div class="inner">
+      <div class="lf-track">
+        <a href="/legal/kullanim-sartlari.html" data-i18n="legal.terms">Kullanım Şartları</a>
+        <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+        <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+        <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
+        <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
+        <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
+        <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
+        <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
+        <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+      </div>
+      <button class="lf-close" id="lfClose" aria-label="Kapat">✕</button>
+    </div>
   </div>
 
   <!-- Canlı Destek Baloncuğu -->
@@ -272,7 +298,7 @@
   <script>
     /* ===== I18N ===== */
     const I18N = {
-      tr: { brand: 'Üreten Eller', post: 'İlan Ver', profile:'Profil', searchPlaceholder: 'Ara: ürün, kategori, ilçe…', search: 'Ara', categories: 'Kategoriler', browse: 'Kategorileri Keşfet', nav:{home:'Ana Sayfa', msg:'Mesajlar', noti:'Bildirimler'}, chat:{title:'🛎️ Canlı Destek', hi1:'Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?', hi2:'Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.'}, heroLines: [ { t: 'El emeği & yerel lezzetler tek çatı altında', d: 'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.' }, { t: 'Mahallenden üreticiye doğrudan destek', d: 'Yakınınızdaki üreticileri bulun, taze ve el emeği ürünleri keşfedin.' }, { t: 'Kendi ürününü kolayca satışa çıkar', d: 'Ücretsiz ilan ver, güvenli mesajlaşma ve sipariş yönetimi ile hızlı başla.' } ], cats: { yemek: '🍲 Yemekler', pasta: '🎂 Pasta & Tatlı', sos: '🫙 Reçel • Turşu • Sos', yoresel: '🌾 Yöresel / Kışlık', diet: '🥗 Diyet / Vegan / GF', taki: '💍 Takı', bebek: '👶 Bebek & Çocuk', orgu: '🧶 Örgü / Triko', terzi: '✂️ Dikiş / Terzilik', makrome: '🧵 Makrome & Dekor', evdekor: '🏠 Ev Dekor & Aksesuar', mum: '🕯️ Mum & Kokulu', kozmetik: '🧼 Doğal Sabun & Kozmetik', amigurumi: '🧸 Amigurumi & Oyuncak' }, sub: { evyemek: 'Ev yemekleri', borek: 'Börek-çörek', corba: 'Çorba', zeytiny: 'Zeytinyağlı', pilav: 'Pilav-makarna', et: 'Et-tavuk', kahvalti: 'Kahvaltılık', meze: 'Meze', dondur: 'Dondurulmuş', cocuk: 'Çocuk öğünleri', diyetvegf: 'Diyet/vegan/gf', yaspasta: 'Yaş pasta', kek: 'Kek-cupcake', kurabiye: 'Kurabiye', serbetli: 'Şerbetli', sutlu: 'Sütlü', cheese: 'Cheesecake', diyettat: 'Diyet tatlı', cikolata: 'Çikolata/şekerleme', dogumset: 'Doğum günü setleri', recel: 'Reçel-marmelat', pekmez: 'Pekmez', tursu: 'Turşu', dom: 'Domates/biber sos', acios: 'Acı sos', salca: 'Salça', sirke: 'Sirke', konserve: 'Konserve', eriste: 'Erişte', tarhana: 'Tarhana', yufka: 'Yufka', manti: 'Mantı', kurut: 'Kurutulmuş', fit: 'Fit tabaklar', vegan: 'Vegan yemekler', gf: 'GF unlu mamuller', sekersiz: 'Şekersiz tatlı', keto: 'Keto ürün', protein: 'Protein atıştırmalık', bileklik: 'Bileklik', kolye: 'Kolye', kupe: 'Küpe', yuzuk: 'Yüzük', halhal: 'Halhal', bros: 'Broş', set: 'Setler', isimli: 'Kişiye özel', makrome: 'Makrome', dogaltas: 'Doğal taş', recine: 'Reçine', telsarma: 'Tel sarma', fig: 'Figürler', cingirak: 'Çıngırak', dis: 'Diş kaşıyıcı', bezoy: 'Bez oyuncak/kitap', montessori: 'Montessori', set2: 'Setler', patik: 'Patik-bere', battaniye: 'Battaniye', onluk: 'Önlük', lohusa: 'Lohusa seti', sac: 'Saç aksesuarı', giyim: 'El emeği kıyafet', hirka: 'Hırka', kazak: 'Kazak', atkibere: 'Atkı-bere', panco: 'Panço', sal: 'Şal', corap: 'Çorap', lif: 'Lif takımı', bepektk: 'Bebek takımı', yelek: 'Yelek', kirlen: 'Kırlent-örtü', igneoyasi: 'İğne oyası', paca: 'Paça/onarım', fermuar: 'Fermuar değişimi', perde: 'Perde', nevresim: 'Nevresim', masa: 'Masa örtüsü', ozel: 'Özel dikim', kostum: 'Kostüm', duvar: 'Duvar süsü', saksı: 'Saksı askısı', anahtar: 'Anahtarlık', avize: 'Avize', runner: 'Runner', sepet: 'Sepet', raf: 'Raf/dekor', kece: 'Keçe işleri', kirlent: 'Kırlent', kapi: 'Kapı süsü', tepsi: 'Tepsi süz', cerceve: 'Çerçeve', ruya: 'Rüya kapanı', tablo: 'Tablo', soya: 'Soya/balmumu', tas: 'Kokulu taş', sprey: 'Oda spreyi', tutsu: 'Tütsü', jel: 'Jel mum', hediye: 'Hediye seti', zeytin: 'Zeytinyağlı sabun', bitkisel: 'Bitkisel sabun', sampuan: 'Katı şampuan', balm: 'Dudak balmı', krem: 'Krem/merhem', banyotuzu: 'Banyo tuzu', lavanta: 'Lavanta kesesi', anahtar2: 'Anahtarlık', magnet: 'Magnet', kolek: 'Koleksiyon', dekorbebek: 'Dekor bebek' }, legal:{terms:'Kullanım Şartları', privacy:'Gizlilik Politikası', kvkk:'KVKK Aydınlatma', community:'Topluluk Kuralları', prohibited:'Yasaklı Ürünler', distance:'Mesafeli Satış', preinfo:'Ön Bilgilendirme', return:'Teslimat/İade', contact:'İletişim'} , item:{ manti:{title:'Ev Yapımı Mantı', meta:'Kadıköy • 350 TL'}, makrome:{title:'Makrome Duvar Süsü', meta:'Konya • 420 TL'}, sabun:{title:'Zeytinyağlı Sabun', meta:'Ayvalık • 95 TL'} } },
+      tr: { brand: 'Üreten Eller', post: 'İlan Ver', profile:'Profil', searchPlaceholder: 'Ara: ürün, kategori, ilçe…', search: 'Ara', categories: 'Kategoriler', browse: 'Kategorileri Keşfet', nav:{home:'Ana Sayfa', msg:'Mesajlar', noti:'Bildirimler'}, chat:{title:'🛎️ Canlı Destek', hi1:'Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?', hi2:'Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.'}, heroLines: [ { t: 'El emeği & yerel lezzetler tek çatı altında', d: 'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.' }, { t: 'Mahallenden üreticiye doğrudan destek', d: 'Yakınınızdaki üreticileri bulun, taze ve el emeği ürünleri keşfedin.' }, { t: 'Kendi ürününü kolayca satışa çıkar', d: 'Ücretsiz ilan ver, güvenli mesajlaşma ve sipariş yönetimi ile hızlı başla.' } ], cats: { yemek: '🍲 Yemekler', pasta: '🎂 Pasta & Tatlı', sos: '🫙 Reçel • Turşu • Sos', yoresel: '🌾 Yöresel / Kışlık', diet: '🥗 Diyet / Vegan / GF', taki: '💍 Takı', bebek: '👶 Bebek & Çocuk', orgu: '🧶 Örgü / Triko', terzi: '✂️ Dikiş / Terzilik', makrome: '🧵 Makrome & Dekor', evdekor: '🏠 Ev Dekor & Aksesuar', mum: '🕯️ Mum & Kokulu', kozmetik: '🧼 Doğal Sabun & Kozmetik', amigurumi: '🧸 Amigurumi & Oyuncak' }, sub: { evyemek: 'Ev yemekleri', borek: 'Börek-çörek', corba: 'Çorba', zeytiny: 'Zeytinyağlı', pilav: 'Pilav-makarna', et: 'Et-tavuk', kahvalti: 'Kahvaltılık', meze: 'Meze', dondur: 'Dondurulmuş', cocuk: 'Çocuk öğünleri', diyetvegf: 'Diyet/vegan/gf', yaspasta: 'Yaş pasta', kek: 'Kek-cupcake', kurabiye: 'Kurabiye', serbetli: 'Şerbetli', sutlu: 'Sütlü', cheese: 'Cheesecake', diyettat: 'Diyet tatlı', cikolata: 'Çikolata/şekerleme', dogumset: 'Doğum günü setleri', recel: 'Reçel-marmelat', pekmez: 'Pekmez', tursu: 'Turşu', dom: 'Domates/biber sos', acios: 'Acı sos', salca: 'Salça', sirke: 'Sirke', konserve: 'Konserve', eriste: 'Erişte', tarhana: 'Tarhana', yufka: 'Yufka', manti: 'Mantı', kurut: 'Kurutulmuş', fit: 'Fit tabaklar', vegan: 'Vegan yemekler', gf: 'GF unlu mamuller', sekersiz: 'Şekersiz tatlı', keto: 'Keto ürün', protein: 'Protein atıştırmalık', bileklik: 'Bileklik', kolye: 'Kolye', kupe: 'Küpe', yuzuk: 'Yüzük', halhal: 'Halhal', bros: 'Broş', set: 'Setler', isimli: 'Kişiye özel', makrome: 'Makrome', dogaltas: 'Doğal taş', recine: 'Reçine', telsarma: 'Tel sarma', fig: 'Figürler', cingirak: 'Çıngırak', dis: 'Diş kaşıyıcı', bezoy: 'Bez oyuncak/kitap', montessori: 'Montessori', set2: 'Setler', patik: 'Patik-bere', battaniye: 'Battaniye', onluk: 'Önlük', lohusa: 'Lohusa seti', sac: 'Saç aksesuarı', giyim: 'El emeği kıyafet', hirka: 'Hırka', kazak: 'Kazak', atkibere: 'Atkı-bere', panco: 'Panço', sal: 'Şal', corap: 'Çorap', lif: 'Lif takımı', bepektk: 'Bebek takımı', yelek: 'Yelek', kirlen: 'Kırlent-örtü', igneoyasi: 'İğne oyası', paca: 'Paça/onarım', fermuar: 'Fermuar değişimi', perde: 'Perde', nevresim: 'Nevresim', masa: 'Masa örtüsü', ozel: 'Özel dikim', kostum: 'Kostüm', duvar: 'Duvar süsü', saksı: 'Saksı askısı', anahtar: 'Anahtarlık', avize: 'Avize', runner: 'Runner', sepet: 'Sepet', raf: 'Raf/dekor', kece: 'Keçe işleri', kirlent: 'Kırlent', kapi: 'Kapı süsü', tepsi: 'Tepsi süs', cerceve: 'Çerçeve', ruya: 'Rüya kapanı', tablo: 'Tablo', soya: 'Soya/balmumu', tas: 'Kokulu taş', sprey: 'Oda spreyi', tutsu: 'Tütsü', jel: 'Jel mum', hediye: 'Hediye seti', zeytin: 'Zeytinyağlı sabun', bitkisel: 'Bitkisel sabun', sampuan: 'Katı şampuan', balm: 'Dudak balmı', krem: 'Krem/merhem', banyotuzu: 'Banyo tuzu', lavanta: 'Lavanta kesesi', anahtar2: 'Anahtarlık', magnet: 'Magnet', kolek: 'Koleksiyon', dekorbebek: 'Dekor bebek' }, legal:{terms:'Kullanım Şartları', privacy:'Gizlilik Politikası', kvkk:'KVKK Aydınlatma', community:'Topluluk Kuralları', prohibited:'Yasaklı Ürünler', distance:'Mesafeli Satış', preinfo:'Ön Bilgilendirme', return:'Teslimat/İade', contact:'İletişim'} , item:{ manti:{title:'Ev Yapımı Mantı', meta:'Kadıköy • 350 TL'}, makrome:{title:'Makrome Duvar Süsü', meta:'Konya • 420 TL'}, sabun:{title:'Zeytinyağlı Sabun', meta:'Ayvalık • 95 TL'} } },
       en: { brand: 'Üreten Eller', post: 'Post Listing', profile:'Profile', searchPlaceholder: 'Search: product, category, district…', search: 'Search', categories: 'Categories', browse: 'Browse Categories', nav:{home:'Home', msg:'Messages', noti:'Notifications'}, chat:{title:'🛎️ Live Support', hi1:'Welcome to live support, how can I help?', hi2:'Please specify… 1=Premium 2=Showcase 3=Account 4=Other.'}, heroLines: [ { t: 'Handmade & local flavors in one place', d: 'Shop from local women producers and artisans. Search by location or explore by categories.' }, { t: 'Support nearby makers directly', d: 'Find producers around you and discover fresh, handmade goods.' }, { t: 'List your product in minutes', d: 'Create a free listing and start selling with secure messaging and orders.' } ], cats: { yemek: '🍲 Meals', pasta: '🎂 Cakes & Desserts', sos: '🫙 Jam • Pickle • Sauce', yoresel: '🌾 Local / Seasonal', diet: '🥗 Diet / Vegan / GF', taki: '💍 Jewelry', bebek: '👶 Baby & Kids', orgu: '🧶 Knitting / Crochet', terzi: '✂️ Sewing / Tailor', makrome: '🧵 Macrame & Decor', evdekor: '🏠 Home Decor & Accessories', mum: '🕯️ Candles & Scents', kozmetik: '🧼 Natural Soap & Cosmetics', amigurumi: '🧸 Amigurumi & Toys' }, sub: {}, legal:{terms:'Terms', privacy:'Privacy', kvkk:'KVKK Notice', community:'Community Guidelines', prohibited:'Prohibited Items', distance:'Distance Sales', preinfo:'Pre‑Information', return:'Delivery/Returns', contact:'Contact'}, item:{ manti:{title:'Homemade Mantı', meta:'Kadıköy • 350 TRY'}, makrome:{title:'Macrame Wall Hanging', meta:'Konya • 420 TRY'}, sabun:{title:'Olive Oil Soap', meta:'Ayvalık • 95 TRY'} } },
       ar: { brand: 'أُنتِجَت بالأيدي', post: 'أنشئ إعلانًا', profile:'الملف الشخصي', searchPlaceholder: 'ابحث: منتج، فئة، حي…', search: 'بحث', categories: 'الفئات', browse: 'استكشاف الفئات', nav:{home:'الرئيسية', msg:'الرسائل', noti:'الإشعارات'}, chat:{title:'🛎️ دعم مباشر', hi1:'مرحبًا، كيف يمكنني المساعدة؟', hi2:'اذكر المشكلة… 1=بريميوم 2=الواجهة 3=الحساب 4=أخرى.'}, heroLines: [ { t: 'حِرَف ونكهات محلية في مكان واحد', d: 'تسوّق من المنتجين المحليين والحرفيين. ابحث حسب الموقع أو استكشف الفئات.' }, { t: 'ادعم المنتجين القريبين منك مباشرة', d: 'اكتشف المنتجات الطازجة والمصنوعة يدويًا حولك.' }, { t: 'اعرض منتجك بسهولة', d: 'أنشئ إعلانًا مجانًا وابدأ البيع برسائل وطلبات آمنة.' } ], cats: { yemek: '🍲 أطعمة', pasta: '🎂 كيك وحلويات', sos: '🫙 مربى • مخللات • صلصات', yoresel: '🌾 محلي/موسمي', diet: '🥗 حِمية/نباتي/خالٍ من الغلوتين', taki: '💍 مجوهرات', bebek: '👶 أطفال', orgu: '🧶 حياكة/كروشيه', terzi: '✂️ خياطة/تفصيل', makrome: '🧵 مكرمية وديكور', evdekor: '🏠 ديكور المنزل', mum: '🕯️ شموع وروائح', kozmetik: '🧼 صابون طبيعي ومستحضرات', amigurumi: '🧸 أميغورومي وألعاب' }, sub: {}, legal:{terms:'الشروط', privacy:'الخصوصية', kvkk:'إشعار KVKK', community:'قواعد المجتمع', prohibited:'المنتجات الممنوعة', distance:'البيع عن بُعد', preinfo:'معلومات أولية', return:'التسليم/الإرجاع', contact:'اتصال'}, item:{ manti:{title:'مانطي منزلي', meta:'Kadıköy • 350 ليرة'}, makrome:{title:'تعليقة جدارية مكرمية', meta:'Konya • 420 ليرة'}, sabun:{title:'صابون بزيت الزيتون', meta:'Ayvalık • 95 ليرة'} } },
       de: { brand: 'Üreten Eller', post: 'Anzeige erstellen', profile:'Profil', searchPlaceholder: 'Suche: Produkt, Kategorie, Bezirk…', search: 'Suchen', categories: 'Kategorien', browse: 'Kategorien entdecken', nav:{home:'Startseite', msg:'Nachrichten', noti:'Benachrichtigungen'}, chat:{title:'🛎️ Live-Support', hi1:'Willkommen im Live‑Support. Wie kann ich helfen?', hi2:'Bitte Anliegen nennen… 1=Premium 2=Schaufenster 3=Konto 4=Sonstiges.'}, heroLines: [ { t: 'Handgemachtes & lokale Köstlichkeiten', d: 'Kaufe bei lokalen Produzentinnen und Handwerker:innen. Suche nach Standort oder stöbere nach Kategorien.' }, { t: 'Unterstütze Hersteller in deiner Nähe', d: 'Finde Produzenten in der Umgebung und entdecke handgemachte Produkte.' }, { t: 'Stelle dein Produkt in Minuten ein', d: 'Kostenlose Anzeige, sichere Nachrichten und Bestellungen.' } ], cats: { yemek: '🍲 Gerichte', pasta: '🎂 Kuchen & Desserts', sos: '🫙 Marmelade • Eingelegtes • Saucen', yoresel: '🌾 Regional / Saisonal', diet: '🥗 Diät / Vegan / GF', taki: '💍 Schmuck', bebek: '👶 Baby & Kinder', orgu: '🧶 Stricken / Häkeln', terzi: '✂️ Schneiderei', makrome: '🧵 Makramee & Deko', evdekor: '🏠 Wohndeko & Accessoires', mum: '🕯️ Kerzen & Düfte', kozmetik: '🧼 Naturseife & Kosmetik', amigurumi: '🧸 Amigurumi & Spielzeug' }, sub: {}, legal:{terms:'Nutzungsbedingungen', privacy:'Datenschutz', kvkk:'KVKK Hinweis', community:'Community‑Regeln', prohibited:'Verbotene Artikel', distance:'Fernabsatz', preinfo:'Vorabinformation', return:'Lieferung/Retouren', contact:'Kontakt'}, item:{ manti:{title:'Hausgemachte Mantı', meta:'Kadıköy • 350 TRY'}, makrome:{title:'Makramee Wandbehang', meta:'Konya • 420 TRY'}, sabun:{title:'Olivenölseife', meta:'Ayvalık • 95 TRY'} } }
@@ -327,8 +353,8 @@
       const kMeta =$('[data-i18n=\"item.makrome.meta\"]'); if(kMeta)  kMeta.textContent =map.makrome?.meta ||'Konya • 420 TL';
       const sTitle=$('[data-i18n=\"item.sabun.title\"]'); if(sTitle) sTitle.textContent=map.sabun?.title||'Zeytinyağlı Sabun';
       const sMeta =$('[data-i18n=\"item.sabun.meta\"]'); if(sMeta)  sMeta.textContent =map.sabun?.meta ||'Ayvalık • 95 TL';
-      // legal links
-      const LL=L.legal||{}; $$('footer .links a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
+      // legal links (footer + fixed panel)
+      const LL=L.legal||{}; $$('footer .links a, #legalFixed .lf-track a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
     }
 
     function buildCats(){
@@ -337,7 +363,8 @@
         const row=document.createElement('div'); row.className='cat'; row.setAttribute('aria-expanded','false');
         const btn=document.createElement('button'); const title=L.cats?.[cat.id]||cat.id; btn.innerHTML=`<span class="cat-title">${title}</span><span class="chev">▶</span>`;
         const sub=document.createElement('div'); sub.className='sublist';
-        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
+        // YÖNLENDİRME DÜZELTİLMİŞ: listings.html yerine index.html (aynı sayfa)
+        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
         btn.addEventListener('click',()=>{ const exp=row.getAttribute('aria-expanded')==='true'; row.setAttribute('aria-expanded', String(!exp)); sub.style.display = exp?'none':'block'; });
         row.append(btn,sub); box.append(row);
       });
@@ -347,93 +374,78 @@
       const L = I18N[getLang()]||I18N.tr; const top=$('#topCats'); const subsBox=$('#topSubs'); if(!top||!subsBox) return;
       top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\" aria-pressed=\"false\">${title}</button>`; }).join('');
 
-      // --- Yeni: aynı chip'e ikinci kez basınca kapat (toggle) ---
+      // --- toggle ---
       let openCatId = null;
 
       function closeSubs(){
         subsBox.innerHTML = '';
         openCatId = null;
-        // tüm chip'leri pasif yap
         $$('.topcats .chip', top).forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
       }
 
       top.addEventListener('click',(e)=>{
         const b=e.target.closest('.chip'); if(!b) return; const id=b.getAttribute('data-cat');
-        if(openCatId === id){
-          // aynı chip: kapat
-          closeSubs();
-          return;
-        }
-        // farklı chip: aç
+        if(openCatId === id){ closeSubs(); return; }
         const cat=CATS.find(c=>c.id===id); if(!cat){ closeSubs(); return; }
         const title=L.cats?.[cat.id]||cat.id;
         const subHtml = cat.subs.map(([sid,label])=>{
           const name=(L.sub?.[sid]||label);
-          return `<a href=\"/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
+          // YÖNLENDİRME DÜZELTİLMİŞ
+          return `<a href=\"/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
         }).join('');
         subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
         openCatId = id;
-        // chip durumlarını güncelle
         $$('.topcats .chip', top).forEach(el=>{ const on = el.getAttribute('data-cat')===id; el.classList.toggle('active', on); el.setAttribute('aria-pressed', on?'true':'false'); });
       });
 
-      // dışarı tıklayınca kapat (yalnızca mobil üst subs açıkken)
-      document.addEventListener('click',(e)=>{
-        if(!openCatId) return;
-        const hitTop = e.target.closest('.topcats');
-        const hitSubs = e.target.closest('#topSubs');
-        if(!hitTop && !hitSubs){ closeSubs(); }
-      });
+      document.addEventListener('click',(e)=>{ if(!openCatId) return; const hitTop = e.target.closest('.topcats'); const hitSubs = e.target.closest('#topSubs'); if(!hitTop && !hitSubs){ closeSubs(); } });
     }
 
     // ===== Events / navigation =====
+    // Marka başlığı tıklanınca ana sayfa
+    document.addEventListener('click', (e)=>{ const bt=e.target.closest('#brandTitle'); if(bt){ location.href='/index.html'; }});
+
     document.getElementById('postBtn')?.addEventListener('click', ()=> location.href='/ilan-ver.html');
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   try {
-    // Firebase Auth (modüler veya compat ikisini de dener)
     const fb = self.firebase || window.firebase;
     let auth;
     if (fb?.getAuth) {
-      // modüler
       auth = fb.getAuth(self.__fb?.app);
       await fb.signOut(auth);
     } else if (fb?.auth) {
-      // compat
       auth = fb.auth();
       await auth.signOut();
     }
   } catch (e) {
     console.warn('signOut hata:', e);
   }
-
-  // Uygulamada tuttuğunuz yerel oturum verileri varsa temizleyin
-  try {
-    ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k));
-  } catch(_) {}
+  try { ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
   try { sessionStorage.clear(); } catch(_) {}
-
-  // Geri tuşu/yenile ile “home”a dönmesin
   location.replace('/index.html');
 });
     document.getElementById('searchBtn')?.addEventListener('click', ()=>{
       const q=(document.getElementById('q')?.value||'').trim();
-      const url=q?`/listings.html?q=${encodeURIComponent(q)}`:'/listings.html';
+      const url=q?`/index.html?q=${encodeURIComponent(q)}`:'/index.html';
       location.href=url;
     });
     document.getElementById('browseBtn')?.addEventListener('click', ()=>{
       const first=CATS[0]?.id||'yemek';
-      location.href=`/listings.html?cat=${first}`;
+      location.href=`/index.html?cat=${first}`;
     });
     document.getElementById('navProfile')?.addEventListener('click', ()=> location.href='/profile.html');
     document.getElementById('navMsg')?.addEventListener('click', ()=> location.href='/docs/mesajlar.html');
     document.getElementById('navNoti')?.addEventListener('click', ()=> location.href='/docs/bildirimler.html');
+
+    // Alt siyah fixed legal panel kapatma
+    document.getElementById('lfClose')?.addEventListener('click', ()=>{ const el=document.getElementById('legalFixed'); if(el) el.style.display='none'; });
 
     // Lang init
     (function init(){
       const y=document.getElementById('yfoot'); if(y) y.textContent=new Date().getFullYear();
       const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); sel.value=initial;
       applyI18n(); buildCats(); buildTopCats();
-      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); });
+      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); buildTopCats(); });
     })();
 
     // ===== Live Chat (local echo) =====
@@ -468,7 +480,7 @@
 const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
 
 const isHttp = (u) => /^https?:\/\//i.test(u || '');
-const isPid  = (u) => u && !isHttp(u) && /[\/_.-]/.test(String(u));
+const isPid  = (u) => u && !isHttp(u) && /[\/_\.-]/.test(String(u));
 const cdn = (pid, { w, h, crop='fill', fmt='auto', q='auto' } = {}) =>
   `https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`, fmt&&`f_${fmt}`, w&&`w_${w}`, h&&`h_${h}`, crop&&`c_${crop}`].filter(Boolean).join(',')}/` +
   String(pid).replace(/^image\/upload\//,'');
@@ -506,7 +518,6 @@ async function resolveImages(d){
   for (const u of uniq) { urls.push(await resolveURL(u)); }
   return urls.length ? urls : ['/assets/icons/ureteneller.png'];
 }
-// openListingDetail başka scope'taysa erişsin:
 window.resolveImages = resolveImages;
 
 const cardHTML = (d, id, cover) => `
@@ -646,8 +657,8 @@ async function fetchAndPaint(){
         mStock.style.display = 'inline-flex';
         mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
         mStock.classList.toggle('red', !inStock);
-        // bağlantılar
-        mOrder.href = `#order-${encodeURIComponent(id)}`; // click handler yönlendirecek
+        // bağlantılar (YÖNLENDİRME DÜZELTİLMİŞ)
+        mOrder.href = `/docs/orders.html?new=1&ilan=${encodeURIComponent(id)}`;
         mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}` : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
         modal.setAttribute('open','');
       }
@@ -657,17 +668,9 @@ async function fetchAndPaint(){
         const id=a.getAttribute('data-id'); const item=window.__UE_LISTINGS?.[id]; if(item){ openListingDetail(id,item.data); }
       });
 
-      // Sipariş Ver → kısa mesaj istemi (30 karakter)
+      // Sipariş Ver → orders.html'e
       mOrder.addEventListener('click', (e)=>{
-        e.preventDefault();
-        if(!currentListingId) return;
-        let msg = prompt('Satıcıya iletilecek kısa not (max 30 karakter):','Merhaba, sipariş vermek istiyorum');
-        if(msg==null) return; // iptal
-        msg = (msg+"").trim().slice(0,30);
-        const url = `/docs/orders.html?new=1&ilan=${encodeURIComponent(currentListingId)}&msg=${encodeURIComponent(msg)}`;
-        // basit bildirim sesi (varsa)
-        try { new Audio('/notify.wav').play().catch(()=>{}); } catch(_) {}
-        location.href = url;
+        // Doğrudan href çalışsın; prompt kaldırıldı ki yönlendirme net olsun
       });
 
       gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
