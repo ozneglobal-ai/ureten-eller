@@ -26,7 +26,7 @@
     .lang select{border:0;background:transparent;font-weight:700}
 
     /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
-    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
+    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff;overflow:clip}
     /* --- FIX: yalnızca içte yatay scroll; sayfa kaymasın --- */
     .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-gutter:stable both-edges;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
     .catnav .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap;scroll-snap-align:start}
@@ -37,6 +37,10 @@
     .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
     .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
     .catdrops .panel.open{display:block}
+
+    /* CatNav başlığı (mevcudu bozmadan) */
+    .catnav-title{max-width:1200px;margin:0 auto;padding:10px 16px 4px;font-weight:900;font-size:14px;letter-spacing:.2px;color:#374151}
+    @media (max-width:768px){.catnav-title{padding:10px 12px 4px;font-size:13px}}
 
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
@@ -131,6 +135,21 @@
     @media (max-width:768px){
       .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     }
+  
+    /* === KARTLARI MOBİLDE KISALT — görüntü oranı & tipografi === */
+    @media (max-width:1024px){
+      /* tablet ve aşağısı: görseli biraz yataylaştır (daha kısa kart) */
+      .card .ph{aspect-ratio:4/3}
+    }
+    @media (max-width:480px){
+      .listings-section{padding:8px 12px 18px}
+      .listings-grid{gap:8px}
+      .card .body{padding:8px;gap:4px}
+      .card .title{font-size:13px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+      .card .desc{font-size:12px;-webkit-line-clamp:1}
+      .price{font-size:13px}
+      .card .actions .btn{padding:8px 10px;font-weight:700}
+    }
   </style>
 </head>
 <body>
@@ -163,6 +182,7 @@
 
       <!-- Üstte Yatay Kategori Şeritleri (hepsi yan yana, kaydırmalı) -->
       <nav id="catNav" class="catnav" aria-label="Kategoriler">
+        <div class="catnav-title">Hategoriler</div>
         <div class="catnav-inner"></div>
       </nav>
       <div id="catDrops" class="catdrops">
@@ -480,30 +500,4 @@
       {id:'evdekor', subs:[["kece"],["kirlent"],["kapi"],["tepsi"],["cerceve"],["ruya"],["tablo"]]},
       {id:'mum', subs:[["soya"],["tas"],["sprey"],["tutsu"],["jel"],["hediye"]]},
       {id:'kozmetik', subs:[["zeytin"],["bitkisel"],["sampuan"],["balm"],["krem"],["banyotuzu"],["lavanta"]]},
-      {id:'amigurumi', subs:[["anahtar2"],["magnet"],["kolek"],["dekorbebek"]]},
-    ];
-
-    const catBar = document.querySelector('#catNav .catnav-inner');
-    const drops = document.querySelector('#catDrops .catdrops-inner');
-
-    function localizeCat(cat, lang){
-      const L = CAT_I18N[lang] || CAT_I18N.tr;
-      const title = L.titles[cat.id] || cat.id;
-      const subs = cat.subs.map(([sid])=>[sid, (L.subs[sid]||sid)]);
-      return { id: cat.id, title, subs };
-    }
-
-    function buildTopCats(lang){
-      const currentLang = lang || (localStorage.getItem('ue_lang') || 'tr');
-      catBar.innerHTML = '';
-      drops.innerHTML = '';
-      CATS.forEach((cat)=>{
-        const LCat = localizeCat(cat, currentLang);
-        const chip = document.createElement('button');
-        chip.className = 'chip';
-        chip.type = 'button';
-        chip.textContent = LCat.title;
-        chip.dataset.target = `p_${LCat.id}`;
-
-        const panel = document.createElement('div');
-        panel.classNam
+      {id:'amigurumi', subs:[["anahtar2"]
