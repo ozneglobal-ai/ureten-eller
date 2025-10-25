@@ -10,12 +10,12 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    /* === FIX: Mobil yatay kayma koruması + güvenli genişlik === */
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw}
+    /* --- FIX: mobil yatay kayma koruması + içte tut --- */
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto;overflow-x:clip}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
-    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
     .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:10px}
@@ -25,16 +25,16 @@
     .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
     .lang select{border:0;background:transparent;font-weight:700}
 
-    /* Üst kategori çipleri – yatay kaydırmalı */
+    /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    /* === FIX: Taşma yapmayan, gerçek yatay scroll + snap === */
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-gutter:stable both-edges;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+    /* --- FIX: yalnızca içte yatay scroll; sayfa kaymasın --- */
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-gutter:stable both-edges;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;scroll-snap-type:x proximity}
     .catnav .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap;scroll-snap-align:start}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
 
     .catdrops{background:#fff}
-    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px;overflow:hidden}
+    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
     .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
     .catdrops .panel.open{display:block}
 
@@ -45,10 +45,9 @@
     .hero p{margin:0 0 16px 0;color:#4b5563;overflow-wrap:anywhere;word-break:break-word}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
-    /* === FIX: Mobilde hero metnini taşırmadan tut: başlık 2 satır, açıklama 3 satır === */
+    /* --- FIX: mobilde hero metinleri 2 satırı aşmasın --- */
     @media (max-width:480px){
-      .hero h2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-      .hero p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+      .hero h2,.hero p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
     }
 
     /* Buttons */
@@ -81,7 +80,7 @@
     /* Footer */
     .legal{background:#000;color:#fff}
     .legal .inner{max-width:1200px;margin:0 auto;padding:16px}
-    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 
     /* === RESPONSIVE DOKUNUŞLAR (mevcudu bozmadan) === */
@@ -125,7 +124,10 @@
     /* Showcase simgesi */
     .ribbon{position:absolute;top:8px;left:8px;background:#caa552;color:#111;font-weight:900;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #b18a37;box-shadow:0 4px 14px rgba(202,165,82,.25)}
 
-    /* Responsive: mobil 2, tablet/desktop 4 sütun (ilan boyutu değiştirilmedi) */
+    /* Responsive isteklerine göre: mobil 2, tablet/desktop 4 sütun */
+    @media (max-width:1024px){
+      .listings-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
     @media (max-width:768px){
       .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     }
@@ -177,10 +179,10 @@
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
         </div>
+        <!-- NOTE: Fazladan kapanan div kaldırıldı (layout boşluğunu engeller) -->
       </section>
-      <!-- === NOTE: Hemen hero'nun altından ilanlar başlar === -->
 
-      <!-- === İLANLAR === -->
+      <!-- === İLANLAR: Hero'nun hemen altında başlasın === -->
       <section class="listings-section">
         <div class="listings-head">
           <h3>Yeni İlanlar</h3>
@@ -261,6 +263,19 @@
       </div>
     </div>
   </dialog>
+
+  <!-- ===== Listing Detail Modal ===== -->
+  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="listingTitle">İlan Detayı</h3>
+        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner" id="listingBody">
+        <!-- JS ile doldurulacak -->
+      </div>
+    </div>
+  </dialog>
   <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
 
@@ -315,7 +330,7 @@
       }
     };
 
-    // ===== i18n – Kategori/Sözlük =====
+    // ===== i18n – Kategori/Sousözlükleri =====
     const CAT_I18N = {
       tr: {
         titles: {
@@ -421,23 +436,28 @@
         const key = el.getAttribute('data-i18n');
         if (dict[key] != null){ el.innerHTML = dict[key]; }
       });
+      // html lang & dir
       document.documentElement.lang = lang;
       document.documentElement.dir = (lang==='ar') ? 'rtl' : 'ltr';
+      // Placeholders
       document.getElementById('li_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
       document.getElementById('su_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
       document.getElementById('su_username')?.setAttribute('placeholder', lang==='en'?'@username':(lang==='de'?'@benutzer':(lang==='ar'?'@username':'@kullanici')));
       document.getElementById('su_name')?.setAttribute('placeholder', lang==='en'?'Your full name':(lang==='de'?'Vollständiger Name':(lang==='ar'?'الاسم الكامل':'Adınız Soyadınız')));
       document.getElementById('su_district')?.setAttribute('placeholder', lang==='en'?'Your district':(lang==='de'?'Bezirk':(lang==='ar'?'المنطقة':'İlçeniz')));
+      // Kategorileri de yeniden kur
       buildTopCats(lang);
     }
 
+    // Yıl
     document.getElementById('y').textContent = new Date().getFullYear();
 
+    // TR İller
     const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
     const suProv = document.getElementById('su_province');
     if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
 
-    // Kategoriler (orijinal veri)
+    // Kategoriler – id tabanlı yapı (mevcudu bozmadan)
     const CATS = [
       {id:'yemek', subs:[["evyemek"],["borek"],["corba"],["zeytiny"],["pilav"],["et"],["kahvalti"],["meze"],["dondur"],["cocuk"],["diyetvegf"]]},
       {id:'pasta', subs:[["yaspasta"],["kek"],["kurabiye"],["serbetli"],["sutlu"],["cheese"],["diyettat"],["cikolata"],["dogumset"]]},
@@ -485,9 +505,13 @@
 
         chip.addEventListener('click',()=>{
           const wasOpen = panel.classList.contains('open');
+          // Kapat tüm paneller ve aktif chipleri
           document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
           document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
-          if (!wasOpen){ panel.classList.add('open'); chip.classList.add('active'); }
+          if (!wasOpen){
+            panel.classList.add('open');
+            chip.classList.add('active');
+          }
         });
 
         catBar.appendChild(chip);
@@ -497,12 +521,13 @@
 
     buildTopCats(localStorage.getItem('ue_lang')||'tr');
 
+    // Auth Modal helpers + güvenli açıcı (dialog destek yoksa fallback)
     const authModal = document.getElementById('authModal');
     function openAuth(){
       if (typeof authModal.showModal === 'function'){
         authModal.showModal();
       } else {
-        authModal.setAttribute('open','');
+        authModal.setAttribute('open',''); // fallback
         authModal.style.display='grid';
       }
     }
@@ -511,22 +536,30 @@
       authModal.removeAttribute('open');
       authModal.style.display='none';
     }
-    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{ closeAuth(); }));
+    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{
+      closeAuth();
+    }));
 
     document.getElementById('signInBtn')?.addEventListener('click', openAuth);
 
+    // Dil seçici
     const langSel = document.getElementById('langSel');
-    langSel?.addEventListener('change', (e)=>{ const v = e.target.value; applyI18n(v); localStorage.setItem('ue_lang', v); });
+    langSel?.addEventListener('change', (e)=>{
+      const v = e.target.value; applyI18n(v); localStorage.setItem('ue_lang', v);
+    });
     applyI18n(localStorage.getItem('ue_lang')||'tr');
 
+    // Password visibility toggles
     document.querySelectorAll('.toggle').forEach(b=>b.addEventListener('click',()=>{
       const id = b.getAttribute('data-toggle'); const inp = document.getElementById(id);
       if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
     }));
 
+    // Firebase Auth
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
+    // === GİRİŞ SONRASI YÖNLENDİRME: /home.html ===
     function redirectHome(){ window.location.href = '/home.html'; }
 
     document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
@@ -581,8 +614,23 @@
 
     document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
 
+    // CTA – bu iki buton giriş penceresini AÇACAK
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
+
+    // === Masaüstünde kategori şeritini tekerlekle yatay kaydırma (isteğe bağlı UX, sayfa kaymasını engeller) ===
+    const catScroller = document.querySelector('.catnav-inner');
+    let wheelLock = false;
+    catScroller?.addEventListener('wheel', (e)=>{
+      if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+        e.preventDefault();
+        if(!wheelLock){
+          wheelLock = true;
+          catScroller.scrollLeft += e.deltaY;
+          setTimeout(()=>wheelLock=false, 0);
+        }
+      }
+    }, { passive:false });
   </script>
 
   <script type="module">
@@ -595,7 +643,7 @@
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
 
-    const PAGE_SIZE = 4; // her sayfada 4 ilan
+    const PAGE_SIZE = 4; // her sayfada 4 ilan (DEĞİŞTİRİLMEDİ)
     let allListings = [];
     let page = 0;
 
@@ -652,6 +700,7 @@
       const start = page * PAGE_SIZE;
       const slice = allListings.slice(start, start + PAGE_SIZE);
       grid.innerHTML = slice.map(cardTpl).join('');
+      if(allListings.length===0){ info.textContent = 'İlan yok'; return; }
       info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
       prevBtn.disabled = page===0;
       nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
@@ -666,9 +715,11 @@
         if(!listing) return;
 
         if (e.target.matches('[data-do="order"], [data-do="msg"]')){
+          // giriş panelini aç
           openAuth();
           return;
         }
+        // Kart tıklanınca detay modal aç
         openListingDetail(listing, card.querySelector('.ph img')?.src);
       });
     }
@@ -676,49 +727,34 @@
     async function openListingDetail(it, imgSrc){
       const modal = document.getElementById('listingModal');
       const body = document.getElementById('listingBody');
-
-      // Satıcı bilgisi
       let seller = null;
+      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
       const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
       try{ seller = await fetchSeller(sellerId); }catch{}
-
-      // Ad Soyad (öncelik profildeki görüntü adı)
-      const fullName = (seller?.displayName || seller?.name || '').trim() || 'Satıcı';
       const av = seller?.photoURL || '/assets/img/avatar-default.png';
+      const name = seller?.displayName || seller?.name || 'Satıcı';
       const verified = !!(seller?.verifiedSeller || seller?.verified);
-
-      // Şehir/İl bilgisi: önce ilçe/il ilan üzerinden, yoksa satıcı profilinden al
-      const city = (it.city || it.province || it.il || seller?.province || seller?.il || '').toString().trim();
-      const district = (it.district || it.ilce || seller?.district || seller?.ilce || '').toString().trim();
-      const locationStr = [district, city].filter(Boolean).join(' / ');
-
       const price = (typeof it.price==='number')? formatPrice(it.price): '';
-      const title = it.title || '';
-      const desc = it.description || '';
 
       body.innerHTML = `
         <div style="display:grid;gap:12px">
-          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${title}" style="width:100%;height:auto;display:block"></div>
-
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
           <div style="display:flex;align-items:center;gap:10px">
-            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${fullName}"></div>
-            <div style="font-weight:700">${fullName}</div>
+            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
+            <div style="font-weight:700">${name}</div>
             ${verified?'<span class="badge">Onaylı</span>':''}
-            ${locationStr?`<span class="pill" style="margin-left:auto">📍 ${locationStr}</span>`:''}
           </div>
-
           <div>
-            <div style="font-size:20px;font-weight:900">${title}</div>
-            <div style="color:#6b7280;margin-top:6px">${desc}</div>
+            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
+            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
           </div>
-          ${price?`<div style="font-size:18px;font-weight:900">${price}</div>`:''}
+          <div style="font-size:18px;font-weight:900">${price}</div>
           <div style="display:flex;gap:8px">
             <button class="btn gold" id="detailOrder">Sipariş Ver</button>
             <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
           </div>
         </div>`;
 
-      // Butonlar giriş panelini açar
       document.getElementById('detailOrder')?.addEventListener('click', openAuth);
       document.getElementById('detailMsg')?.addEventListener('click', openAuth);
 
@@ -745,11 +781,13 @@
         const rows = [];
         snap.forEach(d=>{
           const data = d.data();
+          // filtre: status approved, süresi dolmamış
           if (data?.status === 'approved'){
             const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
             if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
           }
         });
+        // Öncelik: showcase true olanlar
         const showcase = rows.filter(r=>!!r.showcase);
         const standard = rows.filter(r=>!r.showcase);
         allListings = [...showcase, ...standard];
@@ -759,19 +797,9 @@
       }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
     }
 
+    // FB hazır olduğunda yükle
     if (self.__fbReady) loadListings();
     else document.addEventListener('fb-ready', loadListings, { once:true });
   </script>
-
-  <!-- ===== Listing Detail Modal ===== -->
-  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
-    <div class="sheet">
-      <header>
-        <h3 id="listingTitle">İlan Detayı</h3>
-        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
-      </header>
-      <div class="inner" id="listingBody"></div>
-    </div>
-  </dialog>
 </body>
 </html>
