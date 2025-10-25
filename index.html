@@ -9,8 +9,10 @@
   <link rel="manifest" href="/site.webmanifest" />
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; /* --- FIX: mobile yatay kayma koruması --- */ overflow-x:hidden}
+    html,body{height:100%;max-width:100%}
+    /* --- FIX: mobilde yana kayma engeli + iOS --- */
+    html{overflow-x:clip; -webkit-text-size-adjust:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; overflow-x:clip}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
@@ -24,23 +26,23 @@
     .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
     .lang select{border:0;background:transparent;font-weight:700}
 
-    /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
+    /* Üst kategori çipleri – FLEX + yatay kaydırma/drag */
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch; /* --- FIX: mobilde hesaplı scrollbar --- */ scrollbar-gutter:stable both-edges}
-    .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-gutter:stable both-edges; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; touch-action:pan-x pinch-zoom}
+    .catnav .chip{flex:0 0 auto; scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
 
     .catdrops{background:#fff}
-    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
-    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
+    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px;overflow:hidden}
+    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff;overflow:hidden}
     .catdrops .panel.open{display:block}
 
     /* Hero */
-    .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
+    .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto 8px;max-width:1200px}
     .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; /* --- FIX: uzun başlıklarda satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
-    .hero p{margin:0 0 16px 0;color:#4b5563; /* --- FIX: uzun cümlelerde satır kırma --- */ overflow-wrap:anywhere;word-break:break-word}
+    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px; overflow-wrap:anywhere;word-break:break-word}
+    .hero p{margin:0 0 12px 0;color:#4b5563; overflow-wrap:anywhere;word-break:break-word; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
     /* Buttons */
@@ -76,11 +78,11 @@
     .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 
-    /* === RESPONSIVE DOKUNUŞLAR (mevcudu bozmadan) === */
+    /* === RESPONSIVE DOKUNUŞLAR === */
     @media (max-width:768px){
       .topbar-inner{padding:12px 12px}
       .catnav-inner{padding:8px 12px}
-      .hero{margin:12px 12px;padding:18px 14px}
+      .hero{margin:12px 12px 6px;padding:18px 14px}
       .hero h2{font-size:24px;line-height:1.25}
       .hero p{font-size:14px;line-height:1.5}
     }
@@ -91,11 +93,13 @@
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
     }
-      /* === İLAN KARTLARI === */
+
+    /* === İLAN KARTLARI === */
     .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
     .listings-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
     .listings-head h3{margin:0;font-size:18px}
     .listings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    @media (min-width:769px) and (max-width:1024px){.listings-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     .card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
     .card .ph{position:relative;aspect-ratio:1/1;background:#f5f6f7}
     .card .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -116,7 +120,7 @@
     /* Showcase simgesi */
     .ribbon{position:absolute;top:8px;left:8px;background:#caa552;color:#111;font-weight:900;font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #b18a37;box-shadow:0 4px 14px rgba(202,165,82,.25)}
 
-    /* Responsive isteklerine göre: mobil 2, tablet/desktop 4 sütun */
+    /* Responsive: mobil 2, tablet 3, desktop 4 sütun */
     @media (max-width:768px){
       .listings-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     }
@@ -168,10 +172,9 @@
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
         </div>
-              </div>
       </section>
 
-      <!-- === İLANLAR === -->
+      <!-- === İLANLAR (hemen hero altı) === -->
       <section class="listings-section">
         <div class="listings-head">
           <h3>Yeni İlanlar</h3>
@@ -260,12 +263,11 @@
         <h3 id="listingTitle">İlan Detayı</h3>
         <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
       </header>
-      <div class="inner" id="listingBody">
-        <!-- JS ile doldurulacak -->
-      </div>
+      <div class="inner" id="listingBody"><!-- JS ile doldurulacak --></div>
     </div>
   </dialog>
-<!-- Firebase init (kökten) -->
+
+  <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
 
   <script type="module">
@@ -494,13 +496,9 @@
 
         chip.addEventListener('click',()=>{
           const wasOpen = panel.classList.contains('open');
-          // Kapat tüm paneller ve aktif chipleri
           document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
           document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
-          if (!wasOpen){
-            panel.classList.add('open');
-            chip.classList.add('active');
-          }
+          if (!wasOpen){ panel.classList.add('open'); chip.classList.add('active'); }
         });
 
         catBar.appendChild(chip);
@@ -509,6 +507,16 @@
     }
 
     buildTopCats(localStorage.getItem('ue_lang')||'tr');
+
+    // --- Drag-to-scroll (mobilde akıcı kaydırma) ---
+    (function enableDragScroll(){
+      const el = document.querySelector('.catnav-inner');
+      if(!el) return;
+      let isDown=false, startX=0, scrollLeft=0;
+      el.addEventListener('pointerdown', (e)=>{ isDown=true; startX=e.pageX; scrollLeft=el.scrollLeft; el.setPointerCapture(e.pointerId); });
+      el.addEventListener('pointermove', (e)=>{ if(!isDown) return; el.scrollLeft = scrollLeft - (e.pageX - startX); });
+      ['pointerup','pointercancel','mouseleave'].forEach(t=>el.addEventListener(t, ()=>{ isDown=false; }));
+    })();
 
     // Auth Modal helpers + güvenli açıcı (dialog destek yoksa fallback)
     const authModal = document.getElementById('authModal');
@@ -525,9 +533,7 @@
       authModal.removeAttribute('open');
       authModal.style.display='none';
     }
-    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{
-      closeAuth();
-    }));
+    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{ closeAuth(); }));
 
     document.getElementById('signInBtn')?.addEventListener('click', openAuth);
 
@@ -606,7 +612,7 @@
     // CTA – bu iki buton giriş penceresini AÇACAK
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
-    </script>
+  </script>
 
   <script type="module">
     // === İLANLARI ÇEK & GÖSTER ===
