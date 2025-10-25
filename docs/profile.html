@@ -619,7 +619,7 @@
         (async()=>{
           const {auth,db,onAuthStateChanged}=window.__fb;
           const {doc,getDoc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-          onAuthStateChanged(auth, async (u)=>{
+          self.onAuthStateChanged(auth, async (u)=>{
             if(!u){
               try{ document.body.setAttribute('data-auth','signed-out'); }catch{}
               showAdminControlsIfAny();
