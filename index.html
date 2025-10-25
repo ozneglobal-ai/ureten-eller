@@ -151,13 +151,13 @@
               <option value="ar">العربية</option>
             </select>
           </div>
-          <button class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
+          <button type="button" class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
           <div id="authArea" class="auth-badge" style="display:none">
             <div class="avatar"><img id="uAvatar" alt="" /></div>
             <div id="uName" class="hint">Kullanıcı</div>
             <button class="btn ghost" id="signOutBtn" data-i18n="buttons.signout">Çıkış</button>
           </div>
-          <button class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
+          <button type="button" class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
         </div>
       </div>
 
@@ -190,8 +190,8 @@
         </div>
         <div class="listings-grid" id="listGrid" aria-live="polite"></div>
         <div class="paging">
-          <button class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
-          <button class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
+          <button type="button" class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
+          <button type="button" class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
         </div>
       </section>
     </main>
@@ -221,7 +221,7 @@
     <div class="sheet">
       <header>
         <h3 id="authTitle" data-i18n="auth.title">Giriş Yap / Kayıt Ol</h3>
-        <button class="btn ghost" data-close aria-label="Kapat">✕</button>
+        <button type="button" class="btn ghost" data-close aria-label="Kapat">✕</button>
       </header>
       <div class="inner">
         <div class="form" style="margin-bottom:16px">
@@ -229,8 +229,8 @@
           <div class="input pw"><label for="li_pass" data-i18n="fields.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
           <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
-              <button class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
+              <button type="button" class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
+              <button type="button" class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
             </div>
             <button class="btn gold" id="googleBtn" type="button" aria-label="Google" data-i18n="buttons.google">Google ile Giriş</button>
           </div>
@@ -255,7 +255,7 @@
             </div>
             <div class="input pw"><label for="su_pass2" data-i18n="fields.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
             <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
-              <button class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
+              <button type="button" class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
               <div class="hint" data-i18n="hints.verify">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
             </div>
           </div>
@@ -278,6 +278,14 @@
   </dialog>
   <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
+
+  <script>
+    // Sayfa genelinde href="#" linklerinin gezinmesini durdur (tek tık sorunu için güvenli)
+    document.addEventListener('click', (e)=>{
+      const a = e.target.closest('a[href="#"]');
+      if(a){ e.preventDefault(); }
+    });
+  </script>
 
   <script type="module">
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
@@ -498,308 +506,4 @@
         chip.dataset.target = `p_${LCat.id}`;
 
         const panel = document.createElement('div');
-        panel.className = 'panel';
-        panel.id = `p_${LCat.id}`;
-        panel.innerHTML = LCat.subs.map(([id,label])=>`<a href="#" data-open-auth style="display:inline-block;margin:4px 6px;padding:8px 10px;border-radius:8px;border:1px solid #eee">${label}</a>`).join('');
-        panel.addEventListener('click',(e)=>{ if(e.target.matches('a[data-open-auth]')){ e.preventDefault(); openAuth(); }});
-
-        chip.addEventListener('click',()=>{
-          const wasOpen = panel.classList.contains('open');
-          // Kapat tüm paneller ve aktif chipleri
-          document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
-          document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
-          if (!wasOpen){
-            panel.classList.add('open');
-            chip.classList.add('active');
-          }
-        });
-
-        catBar.appendChild(chip);
-        drops.appendChild(panel);
-      });
-    }
-
-    buildTopCats(localStorage.getItem('ue_lang')||'tr');
-
-    // Auth Modal helpers + güvenli açıcı (dialog destek yoksa fallback)
-    const authModal = document.getElementById('authModal');
-    function openAuth(){
-      if (typeof authModal.showModal === 'function'){
-        authModal.showModal();
-      } else {
-        authModal.setAttribute('open',''); // fallback
-        authModal.style.display='grid';
-      }
-    }
-    function closeAuth(){
-      if (typeof authModal.close === 'function') authModal.close();
-      authModal.removeAttribute('open');
-      authModal.style.display='none';
-    }
-    document.querySelectorAll('#authModal [data-close]').forEach(b=>b.addEventListener('click',()=>{
-      closeAuth();
-    }));
-
-    document.getElementById('signInBtn')?.addEventListener('click', openAuth);
-
-    // Dil seçici
-    const langSel = document.getElementById('langSel');
-    langSel?.addEventListener('change', (e)=>{
-      const v = e.target.value; applyI18n(v); localStorage.setItem('ue_lang', v);
-    });
-    applyI18n(localStorage.getItem('ue_lang')||'tr');
-
-    // Password visibility toggles
-    document.querySelectorAll('.toggle').forEach(b=>b.addEventListener('click',()=>{
-      const id = b.getAttribute('data-toggle'); const inp = document.getElementById(id);
-      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
-    }));
-
-    // Firebase Auth
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-
-    // === GİRİŞ SONRASI YÖNLENDİRME: /home.html ===
-    function redirectHome(){ window.location.href = '/home.html'; }
-
-    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, provider); redirectHome(); }
-      catch(err){ alert('Google ile giriş başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      const pass = document.getElementById('li_pass').value;
-      if(!email || pass.length<6){ alert('E‑posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
-      catch(err){ alert('Giriş başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      if(!email){ alert('Şifre sıfırlamak için e‑posta girin.'); return; }
-      try{ await sendPasswordResetEmail(auth, email); alert('Şifre sıfırlama e‑postası gönderildi. Gelen kutusu ve SPAM klasörünü kontrol edin.'); }
-      catch(err){ alert('İşlem başarısız: '+(err?.message||err)); }
-    });
-
-    document.getElementById('registerBtn')?.addEventListener('click', async ()=>{
-      const username = document.getElementById('su_username').value.trim();
-      const name = document.getElementById('su_name').value.trim();
-      const province = document.getElementById('su_province').value;
-      const district = document.getElementById('su_district').value.trim();
-      const email = document.getElementById('su_email').value.trim();
-      const pass = document.getElementById('su_pass').value;
-      const pass2 = document.getElementById('su_pass2').value;
-      if(!username || !name || !province || !district || !email || pass.length<6 || pass!==pass2){ alert('Lütfen tüm alanları doğru doldurun.'); return; }
-      try{
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: name });
-        try{ await sendEmailVerification(cred.user); }catch{}
-        alert('Kayıt tamamlandı. Doğrulama e‑postası gönderildi. SPAM klasörünü de kontrol edin.');
-        redirectHome();
-      }catch(err){ alert('Kayıt başarısız: '+(err?.message||err)); }
-    });
-
-    onAuthStateChanged(auth, (u)=>{
-      const authArea = document.getElementById('authArea');
-      const signBtn = document.getElementById('signInBtn');
-      if (u){
-        authArea.style.display='flex'; signBtn.style.display='none';
-        document.getElementById('uName').textContent = u.displayName || u.email || 'Kullanıcı';
-        document.getElementById('uAvatar').src = u.photoURL || '/assets/img/avatar-default.png';
-      } else {
-        authArea.style.display='none'; signBtn.style.display='inline-flex';
-      }
-    });
-
-    document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
-
-    // CTA – bu iki buton giriş penceresini AÇACAK
-    document.getElementById('browseBtn')?.addEventListener('click', openAuth);
-    document.getElementById('postBtn')?.addEventListener('click', openAuth);
-
-    // === Masaüstünde kategori şeritini tekerlekle yatay kaydırma (isteğe bağlı UX, sayfa kaymasını engeller) ===
-    const catScroller = document.querySelector('.catnav-inner');
-    let wheelLock = false;
-    catScroller?.addEventListener('wheel', (e)=>{
-      if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
-        e.preventDefault();
-        if(!wheelLock){
-          wheelLock = true;
-          catScroller.scrollLeft += e.deltaY;
-          setTimeout(()=>wheelLock=false, 0);
-        }
-      }
-    }, { passive:false });
-  </script>
-
-  <script type="module">
-    // === İLANLARI ÇEK & GÖSTER ===
-    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
-
-    const db2 = (self.__fb?.db) || getFirestore();
-    const grid = document.getElementById('listGrid');
-    const info = document.getElementById('listInfo');
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
-
-    const PAGE_SIZE = 4; // her sayfada 4 ilan (DEĞİŞTİRİLMEDİ)
-    let allListings = [];
-    let page = 0;
-
-    function formatPrice(tryAmount){
-      try{
-        return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
-      }catch{ return tryAmount + ' TL'; }
-    }
-
-    function timeValid(d){
-      try{ const ex = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return ex >= new Date(); }catch{ return true; }
-    }
-
-    async function fetchSeller(uid){
-      if(!uid) return null;
-      try{
-        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const snap = await getDoc(doc(db2,'users',uid));
-        return snap.exists()? snap.data(): null;
-      }catch{ return null; }
-    }
-
-    function cardTpl(it){
-      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
-      const showcase = !!it.showcase;
-      const price = (typeof it.price==='number')? formatPrice(it.price): '';
-      const title = it.title || 'İlan';
-      const desc = it.description || '';
-      const id = it.id;
-      return `
-        <article class="card" data-id="${id}">
-          <div class="ph">
-            ${showcase?'<span class="ribbon">Vitrin</span>':''}
-            <img alt="${title}" loading="lazy" src="${img}">
-          </div>
-          <div class="body">
-            <div class="title">${title}</div>
-            <div class="desc">${desc}</div>
-            <div class="seller" data-seller>
-              <div class="av"><img alt="" src="/assets/img/avatar-default.png"></div>
-              <div class="name">Satıcı</div>
-              <span class="badge" style="display:none">Onaylı</span>
-            </div>
-            <div class="price">${price}</div>
-            <div class="actions">
-              <button class="btn gold" data-do="order">Sipariş Ver</button>
-              <button class="btn ghost" data-do="msg">Satıcıya Yaz</button>
-            </div>
-          </div>
-        </article>`;
-    }
-
-    function render(){
-      const start = page * PAGE_SIZE;
-      const slice = allListings.slice(start, start + PAGE_SIZE);
-      grid.innerHTML = slice.map(cardTpl).join('');
-      if(allListings.length===0){ info.textContent = 'İlan yok'; return; }
-      info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
-      prevBtn.disabled = page===0;
-      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
-    }
-
-    function attachCardEvents(){
-      grid.addEventListener('click', async (e)=>{
-        const card = e.target.closest('.card');
-        if(!card) return;
-        const id = card.getAttribute('data-id');
-        const listing = allListings.find(x=>x.id===id);
-        if(!listing) return;
-
-        if (e.target.matches('[data-do="order"], [data-do="msg"]')){
-          // giriş panelini aç
-          openAuth();
-          return;
-        }
-        // Kart tıklanınca detay modal aç
-        openListingDetail(listing, card.querySelector('.ph img')?.src);
-      });
-    }
-
-    async function openListingDetail(it, imgSrc){
-      const modal = document.getElementById('listingModal');
-      const body = document.getElementById('listingBody');
-      let seller = null;
-      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
-      const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
-      try{ seller = await fetchSeller(sellerId); }catch{}
-      const av = seller?.photoURL || '/assets/img/avatar-default.png';
-      const name = seller?.displayName || seller?.name || 'Satıcı';
-      const verified = !!(seller?.verifiedSeller || seller?.verified);
-      const price = (typeof it.price==='number')? formatPrice(it.price): '';
-
-      body.innerHTML = `
-        <div style="display:grid;gap:12px">
-          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
-            <div style="font-weight:700">${name}</div>
-            ${verified?'<span class="badge">Onaylı</span>':''}
-          </div>
-          <div>
-            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
-            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
-          </div>
-          <div style="font-size:18px;font-weight:900">${price}</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn gold" id="detailOrder">Sipariş Ver</button>
-            <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
-          </div>
-        </div>`;
-
-      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
-      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
-
-      if (typeof modal.showModal === 'function') modal.showModal();
-      else { modal.setAttribute('open',''); modal.style.display='grid'; }
-    }
-
-    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
-      const modal = document.getElementById('listingModal');
-      if (typeof modal.close === 'function') modal.close();
-      modal.removeAttribute('open'); modal.style.display='none';
-    });
-
-    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
-    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
-
-    async function loadListings(){
-      try{
-        info.textContent = 'Yükleniyor…';
-        const col = collection(db2,'listings');
-        const q = query(col, orderBy('updatedAt','desc'));
-        const snap = await getDocs(q);
-        const now = Date.now();
-        const rows = [];
-        snap.forEach(d=>{
-          const data = d.data();
-          // filtre: status approved, süresi dolmamış
-          if (data?.status === 'approved'){
-            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
-            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
-          }
-        });
-        // Öncelik: showcase true olanlar
-        const showcase = rows.filter(r=>!!r.showcase);
-        const standard = rows.filter(r=>!r.showcase);
-        allListings = [...showcase, ...standard];
-        page = 0;
-        render();
-        attachCardEvents();
-      }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
-    }
-
-    // FB hazır olduğunda yükle
-    if (self.__fbReady) loadListings();
-    else document.addEventListener('fb-ready', loadListings, { once:true });
-  </script>
-</body>
-</html>
+        panel.classNam
