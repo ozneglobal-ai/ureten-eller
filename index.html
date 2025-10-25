@@ -569,33 +569,49 @@
     async function openListingDetail(it, imgSrc){
       const modal = document.getElementById('listingModal');
       const body = document.getElementById('listingBody');
+
+      // Satıcı bilgisi
       let seller = null;
       const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
       try{ seller = await fetchSeller(sellerId); }catch{}
+
+      // Ad Soyad (öncelik profildeki görüntü adı)
+      const fullName = (seller?.displayName || seller?.name || '').trim() || 'Satıcı';
       const av = seller?.photoURL || '/assets/img/avatar-default.png';
-      const name = seller?.displayName || seller?.name || 'Satıcı';
       const verified = !!(seller?.verifiedSeller || seller?.verified);
+
+      // Şehir/İl bilgisi: önce ilçe/il ilan üzerinden, yoksa satıcı profilinden al
+      const city = (it.city || it.province || it.il || seller?.province || seller?.il || '').toString().trim();
+      const district = (it.district || it.ilce || seller?.district || seller?.ilce || '').toString().trim();
+      const locationStr = [district, city].filter(Boolean).join(' / ');
+
       const price = (typeof it.price==='number')? formatPrice(it.price): '';
+      const title = it.title || '';
+      const desc = it.description || '';
 
       body.innerHTML = `
         <div style="display:grid;gap:12px">
-          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${title}" style="width:100%;height:auto;display:block"></div>
+
           <div style="display:flex;align-items:center;gap:10px">
-            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
-            <div style="font-weight:700">${name}</div>
+            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${fullName}"></div>
+            <div style="font-weight:700">${fullName}</div>
             ${verified?'<span class="badge">Onaylı</span>':''}
+            ${locationStr?`<span class="pill" style="margin-left:auto">📍 ${locationStr}</span>`:''}
           </div>
+
           <div>
-            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
-            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
+            <div style="font-size:20px;font-weight:900">${title}</div>
+            <div style="color:#6b7280;margin-top:6px">${desc}</div>
           </div>
-          <div style="font-size:18px;font-weight:900">${price}</div>
+          ${price?`<div style="font-size:18px;font-weight:900">${price}</div>`:''}
           <div style="display:flex;gap:8px">
             <button class="btn gold" id="detailOrder">Sipariş Ver</button>
             <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
           </div>
         </div>`;
 
+      // Butonlar giriş panelini açar
       document.getElementById('detailOrder')?.addEventListener('click', openAuth);
       document.getElementById('detailMsg')?.addEventListener('click', openAuth);
 
