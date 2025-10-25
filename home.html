@@ -81,6 +81,8 @@
       .topcats::-webkit-scrollbar{height:6px}
       .topcats .chip{flex:0 0 auto;scroll-snap-align:start;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
       .topcats .chip:active{transform:translateY(1px)}
+      /* aktif chip görünürlüğü */
+      .topcats .chip[aria-pressed="true"], .topcats .chip.active{background:#111;color:#fff;border-color:#111}
     }
     @media (max-width:640px){.topcats{padding:6px 2px 4px}.topcats .chip{padding:7px 10px;font-size:13px}}
     @media (max-width:480px){.topcats .chip{padding:6px 9px;font-size:12.5px}}
@@ -89,7 +91,7 @@
     .topsubs{display:none;margin-top:6px}
     @media (max-width:980px){.topsubs{display:block}}
     .topsubs .subwrap{border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff}
-    .topsubs .subwrap h4{margin:0 0 6px 0;font-size:14px}
+    .topsubs .subwrap h4{margin:0 0 6px 0;font-size:14px;display:flex;align-items:center;justify-content:space-between}
     .topsubs .subs{display:flex;flex-direction:column;gap:6px}
     .topsubs .subs a{display:block;padding:8px 10px;border-radius:10px;font-size:14px;color:#374151;border:1px solid #f1f1f1}
     .topsubs .subs a:hover{background:#f9fafb}
@@ -340,16 +342,44 @@
 
     function buildTopCats(){
       const L = I18N[getLang()]||I18N.tr; const top=$('#topCats'); const subsBox=$('#topSubs'); if(!top||!subsBox) return;
-      top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\">${title}</button>`; }).join('');
+      top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\" aria-pressed=\"false\">${title}</button>`; }).join('');
+
+      // --- Yeni: aynı chip'e ikinci kez basınca kapat (toggle) ---
+      let openCatId = null;
+
+      function closeSubs(){
+        subsBox.innerHTML = '';
+        openCatId = null;
+        // tüm chip'leri pasif yap
+        $$('.topcats .chip', top).forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      }
+
       top.addEventListener('click',(e)=>{
         const b=e.target.closest('.chip'); if(!b) return; const id=b.getAttribute('data-cat');
-        const cat=CATS.find(c=>c.id===id); if(!cat){ subsBox.innerHTML=''; return; }
+        if(openCatId === id){
+          // aynı chip: kapat
+          closeSubs();
+          return;
+        }
+        // farklı chip: aç
+        const cat=CATS.find(c=>c.id===id); if(!cat){ closeSubs(); return; }
         const title=L.cats?.[cat.id]||cat.id;
         const subHtml = cat.subs.map(([sid,label])=>{
           const name=(L.sub?.[sid]||label);
           return `<a href=\"/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
         }).join('');
         subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
+        openCatId = id;
+        // chip durumlarını güncelle
+        $$('.topcats .chip', top).forEach(el=>{ const on = el.getAttribute('data-cat')===id; el.classList.toggle('active', on); el.setAttribute('aria-pressed', on?'true':'false'); });
+      });
+
+      // dışarı tıklayınca kapat (yalnızca mobil üst subs açıkken)
+      document.addEventListener('click',(e)=>{
+        if(!openCatId) return;
+        const hitTop = e.target.closest('.topcats');
+        const hitSubs = e.target.closest('#topSubs');
+        if(!hitTop && !hitSubs){ closeSubs(); }
       });
     }
 
