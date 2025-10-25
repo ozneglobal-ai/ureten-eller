@@ -40,10 +40,10 @@ const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
 const UPLOAD_PRESET = 'ue_unsigned'; // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
 // Yardımcı sabitler
-const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
-const CL_IMAGE = `${CL_BASE}/image`;
-const CL_FETCH = `${CL_IMAGE}/fetch`;
-const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
+const CL_BASE = https://res.cloudinary.com/${CLOUD_NAME};
+const CL_IMAGE = ${CL_BASE}/image;
+const CL_FETCH = ${CL_IMAGE}/fetch;
+const CL_UPLOAD = https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload;
 
 // Global'e aktar (mevcut kodunla uyumlu)
 self.CLOUDINARY_CLOUD = CLOUD_NAME;
@@ -61,16 +61,16 @@ self.CLOUDINARY = {
 function clTx(opts = {}) {
   const { w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr, radius, ar, bg } = opts;
   const parts = [];
-  if (c) parts.push(`c_${c}`);
-if (w) parts.push(`w_${w}`);
-if (h) parts.push(`h_${h}`);
-if (ar) parts.push(`ar_${ar}`);
-if (g) parts.push(`g_${g}`);
-if (radius) parts.push(`r_${radius}`);
-if (bg) parts.push(`b_${bg}`);
-if (dpr) parts.push(`dpr_${dpr}`);
-if (q) parts.push(`q_${q}`);
-if (f) parts.push(`f_${f}`);
+  if (c) parts.push(c_${c});
+  if (w) parts.push(w_${w});
+  if (h) parts.push(h_${h});
+  if (ar) parts.push(ar_${ar});
+  if (g) parts.push(g_${g});
+  if (radius) parts.push(r_${radius});
+  if (bg) parts.push(b_${bg});
+  if (dpr) parts.push(dpr_${dpr});
+  if (q) parts.push(q_${q});
+  if (f) parts.push(f_${f});
   return parts.join(',');
 }
 
@@ -109,15 +109,12 @@ self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto',
   try {
     const supported = await messagingIsSupported();
     if (!supported) return;
-
     if ('Notification' in window && Notification.permission === 'default') {
       try { await Notification.requestPermission(); } catch {}
     }
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
     const messaging = getMessaging(app);
     self.messaging = messaging;
-
     // Service Worker register (docs/ sonra kök)
     let swReg = null;
     if ('serviceWorker' in navigator) {
@@ -127,25 +124,17 @@ self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto',
         try { swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js'); } catch {}
       }
     }
-
     // VAPID Key — kendi public key’in
     const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
-
     let token = null;
     try {
       token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined });
     } catch {}
-
     if (token && auth?.currentUser?.uid) {
       try {
-        await setDoc(doc(db, 'fcmTokens', token), {
-          uid: auth.currentUser.uid,
-          active: true,
-          createdAt: new Date().toISOString()
-        });
+        await setDoc(doc(db, 'fcmTokens', token), { uid: auth.currentUser.uid, active: true, createdAt: new Date().toISOString() });
       } catch {}
     }
-
     try {
       onMessage(messaging, (payload) => {
         const { title, body } = payload?.notification || {};
@@ -166,12 +155,9 @@ self._uploadBytes = (refObj, file) => uploadBytes(refObj, file);
 self._getDownloadURL = (refObj) => getDownloadURL(refObj);
 
 self.firebase = Object.assign(self.firebase || {}, {
-  setDoc: (refOrPath, data, opts) =>
-    setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
-  updateDoc: (refOrPath, data) =>
-    updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
-  getDoc: (refOrPath) =>
-    getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
+  setDoc: (refOrPath, data, opts) => setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
+  updateDoc: (refOrPath, data) => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
+  getDoc: (refOrPath) => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
   serverTimestamp: () => serverTimestamp(),
   col: (path) => collection(db, ...path.split('/')),
   q: (...args) => query(...args),
