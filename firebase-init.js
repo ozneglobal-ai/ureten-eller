@@ -2,10 +2,22 @@
 
 // === Firebase (CDN ESM) ===
 import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
-import { getAuth, onAuthStateChanged as _onAuthStateChanged, signInWithEmailAndPassword as _signInWithEmailAndPassword, signOut as _signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
-import { getStorage, ref as _storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
-import { getMessaging, getToken, onMessage, isSupported as messagingIsSupported } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
+import {
+  getAuth,
+  onAuthStateChanged as _onAuthStateChanged,
+  signInWithEmailAndPassword as _signInWithEmailAndPassword,
+  signOut as _signOut
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+import {
+  getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
+  setDoc, updateDoc, serverTimestamp, onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+import {
+  getStorage, ref as _storageRef, uploadBytes, getDownloadURL
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
+import {
+  getMessaging, getToken, onMessage, isSupported as messagingIsSupported
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
 
 // === Firebase Config (istersen window.__FIREBASE_CONFIG ile override edebilirsin)
 const firebaseConfig = (window.__FIREBASE_CONFIG) || {
@@ -24,9 +36,9 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // Global fallbacks (index/home kodu self.* bekliyor)
-self.app = app;
-self.auth = auth;
-self.db = db;
+self.app = app; 
+self.auth = auth; 
+self.db = db; 
 self.storage = storage;
 
 // >>> EKLENDİ: home.html’in beklediği nesne
@@ -35,15 +47,15 @@ self.__fb = { app, auth, db, storage };
 // =================== Cloudinary (ozneglobal) ===================
 // Not: API SECRET asla frontend'e konulmaz.
 // Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
-const CLOUD_NAME = 'ozneglobal'; // Cloud name (hesabında gözüken)
+const CLOUD_NAME = 'ozneglobal';        // Cloud name (hesabında gözüken)
 const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
-const UPLOAD_PRESET = 'ue_unsigned'; // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
+const UPLOAD_PRESET = 'ue_unsigned';    // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
 
 // Yardımcı sabitler
-const CL_BASE = https://res.cloudinary.com/${CLOUD_NAME};
-const CL_IMAGE = ${CL_BASE}/image;
-const CL_FETCH = ${CL_IMAGE}/fetch;
-const CL_UPLOAD = https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload;
+const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
+const CL_IMAGE = `${CL_BASE}/image`;
+const CL_FETCH = `${CL_IMAGE}/fetch`;
+const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
 
 // Global'e aktar (mevcut kodunla uyumlu)
 self.CLOUDINARY_CLOUD = CLOUD_NAME;
@@ -59,32 +71,35 @@ self.CLOUDINARY = {
 
 // Basit dönüştürme string'i üret (ör: "c_fill,w_600,h_600,q_auto,f_auto")
 function clTx(opts = {}) {
-  const { w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr, radius, ar, bg } = opts;
+  const {
+    w, h, c = 'fill', q = 'auto', f = 'auto', g, dpr,
+    radius, ar, bg
+  } = opts;
   const parts = [];
-  if (c) parts.push(c_${c});
-  if (w) parts.push(w_${w});
-  if (h) parts.push(h_${h});
-  if (ar) parts.push(ar_${ar});
-  if (g) parts.push(g_${g});
-  if (radius) parts.push(r_${radius});
-  if (bg) parts.push(b_${bg});
-  if (dpr) parts.push(dpr_${dpr});
-  if (q) parts.push(q_${q});
-  if (f) parts.push(f_${f});
+  if (c) parts.push(`c_${c}`);
+  if (w) parts.push(`w_${w}`);
+  if (h) parts.push(`h_${h}`);
+  if (ar) parts.push(`ar_${ar}`);
+  if (g) parts.push(`g_${g}`);
+  if (radius) parts.push(`r_${radius}`);
+  if (bg) parts.push(`b_${bg}`);
+  if (dpr) parts.push(`dpr_${dpr}`);
+  if (q) parts.push(`q_${q}`);
+  if (f) parts.push(`f_${f}`);
   return parts.join(',');
 }
 
 // Public ID ile URL (image/upload)
 self.clUrl = function clUrl(publicId, opts = {}) {
   const tx = clTx(opts);
-  return tx ? ${CL_IMAGE}/upload/${tx}/${publicId} : ${CL_IMAGE}/upload/${publicId};
+  return tx ? `${CL_IMAGE}/upload/${tx}/${publicId}` : `${CL_IMAGE}/upload/${publicId}`;
 };
 
 // Harici URL’i fetch ile dönüştür (image/fetch)
 self.clFetch = function clFetch(srcUrl, opts = {}) {
   const tx = clTx(opts);
   const encoded = encodeURIComponent(srcUrl);
-  return tx ? ${CL_FETCH}/${tx}/${encoded} : ${CL_FETCH}/${encoded};
+  return tx ? `${CL_FETCH}/${tx}/${encoded}` : `${CL_FETCH}/${encoded}`;
 };
 
 // UNSIGNED upload (form file veya blob)
@@ -95,14 +110,14 @@ self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'up
   if (folder) form.append('folder', folder);
   // Opsiyonel: public_id, tags, context vs. ekleyebilirsin
   const res = await fetch(CL_UPLOAD, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(Cloudinary upload failed: ${res.status});
+  if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
   return res.json(); // { public_id, secure_url, ... }
 };
 
 // === Örnek kullanımlar ===
 self.avatarUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:600, h:600, q:'auto', f:'auto', radius:'max' });
-self.coverUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:1000, h:1000, q:'auto', f:'auto' });
-self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto', f:'auto' });
+self.coverUrl  = (publicId) => self.clUrl(publicId, { c:'fill', w:1000, h:1000, q:'auto', f:'auto' });
+self.fetchThumb = (src)    => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto', f:'auto' });
 
 // =================== FCM (guard'lı) ===================
 (async () => {
@@ -113,8 +128,10 @@ self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto',
       try { await Notification.requestPermission(); } catch {}
     }
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
     const messaging = getMessaging(app);
     self.messaging = messaging;
+
     // Service Worker register (docs/ sonra kök)
     let swReg = null;
     if ('serviceWorker' in navigator) {
@@ -124,23 +141,23 @@ self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto',
         try { swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js'); } catch {}
       }
     }
+
     // VAPID Key — kendi public key’in
     const vapidKey = 'BMsWqbSjTl3bJtZ4UPiDR_vSWSCulR4RjA9TfxLqarm9qRsYEXz2xbDQgpDOpk7-gf7KNP0WCyzecIj3SRkl9SI';
     let token = null;
-    try {
-      token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined });
-    } catch {}
+    try { token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg || undefined }); } catch {}
     if (token && auth?.currentUser?.uid) {
       try {
-        await setDoc(doc(db, 'fcmTokens', token), { uid: auth.currentUser.uid, active: true, createdAt: new Date().toISOString() });
+        await setDoc(doc(db, 'fcmTokens', token), {
+          uid: auth.currentUser.uid, active: true, createdAt: new Date().toISOString()
+        });
       } catch {}
     }
+
     try {
       onMessage(messaging, (payload) => {
         const { title, body } = payload?.notification || {};
-        if (title || body) {
-          try { new Notification(title || 'Yeni mesaj', { body }); } catch {}
-        }
+        if (title || body) { try { new Notification(title || 'Yeni mesaj', { body }); } catch {} }
       });
     } catch {}
   } catch {}
@@ -150,22 +167,20 @@ self.fetchThumb = (src) => self.clFetch(src, { c:'fill', w:600, h:600, q:'auto',
 self.onAuthStateChanged = (a, b) => (typeof a === 'function' ? _onAuthStateChanged(auth, a) : _onAuthStateChanged(a || auth, b));
 self.signInWithEmailAndPassword = (email, pass) => _signInWithEmailAndPassword(auth, email, pass);
 self.signOutNow = () => _signOut(auth);
-self.storageRef = (path) => _storageRef(storage, path);
-self._uploadBytes = (refObj, file) => uploadBytes(refObj, file);
-self._getDownloadURL = (refObj) => getDownloadURL(refObj);
+
+self.storageRef       = (path) => _storageRef(storage, path);
+self._uploadBytes     = (refObj, file) => uploadBytes(refObj, file);
+self._getDownloadURL  = (refObj) => getDownloadURL(refObj);
 
 self.firebase = Object.assign(self.firebase || {}, {
   setDoc: (refOrPath, data, opts) => setDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data, opts),
-  updateDoc: (refOrPath, data) => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
-  getDoc: (refOrPath) => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
+  updateDoc: (refOrPath, data)    => updateDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath, data),
+  getDoc: (refOrPath)             => getDoc(typeof refOrPath === 'string' ? doc(db, ...refOrPath.split('/')) : refOrPath),
   serverTimestamp: () => serverTimestamp(),
   col: (path) => collection(db, ...path.split('/')),
-  q: (...args) => query(...args),
-  where,
-  orderBy,
-  limit,
+  q:   (...args) => query(...args),
+  where, orderBy, limit,
 });
-
 self.getDocs = getDocs;
 
 // Ready bayrağı
