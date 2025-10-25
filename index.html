@@ -182,7 +182,7 @@
 
       <!-- Üstte Yatay Kategori Şeritleri (hepsi yan yana, kaydırmalı) -->
       <nav id="catNav" class="catnav" aria-label="Kategoriler">
-        <div class="catnav-title">Hategoriler</div>
+        <div class="catnav-title">Kategoriler</div>
         <div class="catnav-inner"></div>
       </nav>
       <div id="catDrops" class="catdrops">
@@ -500,4 +500,104 @@
       {id:'evdekor', subs:[["kece"],["kirlent"],["kapi"],["tepsi"],["cerceve"],["ruya"],["tablo"]]},
       {id:'mum', subs:[["soya"],["tas"],["sprey"],["tutsu"],["jel"],["hediye"]]},
       {id:'kozmetik', subs:[["zeytin"],["bitkisel"],["sampuan"],["balm"],["krem"],["banyotuzu"],["lavanta"]]},
-      {id:'amigurumi', subs:[["anahtar2"]
+      {id:'amigurumi', subs:[["anahtar2"],["magnet"],["kolek"],["dekorbebek"]]},
+    ];
+
+    const catBar = document.querySelector('#catNav .catnav-inner');
+    const drops = document.querySelector('#catDrops .catdrops-inner');
+
+    function localizeCat(cat, lang){
+      const L = CAT_I18N[lang] || CAT_I18N.tr;
+      const title = (L.titles && L.titles[cat.id]) ? L.titles[cat.id] : cat.id;
+      const subs = (cat.subs||[]).map(([sid])=>[sid, (L.subs && L.subs[sid]) ? L.subs[sid] : sid]);
+      return { id: cat.id, title, subs };
+    }
+
+    function buildTopCats(lang){
+      const currentLang = lang || (localStorage.getItem('ue_lang') || 'tr');
+      if(!catBar || !drops) return;
+      catBar.innerHTML = '';
+      drops.innerHTML = '';
+
+      CATS.forEach((cat)=>{
+        const LCat = localizeCat(cat, currentLang);
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.type = 'button';
+        chip.textContent = LCat.title;
+        chip.dataset.target = `p_${LCat.id}`;
+
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.id = `p_${LCat.id}`;
+        panel.innerHTML = LCat.subs.map(([id,label])=>`<a href="#" data-open-auth style="display:inline-block;margin:4px 6px;padding:8px 10px;border-radius:8px;border:1px solid #eee">${label}</a>`).join('');
+        panel.addEventListener('click',(e)=>{
+          const a = e.target.closest('a[data-open-auth]');
+          if(a){ e.preventDefault(); if(typeof openAuth === 'function'){ openAuth(); } }
+        });
+
+        chip.addEventListener('click',()=>{
+          const wasOpen = panel.classList.contains('open');
+          document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
+          document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
+          if (!wasOpen){ panel.classList.add('open'); chip.classList.add('active'); }
+        });
+
+        catBar.appendChild(chip);
+        drops.appendChild(panel);
+      });
+
+      // yatay kaydırmayı kolaylaştır (mouse tekeri ile)
+      catBar.addEventListener('wheel', (e)=>{
+        if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+          catBar.scrollLeft += e.deltaY; e.preventDefault();
+        }
+      }, { passive:false });
+    }
+
+    // Basit openAuth (modali aç) — eğer daha önce tanımlıysa onu kullanır
+    function openAuth(){
+      const authModal = document.getElementById('authModal');
+      if(!authModal) return;
+      if (typeof authModal.showModal === 'function') authModal.showModal();
+      else { authModal.setAttribute('open',''); authModal.style.display='grid'; }
+    }
+
+    // Modal kapatma yardımcıları
+    function closeDialog(dlg){
+      if(!dlg) return;
+      if(typeof dlg.close === 'function') dlg.close();
+      dlg.removeAttribute('open');
+      dlg.style.display='';
+    }
+
+    const authModal = document.getElementById('authModal');
+    const listingModal = document.getElementById('listingModal');
+
+    // Auth modal — X butonu, arka plan tıkı ve ESC
+    authModal?.querySelector('[data-close]')?.addEventListener('click', ()=>closeDialog(authModal));
+    authModal?.addEventListener('click', (e)=>{ if(e.target === authModal) closeDialog(authModal); });
+    authModal?.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDialog(authModal); });
+
+    // Listing modal — X butonu, arka plan tıkı ve ESC
+    listingModal?.querySelector('[data-close-listing]')?.addEventListener('click', ()=>closeDialog(listingModal));
+    listingModal?.addEventListener('click', (e)=>{ if(e.target === listingModal) closeDialog(listingModal); });
+    listingModal?.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDialog(listingModal); });
+
+    // Açma butonları
+    document.getElementById('signInBtn')?.addEventListener('click', openAuth);
+    document.getElementById('postBtn')?.addEventListener('click', openAuth);
+
+    // Dil seçim dinleyicisi ve ilk kurulum
+    const savedLang = localStorage.getItem('ue_lang')||'tr';
+    const langSel = document.getElementById('langSel');
+    if (langSel){
+      langSel.value = savedLang;
+      langSel.addEventListener('change', (e)=>{
+        const v = e.target.value; localStorage.setItem('ue_lang', v); applyI18n(v);
+      });
+    }
+
+    // İlk yüklemede dil uygula ve kategorileri kur
+    applyI18n(savedLang);
+  </script>
