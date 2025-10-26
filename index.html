@@ -797,8 +797,16 @@ function clThumb(src){
 function avatarFromSeller(s){
   const publicId = s?.avatarPublicId || s?.photoPublicId || s?.avatarId || s?.avatarPid;
   const url      = s?.sellerAvatarUrl || s?.photoURL || s?.avatarUrl;
+
   if (publicId && window.avatarUrl) return window.avatarUrl(publicId);
-  if (url) return window.clFetch?.(url, { c:'fill', w:60, h:60, q:'auto', f:'auto', radius:'max' }) || url;
+
+  if (url){
+    // Cloudinary tam URL ise direkt kullan
+    if (/^https?:\/\/res\.cloudinary\.com\//.test(url)) return url;
+    // Diğer tam URL'ler için istersen kırp/fetch
+    return window.clFetch?.(url, { c:'fill', w:60, h:60, q:'auto', f:'auto', radius:'max' }) || url;
+  }
+
   return EMPTY_IMG;
 }
 
@@ -848,7 +856,7 @@ async function openListingDetail(it, imgSrc) {
   try { if (sellerId) seller = await fetchSeller(sellerId); } catch {}
 
   // Avatar, ad-soyad, konum, onay
-  const av   = avatarFromSeller(seller || it.seller || it.owner || {});
+  const av   = avatarFromSeller(seller || it);
   const name =
     seller?.displayName || seller?.name || seller?.fullName ||
     [seller?.firstName, seller?.lastName].filter(Boolean).join(' ') ||
