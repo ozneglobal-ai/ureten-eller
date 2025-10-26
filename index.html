@@ -767,16 +767,17 @@ window.addEventListener('ue:lang', (e)=>{
       info.textContent = txt;
     }
 
-    function render(){
-      const start = page * PAGE_SIZE;
-      const slice = allListings.slice(start, start + PAGE_SIZE);
-      grid.innerHTML = slice.map(cardTpl).join('');
-      setListInfo(allListings.length? (start+1):0, Math.min(start+PAGE_SIZE, allListings.length), allListings.length);
-      prevBtn.disabled = page===0;
-      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
-      prevBtn.textContent = I18N[currentLang]['buttons.prev']||'‹ Önceki';
-      nextBtn.textContent = I18N[currentLang]['buttons.next']||'Sonraki ›';
-    }
+    async function render(){
+  const start = page * PAGE_SIZE;
+  const slice = allListings.slice(start, start + PAGE_SIZE);
+  const htmlArr = await Promise.all(slice.map(cardTpl)); // ← Promiseleri bekle
+  grid.innerHTML = htmlArr.join('');
+  setListInfo(allListings.length ? (start + 1) : 0, Math.min(start + PAGE_SIZE, allListings.length), allListings.length);
+  prevBtn.disabled = page === 0;
+  nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+  prevBtn.textContent = I18N[currentLang]['buttons.prev'] || '‹ Önceki';
+  nextBtn.textContent = I18N[currentLang]['buttons.next'] || 'Sonraki ›';
+}
 
     grid.addEventListener('click', async (e) => {
   const card = e.target.closest('.card');
