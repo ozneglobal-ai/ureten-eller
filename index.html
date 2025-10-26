@@ -20,7 +20,7 @@
     .brand{display:flex;align-items:center;gap:10px; /* MOBIL FIX */ min-width:0;flex:1}
     .brand .logo{width:36px;height:36px;border-radius:10px;background:#000 url('/assets/icons/favicon.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
     .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800; /* MOBIL FIX */ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
-    .actions{display:flex;align-items:center;gap:8px; /* MOBIL FIX */ flex-shrink:0;flex-wrap:nowrap}
+    .actions{display:flex;align-items:center;gap:8px; /* MOBIL FIX */ flex:0 1 auto;flex-wrap:wrap;min-width:0}
     .btn{white-space:nowrap} /* MOBIL FIX: buton metinleri tek satır */
     .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
     .lang select{border:0;background:transparent;font-weight:700; /* MOBIL FIX */ max-width:28ch}
@@ -89,13 +89,22 @@
       .brand h1{max-width:36vw}
     }
 
+    @media (max-width:520px){
+      /* MOBIL FIX: üst bar iki satır olabilsin */
+      .topbar-inner{flex-wrap:wrap}
+      .actions{flex-basis:100%;justify-content:flex-end}
+      .btn{padding:8px 10px;font-size:13px}
+      .lang{padding:6px 8px}
+    }
+
     @media (max-width:420px){
       .brand h1{font-size:16px;max-width:46vw}
       .actions{gap:6px}
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
     }
-      /* === İLAN KARTLARI === */
+
+    /* === İLAN KARTLARI === */
     .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
     .listings-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
     .listings-head h3{margin:0;font-size:18px}
@@ -172,7 +181,6 @@
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
         </div>
-              </div>
       </section>
 
       <!-- === İLANLAR === -->
@@ -256,7 +264,21 @@
       </div>
     </div>
   </dialog>
-<!-- Firebase init (kökten) -->
+
+  <!-- ===== Listing Detail Modal ===== -->
+  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="listingTitle">İlan Detayı</h3>
+        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner" id="listingBody">
+        <!-- JS ile doldurulacak -->
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
 
   <script type="module">
@@ -364,7 +386,7 @@
         titles: {
           yemek:'🍲 Gerichte', pasta:'🎂 Kuchen & Süßes', sos:'🫙 Marmelade • Pickles • Soßen', yoresel:'🌾 Regional / Vorrat',
           diet:'🥗 Diät / Vegan / GF', taki:'💍 Schmuck', bebek:'👶 Baby & Kinder', orgu:'🧶 Strick',
-          terzi:'✂️ Nähen / Schneiderei', makrome:'🧵 Makramee & Deko', evdekor:'🏠 Wohndeko & Accessoires',
+        "terzi":"✂️ Nähen / Schneiderei", "makrome":"🧵 Makramee & Deko", "evdekor":"🏠 Wohndeko & Accessoires",
           mum:'🕯️ Kerzen & Düfte', kozmetik:'🧼 Naturseife & Kosmetik', amigurumi:'🧸 Amigurumi & Spielzeug'
         },
         subs: {
