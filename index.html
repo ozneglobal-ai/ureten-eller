@@ -790,34 +790,50 @@ window.addEventListener('ue:lang', (e)=>{
     prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
     nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
 
-    async function loadListings(){
-      try{
-        info.textContent = I18N[currentLang]['list.loading']||'Yükleniyor…';
-        const col = collection(db2,'listings');
-        const q = query(col, orderBy('updatedAt','desc'));
-        const snap = await getDocs(q);
-        const now = Date.now();
-        const rows = [];
-        snap.forEach(d=>{
-          const data = d.data();
-          if (data?.status === 'approved'){
-            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
-            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
-          }
-        });
-        const showcase = rows.filter(r=>!!r.showcase);
-        const standard = rows.filter(r=>!r.showcase);
-        allListings = [...showcase, ...standard];
-        page = 0;
-        render();
-      }catch(err){
-        info.textContent = currentLang==='en'?'Failed to load listings':'İlanlar yüklenemedi';
-        console.error(err);
-      }
-    }
+    async function loadListings() {
+  try {
+    // Güvenli I18N kontrolü
+    const dict = I18N?.[currentLang] || I18N?.tr || {};
+    info.textContent = dict['list.loading'] || 'Yükleniyor…';
 
-    if (self.__fbReady) loadListings();
-    else document.addEventListener('fb-ready', loadListings, { once:true });
+    const colRef = collection(db2, 'listings');
+    const q = query(colRef, orderBy('updatedAt', 'desc'));
+    const snap = await getDocs(q);
+
+    const now = Date.now();
+    const rows = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data?.status === 'approved') {
+        const exp = data?.expiresAt?.toDate
+          ? data.expiresAt.toDate().getTime()
+          : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now + 1);
+        if (exp >= now) {
+          rows.push({ id: docSnap.id, ...data });
+        }
+      }
+    });
+
+    const showcase = rows.filter(r => !!r.showcase);
+    const standard = rows.filter(r => !r.showcase);
+    allListings = [...showcase, ...standard];
+    page = 0;
+    render();
+  } catch (err) {
+    info.textContent = currentLang === 'en'
+      ? 'Failed to load listings'
+      : 'İlanlar yüklenemedi';
+    console.error(err);
+  }
+}
+
+// Firebase hazır olduğunda çalıştır
+if (self.__fbReady) {
+  loadListings();
+} else {
+  document.addEventListener('fb-ready', loadListings, { once: true });
+}
 
     // dil değişirse liste metinlerini yenile
     window.addEventListener('storage', (e)=>{ if(e.key==='ue_lang'){ currentLang = localStorage.getItem('ue_lang')||'tr'; render(); } });
