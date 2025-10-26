@@ -776,16 +776,22 @@ const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 
 function clMain(src){
   if (!src) return EMPTY_IMG;
-  return /^https?:\/\//.test(src)
-    ? (window.clFetch?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src)
-    : (window.clUrl?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src);
+  // Tam Cloudinary URL geldiyse (hangi cloud name olursa olsun) olduğu gibi kullan:
+  if (/^https?:\/\/res\.cloudinary\.com\//.test(src)) return src;
+  // Başka bir tam URL ise de fetch yapma, direkt göster:
+  if (/^https?:\/\//.test(src)) return src;
+  // Public ID ise kendi cloud'unda üret:
+  return (window.clUrl?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src);
 }
 
 function clThumb(src){
   if (!src) return EMPTY_IMG;
-  return /^https?:\/\//.test(src)
-    ? (window.clFetch?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src)
-    : (window.clUrl?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src);
+  // Tam Cloudinary URL geldiyse direkt kullan:
+  if (/^https?:\/\/res\.cloudinary\.com\//.test(src)) return src;
+  // Başka bir tam URL ise de fetch yapma:
+  if (/^https?:\/\//.test(src)) return src;
+  // Public ID ise kendi cloud'unda küçük görsel üret:
+  return (window.clUrl?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src);
 }
 
 function avatarFromSeller(s){
