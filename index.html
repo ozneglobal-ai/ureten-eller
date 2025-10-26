@@ -457,7 +457,7 @@ window.UE.setLang = (lang) => {
     }
 
     // ===== i18n – Kategori/Sözlükleri (SENDE NE VARSA AYNEN KALSIN) =====
-    const CAT_I18N = { /* ... (değişmedi) ... */ };
+const CAT_I18N = { /* ... (değişmedi) ... */ };
 
 function applyI18n(lang) {
   currentLang = lang;
@@ -472,22 +472,62 @@ function applyI18n(lang) {
   document.title = dict['app.title'] || document.title;
   document.documentElement.lang = lang;
   document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+  // Placeholder metinleri
+  document.getElementById('li_email')?.setAttribute('placeholder',
+    lang === 'en' ? 'name@example.com' :
+    lang === 'de' ? 'name@beispiel.de' :
+    lang === 'ar' ? 'name@example.com' :
+    'ornek@mail.com');
+
+  document.getElementById('su_email')?.setAttribute('placeholder',
+    lang === 'en' ? 'name@example.com' :
+    lang === 'de' ? 'name@beispiel.de' :
+    lang === 'ar' ? 'name@example.com' :
+    'ornek@mail.com');
+
+  document.getElementById('su_username')?.setAttribute('placeholder',
+    lang === 'en' ? '@username' :
+    lang === 'de' ? '@benutzer' :
+    lang === 'ar' ? '@username' :
+    '@kullanici');
+
+  document.getElementById('su_name')?.setAttribute('placeholder',
+    lang === 'en' ? 'Your full name' :
+    lang === 'de' ? 'Vollständiger Name' :
+    lang === 'ar' ? 'الاسم الكامل' :
+    'Adınız Soyadınız');
+
+  document.getElementById('su_district')?.setAttribute('placeholder',
+    lang === 'en' ? 'Your district' :
+    lang === 'de' ? 'Bezirk' :
+    lang === 'ar' ? 'المنطقة' :
+    'İlçeniz');
+
+  buildTopCats(lang);
 }
 
-      document.getElementById('li_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
-      document.getElementById('su_email')?.setAttribute('placeholder', lang==='en'?'name@example.com':(lang==='de'?'name@beispiel.de':(lang==='ar'?'name@example.com':'ornek@mail.com')));
-      document.getElementById('su_username')?.setAttribute('placeholder', lang==='en'?'@username':(lang==='de'?'@benutzer':(lang==='ar'?'@username':'@kullanici')));
-      document.getElementById('su_name')?.setAttribute('placeholder', lang==='en'?'Your full name':(lang==='de'?'Vollständiger Name':(lang==='ar'?'الاسم الكامل':'Adınız Soyadınız')));
-      document.getElementById('su_district')?.setAttribute('placeholder', lang==='en'?'Your district':(lang==='de'?'Bezirk':(lang==='ar'?'المنطقة':'İlçeniz')));
+// Yıl ve il listesi
+document.getElementById('y').textContent = new Date().getFullYear();
 
-      buildTopCats(lang);
-    }
+const PROVINCES = [
+  "Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan",
+  "Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu",
+  "Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ",
+  "Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır",
+  "Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri",
+  "Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa",
+  "Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun",
+  "Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak",
+  "Van","Yalova","Yozgat","Zonguldak"
+].sort((a, b) => a.localeCompare(b, 'tr'));
 
-    document.getElementById('y').textContent = new Date().getFullYear();
-
-    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
-    const suProv = document.getElementById('su_province');
-    if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
+const suProv = document.getElementById('su_province');
+if (suProv) {
+  suProv.innerHTML =
+    '<option value="" disabled selected>İl seçiniz</option>' +
+    PROVINCES.map(p => `<option value="${p}">${p}</option>`).join('');
+}
 
     /* ===== KATEGORİLER – SENİN DOSYANDAN AYNEN ===== */
     const CATS = [ /* ... (değişmedi) ... */ ];
