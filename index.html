@@ -835,7 +835,10 @@ function avatarFromSeller(s){
   }
 
   // Kartın başka yerine tıklanırsa detay modalını aç
- async function openListingDetail(it, imgSrc){
+openListingDetail(listing, card.querySelector('.ph img')?.src);
+}); 
+
+async function openListingDetail(it, imgSrc) {
   const modal = document.getElementById('listingModal');
   const body  = document.getElementById('listingBody');
 
