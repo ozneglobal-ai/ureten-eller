@@ -715,7 +715,7 @@ window.addEventListener('ue:lang', (e)=>{
 
     async function cardTpl(it){
   const imgList = Array.isArray(it.photos) ? it.photos : [];
-  const mainImg = imgList[0] || '/assets/img/placeholder.png';
+  const mainImg = clMain(imgList[0])
   const extraImgs = imgList.slice(1);
   const showcase = !!it.showcase;
   const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
@@ -728,14 +728,14 @@ window.addEventListener('ue:lang', (e)=>{
   let seller = null;
   try { seller = await fetchSeller(sellerId); } catch {}
   const sName = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default'] || 'Satıcı');
-  const sAv = seller?.photoURL || '/assets/img/avatar-default.png';
+  const sAv = avatarFromSeller(seller || it.seller || it.owner || {});
   const verified = !!(seller?.verifiedSeller || seller?.verified);
 
   // ek resimleri ufak önizleme olarak göster
   const thumbRow = extraImgs.length ? `
     <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
-      ${extraImgs.slice(0,3).map(url => `<img src="${url}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;">`).join('')}
-    </div>` : '';
+    ${extraImgs.slice(0,3).map(url => `<img src="${clThumb(url)}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;">`).join('')}
+
 
   return `
     <article class="card" data-id="${id}">
@@ -766,6 +766,31 @@ window.addEventListener('ue:lang', (e)=>{
         .replace('{start}', start).replace('{end}', end).replace('{total}', total);
       info.textContent = txt;
     }
+
+    // ---- Cloudinary yardımcıları (firebase-init.js global fonksiyonlarını kullanır) ----
+const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+
+function clMain(src){
+  if (!src) return EMPTY_IMG;
+  return /^https?:\/\//.test(src)
+    ? (window.clFetch?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src)
+    : (window.clUrl?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src);
+}
+
+function clThumb(src){
+  if (!src) return EMPTY_IMG;
+  return /^https?:\/\//.test(src)
+    ? (window.clFetch?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src)
+    : (window.clUrl?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src);
+}
+
+function avatarFromSeller(s){
+  const publicId = s?.avatarPublicId || s?.photoPublicId || s?.avatarId || s?.avatarPid;
+  const url      = s?.photoURL || s?.avatarUrl;
+  if (publicId && window.avatarUrl) return window.avatarUrl(publicId);
+  if (url) return window.clFetch?.(url, { c:'fill', w:60, h:60, q:'auto', f:'auto', radius:'max' }) || url;
+  return EMPTY_IMG;
+}
 
     async function render(){
   const start = page * PAGE_SIZE;
@@ -809,7 +834,7 @@ window.addEventListener('ue:lang', (e)=>{
       let seller = null;
       const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
       try{ seller = await fetchSeller(sellerId); }catch{}
-      const av = seller?.photoURL || '/assets/img/avatar-default.png';
+      const av = avatarFromSeller(seller || it.seller || it.owner || {});
       const name = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default']||'Satıcı');
       const verified = !!(seller?.verifiedSeller || seller?.verified);
       const price = (typeof it.price==='number')? formatPrice(it.price): '';
