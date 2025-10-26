@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ =<!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
   <meta charset="utf-8" />
@@ -88,6 +88,22 @@
       .actions{gap:6px}
       .brand h1{max-width:36vw}
     }
+    /* === MOBİL TAŞMA DÜZELTMELERİ === */
+.card .actions{
+  flex-wrap: wrap;           /* küçük ekranda yan yana zorlamasın */
+}
+.card .actions .btn{
+  flex: 1 1 100%;            /* butonları alt alta, tam genişlik */
+  white-space: normal;       /* metin gerektiğinde satır kırabilsin */
+  min-width: 0;              /* min-content genişlik kısıtını kaldır */
+}
+@media (min-width: 481px){
+  .card .actions .btn{ flex: 1 } /* tablet/desktop’ta yine yan yana dursun */
+}
+
+/* Üst bar dil seçicide olası taşmaları önle */
+.actions{ min-width: 0; }
+.lang select{ max-width: 100%; }
 
     @media (max-width:520px){
       /* MOBIL FIX: üst bar iki satır olabilsin */
@@ -103,44 +119,6 @@
       .lang{padding:6px 8px}
       .hero h2{font-size:22px}
     }
-    /* === MOBİL TAŞMA KALKANI — index.html patch === */
-
-/* 1) Grid/Flex içinde genişleyen çocukları kırp */
-.page,
-.topbar-inner,
-.brand,
-.actions,
-.catnav-inner,
-.catdrops-inner,
-.listings-section,
-.listings-grid,
-.legal .row,
-.legal .links {
-  min-width: 0;
-  overflow-x: hidden;
-}
-
-/* 2) Dil seçici ve butonlar genişlemesin */
-.lang select { max-width: 100%; min-width: 0; }
-.btn { min-width: 0; white-space: nowrap; }
-
-/* 3) Üstte yatay kategori şeridi — iOS/Android küçük ekranlarda guttersız */
-@media (max-width: 480px){
-  .catnav-inner{ scrollbar-gutter: auto !important; }
-  .catnav .chip{ padding: 6px 9px; font-size: 12.5px; }
-}
-
-/* 4) Hero ve genel içerik güvenliği */
-.hero, .content, main { overflow-x: hidden; }
-img, svg { max-width: 100%; height: auto; }
-
-/* 5) Footer satırı dar ekranlarda kaymasın */
-.legal .row{ flex-wrap: wrap; }
-.legal .links{ flex: 1 1 auto; }
-
-/* 6) Modal güvenliği (bazı tarayıcılarda taşma yapabiliyor) */
-dialog.modal{ max-width: 100vw; }
-.sheet{ max-width: 96vw; }
 
     /* === İLAN KARTLARI === */
     .listings-section{max-width:1200px;margin:0 auto;padding:8px 16px 24px}
@@ -827,4 +805,4 @@ dialog.modal{ max-width: 100vw; }
     else document.addEventListener('fb-ready', loadListings, { once:true });
   </script>
 </body>
-</html> 
+</html>  
