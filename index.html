@@ -713,35 +713,53 @@ window.addEventListener('ue:lang', (e)=>{
       }catch{ return null; }
     }
 
-    function cardTpl(it){
-      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
-      const showcase = !!it.showcase;
-      const price = (typeof it.price==='number')? formatPrice(it.price): '';
-      const title = it.title || '—';
-      const desc = it.description || '';
-      const id = it.id;
-      return `
-        <article class="card" data-id="${id}">
-          <div class="ph">
-            ${showcase?`<span class="ribbon">${I18N[currentLang]['ribbon.showcase']||'Vitrin'}</span>`:''}
-            <img alt="${title}" loading="lazy" src="${img}" width="800" height="550">
-          </div>
-          <div class="body">
-            <div class="title">${title}</div>
-            <div class="desc">${desc}</div>
-            <div class="seller" data-seller>
-              <div class="av"><img alt="" src="/assets/img/avatar-default.png" width="22" height="22"></div>
-              <div class="name">${I18N[currentLang]['seller.default']||'Satıcı'}</div>
-              <span class="badge" style="display:none">${I18N[currentLang]['seller.verified']||'Onaylı'}</span>
-            </div>
-            <div class="price">${price}</div>
-            <div class="actions">
-              <button class="btn gold" data-do="order">${I18N[currentLang]['buttons.order']||'Sipariş Ver'}</button>
-              <button class="btn ghost" data-do="msg">${I18N[currentLang]['buttons.message']||'Satıcıya Yaz'}</button>
-            </div>
-          </div>
-        </article>`;
-    }
+    async function cardTpl(it){
+  const imgList = Array.isArray(it.photos) ? it.photos : [];
+  const mainImg = imgList[0] || '/assets/img/placeholder.png';
+  const extraImgs = imgList.slice(1);
+  const showcase = !!it.showcase;
+  const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
+  const title = it.title || '—';
+  const desc = it.description || '';
+  const id = it.id;
+  const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+
+  // satıcı bilgilerini getir
+  let seller = null;
+  try { seller = await fetchSeller(sellerId); } catch {}
+  const sName = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default'] || 'Satıcı');
+  const sAv = seller?.photoURL || '/assets/img/avatar-default.png';
+  const verified = !!(seller?.verifiedSeller || seller?.verified);
+
+  // ek resimleri ufak önizleme olarak göster
+  const thumbRow = extraImgs.length ? `
+    <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+      ${extraImgs.slice(0,3).map(url => `<img src="${url}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;">`).join('')}
+    </div>` : '';
+
+  return `
+    <article class="card" data-id="${id}">
+      <div class="ph">
+        ${showcase ? `<span class="ribbon">${I18N[currentLang]['ribbon.showcase']||'Vitrin'}</span>` : ''}
+        <img alt="${title}" loading="lazy" src="${mainImg}" width="800" height="550">
+      </div>
+      <div class="body">
+        <div class="title">${title}</div>
+        <div class="desc">${desc}</div>
+        <div class="seller">
+          <div class="av"><img alt="" src="${sAv}" width="22" height="22"></div>
+          <div class="name">${sName}</div>
+          ${verified ? `<span class="badge">${I18N[currentLang]['seller.verified']||'Onaylı'}</span>` : ''}
+        </div>
+        ${thumbRow}
+        <div class="price">${price}</div>
+        <div class="actions">
+          <button class="btn gold" data-do="order">${I18N[currentLang]['buttons.order']||'Sipariş Ver'}</button>
+          <button class="btn ghost" data-do="msg">${I18N[currentLang]['buttons.message']||'Satıcıya Yaz'}</button>
+        </div>
+      </div>
+    </article>`;
+}
 
     function setListInfo(start, end, total){
       const txt = (I18N[currentLang]['list.range']||'{start}-{end} / {total}')
@@ -822,10 +840,9 @@ window.addEventListener('ue:lang', (e)=>{
     }
 
     document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
-      const modal = document.getElementById('listingModal');
-      if (typeof modal.close === 'function') modal.close();
-      modal.removeAttribute('open'); modal.style.display='none';
-    });
+  const modal = document.getElementById('listingModal');
+  if (typeof modal.close === 'function') modal.close();
+});
 
     prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
     nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
