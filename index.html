@@ -734,8 +734,12 @@ window.addEventListener('ue:lang', (e)=>{
   // ek resimleri ufak önizleme olarak göster
   const thumbRow = extraImgs.length ? `
     <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
-    ${extraImgs.slice(0,3).map(url => `<img src="${clThumb(url)}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;">`).join('')}
-
+      ${extraImgs.slice(0,3).map(url => `
+        <img src="${clThumb(url)}" alt=""
+             style="width:60px;height:60px;object-fit:cover;
+             border-radius:6px;border:1px solid #eee;">
+      `).join('')}
+    </div>` : '';
 
   return `
     <article class="card" data-id="${id}">
