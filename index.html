@@ -40,8 +40,6 @@
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
     .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
-    .hero h2{ font-size:clamp(16px,4.3vw,20px); margin:0 0 6px; letter-spacing:.1px; line-height:1.18; overflow-wrap:anywhere; word-break:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; }
-    .hero p { font-size:clamp(11.5px,3.6vw,13.5px); margin:0 0 10px; color:#4b5563; line-height:1.45; overflow-wrap:anywhere; word-break:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; }
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
     /* Buttons */
@@ -154,7 +152,6 @@ dialog[open].modal{ display:grid; }
 @media (max-width:520px){
   .topbar-inner{ flex-wrap:wrap; }
   .actions{ flex-basis:100%; justify-content:flex-end; }
-  .btn{ padding:8px 10px; font-size:13px; } /* varsayılan; aşağıdaki override bunu genişletecek */
   .lang{ padding:6px 8px; }
 }
 
