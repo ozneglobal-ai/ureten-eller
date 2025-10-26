@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
   <meta charset="utf-8" />
@@ -10,37 +10,36 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased; /* --- FIX: mobile yatay kayma koruması --- */ overflow-x:hidden}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
     .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
-    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:10px}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between; /* MOBIL FIX */ min-width:0}
+    .brand{display:flex;align-items:center;gap:10px; /* MOBIL FIX */ min-width:0;flex:1}
     .brand .logo{width:36px;height:36px;border-radius:10px;background:#000 url('/assets/icons/favicon.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
-    .actions{display:flex;align-items:center;gap:8px}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800; /* MOBIL FIX */ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+    .actions{display:flex;align-items:center;gap:8px; /* MOBIL FIX */ flex:0 1 auto;flex-wrap:wrap;min-width:0}
+    .btn{white-space:nowrap} /* MOBIL FIX: buton metinleri tek satır */
     .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
-    .lang select{border:0;background:transparent;font-weight:700}
+    .lang select{border:0;background:transparent;font-weight:700; /* MOBIL FIX */ max-width:28ch}
 
     /* Üst kategori çipleri – tümü yan yana, yatay kaydırmalı */
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch; /* --- FIX: mobilde hesaplı scrollbar --- */ scrollbar-gutter:stable both-edges}
     .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
 
     .catdrops{background:#fff}
     .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
-    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 16px;background:#fff}
+    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
     .catdrops .panel.open{display:block}
 
     /* Hero */
     .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
-    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%)}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px}
-    .hero p{margin:0 0 16px 0;color:#4b5563}
+    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
 
     /* Buttons */
@@ -53,28 +52,230 @@
     .auth-badge{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:999px}
     .avatar{width:28px;height:28px;border-radius:50%;background:#f3f4f6;overflow:hidden}
 
-    /* Modal */
-    dialog.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.32);z-index:60;padding:16px}
-    dialog[open].modal{display:grid}
-    .sheet{width:min(560px,96vw);background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 30px 60px rgba(0,0,0,.15);overflow:hidden}
-    .sheet header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #eee}
-    .sheet header h3{margin:0;font-size:18px}
-    .sheet .inner{padding:16px}
-    .form{display:grid;gap:10px}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:560px){.row2{grid-template-columns:1fr}}
-    .input{display:flex;flex-direction:column;gap:6px}
-    .input label{font-size:12px;color:#6b7280}
-    .input input, .input select{border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px}
-    .pw{position:relative}
-    .pw input{padding-right:38px}
-    .pw .toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer}
+  /* =========================
+   MODAL (dialog) STİLLERİ
+   ========================= */
+dialog.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  place-items:center;
+  background:rgba(0,0,0,.32);
+  z-index:60;
+  /* Güvenli sınır: dialog kenar boşluğu taşmasın */
+  padding:0;
+  overflow:hidden;
+}
+dialog[open].modal{ display:grid; }
 
-    /* Footer */
-    .legal{background:#000;color:#fff}
-    .legal .inner{max-width:1200px;margin:0 auto;padding:16px}
-    .legal .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .legal .links{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.sheet{
+  /* 96vw yerine 100vw: bazı cihazlarda 1-2px taşmayı önler */
+  width:min(560px, 100vw);
+  max-width:100vw;
+  margin:0;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 30px 60px rgba(0,0,0,.15);
+  overflow:hidden;
+}
+.sheet header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 14px;
+  border-bottom:1px solid #eee;
+}
+.sheet header h3{ margin:0; font-size:18px; }
+.sheet .inner{ padding:16px; }
+
+.form{ display:grid; gap:10px; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:560px){ .row2{ grid-template-columns:1fr; } }
+
+.input{ display:flex; flex-direction:column; gap:6px; }
+.input label{ font-size:12px; color:#6b7280; }
+.input input, .input select{
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:14px;
+}
+
+.pw{ position:relative; }
+.pw input{ padding-right:38px; }
+.pw .toggle{
+  position:absolute; right:8px; top:50%;
+  transform:translateY(-50%);
+  border:0; background:transparent; cursor:pointer;
+}
+
+/* =========================
+   FOOTER (LEGAL)
+   ========================= */
+.legal{ background:#000; color:#fff; }
+.legal .inner{ max-width:1200px; margin:0 auto; padding:16px; }
+.legal .row{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.legal .links{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+
+/* =========================
+   RESPONSIVE DOKUNUŞLAR
+   ========================= */
+@media (max-width:768px){
+  .topbar-inner{ padding:12px 12px; }
+  .catnav-inner{ padding:8px 12px; }
+  .hero{ margin:12px 12px; padding:18px 14px; }
+
+  /* Sağ üst butonlar ezilmesin */
+  .actions{ gap:6px; }
+
+  /* Flex çocuklar taşma yapmasın (kritik) */
+  .topbar-inner, .brand, .actions{ min-width:0; }
+}
+
+/* Kart butonları küçük ekranda kırılıp alta geçsin */
+.card .actions{ flex-wrap:wrap; }
+.card .actions .btn{
+  flex:1 1 100%;
+  white-space:normal;
+  min-width:0;
+}
+@media (min-width:481px){
+  .card .actions .btn{ flex:1; }
+}
+
+/* Üst bar dil seçicide olası taşmaları önle */
+.actions{ min-width:0; }
+.lang select{ max-width:100%; }
+
+/* Üst bar iki satıra düşebilsin */
+@media (max-width:520px){
+  .topbar-inner{ flex-wrap:wrap; }
+  .actions{ flex-basis:100%; justify-content:flex-end; }
+  .lang{ padding:6px 8px; }
+}
+
+/* 420px kuralı: .hero h2 sabit font-size vermeyecek (override ile yönetilecek) */
+
+  /* =========================
+   İLAN KARTLARI
+   ========================= */
+.listings-section{ max-width:1200px; margin:0 auto; padding:16px 12px; }
+
+.listings-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:12px;
+  min-width:0;
+}
+
+.listings-head h3{ margin:0; font-size:18px; }
+
+.card{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 10px 30px rgba(0,0,0,.04);
+  /* font-size satırı kaldırıldı */
+}
+
+.card .ph{
+  position:relative;
+  aspect-ratio:16/11;
+  background:linear-gradient(180deg,#f3f4f6,#fff);
+}
+
+.card .body{ padding:12px; display:grid; gap:6px; }
+.card .title{ font-weight:700; line-height:1.3; margin:0 0 4px; } /* font-size kaldırıldı */
+.price{ font-weight:900; } /* font-size kaldırıldı */
+
+.seller{ display:flex; gap:8px; align-items:center; }
+.seller .av{ width:22px; height:22px; border-radius:50%; background:#eee; overflow:hidden; }
+.seller .av img{ width:100%; height:100%; object-fit:cover; }
+.seller .name{ font-size:12px; }
+
+.badge{
+  border:1px solid #10b981;
+  color:#065f46;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#ecfdf5;
+  margin-left:auto;
+  /* font-size kaldırıldı */
+}
+
+.card .actions{ display:flex; gap:8px; margin-top:8px; }
+.card .actions .btn{ flex:1; }
+
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid #e5e7eb; border-radius:999px;
+  padding:6px 10px; background:#fff;
+  /* font-size kaldırıldı */
+}
+
+.paging{ display:flex; gap:8px; justify-content:center; margin-top:12px; }
+
+/* Showcase simgesi */
+.ribbon{
+  position:absolute; top:8px; left:8px;
+  background:#caa552; color:#111; font-weight:900; font-size:11px;
+  padding:4px 8px; border-radius:999px;
+  border:1px solid #b18a37; box-shadow:0 4px 14px rgba(202,165,82,.25);
+}
+
+/* =========================
+   BOYUT & DÜZEN OVERRIDE
+   (EN ALTA EKLEYİN)
+   ========================= */
+
+/* Genel metin tabanı */
+html, body{ font-size:16px; line-height:1.5; }
+
+/* Hero metinleri: daha büyük ve çakışmaları bastır */
+.hero h2{
+  font-size:clamp(20px, 4.6vw, 28px) !important;
+  line-height:1.22 !important;
+}
+.hero p{
+  font-size:clamp(13px, 3.8vw, 16px) !important;
+  line-height:1.5 !important;
+}
+
+/* Butonlar: okunaklı */
+.btn{ font-size:15px !important; padding:12px 16px !important; }
+
+/* Kategori çipleri */
+.catnav .chip{ font-size:15px !important; padding:9px 12px !important; }
+
+/* Legal alan linkleri */
+.legal .links a,
+.legal .hint{ font-size:14px !important; }
+
+/* Kart içi metinler */
+.card .title{ font-size:16px !important; }
+.card .desc{ font-size:13px !important; }
+.price{ font-size:15px !important; }
+
+/* Küçük rozet/pill biraz büyüsün */
+.pill{ font-size:13px !important; }
+.badge{ font-size:11px !important; }
+
+/* Liste ızgarası tek tanım (desktop 4, mobil 2) – güvence */
+.listings-section .listings-grid{
+  grid-template-columns:repeat(4, minmax(0,1fr)) !important;
+  gap:12px !important;
+}
+@media (max-width:768px){
+  .listings-section .listings-grid{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -122,6 +323,19 @@
           <div class="cta-row">
             <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
           </div>
+        </div>
+      </section>
+
+      <!-- === İLANLAR === -->
+      <section class="listings-section">
+        <div class="listings-head">
+          <h3>Yeni İlanlar</h3>
+          <div class="pill" id="listInfo">Yükleniyor…</div>
+        </div>
+        <div class="listings-grid" id="listGrid" aria-live="polite"></div>
+        <div class="paging">
+          <button class="btn ghost" id="prevPage" disabled>‹ Önceki</button>
+          <button class="btn ghost" id="nextPage" disabled>Sonraki ›</button>
         </div>
       </section>
     </main>
@@ -194,6 +408,19 @@
     </div>
   </dialog>
 
+  <!-- ===== Listing Detail Modal ===== -->
+  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="listingTitle">İlan Detayı</h3>
+        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner" id="listingBody">
+        <!-- JS ile doldurulacak -->
+      </div>
+    </div>
+  </dialog>
+
   <!-- Firebase init (kökten) -->
   <script type="module" src="/firebase-init.js"></script>
 
@@ -244,7 +471,7 @@
         'fields.email':'البريد الإلكتروني','fields.password':'كلمة المرور','fields.password2':'تأكيد كلمة المرور','fields.username':'اسم المستخدم','fields.fullname':'الاسم الكامل','fields.province':'الولاية','fields.district':'المنطقة',
         'register.summary':'ليس لديك حساب؟ سجّل الآن',
         'hints.verify':'سيتم إرسال <strong>رسالة تفعيل</strong>. يرجى فحص الوارد و<strong>الرسائل غير المرغوبة</strong>.',
-        'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','legal.delivery':'التسليم/الإرجاع','legal.contact':'التواصل'
+        'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','التسليم/الإرجاع':'التسليم/الإرجاع','legal.contact':'التواصل'
       }
     };
 
@@ -302,7 +529,7 @@
         titles: {
           yemek:'🍲 Gerichte', pasta:'🎂 Kuchen & Süßes', sos:'🫙 Marmelade • Pickles • Soßen', yoresel:'🌾 Regional / Vorrat',
           diet:'🥗 Diät / Vegan / GF', taki:'💍 Schmuck', bebek:'👶 Baby & Kinder', orgu:'🧶 Strick',
-          terzi:'✂️ Nähen / Schneiderei', makrome:'🧵 Makramee & Deko', evdekor:'🏠 Wohndeko & Accessoires',
+        "terzi":"✂️ Nähen / Schneiderei", "makrome":"🧵 Makramee & Deko", "evdekor":"🏠 Wohndeko & Accessoires",
           mum:'🕯️ Kerzen & Düfte', kozmetik:'🧼 Naturseife & Kosmetik', amigurumi:'🧸 Amigurumi & Spielzeug'
         },
         subs: {
@@ -535,6 +762,174 @@
     // CTA – bu iki buton giriş penceresini AÇACAK
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
+    </script>
+
+  <script type="module">
+    // === İLANLARI ÇEK & GÖSTER ===
+    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+    const db2 = (self.__fb?.db) || getFirestore();
+    const grid = document.getElementById('listGrid');
+    const info = document.getElementById('listInfo');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+
+    const PAGE_SIZE = 4; // her sayfada 4 ilan
+    let allListings = [];
+    let page = 0;
+
+    function formatPrice(tryAmount){
+      try{
+        return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
+      }catch{ return tryAmount + ' TL'; }
+    }
+
+    function timeValid(d){
+      try{ const ex = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d)); return ex >= new Date(); }catch{ return true; }
+    }
+
+    async function fetchSeller(uid){
+      if(!uid) return null;
+      try{
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const snap = await getDoc(doc(db2,'users',uid));
+        return snap.exists()? snap.data(): null;
+      }catch{ return null; }
+    }
+
+    function cardTpl(it){
+      const img = (Array.isArray(it.photos) && it.photos[0]) ? it.photos[0] : '/assets/img/placeholder.png';
+      const showcase = !!it.showcase;
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+      const title = it.title || 'İlan';
+      const desc = it.description || '';
+      const id = it.id;
+      return `
+        <article class="card" data-id="${id}">
+          <div class="ph">
+            ${showcase?'<span class="ribbon">Vitrin</span>':''}
+            <img alt="${title}" loading="lazy" src="${img}">
+          </div>
+          <div class="body">
+            <div class="title">${title}</div>
+            <div class="desc">${desc}</div>
+            <div class="seller" data-seller>
+              <div class="av"><img alt="" src="/assets/img/avatar-default.png"></div>
+              <div class="name">Satıcı</div>
+              <span class="badge" style="display:none">Onaylı</span>
+            </div>
+            <div class="price">${price}</div>
+            <div class="actions">
+              <button class="btn gold" data-do="order">Sipariş Ver</button>
+              <button class="btn ghost" data-do="msg">Satıcıya Yaz</button>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function render(){
+      const start = page * PAGE_SIZE;
+      const slice = allListings.slice(start, start + PAGE_SIZE);
+      grid.innerHTML = slice.map(cardTpl).join('');
+      info.textContent = `${allListings.length} ilanın ${start+1}-${Math.min(start+PAGE_SIZE, allListings.length)} arası`;
+      prevBtn.disabled = page===0;
+      nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+    }
+
+    function attachCardEvents(){
+      grid.addEventListener('click', async (e)=>{
+        const card = e.target.closest('.card');
+        if(!card) return;
+        const id = card.getAttribute('data-id');
+        const listing = allListings.find(x=>x.id===id);
+        if(!listing) return;
+
+        if (e.target.matches('[data-do="order"], [data-do="msg"]')){
+          // giriş panelini aç
+          openAuth();
+          return;
+        }
+        // Kart tıklanınca detay modal aç
+        openListingDetail(listing, card.querySelector('.ph img')?.src);
+      });
+    }
+
+    async function openListingDetail(it, imgSrc){
+      const modal = document.getElementById('listingModal');
+      const body = document.getElementById('listingBody');
+      let seller = null;
+      // Satıcı bilgisi sellerId/ownerId alanlarından biri olabilir
+      const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+      try{ seller = await fetchSeller(sellerId); }catch{}
+      const av = seller?.photoURL || '/assets/img/avatar-default.png';
+      const name = seller?.displayName || seller?.name || 'Satıcı';
+      const verified = !!(seller?.verifiedSeller || seller?.verified);
+      const price = (typeof it.price==='number')? formatPrice(it.price): '';
+
+      body.innerHTML = `
+        <div style="display:grid;gap:12px">
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #eee"><img src="${imgSrc}" alt="${it.title}" style="width:100%;height:auto;display:block"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="av" style="width:34px;height:34px"><img src="${av}" alt="${name}"></div>
+            <div style="font-weight:700">${name}</div>
+            ${verified?'<span class="badge">Onaylı</span>':''}
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:900">${it.title||''}</div>
+            <div style="color:#6b7280;margin-top:6px">${it.description||''}</div>
+          </div>
+          <div style="font-size:18px;font-weight:900">${price}</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn gold" id="detailOrder">Sipariş Ver</button>
+            <button class="btn ghost" id="detailMsg">Satıcıya Yaz</button>
+          </div>
+        </div>`;
+
+      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
+      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+
+      if (typeof modal.showModal === 'function') modal.showModal();
+      else { modal.setAttribute('open',''); modal.style.display='grid'; }
+    }
+
+    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
+      const modal = document.getElementById('listingModal');
+      if (typeof modal.close === 'function') modal.close();
+      modal.removeAttribute('open'); modal.style.display='none';
+    });
+
+    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
+    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
+
+    async function loadListings(){
+      try{
+        info.textContent = 'Yükleniyor…';
+        const col = collection(db2,'listings');
+        const q = query(col, orderBy('updatedAt','desc'));
+        const snap = await getDocs(q);
+        const now = Date.now();
+        const rows = [];
+        snap.forEach(d=>{
+          const data = d.data();
+          // filtre: status approved, süresi dolmamış
+          if (data?.status === 'approved'){
+            const exp = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now+1);
+            if (exp >= now){ rows.push(Object.assign({id:d.id}, data)); }
+          }
+        });
+        // Öncelik: showcase true olanlar
+        const showcase = rows.filter(r=>!!r.showcase);
+        const standard = rows.filter(r=>!r.showcase);
+        allListings = [...showcase, ...standard];
+        page = 0;
+        render();
+        attachCardEvents();
+      }catch(err){ info.textContent = 'İlanlar yüklenemedi'; console.error(err); }
+    }
+
+    // FB hazır olduğunda yükle
+    if (self.__fbReady) loadListings();
+    else document.addEventListener('fb-ready', loadListings, { once:true });
   </script>
 </body>
-</html>
+</html>  
