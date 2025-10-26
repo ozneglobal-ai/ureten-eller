@@ -438,6 +438,15 @@
     };
 
     let currentLang = localStorage.getItem('ue_lang') || 'tr';
+    // --- paylaşılan durum / API ---
+window.UE = window.UE || {};
+window.UE.I18N = I18N;
+window.UE.getLang = () => currentLang;
+window.UE.setLang = (lang) => {
+  currentLang = lang;
+  localStorage.setItem('ue_lang', lang);
+  window.dispatchEvent(new CustomEvent('ue:lang', { detail: lang }));
+};
     function t(key, vars){
       const dict = I18N[currentLang] || I18N.tr;
       let val = dict[key] ?? I18N.tr[key] ?? key;
@@ -452,6 +461,7 @@
 
     function applyI18n(lang){
       currentLang = lang;
+      window.UE?.setLang?.(lang);
       const dict = I18N[lang] || I18N.tr;
       document.querySelectorAll('[data-i18n]').forEach(el=>{
         const key = el.getAttribute('data-i18n');
@@ -620,6 +630,17 @@
 
   <script type="module">
     import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+    
+    // paylaşılan sözlük ve dil
+const I18N = (window.UE && window.UE.I18N) || {};
+let currentLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
+
+// dil değişince listeyi yeniden çiz
+window.addEventListener('ue:lang', (e)=>{
+  currentLang = e.detail || 'tr';
+  render?.();
+});
+
 
     const db2 = (self.__fb?.db) || getFirestore();
     const grid = document.getElementById('listGrid');
@@ -702,9 +723,10 @@
       if(!listing) return;
 
       if (e.target.matches('[data-do="order"], [data-do="msg"]')){
-        openAuth();
-        return;
-      }
+  window.openAuth?.();
+  return;
+}
+
       openListingDetail(listing, card.querySelector('.ph img')?.src);
     });
 
@@ -738,8 +760,8 @@
           </div>
         </div>`;
 
-      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
-      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+      document.getElementById('detailOrder')?.addEventListener('click', () => window.openAuth?.());
+      document.getElementById('detailMsg')  ?.addEventListener('click', () => window.openAuth?.());
 
       if (typeof modal.showModal === 'function') modal.showModal();
       else { modal.setAttribute('open',''); modal.style.display='grid'; }
