@@ -12,13 +12,14 @@
     html,body{height:100%}
     :root{ scrollbar-gutter: stable; }
     body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:#fff;color:#0b1220;
-      -webkit-font-smoothing:antialiased;
-      overflow-x:hidden;
-      overflow-y:scroll;
-    }
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:#fff;
+  color:#0b1220;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
@@ -284,6 +285,13 @@
       .hero h2{ font-size:2rem; }
       .hero p{  font-size:1.125rem; }
     }
+    /* Mobilde yatay taşmayı tamamen engelle */
+.wrap, .content, .topcats, .grid {
+  min-width: 0;
+}
+.page {
+  overflow-x: hidden;
+}
   </style>
 </head>
 <body>
@@ -866,6 +874,41 @@ window.addEventListener('ue:lang', (e)=>{
 
     // dil değişirse liste metinlerini yenile
     window.addEventListener('storage', (e)=>{ if(e.key==='ue_lang'){ currentLang = localStorage.getItem('ue_lang')||'tr'; render(); } });
-  </script>
+
+document.addEventListener('close-all-modals', ()=>{
+  document.querySelectorAll('dialog[open]').forEach(d=>{
+    if (typeof d.close === 'function') d.close();
+    d.removeAttribute('open');
+    d.style.display='none';
+  });
+  document.body.style.overflow = '';
+});
+
+// Modal kapatıldığında tıklama kilitlenmesin
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('close', ()=>{
+    document.body.style.overflow = '';
+  });
+});
+    // Modal dışına tıklanınca da düzgün kapat
+document.querySelectorAll('dialog.modal').forEach(modal=>{
+  modal.addEventListener('click', e=>{
+    const rect = modal.querySelector('.sheet')?.getBoundingClientRect();
+    if(!rect) return;
+    const clickInSheet = (
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom
+    );
+    if(!clickInSheet){
+      if (typeof modal.close === 'function') modal.close();
+      modal.removeAttribute('open');
+      modal.style.display='none';
+    }
+  });
+})
+    
+</script>
 </body>
 </html>
