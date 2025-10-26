@@ -679,6 +679,31 @@ async function fetchAndPaint(){
       modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
       document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
     })();
-  </script>
+<!-- diğer script'lerin altına -->
+  
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  try {
+    // Tüm Firebase app'lerinden çıkış yap (modular SDK)
+    const fb = self.firebase || window.firebase || {};
+    if (fb.getApps && fb.getAuth && fb.signOut) {
+      const apps = fb.getApps();
+      for (const app of apps) {
+        try { await fb.signOut(fb.getAuth(app)); } catch(e) {}
+      }
+    }
+    // Compat/tekil örnek varsa onu da kapat
+    if (self.__fb?.auth?.signOut) {
+      try { await self.__fb.auth.signOut(); } catch(e) {}
+    }
+  } finally {
+    // Yerel verileri temizle
+    try { ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
+    try { sessionStorage.clear(); } catch(_) {}
+    // Ana sayfaya tek yön bilet
+    location.replace('/index.html');
+  }
+});
+</script>
 </body>
 </html>
+
