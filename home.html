@@ -7,21 +7,21 @@
   <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Arayın, keşfedin, ilan verin." />
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
+    /* ==== GENEL ==== */
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
 
     .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
 
-    /* Topbar */
+    /* ==== TOPBAR ==== */
     .topbar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e5e7eb}
     .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:10px}
-    /* LOGO STYLES LEFT INTENTIONALLY UNUSED — LOGO ELEMENT REMOVED */
     .brand .logo{display:none}
-    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800;cursor:pointer}
     .actions{display:flex;align-items:center;gap:8px}
     .btn{appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;transition:transform .06s ease, box-shadow .2s ease}
     .btn:active{transform:translateY(1px)}
@@ -29,46 +29,83 @@
     .btn.ghost{background:#fff;border:1px solid #e5e7eb}
     .lang{border:1px solid #e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600;background:#fff}
 
-    /* Layout */
-    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:280px 1fr;gap:16px}
-    @media (max-width: 980px){.wrap{grid-template-columns:1fr}.sidebar{order:2}.content{order:1}}
+    /* ==== LAYOUT (SOL KATEGORİ MASAÜSTÜ/TABLET, MOBİLDE ÜSTTE) ==== */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;gap:16px;grid-template-columns:280px 1fr}
+    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
 
-    /* Sidebar */
-    .sidebar{position:relative}
-    .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
-    .search input{flex:1;border:0;outline:0;background:transparent;font-size:14px}
+    /* ==== SIDEBAR ==== */
+    .sidebar{position:relative;min-width:0}
+    @media (max-width:980px){.sidebar{display:none}}
+    .sidebar{position:relative;min-width:0}
 
-    .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}
+    .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03);min-width:0}
+    .search input{flex:1;border:0;outline:0;background:transparent;font-size:14px;min-width:0}
+
+    .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;position:sticky;top:132px;background:#fff}
     .cathead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;padding:10px 14px;background:#fafafa;border-bottom:1px solid #eee}
-    .catlist{max-height:68vh;overflow:auto}
+    .catlist{max-height:calc(100vh - 240px); /* üst bar + arama + alt bar payı */ overflow:auto}
     .cat{border-bottom:1px dashed #eee}
     .cat:last-child{border-bottom:0}
     .cat > button{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#fff;border:0;cursor:pointer;font-weight:700}
     .cat > button:hover{background:#fafafa}
-    .cat-title{display:flex;align-items:center;gap:8px}
+    .cat-title{display:flex;align-items:center;gap:8px;min-width:0}
     .chev{transition:transform .2s ease}
     .cat[aria-expanded="true"] .chev{transform:rotate(90deg)}
     .sublist{display:none;padding:8px 10px 14px 38px}
-    .sublist a{display:block;padding:6px 4px;border-radius:8px;font-size:14px;color:#374151}
+    .sublist a{display:block;padding:6px 4px;border-radius:8px;font-size:14px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .sublist a:hover{background:#f3f4f6}
 
-    /* Content */
-    .hero{border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa}
+    /* ==== CONTENT ==== */
+    /* Mobilde yatay kaymayı kesin önlemek için min-width sıfırlamaları */
+    .wrap,.content,.topcats,.grid{min-width:0}
+    .page{overflow-x:hidden}
+
+    .hero{border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa;min-width:0}
     @media (max-width: 900px){.hero{grid-template-columns:1fr}}
-    .hero h2{font-size:28px;margin:0 0 10px 0;letter-spacing:.2px}
-    .hero p{margin:0 0 16px 0;color:#4b5563}
+    /* Başlık ve açıklamayı mobilde küçült */
+    .hero h2{font-size:clamp(16px,4.3vw,20px);margin:0 0 6px 0;letter-spacing:.1px;line-height:1.18}
+    .hero p{margin:0 0 10px 0;color:#4b5563;font-size:clamp(11.5px,3.6vw,13.5px);line-height:1.45}
+    @media (max-width:640px){.hero{padding:12px 10px}.cta-row .btn{padding:7px 10px;font-size:13px}}
     .cta-row{display:flex;flex-wrap:wrap;gap:8px}
+    @media (max-width:480px){
+      .hero{padding:10px 8px}
+      .hero h2{font-size:clamp(15px,3.9vw,18px)}
+      .hero p{font-size:clamp(11px,3.2vw,13px)}
+      .cta-row .btn{padding:6px 9px;font-size:12.5px}
+    }
+
+    /* Üst kategori şeridi: sadece mobil/tablet (≤980px) görünsün */
+    .topcats{display:none}
+    @media (max-width:980px){
+      .topcats{display:flex;gap:8px;overflow:auto;padding:8px 2px 6px;scroll-snap-type:x mandatory}
+      .topcats::-webkit-scrollbar{height:6px}
+      .topcats .chip{flex:0 0 auto;scroll-snap-align:start;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
+      .topcats .chip:active{transform:translateY(1px)}
+      /* aktif chip görünürlüğü */
+      .topcats .chip[aria-pressed="true"], .topcats .chip.active{background:#111;color:#fff;border-color:#111}
+    }
+    @media (max-width:640px){.topcats{padding:6px 2px 4px}.topcats .chip{padding:7px 10px;font-size:13px}}
+    @media (max-width:480px){.topcats .chip{padding:6px 9px;font-size:12.5px}}
+
+    /* Üstte tıklanan kategoriye ait alt kategoriler bloğu */
+    .topsubs{display:none;margin-top:6px}
+    @media (max-width:980px){.topsubs{display:block}}
+    .topsubs .subwrap{border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff}
+    .topsubs .subwrap h4{margin:0 0 6px 0;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+    .topsubs .subs{display:flex;flex-direction:column;gap:6px}
+    .topsubs .subs a{display:block;padding:8px 10px;border-radius:10px;font-size:14px;color:#374151;border:1px solid #f1f1f1}
+    .topsubs .subs a:hover{background:#f9fafb}
 
     .grid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width: 1100px){.grid{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width: 640px){.grid{grid-template-columns:1fr}}
+    @media (max-width: 640px){.grid{grid-template-columns:repeat(2,1fr)}}
     .card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
     .card .ph{aspect-ratio:16/11;background:linear-gradient(180deg,#f3f4f6,#fff)}
     .card .body{padding:12px}
     .card .title{font-weight:700;margin:0 0 4px 0}
     .card .meta{font-size:12px;color:#6b7280}
 
-    /* Legal footer */
+    /* ==== LEGAL FOOTER ==== */
     .legal{background:#000;color:#fff;padding:20px 0;margin-top:30px}
     .legal .inner{max-width:1200px;margin:auto;padding:0 16px}
     .legal .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
@@ -76,13 +113,13 @@
     .legal a:hover{opacity:1;text-decoration:underline}
     .legal .copy{text-align:center;margin-top:10px;font-size:14px;color:#aaa}
 
-    /* Bottom bar */
+    /* ==== ALT BAR ==== */
     .bottomBar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;z-index:100}
     .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
     .bbtn[aria-current="page"]{border-color:#e5e7eb;background:#fafafa}
     .bicon{width:22px;height:22px;display:block}
 
-    /* Live chat bubble */
+    /* ==== CANLI DESTEK ==== */
     .chatBubble{position:fixed;right:16px;bottom:76px;width:56px;height:56px;border-radius:50%;border:1px solid #e5e7eb;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.15);cursor:pointer;z-index:120}
     .chatPanel{position:fixed;right:16px;bottom:140px;width:min(380px,92vw);border:1px solid #e5e7eb;border-radius:16px;background:#fff;color:#000;display:none;z-index:121;box-shadow:0 16px 48px rgba(0,0,0,.2);overflow:hidden}
     .chatHead{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;border-bottom:1px solid #e5e7eb;background:#fafafa}
@@ -91,7 +128,44 @@
     .chatMsg.me{margin-left:auto;background:#111;color:#fff;border-color:#111}
     .chatFoot{display:flex;gap:.4rem;padding:.6rem;border-top:1px solid #e5e7eb;background:#fff}
     .chatFoot input{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:.55rem .6rem}
+
+    /* ==== İLAN DETAY MODAL ==== */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:200;align-items:center;justify-content:center;padding:16px}
+    .modal[open]{display:flex}
+    .modal-card{background:#fff;border-radius:16px;max-width:min(980px,96vw);width:100%;max-height:92vh;display:grid;grid-template-columns:1.25fr 1fr;gap:16px;overflow:hidden;border:1px solid #e5e7eb}
+    .m-head, .m-body { grid-column: 1 / -1; }
+    @media (max-width:900px){.modal-card{grid-template-columns:1fr;max-height:94vh}}
+    .m-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #f1f1f1;background:#fafafa}
+    .m-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px;overflow:auto}
+    @media (max-width:900px){.m-body{grid-template-columns:1fr}}
+    .gallery{display:grid;grid-template-rows:auto auto 1fr;gap:10px}
+    .g-main{aspect-ratio:16/11;border-radius:12px;overflow:hidden;border:1px solid #eee;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .g-main img{max-width:100%;max-height:100%;object-fit:contain}
+    .g-thumbs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
+    .g-thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid transparent;flex:0 0 auto}
+    .g-thumbs img[aria-current="true"]{border-color:#111}
+    .g-controls{display:flex;gap:8px}
+    .g-btn{border:1px solid #e5e7eb;border-radius:10px;background:#fff;padding:8px 10px;font-weight:700;cursor:pointer}
+    .m-info{display:grid;gap:10px}
+    .title{font-weight:800;font-size:20px;margin:0}
+    .meta2{color:#6b7280}
+    .seller{display:flex;align-items:center;gap:10px;border:1px solid #f0f0f0;border-radius:12px;padding:10px}
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 8px;border-radius:999px;background:#ecfdf5;border:1px solid #10b981;color:#065f46;font-weight:700}
+    .badge.red{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+    .cta{display:flex;flex-wrap:wrap;gap:8px}
+    .btn.primary{background:#111;color:#fff;border:1px solid #111}
+    .btn.secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
+
+    /* ==== ALT SİYAH HIZLI LEGAL PANEL (YENİ) ==== */
+    .legal-fixed{position:fixed;left:0;right:0;bottom:64px;background:#000;color:#fff;border-top:1px solid #111;z-index:140}
+    @media (min-width:981px){.legal-fixed{bottom:64px}}
+    .legal-fixed .inner{max-width:1200px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;gap:10px}
+    .lf-close{margin-left:auto;background:transparent;border:1px solid #333;color:#fff;border-radius:10px;padding:4px 8px;cursor:pointer}
+    .lf-track{display:flex;gap:14px;overflow:auto;padding:4px 0}
+    .lf-track a{color:#fff;opacity:.9;white-space:nowrap}
+    .lf-track a:hover{opacity:1;text-decoration:underline}
   </style>
+  <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
@@ -133,6 +207,8 @@
       </aside>
 
       <section class="content">
+        <div class="topcats" id="topCats" aria-label="Kategoriler"></div>
+        <div id="topSubs" class="topsubs" aria-live="polite"></div>
         <div class="hero">
           <div>
             <h2 id="heroTitle">El emeği & yerel lezzetler tek çatı altında</h2>
@@ -140,9 +216,6 @@
             <div class="cta-row">
               <button class="btn gold" id="browseBtn" data-i18n="browse">Kategorileri Keşfet</button>
             </div>
-          </div>
-          <div>
-            <img alt="Üreten Eller illüstrasyon" src="/assets/icons/ureteneller.png" onerror="this.src='/assets/img/avatar-default.png'" />
           </div>
         </div>
         <section aria-label="İlanlar">
@@ -162,7 +235,7 @@
           <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
           <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
           <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
-          <a href="/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+          <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
         </div>
         <div class="copy">© <span id="yfoot"></span> <span data-i18n="brand">Üreten Eller</span></div>
       </div>
@@ -183,6 +256,24 @@
         <span class="mini" id="navNotiLabel" data-i18n="nav.noti">Bildirimler</span>
       </button>
     </nav>
+  </div>
+
+  <!-- Alt siyah Hızlı Legal (fixed) -->
+  <div id="legalFixed" class="legal-fixed" role="region" aria-label="Hızlı Yasal Linkler">
+    <div class="inner">
+      <div class="lf-track">
+        <a href="/legal/kullanim-sartlari.html" data-i18n="legal.terms">Kullanım Şartları</a>
+        <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+        <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+        <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
+        <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
+        <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
+        <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
+        <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
+        <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+      </div>
+      <button class="lf-close" id="lfClose" aria-label="Kapat">✕</button>
+    </div>
   </div>
 
   <!-- Canlı Destek Baloncuğu -->
@@ -262,8 +353,8 @@
       const kMeta =$('[data-i18n=\"item.makrome.meta\"]'); if(kMeta)  kMeta.textContent =map.makrome?.meta ||'Konya • 420 TL';
       const sTitle=$('[data-i18n=\"item.sabun.title\"]'); if(sTitle) sTitle.textContent=map.sabun?.title||'Zeytinyağlı Sabun';
       const sMeta =$('[data-i18n=\"item.sabun.meta\"]'); if(sMeta)  sMeta.textContent =map.sabun?.meta ||'Ayvalık • 95 TL';
-      // legal links
-      const LL=L.legal||{}; $$('footer .links a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
+      // legal links (footer + fixed panel)
+      const LL=L.legal||{}; $$('footer .links a, #legalFixed .lf-track a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
     }
 
     function buildCats(){
@@ -272,34 +363,89 @@
         const row=document.createElement('div'); row.className='cat'; row.setAttribute('aria-expanded','false');
         const btn=document.createElement('button'); const title=L.cats?.[cat.id]||cat.id; btn.innerHTML=`<span class="cat-title">${title}</span><span class="chev">▶</span>`;
         const sub=document.createElement('div'); sub.className='sublist';
-        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
+        // YÖNLENDİRME DÜZELTİLMİŞ: listings.html yerine index.html (aynı sayfa)
+        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
         btn.addEventListener('click',()=>{ const exp=row.getAttribute('aria-expanded')==='true'; row.setAttribute('aria-expanded', String(!exp)); sub.style.display = exp?'none':'block'; });
         row.append(btn,sub); box.append(row);
       });
     }
 
+    function buildTopCats(){
+      const L = I18N[getLang()]||I18N.tr; const top=$('#topCats'); const subsBox=$('#topSubs'); if(!top||!subsBox) return;
+      top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\" aria-pressed=\"false\">${title}</button>`; }).join('');
+
+      // --- toggle ---
+      let openCatId = null;
+
+      function closeSubs(){
+        subsBox.innerHTML = '';
+        openCatId = null;
+        $$('.topcats .chip', top).forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      }
+
+      top.addEventListener('click',(e)=>{
+        const b=e.target.closest('.chip'); if(!b) return; const id=b.getAttribute('data-cat');
+        if(openCatId === id){ closeSubs(); return; }
+        const cat=CATS.find(c=>c.id===id); if(!cat){ closeSubs(); return; }
+        const title=L.cats?.[cat.id]||cat.id;
+        const subHtml = cat.subs.map(([sid,label])=>{
+          const name=(L.sub?.[sid]||label);
+          // YÖNLENDİRME DÜZELTİLMİŞ
+          return `<a href=\"/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
+        }).join('');
+        subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
+        openCatId = id;
+        $$('.topcats .chip', top).forEach(el=>{ const on = el.getAttribute('data-cat')===id; el.classList.toggle('active', on); el.setAttribute('aria-pressed', on?'true':'false'); });
+      });
+
+      document.addEventListener('click',(e)=>{ if(!openCatId) return; const hitTop = e.target.closest('.topcats'); const hitSubs = e.target.closest('#topSubs'); if(!hitTop && !hitSubs){ closeSubs(); } });
+    }
+
     // ===== Events / navigation =====
+    // Marka başlığı tıklanınca ana sayfa
+    document.addEventListener('click', (e)=>{ const bt=e.target.closest('#brandTitle'); if(bt){ location.href='/index.html'; }});
+
     document.getElementById('postBtn')?.addEventListener('click', ()=> location.href='/ilan-ver.html');
-    document.getElementById('logoutBtn')?.addEventListener('click', ()=> location.href='/index.html');
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  try {
+    const fb = self.firebase || window.firebase;
+    let auth;
+    if (fb?.getAuth) {
+      auth = fb.getAuth(self.__fb?.app);
+      await fb.signOut(auth);
+    } else if (fb?.auth) {
+      auth = fb.auth();
+      await auth.signOut();
+    }
+  } catch (e) {
+    console.warn('signOut hata:', e);
+  }
+  try { ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
+  try { sessionStorage.clear(); } catch(_) {}
+  location.replace('/index.html');
+});
     document.getElementById('searchBtn')?.addEventListener('click', ()=>{
       const q=(document.getElementById('q')?.value||'').trim();
-      const url=q?`/listings.html?q=${encodeURIComponent(q)}`:'/listings.html';
+      const url=q?`/index.html?q=${encodeURIComponent(q)}`:'/index.html';
       location.href=url;
     });
     document.getElementById('browseBtn')?.addEventListener('click', ()=>{
       const first=CATS[0]?.id||'yemek';
-      location.href=`/listings.html?cat=${first}`;
+      location.href=`/index.html?cat=${first}`;
     });
     document.getElementById('navProfile')?.addEventListener('click', ()=> location.href='/profile.html');
     document.getElementById('navMsg')?.addEventListener('click', ()=> location.href='/docs/mesajlar.html');
     document.getElementById('navNoti')?.addEventListener('click', ()=> location.href='/docs/bildirimler.html');
 
+    // Alt siyah fixed legal panel kapatma
+    document.getElementById('lfClose')?.addEventListener('click', ()=>{ const el=document.getElementById('legalFixed'); if(el) el.style.display='none'; });
+
     // Lang init
     (function init(){
       const y=document.getElementById('yfoot'); if(y) y.textContent=new Date().getFullYear();
       const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); sel.value=initial;
-      applyI18n(); buildCats();
-      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); });
+      applyI18n(); buildCats(); buildTopCats();
+      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); buildTopCats(); });
     })();
 
     // ===== Live Chat (local echo) =====
@@ -330,33 +476,208 @@
       const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
       const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
 
-      const CLOUD = (window.CLOUDINARY_CLOUD||'ozneglobal');
-      const isHttp = (u)=>/^https?:\/\//i.test(u||'');
-      const isPid  = (u)=> u && !isHttp(u) && /[\/_.-]/.test(String(u));
-      const cdn = (pid,{w,h,crop='fill',fmt='auto',q='auto'}={})=>`https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`,fmt&&`f_${fmt}`,w&&`w_${w}`,h&&`h_${h}`,crop&&`c_${crop}`].filter(Boolean).join(',')}/`+String(pid).replace(/^image\/upload\//,'');
-      async function resolveURL(raw){ if(!raw) return ''; if(isHttp(raw)) return raw; if(isPid(raw)) return cdn(raw,{w:600,h:450}); try{ if(self.storageRef && self._getDownloadURL){ return await self._getDownloadURL(self.storageRef(raw)); } }catch(_){ } return raw; }
-      async function resolveCover(d){ const arr=[]; if(d.cover)arr.push(d.cover); if(d.coverUrl)arr.push(d.coverUrl); if(Array.isArray(d.photos))arr.push(...d.photos); if(Array.isArray(d.images))arr.push(...d.images.map(x=>typeof x==='string'?x:(x.secure_url||x.url||x.src||x.path||x.public_id||''))); const first=arr.find(Boolean); return await resolveURL(first)||'/assets/icons/ureteneller.png'; }
+      // ==== Cloudinary yardımcıları + kart render ==== 
+const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
 
-      const cardHTML = (d,id,cover)=>`<a class="card" href="/ilan/${id}"><span class="thumb" style="background-image:url('${cover}');aspect-ratio:16/11;background-size:cover;background-position:center"></span><div class="body"><h3 class="title">${(d.title||d.name||'İlan')}</h3><div class="meta">${(d.city||'')} · ${d.price?fmtPrice(d.price,(d.currency||d.cur||'TRY')):''}</div></div></a>`;
-      function renderList(gridId, list){ const grid=document.getElementById(gridId); if(!grid) return; grid.innerHTML=''; const frag=document.createDocumentFragment(); list.forEach(x=>{ const wrap=document.createElement('div'); wrap.innerHTML=cardHTML(x.data,x.id,x.data.__cover||'/assets/icons/ureteneller.png'); frag.appendChild(wrap.firstElementChild); }); grid.appendChild(frag); }
+const isHttp = (u) => /^https?:\/\//i.test(u || '');
+const isPid  = (u) => u && !isHttp(u) && /[\/_\.-]/.test(String(u));
+const cdn = (pid, { w, h, crop='fill', fmt='auto', q='auto' } = {}) =>
+  `https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`, fmt&&`f_${fmt}`, w&&`w_${w}`, h&&`h_${h}`, crop&&`c_${crop}`].filter(Boolean).join(',')}/` +
+  String(pid).replace(/^image\/upload\//,'');
 
-      async function fetchAndPaint(){
-        try{
-          const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
-          const ref = col('listings');
-          let snap; try{ snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200))); }catch(e){ snap = await getDocs(q(ref, limit(200))); }
-          const now=Date.now(); const vip=[], std=[];
-          snap.forEach(doc=>{ const d=doc.data()||{}; (isVipDoc(d,now)?vip:std).push({id:doc.id, data:d}); });
-          await Promise.all([...vip, ...std].map(async x=>{ x.data.__cover = await resolveCover(x.data); }));
-          const sortBy=(a,b)=> toMillis(b.data.createdAt)-toMillis(a.data.createdAt);
-          vip.sort(sortBy); std.sort(sortBy);
-          const combined = vip.slice(0,20).concat(std);
-          renderList('allGrid', combined);
-        }catch(e){ console.warn('İlan yüklenemedi:', e); }
-      }
+async function resolveURL(raw){
+  if (!raw) return '';
+  if (isHttp(raw)) return raw;
+  if (isPid(raw))  return cdn(raw, { w:600, h:450 });
+  try {
+    if (self.storageRef && self._getDownloadURL) {
+      return await self._getDownloadURL(self.storageRef(raw));
+    }
+  } catch(_) {}
+  return raw;
+}
+
+async function resolveCover(d){
+  const arr = [];
+  if (d.cover)    arr.push(d.cover);
+  if (d.coverUrl) arr.push(d.coverUrl);
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  const first = arr.find(Boolean);
+  return await resolveURL(first) || '/assets/icons/ureteneller.png';
+}
+
+async function resolveImages(d){
+  const arr = [];
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (d.cover)    arr.unshift(d.cover);
+  if (d.coverUrl) arr.unshift(d.coverUrl);
+  const uniq = [...new Set(arr.filter(Boolean))];
+  const urls = [];
+  for (const u of uniq) { urls.push(await resolveURL(u)); }
+  return urls.length ? urls : ['/assets/icons/ureteneller.png'];
+}
+window.resolveImages = resolveImages;
+
+const cardHTML = (d, id, cover) => `
+<a class="card" href="#" data-id="${id}">
+  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center"></div>
+  <div class="body">
+    <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
+    <div class="meta">${(d.city || '')}${(d.city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}</div>
+  </div>
+</a>`.trim();
+
+function renderList(gridId, list){
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  list.forEach(x => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = cardHTML(x.data, x.id, x.data.__cover || '/assets/icons/ureteneller.png');
+    frag.appendChild(wrap.firstElementChild);
+  });
+  grid.appendChild(frag);
+}
+
+async function fetchAndPaint(){
+  try{
+    const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
+    const ref = col('listings');
+    let snap;
+    try {
+      snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200)));
+    } catch(e) {
+      snap = await getDocs(q(ref, limit(200)));
+    }
+    const now = Date.now();
+    const vip = [], std = [];
+    snap.forEach(doc => {
+      const d = doc.data() || {};
+      (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
+    });
+    await Promise.all([...vip, ...std].map(async x => { x.data.__cover = await resolveCover(x.data); }));
+    const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
+    vip.sort(sortBy); std.sort(sortBy);
+    const combined = vip.slice(0,20).concat(std);
+    renderList('allGrid', combined);
+    window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
+  } catch(e) {
+    console.warn('İlan yüklenemedi:', e);
+  }
+}
 
       function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
       if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
+    })();
+  </script>
+  <!-- İlan Detay Modal -->
+  <div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-label="İlan Detayı">
+    <div class="modal-card">
+      <div class="m-head">
+        <strong>İlan Detayı</strong>
+        <button class="btn ghost" id="mClose">✕</button>
+      </div>
+      <div class="m-body">
+        <div class="gallery">
+          <div class="g-main"><img id="gMain" alt="İlan görseli"/></div>
+          <div class="g-controls">
+            <button class="g-btn" id="gPrev">‹ Önceki</button>
+            <button class="g-btn" id="gNext">Sonraki ›</button>
+          </div>
+          <div class="g-thumbs" id="gThumbs"></div>
+        </div>
+        <div class="m-info">
+          <h3 class="title" id="mTitle">İlan</h3>
+          <div class="meta2" id="mMeta"></div>
+          <div id="mDesc"></div>
+          <div class="seller">
+            <div style="flex:1">
+              <div id="mSellerName" style="font-weight:700">Satıcı</div>
+              <div id="mSellerCity" class="meta2"></div>
+            </div>
+            <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
+          </div>
+          <div id="mStock" class="badge" style="display:none">Stok durumu</div>
+          <div class="cta">
+            <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
+            <a id="mProfile" class="btn secondary" href="#">Profili Ziyaret Et</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==== Detay Modal + Kart Tıklama ====
+    (function(){
+      const modal = document.getElementById('listingModal');
+      const gMain = document.getElementById('gMain');
+      const gThumbs = document.getElementById('gThumbs');
+      const gPrev = document.getElementById('gPrev');
+      const gNext = document.getElementById('gNext');
+      const mTitle = document.getElementById('mTitle');
+      const mMeta = document.getElementById('mMeta');
+      const mDesc = document.getElementById('mDesc');
+      const mSellerName = document.getElementById('mSellerName');
+      const mSellerCity = document.getElementById('mSellerCity');
+      const mBadge = document.getElementById('mBadge');
+      const mStock = document.getElementById('mStock');
+      const mOrder = document.getElementById('mOrder');
+      const mProfile = document.getElementById('mProfile');
+      const mClose = document.getElementById('mClose');
+
+      let currentListingId = null;
+      let imgs = []; let idx = 0;
+
+      function paint(){ if(!imgs.length) return; idx = Math.max(0, Math.min(idx, imgs.length-1)); gMain.src = imgs[idx]; Array.from(gThumbs.children).forEach((im,i)=> im.setAttribute('aria-current', i===idx?'true':'false')); }
+      function buildThumbs(){ gThumbs.innerHTML=''; imgs.forEach((u,i)=>{ const im = new Image(); im.src=u; im.alt='Önizleme'; im.addEventListener('click', ()=>{ idx=i; paint(); }); gThumbs.appendChild(im); }); }
+
+      window.openListingDetail = async function(id, d){
+        const data = d||{};
+        currentListingId = id;
+        imgs = await window.resolveImages(data);  
+        idx = 0;
+        buildThumbs();
+        paint();
+        mTitle.textContent = data.title || data.name || 'İlan';
+        mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? (new Intl.NumberFormat('tr-TR',{style:'currency',currency:(data.currency||data.cur||'TRY')}).format(Number(data.price))):''}`;
+        mDesc.textContent = data.description || data.desc || '';
+        const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
+        const sCity = data.sellerCity || data.city || '';
+        const sId = data.sellerId || data.ownerId || data.userId || '';
+        const sSlug = data.sellerSlug || sId || '';
+        const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
+        mSellerName.textContent = sName; mSellerCity.textContent = sCity; mBadge.style.display = verified? 'inline-flex':'none';
+        // stok durumu
+        const stockNum = Number((data.stock ?? data.quantity ?? 0));
+        const inStock = (data.inStock === true) || stockNum > 0;
+        mStock.style.display = 'inline-flex';
+        mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
+        mStock.classList.toggle('red', !inStock);
+        // bağlantılar (YÖNLENDİRME DÜZELTİLMİŞ)
+        mOrder.href = `/docs/orders.html?new=1&ilan=${encodeURIComponent(id)}`;
+        mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}` : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
+        modal.setAttribute('open','');
+      }
+
+      document.getElementById('allGrid')?.addEventListener('click', (e)=>{
+        const a=e.target.closest('.card'); if(!a) return; e.preventDefault();
+        const id=a.getAttribute('data-id'); const item=window.__UE_LISTINGS?.[id]; if(item){ openListingDetail(id,item.data); }
+      });
+
+      // Sipariş Ver → orders.html'e
+      mOrder.addEventListener('click', (e)=>{
+        // Doğrudan href çalışsın; prompt kaldırıldı ki yönlendirme net olsun
+      });
+
+      gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
+      gNext.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx+1)%imgs.length; paint(); });
+      mClose.addEventListener('click', ()=> modal.removeAttribute('open'));
+      modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
+      document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
     })();
   </script>
 </body>
