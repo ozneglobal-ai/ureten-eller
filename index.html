@@ -203,6 +203,10 @@
       border-radius:999px;
       background:#ecfdf5;
       margin-left:auto;
+      white-space: nowrap;  
+      line-height: 1;       
+      display: inline-flex;  
+      align-items: center;  
     }
 
     .card .actions{ display:flex; gap:8px; margin-top:8px; }
@@ -578,14 +582,18 @@ if (suProv) {
     buildTopCats(localStorage.getItem('ue_lang')||'tr');
 
     const authModal = document.getElementById('authModal');
-    function openAuth(){
-      if (typeof authModal.showModal === 'function'){
-        authModal.showModal();
-      } else {
-        authModal.setAttribute('open','');
-        authModal.style.display='grid';
-      }
-    }
+
+function openAuth(){
+  if (authModal && typeof authModal.showModal === 'function'){
+    authModal.showModal();
+  } else if (authModal) {
+    authModal.setAttribute('open','');
+    authModal.style.display = 'grid';
+  }
+}
+
+window.openAuth = openAuth; // diğer scriptler için global erişim
+
    function closeAuth(){
   if (typeof authModal.close === 'function') authModal.close();
 }
