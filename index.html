@@ -232,33 +232,22 @@ dialog[open].modal{ display:grid; }
    (EN ALTA EKLEYİN)
    ========================= */
 
-/* GENEL METİN TABANI ZORLAMASI YOK — SİLİNDİ */
-
-/* Hero metinleri: büyüklüğü koru, !important yok */
+/* Hero metinleri: sabit ve stabil boyutlar */
 .hero h2{
-  font-size:clamp(24px, 6.2vw, 32px);
+  font-size:1.9rem;     /* yaklaşık 30px */
   line-height:1.22;
+  font-weight:800;
 }
+
 .hero p{
-  font-size:clamp(15px, 4.8vw, 18px);
+  font-size:1.0625rem;  /* yaklaşık 17px */
   line-height:1.5;
 }
 
-/* Buton/çip/kart metni için boyut zorlaması YOK — kaldırıldı
-   (üstteki temel stiller geçerli olacak) */
-
-/* Legal alan linkleri — boyut zorlaması kaldırıldı */
-
-/* Liste ızgarası tek tanım (desktop 4, mobil 2) – güvence */
-.listings-section .listings-grid{
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:12px;
-}
-@media (max-width:768px){
-  .listings-section .listings-grid{
-    grid-template-columns:repeat(2, minmax(0,1fr));
-    gap:10px;
-  }
+/* İsteğe bağlı: büyük ekranlarda biraz büyüsün */
+@media (min-width:768px){
+  .hero h2{ font-size:2rem; }   /* 32px civarı */
+  .hero p{  font-size:1.125rem; } /* 18px civarı */
 }
 
   </style>
