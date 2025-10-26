@@ -1,3 +1,4 @@
+<!-- /index.html -->
 <!DOCTYPE html>
 <html lang="tr" dir="ltr">
 <head>
@@ -10,10 +11,12 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    :root{ scrollbar-gutter:stable; }
+    /* scrollbar-gutter sadece desktop; mobilde genişletmesin (neden: mobilde kayma yapıyor) */
+    @media (hover:hover) and (pointer:fine){ :root{ scrollbar-gutter:stable; } }
     body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-y:scroll}
     a{color:inherit;text-decoration:none}
     img{max-width:100%;display:block}
+    html, body { max-width:100%; overflow-x:hidden; } /* güvenlik bariyeri */
 
     .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
@@ -27,7 +30,8 @@
     .lang select{border:0;background:transparent;font-weight:700;max-width:28ch}
 
     #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
-    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable both-edges}
+    /* 'both-edges' kaldırıldı: mobilde toplam genişliği büyütüyordu */
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
     .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
     .catnav .chip:hover{background:#fafafa}
     .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
@@ -254,9 +258,10 @@
     </div>
   </dialog>
 
-  <!-- Firebase init -->
+  <!-- Firebase init (projenizde zaten var) -->
   <script type="module" src="/firebase-init.js"></script>
 
+  <!-- === SCRIPT #1: i18n + UI (global bağlar dahil) === -->
   <script type="module">
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
@@ -268,49 +273,107 @@
       ar:{'app.name':'الأيادي المُنتِجة','buttons.post':'أنشئ إعلانًا','buttons.signin':'تسجيل الدخول / إنشاء حساب','buttons.signout':'تسجيل الخروج','buttons.browse':'استكشف الفئات','buttons.login':'تسجيل الدخول','buttons.forgot':'نسيت كلمة المرور','buttons.google':'الدخول عبر Google','buttons.register':'إنشاء حساب','hero.title':'منتجات يدوية ونكهات محلية تحت سقف واحد','hero.desc':'تسوّق من السيّدات المُنتِجات: أطعمة منزلية وأعمال يدوية. ابحث حسب موقعك أو استكشف حسب الفئات.','auth.title':'تسجيل الدخول / إنشاء حساب','fields.email':'البريد الإلكتروني','fields.password':'كلمة المرور','fields.password2':'تأكيد كلمة المرور','fields.username':'اسم المستخدم','fields.fullname':'الاسم الكامل','fields.province':'الولاية','fields.district':'المنطقة','register.summary':'ليس لديك حساب؟ سجّل الآن','hints.verify':'سيتم إرسال <strong>رسالة تفعيل</strong>. يرجى فحص الوارد و<strong>الرسائل غير المرغوبة</strong>.','legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'السلع المحظورة','legal.distance':'البيع عن بعد','legal.preinfo':'معلومات أولية','legal.delivery':'التسليم/الإرجاع','legal.contact':'التواصل','list.title':'إعلانات جديدة','list.loading':'جارٍ التحميل…','list.range':'{from}-{to} من {total}','paging.prev':'‹ السابق','paging.next':'التالي ›','card.ribbon':'واجهة','card.seller':'البائع','card.order':'اطلب الآن','card.msg':'راسل البائع','listing.title':'تفاصيل الإعلان'}
     };
 
-    /* Basit i18n runtime */
-    const i18n = {
-      lang: localStorage.getItem('ue_lang') || 'tr',
-      t(key){ const d=I18N[this.lang]||I18N.tr; return d[key] ?? key; },
-      setLang(lang){
-        this.lang = I18N[lang]? lang : 'tr';
-        localStorage.setItem('ue_lang', this.lang);
-        document.documentElement.lang = this.lang;
-        document.documentElement.dir = (this.lang==='ar')?'rtl':'ltr';
-        // statik [data-i18n]
-        document.querySelectorAll('[data-i18n]').forEach(el=>{
-          const k = el.getAttribute('data-i18n'); const val = this.t(k);
-          if(val!=null) el.innerHTML = val;
-        });
-        // placeholderlar
-        const phMail = (this.lang==='en'?'name@example.com':(this.lang==='de'?'name@beispiel.de':'name@example.com'));
-        document.getElementById('li_email')?.setAttribute('placeholder', phMail);
-        document.getElementById('su_email')?.setAttribute('placeholder', phMail);
-        document.getElementById('su_username')?.setAttribute('placeholder', this.lang==='de'?'@benutzer':'@username');
-        document.getElementById('su_name')?.setAttribute('placeholder', this.lang==='en'?'Your full name':(this.lang==='de'?'Vollständiger Name':(this.lang==='ar'?'الاسم الكامل':'Adınız Soyadınız')));
-        document.getElementById('su_district')?.setAttribute('placeholder', this.lang==='en'?'Your district':(this.lang==='de'?'Bezirk':(this.lang==='ar'?'المنطقة':'İlçeniz')));
-        // kategoriler ve ilanlar yeniden
-        buildTopCats(this.lang);
-        rerenderListings(); // dinamik buton/etiketler
-        // pager buton metinleri
-        document.getElementById('prevPage')?.setAttribute('data-i18n','paging.prev');
-        document.getElementById('nextPage')?.setAttribute('data-i18n','paging.next');
-        document.getElementById('listingTitle')?.setAttribute('data-i18n','listing.title');
+    /* ===== Kategori i18n (tam) ===== */
+    const CAT_I18N = {
+      tr: {
+        titles: {
+          yemek:'🍲 Yemekler', pasta:'🎂 Pasta & Tatlı', sos:'🫙 Reçel • Turşu • Sos', yoresel:'🌾 Yöresel / Kışlık',
+          diet:'🥗 Diyet / Vegan / GF', taki:'💍 Takı', bebek:'👶 Bebek & Çocuk', orgu:'🧶 Örgü / Triko',
+          terzi:'✂️ Dikiş / Terzilik', makrome:'🧵 Makrome & Dekor', evdekor:'🏠 Ev Dekor & Aksesuar',
+          mum:'🕯️ Mum & Kokulu', kozmetik:'🧼 Doğal Sabun & Kozmetik', amigurumi:'🧸 Amigurumi & Oyuncak'
+        },
+        subs: {
+          evyemek:'Ev yemekleri', borek:'Börek-çörek', corba:'Çorba', zeytiny:'Zeytinyağlı', pilav:'Pilav-makarna', et:'Et-tavuk', kahvalti:'Kahvaltılık', meze:'Meze', dondur:'Dondurulmuş', cocuk:'Çocuk öğünleri', diyetvegf:'Diyet/vegan/gf',
+          yaspasta:'Yaş pasta', kek:'Kek-cupcake', kurabiye:'Kurabiye', serbetli:'Şerbetli', sutlu:'Sütlü', cheese:'Cheesecake', diyettat:'Diyet tatlı', cikolata:'Çikolata/şekerleme', dogumset:'Doğum günü setleri',
+          recel:'Reçel-marmelat', pekmez:'Pekmez', tursu:'Turşu', dom:'Domates/biber sos', acios:'Acı sos', salca:'Salça', sirke:'Sirke', konserve:'Konserve',
+          eriste:'Erişte', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Kurutulmuş', salca2:'Salça', sirke2:'Sirke', konserve2:'Konserve',
+          fit:'Fit tabaklar', vegan:'Vegan yemekler', gf:'GF unlu mamuller', sekersiz:'Şekersiz tatlı', keto:'Keto ürün', protein:'Protein atıştırmalık',
+          bileklik:'Bileklik', kolye:'Kolye', kupe:'Küpe', yuzuk:'Yüzük', halhal:'Halhal', bros:'Broş', set:'Setler', isimli:'Kişiye özel', makrome:'Makrome', dogaltas:'Doğal taş', recine:'Reçine', telsarma:'Tel sarma',
+          fig:'Figürler', cingirak:'Çıngırak', dis:'Diş kaşıyıcı', bezoy:'Bez oyuncak/kitap', montessori:'Montessori', set2:'Setler', patik:'Patik-bere', battaniye:'Battaniye', onluk:'Önlük', lohusa:'Lohusa seti', sac:'Saç aksesuarı', giyim:'El emeği kıyafet',
+          hirka:'Hırka', kazak:'Kazak', atkibere:'Atkı-bere', panco:'Panço', sal:'Şal', corap:'Çorap', lif:'Lif takımı', bebektk:'Bebek takımı', yelek:'Yelek', kirlen:'Kırlent-örtü', igneoyasi:'İğne oyası',
+          paca:'Paça/onarım', fermuar:'Fermuar değişimi', perde:'Perde', nevresim:'Nevresim', masa:'Masa örtüsü', ozel:'Özel dikim', kostum:'Kostüm',
+          duvar:'Duvar süsü', saksi:'Saksı askısı', anahtar:'Anahtarlık', avize:'Avize', runner:'Runner', sepet:'Sepet', raf:'Raf/dekor',
+          kece:'Keçe işleri', kirlent:'Kırlent', kapi:'Kapı süsü', tepsi:'Tepsi süs', cerceve:'Çerçeve', ruya:'Rüya kapanı', tablo:'Tablo',
+          soya:'Soya/balmumu', tas:'Kokulu taş', sprey:'Oda spreyi', tutsu:'Tütsü', jel:'Jel mum', hediye:'Hediye seti',
+          zeytin:'Zeytinyağlı sabun', bitkisel:'Bitkisel sabun', sampuan:'Katı şampuan', balm:'Dudak balmı', krem:'Krem/merhem', banyotuzu:'Banyo tuzu', lavanta:'Lavanta kesesi',
+          anahtar2:'Anahtarlık', magnet:'Magnet', kolek:'Koleksiyon', dekorbebek:'Dekor bebek'
+        }
+      },
+      en: {
+        titles: {
+          yemek:'🍲 Meals', pasta:'🎂 Cakes & Sweets', sos:'🫙 Jam • Pickles • Sauces', yoresel:'🌾 Local / Pantry',
+          diet:'🥗 Diet / Vegan / GF', taki:'💍 Jewelry', bebek:'👶 Baby & Kids', orgu:'🧶 Knitwear',
+          terzi:'✂️ Sewing / Tailor', makrome:'🧵 Macramé & Decor', evdekor:'🏠 Home Decor & Accessories',
+          mum:'🕯️ Candles & Fragrance', kozmetik:'🧼 Natural Soap & Cosmetics', amigurumi:'🧸 Amigurumi & Toys'
+        },
+        subs: {
+          evyemek:'Home-cooked meals', borek:'Börek & pastries', corba:'Soup', zeytiny:'Olive-oil dishes', pilav:'Rice & pasta', et:'Meat & chicken', kahvalti:'Breakfast items', meze:'Meze', dondur:'Frozen', cocuk:'Kids meals', diyetvegf:'Diet/vegan/gf',
+          yaspasta:'Cream cakes', kek:'Cake & cupcake', kurabiye:'Cookies', serbetli:'Syrupy desserts', sutlu:'Milk desserts', cheese:'Cheesecake', diyettat:'Diet desserts', cikolata:'Chocolate/candy', dogumset:'Birthday sets',
+          recel:'Jam & marmalade', pekmez:'Molasses', tursu:'Pickles', dom:'Tomato/pepper sauce', acios:'Hot sauce', salca:'Paste', sirke:'Vinegar', konserve:'Canned',
+          eriste:'Noodles (erişte)', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Dried foods', salca2:'Paste', sirke2:'Vinegar', konserve2:'Canned',
+          fit:'Fit plates', vegan:'Vegan dishes', gf:'Gluten-free bakery', sekersiz:'Sugar-free desserts', keto:'Keto products', protein:'Protein snacks',
+          bileklik:'Bracelet', kolye:'Necklace', kupe:'Earrings', yuzuk:'Ring', halhal:'Anklet', bros:'Brooch', set:'Sets', isimli:'Personalized', makrome:'Macramé', dogaltas:'Gemstone', recine:'Resin', telsarma:'Wire wrap',
+          fig:'Figures', cingirak:'Rattle', dis:'Teether', bezoy:'Cloth toy/book', montessori:'Montessori', set2:'Sets', patik:'Booties & beanie', battaniye:'Blanket', onluk:'Bib', lohusa:'Maternity set', sac:'Hair accessory', giyim:'Handmade clothing',
+          hirka:'Cardigan', kazak:'Sweater', atkibere:'Scarf & beanie', panco:'Poncho', sal:'Shawl', corap:'Socks', lif:'Bath mitt set', bebektk:'Baby set', yelek:'Vest', kirlen:'Cushion/cover', igneoyasi:'Needle lace',
+          paca:'Hem/repair', fermuar:'Zipper change', perde:'Curtain', nevresim:'Duvet set', masa:'Tablecloth', ozel:'Custom tailoring', kostum:'Costume',
+          duvar:'Wall hanging', saksi:'Plant hanger', anahtar:'Keychain', avize:'Chandelier', runner:'Runner', sepet:'Basket', raf:'Shelf/decor',
+          kece:'Felt crafts', kirlent:'Cushion', kapi:'Door wreath', tepsi:'Tray decor', cerceve:'Frame', ruya:'Dreamcatcher', tablo:'Painting',
+          soya:'Soy/beeswax', tas:'Aroma stone', sprey:'Room spray', tutsu:'Incense', jel:'Gel candle', hediye:'Gift set',
+          zeytin:'Olive oil soap', bitkisel:'Herbal soap', sampuan:'Solid shampoo', balm:'Lip balm', krem:'Cream/ointment', banyotuzu:'Bath salt', lavanta:'Lavender sachet',
+          anahtar2:'Keychain', magnet:'Magnet', kolek:'Collection', dekorbebek:'Decor doll'
+        }
+      },
+      de: {
+        titles: {
+          yemek:'🍲 Gerichte', pasta:'🎂 Kuchen & Süßes', sos:'🫙 Marmelade • Pickles • Soßen', yoresel:'🌾 Regional / Vorrat',
+        "terzi":"✂️ Nähen / Schneiderei", "makrome":"🧵 Makramee & Deko", "evdekor":"🏠 Wohndeko & Accessoires",
+          diet:'🥗 Diät / Vegan / GF', taki:'💍 Schmuck', bebek:'👶 Baby & Kinder', orgu:'🧶 Strick',
+          mum:'🕯️ Kerzen & Düfte', kozmetik:'🧼 Naturseife & Kosmetik', amigurumi:'🧸 Amigurumi & Spielzeug'
+        },
+        subs: {
+          evyemek:'Hausmannskost', borek:'Börek & Gebäck', corba:'Suppe', zeytiny:'Olivenöldgerichte', pilav:'Reis & Pasta', et:'Fleisch & Huhn', kahvalti:'Frühstück', meze:'Meze', dondur:'Tiefgekühlt', cocuk:'Kindermahlzeiten', diyetvegf:'Diät/vegan/gf',
+          yaspasta:'Sahnetorten', kek:'Kuchen & Cupcake', kurabiye:'Kekse', serbetli:'Sirup-Desserts', sutlu:'Milchdesserts', cheese:'Käsekuchen', diyettat:'Diät-Desserts', cikolata:'Schokolade/Süßwaren', dogumset:'Geburtstags-Sets',
+          recel:'Marmelade', pekmez:'Melasse', tursu:'Eingelegtes', dom:'Tomaten/Paprika-Soße', acios:'Scharfe Soße', salca:'Mark', sirke:'Essig', konserve:'Konserven',
+          eriste:'Erişte-Nudeln', tarhana:'Tarhana', yufka:'Yufka', manti:'Mantı', kurut:'Getrocknetes', salca2:'Mark', sirke2:'Essig', konserve2:'Konserven',
+          fit:'Fit-Teller', vegan:'Vegane Gerichte', gf:'Glutenfreie Backwaren', sekersiz:'Zuckerfreie Desserts', keto:'Keto-Produkte', protein:'Protein-Snacks',
+          bileklik:'Armband', kolye:'Kette', kupe:'Ohrringe', yuzuk:'Ring', halhal:'Fußkettchen', bros:'Brosche', set:'Sets', isimli:'Personalisiert', makrome:'Makramee', dogaltas:'Edelstein', recine:'Harz', telsarma:'Drahtwicklung',
+          fig:'Figuren', cingirak:'Rassel', dis:'Beißring', bezoy:'Stoffspielzeug/Buch', montessori:'Montessori', set2:'Sets', patik:'Schühchen & Mütze', battaniye:'Decke', onluk:'Lätzchen', lohusa:'Wochenbett-Set', sac:'Haaraccessoire', giyim:'Handgemachte Kleidung',
+          hirka:'Cardigan', kazak:'Pullover', atkibere:'Schal & Mütze', panco:'Poncho', sal:'Tuch', corap:'Socken', lif:'Badeset', bebektk:'Baby-Set', yelek:'Weste', kirlen:'Kissen/Decke', igneoyasi:'Nadelspitze',
+          paca:'Saum/Reparatur', fermuar:'Reißverschlusswechsel', perde:'Vorhang', nevresim:'Bettwäsche-Set', masa:'Tischdecke', ozel:'Maßanfertigung', kostum:'Kostüm',
+          duvar:'Wanddeko', saksi:'Pflanzenhänger', anahtar:'Schlüsselanhänger', avize:'Krone/Leuchte', runner:'Läufer', sepet:'Korb', raf:'Regal/Deko',
+          kece:'Filzarbeiten', kirlent:'Kissen', kapi:'Türkranz', tepsi:'Tablett-Deko', cerceve:'Rahmen', ruya:'Traumfänger', tablo:'Bild',
+          soya:'Soja/Bienenwachs', tas:'Duftstein', sprey:'Raumspray', tutsu:'Weihrauch', jel:'Gelkerze', hediye:'Geschenkset',
+          zeytin:'Olivenölseife', bitkisel:'Kräuterseife', sampuan:'Festes Shampoo', balm:'Lippenbalsam', krem:'Creme/Salbe', banyotuzu:'Badesalz', lavanta:'Lavendelsäckchen',
+          anahtar2:'Schlüsselanhänger', magnet:'Magnet', kolek:'Sammlung', dekorbebek:'Deko-Puppe'
+        }
+      },
+      ar: {
+        titles: {
+          yemek:'🍲 وجبات', pasta:'🎂 كعكات وحلويات', sos:'🫙 مربّى • مخللات • صلصات', yoresel:'🌾 محلي / مؤونة',
+          diet:'🥗 حمية / نباتي / خالٍ من الغلوتين', taki:'💍 مجوهرات', bebek:'👶 أطفال ورضّع', orgu:'🧶 حياكة',
+          terzi:'✂️ خياطة / تفصيل', makrome:'🧵 مكرمية وديكور', evdekor:'🏠 ديكور منزلي وإكسسوارات',
+          mum:'🕯️ شموع وروائح', kozmetik:'🧼 صابون طبيعي ومستحضرات', amigurumi:'🧸 أميغورومي وألعاب'
+        },
+        subs: {
+          evyemek:'أطباق منزلية', borek:'بورك ومعجّنات', corba:'شوربة', zeytiny:'أطباق بزيت الزيتون', pilav:'أرز ومكرونة', et:'لحوم ودجاج', kahvalti:'فطور', meze:'مقبلات', dondur:'مجمّدة', cocuk:'وجبات أطفال', diyetvegf:'حمية/نباتي/خالٍ من الغلوتين',
+          yaspasta:'كيك بالكريمة', kek:'كيك وكب كيك', kurabiye:'بسكويت', serbetli:'حلويات قطر', sutlu:'حلويات بالحليب', cheese:'تشيزكيك', diyettat:'حلويات حمية', cikolata:'شوكولا/حلويات', dogumset:'مجموعات عيد ميلاد',
+          recel:'مربّى', pekmez:'دبس', tursu:'مخللات', dom:'صلصة طماطم/فلفل', acios:'صلصة حارة', salca:'معجون', sirke:'خل', konserve:'معلّبات',
+          eriste:'نودلز (إريشته)', tarhana:'ترخانة', yufka:'يفكة', manti:'مانطي', kurut:'مجففات', salca2:'معجون', sirke2:'خل', konserve2:'معلّبات',
+          fit:'أطباق خفيفة', vegan:'أطباق نباتية', gf:'مخبوزات خالية من الغلوتين', sekersiz:'حلويات بدون سكر', keto:'منتجات كيتو', protein:'سناكات بروتين',
+          bileklik:'سوار', kolye:'عقد', kupe:'أقراط', yuzuk:'خاتم', halhal:'خلخال', bros:'بروش', set:'طقم', isimli:'مخصص بالاسم', makrome:'مكرمية', dogaltas:'أحجار طبيعية', recine:'ريزن', telsarma:'سلك مجدول',
+          fig:'مجسّمات', cingirak:'خشخيشة', dis:'عضّاضة', bezoy:'لعبة/كتاب قماشي', montessori:'مونتيسوري', set2:'أطقم', patik:'حذاء/قبعة', battaniye:'بطانية', onluk:'مريلة', lohusa:'طقم نفاس', sac:'إكسسوار شعر', giyim:'ملابس يدوية',
+          hirka:'كارديغان', kazak:'كنزة', atkibere:'وشاح وقبعة', panco:'بونشو', sal:'شال', corap:'جوارب', lif:'طقم استحمام', bebektk:'طقم طفل', yelek:'صدرية', kirlen:'وسادة/غطاء', igneoyasi:'دانتيلا بالإبرة',
+          paca:'تقريب/إصلاح', fermuar:'تغيير سحاب', perde:'ستارة', nevresim:'طقم مفارش', masa:'مفرش طاولة', ozel:'تفصيل خاص', kostum:'زي تنكري',
+          duvar:'تعليق جداري', saksi:'حامل نباتات', anahtar:'ميدالية مفاتيح', avize:'ثريا', runner:'رانر', sepet:'سلة', raf:'رف/ديكور',
+          kece:'أعمال لباد', kirlent:'وسادة', kapi:'إكليل باب', tepsi:'تزيين صينية', cerceve:'إطار', ruya:'ماسِك أحلام', tablo:'لوحة',
+          soya:'شمع صويا/نحل', tas:'حجر عطري', sprey:'معطّر غرف', tutsu:'بخور', jel:'شمعة جل', hediye:'طقم هدية',
+          zeytin:'صابون زيت زيتون', bitkisel:'صابون عشبي', sampuan:'شامبو صلب', balm:'مرهَم شفاه', krem:'كريم/مرهم', banyotuzu:'ملح استحمام', lavanta:'كيس لافندر',
+          anahtar2:'ميدالية مفاتيح', magnet:'مغناطيس', kolek:'مجموعة', dekorbebek:'دمية ديكور'
+        }
       }
     };
 
-    // Yıl
-    document.getElementById('y').textContent = new Date().getFullYear();
-
-    // TR iller
-    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
-    const suProv = document.getElementById('su_province');
-    if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
-
-    // Kategori i18n (mevcutta vardı) — değişmedi
-    const CAT_I18N = /* mevcut CAT_I18N objesi (uzun) — aynı bırakıldı */ undefined;
-
-    // Kategoriler – id tabanlı yapı (mevcutta vardı) — değişmedi
+    // Kategoriler – id tabanlı
     const CATS = [
       {id:'yemek', subs:[["evyemek"],["borek"],["corba"],["zeytiny"],["pilav"],["et"],["kahvalti"],["meze"],["dondur"],["cocuk"],["diyetvegf"]]},
       {id:'pasta', subs:[["yaspasta"],["kek"],["kurabiye"],["serbetli"],["sutlu"],["cheese"],["diyettat"],["cikolata"],["dogumset"]]},
@@ -328,11 +391,48 @@
       {id:'amigurumi', subs:[["anahtar2"],["magnet"],["kolek"],["dekorbebek"]]},
     ];
 
+    // i18n çekirdeği
+    const i18n = {
+      lang: localStorage.getItem('ue_lang') || 'tr',
+      t(key){ const d = I18N[this.lang] || I18N.tr; return d[key] ?? key; },
+      setLang(lang){
+        this.lang = I18N[lang] ? lang : 'tr';
+        localStorage.setItem('ue_lang', this.lang);
+        document.documentElement.lang = this.lang;
+        document.documentElement.dir = (this.lang==='ar')?'rtl':'ltr';
+        // statik data-i18n
+        document.querySelectorAll('[data-i18n]').forEach(el=>{
+          const k = el.getAttribute('data-i18n'); const val = this.t(k);
+          if (val != null) el.innerHTML = val;
+        });
+        // placeholders
+        const phMail = (this.lang==='en'?'name@example.com':(this.lang==='de'?'name@beispiel.de':'name@example.com'));
+        document.getElementById('li_email')?.setAttribute('placeholder', phMail);
+        document.getElementById('su_email')?.setAttribute('placeholder', phMail);
+        document.getElementById('su_username')?.setAttribute('placeholder', this.lang==='de'?'@benutzer':'@username');
+        document.getElementById('su_name')?.setAttribute('placeholder', this.lang==='en'?'Your full name':(this.lang==='de'?'Vollständiger Name':(this.lang==='ar'?'الاسم الكامل':'Adınız Soyadınız')));
+        document.getElementById('su_district')?.setAttribute('placeholder', this.lang==='en'?'Your district':(this.lang==='de'?'Bezirk':(this.lang==='ar'?'المنطقة':'İlçeniz')));
+        // kategoriler
+        buildTopCats(this.lang);
+        // dinamik ilan/paging metinleri
+        if (typeof window.rerenderListings === 'function') window.rerenderListings(); else setTimeout(()=>window.rerenderListings?.(),0);
+      }
+    };
+
+    // Yıl
+    document.getElementById('y').textContent = new Date().getFullYear();
+
+    // TR iller
+    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
+    const suProv = document.getElementById('su_province');
+    if (suProv){ suProv.innerHTML = '<option value="" disabled selected>İl seçiniz</option>' + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join(''); }
+
+    // Kategori UI
     const catBar = document.querySelector('#catNav .catnav-inner');
     const drops = document.querySelector('#catDrops .catdrops-inner');
 
     function localizeCat(cat, lang){
-      const L = (typeof CAT_I18N==='object' && CAT_I18N[lang]) ? CAT_I18N[lang] : null;
+      const L = CAT_I18N[lang] || CAT_I18N.tr;
       const title = L?.titles?.[cat.id] || cat.id;
       const subs = cat.subs.map(([sid])=>[sid, (L?.subs?.[sid]||sid)]);
       return { id: cat.id, title, subs };
@@ -432,8 +532,15 @@
 
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
+
+    // ---- Global bağlar (neden: ikinci module'den erişim) ----
+    window.I18N = I18N;
+    window.i18n = i18n;
+    window.buildTopCats = buildTopCats;
+    window.openAuth = openAuth;
   </script>
 
+  <!-- === SCRIPT #2: Listings === -->
   <script type="module">
     import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
@@ -447,7 +554,7 @@
     let allListings = [];
     let page = 0;
 
-    /* i18n yardımcıları */
+    // i18n helpers
     function t(k){ return (window.i18n?.t ? window.i18n.t(k) : (window.I18N?.tr?.[k]||k)); }
     function fmtRange(total,start,count){
       const from = Math.min(total, start+1);
@@ -506,6 +613,9 @@
       info.textContent = fmtRange(allListings.length, start, PAGE_SIZE);
       prevBtn.disabled = page===0;
       nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+      // pager metinlerini her render'da güncelle (dil değişimi için)
+      prevBtn.textContent = t('paging.prev');
+      nextBtn.textContent = t('paging.next');
     }
 
     // Dil değişince kullanılacak
@@ -518,7 +628,7 @@
         const id = card.getAttribute('data-id');
         const listing = allListings.find(x=>x.id===id);
         if(!listing) return;
-        if (e.target.matches('[data-do="order"], [data-do="msg"]')){ openAuth(); return; }
+        if (e.target.matches('[data-do="order"], [data-do="msg"]')){ window.openAuth?.(); return; }
         openListingDetail(listing, card.querySelector('.ph img')?.src);
       });
     }
@@ -553,8 +663,8 @@
           </div>
         </div>`;
 
-      document.getElementById('detailOrder')?.addEventListener('click', openAuth);
-      document.getElementById('detailMsg')?.addEventListener('click', openAuth);
+      document.getElementById('detailOrder')?.addEventListener('click', ()=>window.openAuth?.());
+      document.getElementById('detailMsg')?.addEventListener('click', ()=>window.openAuth?.());
 
       if (typeof modal.showModal === 'function') modal.showModal();
       else { modal.setAttribute('open',''); modal.style.display='grid'; }
@@ -595,6 +705,9 @@
 
     if (self.__fbReady) loadListings();
     else document.addEventListener('fb-ready', loadListings, { once:true });
+
+    // (İlk yüklemeyle de bir kere yerelleştir)
+    window.addEventListener('DOMContentLoaded', ()=>window.rerenderListings?.());
   </script>
 </body>
 </html>
