@@ -623,15 +623,10 @@ document.getElementById('signInBtn')
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
-    function redirectAfterAuth(){
-  const url = new URL(location.href);
-  const next = url.searchParams.get('next') || localStorage.getItem('ue_next') || '/home.html';
-  try { localStorage.removeItem('ue_next'); } catch(_) {}
-  location.href = next;
-}
+    function redirectHome(){ window.location.href = '/home.html'; }
 
     document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, provider); redirectAfterAuth(); }
+      try{ await signInWithPopup(auth, provider); redirectHome(); }
       catch(err){ alert('Google: '+(err?.message||err)); }
     });
 
@@ -639,7 +634,7 @@ document.getElementById('signInBtn')
       const email = document.getElementById('li_email').value.trim();
       const pass = document.getElementById('li_pass').value;
       if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectAfterAuth(); }
+      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
       catch(err){ alert(''+(err?.message||err)); }
     });
 
@@ -664,7 +659,7 @@ document.getElementById('signInBtn')
         await updateProfile(cred.user, { displayName: name });
         try{ await sendEmailVerification(cred.user); }catch{}
         alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
-        redirectAfterAuth();
+        redirectHome();
       }catch(err){ alert(''+(err?.message||err)); }
     });
 
@@ -683,24 +678,7 @@ document.getElementById('signInBtn')
     document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
 
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
-    document.getElementById('postBtn')?.addEventListener('click', (e)=>{
-  e.preventDefault();
-  const next = '/ilan-ver.html';
-  const { getAuth } = window.firebase || {};
-  // import ile zaten yukarıda: import { getAuth } from 'firebase-auth.js'
-  const auth = getAuth();
-  const user = auth.currentUser;
-
-  if (user) {
-    // Girişliyse direkt ilan verme sayfasına
-    location.href = next;
-  } else {
-    // Girişli değilse modalı aç ve hedefi hatırla
-    try { localStorage.setItem('ue_next', next); } catch(_) {}
-    openAuth();
-  }
-});
-
+    document.getElementById('postBtn')?.addEventListener('click', openAuth);
   </script>
 
   <script type="module">
