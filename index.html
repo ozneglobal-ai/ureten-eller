@@ -772,11 +772,16 @@ window.addEventListener('ue:lang', (e)=>{
   const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
 
   // satıcı bilgilerini getir
-  let seller = null;
-  try { seller = await fetchSeller(sellerId); } catch {}
-  const sName = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default'] || 'Satıcı');
-  const sAv = avatarFromSeller(seller || it);
-  const verified = !!(seller?.verifiedSeller || seller?.verified);
+let seller = null;
+try {
+  seller = await fetchSeller(sellerId);
+} catch {}
+
+// güvenli I18N kullanımı
+const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
+const sName = seller?.displayName || seller?.name || dict['seller.default'] || 'Satıcı';
+const sAv = avatarFromSeller(seller || it);
+const verified = !!(seller?.verifiedSeller || seller?.verified);
 
   // ek resimleri ufak önizleme olarak göster
   const thumbRow = extraImgs.length ? `
