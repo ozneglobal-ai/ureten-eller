@@ -243,6 +243,22 @@
   background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
   color:#111; border:1px solid #b18a37; box-shadow:0 6px 18px rgba(202,165,82,.35);
 }
+    /* ==== SİPARİŞ ÇEKMECESİ (slide-up) ==== */
+.order-drawer{position:fixed;left:0;right:0;bottom:-100%;z-index:250;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -18px 48px rgba(0,0,0,.15);transition:bottom .25s ease}
+.order-drawer.open{bottom:0}
+.order-inner{max-width:680px;margin:0 auto;padding:14px 12px}
+.order-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.order-title{font-weight:800;margin:0;font-size:16px}
+.order-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.order-form{grid-template-columns:1fr}}
+.order-form .field{display:flex;flex-direction:column;gap:6px}
+.order-form input,.order-form textarea,.order-form select{border:1px solid #e5e7eb;border-radius:10px;padding:10px}
+.order-form textarea{min-height:80px;resize:vertical}
+.order-row{display:flex;gap:10px;align-items:center}
+.order-ship{display:flex;gap:10px;align-items:center}
+.order-summary{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed #eee;margin-top:10px;padding-top:10px;font-weight:800}
+.order-actions{display:flex;gap:8px;margin-top:10px}
+.btn.cancel{background:#fff;border:1px solid #e5e7eb}
 
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
@@ -715,141 +731,420 @@ if(document.readyState==='loading'){
 
   </script>
   <!-- İlan Detay Modal -->
-  <div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-label="İlan Detayı">
-    <div class="modal-card">
-      <div class="m-head">
-        <strong>İlan Detayı</strong>
-        <button class="btn ghost" id="mClose">✕</button>
-      </div>
-      <div class="m-body">
-        <div class="gallery">
-          <div class="g-main"><img id="gMain" alt="İlan görseli"/></div>
-          <div class="g-controls">
-            <button class="g-btn" id="gPrev">‹ Önceki</button>
-            <button class="g-btn" id="gNext">Sonraki ›</button>
-          </div>
-          <div class="g-thumbs" id="gThumbs"></div>
+<div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-label="İlan Detayı">
+  <div class="modal-card">
+    <div class="m-head">
+      <strong>İlan Detayı</strong>
+      <button class="btn ghost" id="mClose">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="gallery">
+        <div class="g-main"><img id="gMain" alt="İlan görseli"/></div>
+        <div class="g-controls">
+          <button class="g-btn" id="gPrev">‹ Önceki</button>
+          <button class="g-btn" id="gNext">Sonraki ›</button>
         </div>
-        <div class="m-info">
-          <h3 class="title" id="mTitle">İlan</h3>
-          <div class="meta2" id="mMeta"></div>
-          <div id="mDesc"></div>
-          <div class="seller">
-            <div style="flex:1">
-              <div id="mSellerName" style="font-weight:700">Satıcı</div>
-              <div id="mSellerCity" class="meta2"></div>
-            </div>
-            <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
+        <div class="g-thumbs" id="gThumbs"></div>
+      </div>
+      <div class="m-info">
+        <h3 class="title" id="mTitle">İlan</h3>
+        <div class="meta2" id="mMeta"></div>
+        <div id="mDesc"></div>
+        <div class="seller">
+          <div style="flex:1">
+            <div id="mSellerName" style="font-weight:700">Satıcı</div>
+            <div id="mSellerCity" class="meta2"></div>
           </div>
-          <div id="mStock" class="badge" style="display:none">Stok durumu</div>
-          <div class="cta">
-            <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
-            <a id="mProfile" class="btn secondary" href="#">Profili Ziyaret Et</a>
-          </div>
+          <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
+        </div>
+        <div id="mStock" class="badge" style="display:none">Stok durumu</div>
+        <div class="cta">
+          <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
+          <a id="mProfile" class="btn secondary" href="#">Profili Ziyaret Et</a>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Sipariş Çekmecesi -->
+<div id="orderDrawer" class="order-drawer" aria-hidden="true">
+  <div class="order-inner">
+    <div class="order-head">
+      <h4 class="order-title">Sipariş</h4>
+      <button id="odClose" class="btn cancel">Kapat</button>
+    </div>
+
+    <div id="odListing" style="font-size:13px;color:#6b7280;margin-bottom:8px"></div>
+
+    <div class="order-form">
+      <div class="field">
+        <label>Adet</label>
+        <input id="odQty" type="number" min="1" step="1" value="1" inputmode="numeric">
+      </div>
+
+      <div class="field">
+        <label>Teslimat</label>
+        <div class="order-ship">
+          <label><input type="radio" name="odShip" value="pickup" checked> Elden</label>
+          <label><input type="radio" name="odShip" value="cargo"> Kargo</label>
+        </div>
+      </div>
+
+      <div class="field" id="odAddressWrap" style="display:none">
+        <label>Adres</label>
+        <textarea id="odAddress" placeholder="Kargo için adres"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Telefon</label>
+        <input id="odPhone" type="tel" placeholder="İletişim için">
+      </div>
+
+      <div class="field" style="grid-column:1/-1">
+        <label>Not</label>
+        <textarea id="odNote" placeholder="Örn: hediye paketi lütfen"></textarea>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <span id="odCalcLabel">Toplam</span>
+      <span id="odTotal">0 TL</span>
+    </div>
+
+    <div class="order-actions">
+      <button id="odConfirm" class="btn primary" style="flex:1">Siparişi Onayla</button>
+      <button id="odMsg" class="btn secondary">Satıcıya Mesaj</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
+(() => {
+  // ---- Modal elemanları
+  const modal = document.getElementById('listingModal');
+  const gMain = document.getElementById('gMain');
+  const gThumbs = document.getElementById('gThumbs');
+  const gPrev = document.getElementById('gPrev');
+  const gNext = document.getElementById('gNext');
+  const mTitle = document.getElementById('mTitle');
+  const mMeta = document.getElementById('mMeta');
+  const mDesc = document.getElementById('mDesc');
+  const mSellerName = document.getElementById('mSellerName');
+  const mSellerCity = document.getElementById('mSellerCity');
+  const mBadge = document.getElementById('mBadge');
+  const mStock = document.getElementById('mStock');
+  const mOrder = document.getElementById('mOrder');
+  const mProfile = document.getElementById('mProfile');
+  const mClose = document.getElementById('mClose');
+  const mSellerBox = document.querySelector('.m-info .seller');
+
+  // ---- Drawer elemanları
+  const drawer = document.getElementById('orderDrawer');
+  const btnClose = document.getElementById('odClose');
+  const btnConfirm = document.getElementById('odConfirm');
+  const btnMsg = document.getElementById('odMsg');
+  const qty = document.getElementById('odQty');
+  const addressWrap = document.getElementById('odAddressWrap');
+  const address = document.getElementById('odAddress');
+  const phone = document.getElementById('odPhone');
+  const note = document.getElementById('odNote');
+  const totalLabel = document.getElementById('odTotal');
+  const listingInfo = document.getElementById('odListing');
+  const radios = document.querySelectorAll('[name="odShip"]');
+
+  let currentListingId = null;
+  let currentOrderItem = null;
+  let imgs = []; let idx = 0;
+
+  const fmtCur = (v, cur='TRY') => {
+    try { return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v||0)); }
+    catch(_) { return `${v||0} ${cur}`; }
+  };
+
+  function paint(){
+    if(!imgs.length) return;
+    idx = Math.max(0, Math.min(idx, imgs.length-1));
+    gMain.src = imgs[idx];
+    Array.from(gThumbs.children).forEach((im,i)=> im.setAttribute('aria-current', i===idx?'true':'false'));
+  }
+  function buildThumbs(){
+    gThumbs.innerHTML='';
+    imgs.forEach((u,i)=>{
+      const im = new Image();
+      im.src=u; im.alt='Önizleme';
+      im.addEventListener('click', ()=>{ idx=i; paint(); });
+      gThumbs.appendChild(im);
+    });
+  }
+
+  // Dışarıdan da çağrılabilir:
+  window.openListingDetail = async function(id, d){
+    const data = d||{};
+    currentListingId = id;
+
+    // görseller
+    try { imgs = await (window.resolveImages ? window.resolveImages(data) : [data.coverUrl || data.cover || '']); }
+    catch { imgs = [data.coverUrl || data.cover || '']; }
+    imgs = imgs.filter(Boolean);
+    idx = 0; buildThumbs(); paint();
+
+    // metinler
+    mTitle.textContent = data.title || data.name || 'İlan';
+    mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
+    mDesc.textContent = data.description || data.desc || '';
+
+    // satıcı
+    const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
+    const sCity = data.sellerCity || data.city || '';
+    const sId = data.sellerId || data.ownerId || data.userId || '';
+    const sSlug = data.sellerSlug || sId || '';
+    const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
+    mSellerName.textContent = sName;
+    mSellerCity.textContent = sCity;
+    mBadge.style.display = verified ? 'inline-flex' : 'none';
+    if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
+
+    // stok
+    const stockNum = Number((data.stock ?? data.quantity ?? 0));
+    const inStock = (data.inStock === true) || stockNum > 0;
+    mStock.style.display = 'inline-flex';
+    mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
+    mStock.classList.toggle('red', !inStock);
+
+    // profiline link
+    mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}`
+                          : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
+
+    // Sipariş çekmecesine geçecek payload
+    currentOrderItem = {
+      id,
+      title: data.title || data.name || 'İlan',
+      price: Number(data.price)||0,
+      currency: data.currency || data.cur || 'TRY',
+      sellerName: sName
+    };
+
+    modal.setAttribute('open','');
+  };
+
+  // Grid kart tıkla → modal
+  document.getElementById('allGrid')?.addEventListener('click', (e)=>{
+    const a=e.target.closest('.card'); if(!a) return; e.preventDefault();
+    const id=a.getAttribute('data-id');
+    const item=window.__UE_LISTINGS?.[id];
+    if(item){ openListingDetail(id,item.data); }
+  });
+
+  // Modal içi buton: Sipariş Ver → çekmeceyi aç
+  mOrder.addEventListener('click', (e)=>{
+    e.preventDefault();
+    if (!currentOrderItem) return;
+    openOrderDrawer(currentOrderItem);
+  });
+
+  gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
+  gNext.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx+1)%imgs.length; paint(); });
+  mClose.addEventListener('click', ()=> modal.removeAttribute('open'));
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
+  document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
 
   <script>
-    // ==== Detay Modal + Kart Tıklama ====
-    (function(){
-      const modal = document.getElementById('listingModal');
-      const gMain = document.getElementById('gMain');
-      const gThumbs = document.getElementById('gThumbs');
-      const gPrev = document.getElementById('gPrev');
-      const gNext = document.getElementById('gNext');
-      const mTitle = document.getElementById('mTitle');
-      const mMeta = document.getElementById('mMeta');
-      const mDesc = document.getElementById('mDesc');
-      const mSellerName = document.getElementById('mSellerName');
-      const mSellerCity = document.getElementById('mSellerCity');
-      const mBadge = document.getElementById('mBadge');
-      const mStock = document.getElementById('mStock');
-      const mOrder = document.getElementById('mOrder');
-      const mProfile = document.getElementById('mProfile');
-      const mClose = document.getElementById('mClose');
-      const mSellerBox = document.querySelector('.m-info .seller');
+/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi (tek blok) ==== */
+(() => {
+  // ---- Modal elemanları
+  const modal = document.getElementById('listingModal');
+  const gMain = document.getElementById('gMain');
+  const gThumbs = document.getElementById('gThumbs');
+  const gPrev = document.getElementById('gPrev');
+  const gNext = document.getElementById('gNext');
+  const mTitle = document.getElementById('mTitle');
+  const mMeta = document.getElementById('mMeta');
+  const mDesc = document.getElementById('mDesc');
+  const mSellerName = document.getElementById('mSellerName');
+  const mSellerCity = document.getElementById('mSellerCity');
+  const mBadge = document.getElementById('mBadge');
+  const mStock = document.getElementById('mStock');
+  const mOrder = document.getElementById('mOrder');
+  const mProfile = document.getElementById('mProfile');
+  const mClose = document.getElementById('mClose');
+  const mSellerBox = document.querySelector('.m-info .seller');
 
-      let currentListingId = null;
-      let imgs = []; let idx = 0;
+  // ---- Çekmece elemanları
+  const drawer = document.getElementById('orderDrawer');
+  const btnClose = document.getElementById('odClose');
+  const btnConfirm = document.getElementById('odConfirm');
+  const btnMsg = document.getElementById('odMsg');
+  const qty = document.getElementById('odQty');
+  const addressWrap = document.getElementById('odAddressWrap');
+  const address = document.getElementById('odAddress');
+  const phone = document.getElementById('odPhone');
+  const note = document.getElementById('odNote');
+  const totalLabel = document.getElementById('odTotal');
+  const listingInfo = document.getElementById('odListing');
+  const radios = document.querySelectorAll('[name="odShip"]');
 
-      function paint(){ if(!imgs.length) return; idx = Math.max(0, Math.min(idx, imgs.length-1)); gMain.src = imgs[idx]; Array.from(gThumbs.children).forEach((im,i)=> im.setAttribute('aria-current', i===idx?'true':'false')); }
-      function buildThumbs(){ gThumbs.innerHTML=''; imgs.forEach((u,i)=>{ const im = new Image(); im.src=u; im.alt='Önizleme'; im.addEventListener('click', ()=>{ idx=i; paint(); }); gThumbs.appendChild(im); }); }
+  let currentListingId = null;
+  let currentOrderItem = null;
+  let imgs = []; let idx = 0;
 
-      window.openListingDetail = async function(id, d){
-        const data = d||{};
-        currentListingId = id;
-        imgs = await window.resolveImages(data);  
-        idx = 0;
-        buildThumbs();
-        paint();
-        mTitle.textContent = data.title || data.name || 'İlan';
-        mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? (new Intl.NumberFormat('tr-TR',{style:'currency',currency:(data.currency||data.cur||'TRY')}).format(Number(data.price))):''}`;
-        mDesc.textContent = data.description || data.desc || '';
-        const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
-        const sCity = data.sellerCity || data.city || '';
-        const sId = data.sellerId || data.ownerId || data.userId || '';
-        const sSlug = data.sellerSlug || sId || '';
-        const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
-       mSellerName.textContent = sName;
-mSellerCity.textContent = sCity;
-mBadge.style.display = verified ? 'inline-flex' : 'none';
-if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
+  const fmtCur = (v, cur='TRY') => {
+    try { return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v||0)); }
+    catch(_) { return `${v||0} ${cur}`; }
+  };
 
-        // stok durumu
-        const stockNum = Number((data.stock ?? data.quantity ?? 0));
-        const inStock = (data.inStock === true) || stockNum > 0;
-        mStock.style.display = 'inline-flex';
-        mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
-        mStock.classList.toggle('red', !inStock);
-        // bağlantılar (YÖNLENDİRME DÜZELTİLMİŞ)
-        mOrder.href = `/docs/orders.html?new=1&ilan=${encodeURIComponent(id)}`;
-        mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}` : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
-        modal.setAttribute('open','');
-      }
-
-      document.getElementById('allGrid')?.addEventListener('click', (e)=>{
-        const a=e.target.closest('.card'); if(!a) return; e.preventDefault();
-        const id=a.getAttribute('data-id'); const item=window.__UE_LISTINGS?.[id]; if(item){ openListingDetail(id,item.data); }
-      });
-
-      // Sipariş Ver → orders.html'e
-      mOrder.addEventListener('click', (e)=>{
-        // Doğrudan href çalışsın; prompt kaldırıldı ki yönlendirme net olsun
-      });
-
-      gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
-      gNext.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx+1)%imgs.length; paint(); });
-      mClose.addEventListener('click', ()=> modal.removeAttribute('open'));
-      modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
-      document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
-    })();
-<!-- diğer script'lerin altına -->
-  
-document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-  try {
-    // Tüm Firebase app'lerinden çıkış yap (modular SDK)
-    const fb = self.firebase || window.firebase || {};
-    if (fb.getApps && fb.getAuth && fb.signOut) {
-      const apps = fb.getApps();
-      for (const app of apps) {
-        try { await fb.signOut(fb.getAuth(app)); } catch(e) {}
-      }
-    }
-    // Compat/tekil örnek varsa onu da kapat
-    if (self.__fb?.auth?.signOut) {
-      try { await self.__fb.auth.signOut(); } catch(e) {}
-    }
-  } finally {
-    // Yerel verileri temizle
-    try { ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
-    try { sessionStorage.clear(); } catch(_) {}
-    // Ana sayfaya tek yön bilet
-    location.replace('/index.html');
+  function paint(){
+    if(!imgs.length) return;
+    idx = Math.max(0, Math.min(idx, imgs.length-1));
+    gMain.src = imgs[idx];
+    Array.from(gThumbs.children).forEach((im,i)=> im.setAttribute('aria-current', i===idx?'true':'false'));
   }
-});
+  function buildThumbs(){
+    gThumbs.innerHTML='';
+    imgs.forEach((u,i)=>{
+      const im = new Image();
+      im.src=u; im.alt='Önizleme';
+      im.addEventListener('click', ()=>{ idx=i; paint(); });
+      gThumbs.appendChild(im);
+    });
+  }
+
+  // Dışarıdan çağrılacak: kart tıklandığında detay aç
+  window.openListingDetail = async function(id, d){
+    const data = d||{};
+    currentListingId = id;
+
+    // görseller
+    try { imgs = await (window.resolveImages ? window.resolveImages(data) : [data.coverUrl || data.cover || '']); }
+    catch { imgs = [data.coverUrl || data.cover || '']; }
+    imgs = imgs.filter(Boolean);
+    idx = 0; buildThumbs(); paint();
+
+    // metinler
+    mTitle.textContent = data.title || data.name || 'İlan';
+    mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
+    mDesc.textContent = data.description || data.desc || '';
+
+    // satıcı
+    const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
+    const sCity = data.sellerCity || data.city || '';
+    const sId = data.sellerId || data.ownerId || data.userId || '';
+    const sSlug = data.sellerSlug || sId || '';
+    const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
+    mSellerName.textContent = sName;
+    mSellerCity.textContent = sCity;
+    mBadge.style.display = verified ? 'inline-flex' : 'none';
+    if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
+
+    // stok
+    const stockNum = Number((data.stock ?? data.quantity ?? 0));
+    const inStock = (data.inStock === true) || stockNum > 0;
+    mStock.style.display = 'inline-flex';
+    mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
+    mStock.classList.toggle('red', !inStock);
+
+    // profiline link
+    mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}`
+                          : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
+
+    // Sipariş çekmecesine geçecek payload
+    currentOrderItem = {
+      id,
+      title: data.title || data.name || 'İlan',
+      price: Number(data.price)||0,
+      currency: data.currency || data.cur || 'TRY',
+      sellerName: sName
+    };
+
+    modal.setAttribute('open','');
+  };
+
+  // Grid kart tıkla → modal
+  document.getElementById('allGrid')?.addEventListener('click', (e)=>{
+    const a=e.target.closest('.card'); if(!a) return; e.preventDefault();
+    const id=a.getAttribute('data-id');
+    const item=window.__UE_LISTINGS?.[id];
+    if(item){ openListingDetail(id,item.data); }
+  });
+
+  // Modal içi: Sipariş Ver → çekmeceyi aç
+  mOrder.addEventListener('click', (e)=>{
+    e.preventDefault();
+    if (!currentOrderItem) return;
+    openOrderDrawer(currentOrderItem);
+  });
+
+  gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
+  gNext.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx+1)%imgs.length; paint(); });
+  mClose.addEventListener('click', ()=> modal.removeAttribute('open'));
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
+  document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
+
+  // ==== Sipariş çekmecesi ====
+  function updateTotal(){
+    if(!currentOrderItem) return;
+    const q = Math.max(1, parseInt(qty.value||1));
+    totalLabel.textContent = fmtCur(q * (Number(currentOrderItem.price)||0), currentOrderItem.currency||'TRY');
+  }
+
+  window.openOrderDrawer = (item) => {
+    currentOrderItem = item;
+    listingInfo.innerHTML = `<b>${item.title || 'İlan'}</b> • ${fmtCur(item.price, item.currency||'TRY')}`;
+    qty.value = 1;
+    address.value = '';
+    phone.value = '';
+    note.value = '';
+    document.querySelector('[name="odShip"][value="pickup"]').checked = true;
+    addressWrap.style.display = 'none';
+    updateTotal();
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+  };
+
+  btnClose.addEventListener('click', ()=>{
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+  });
+
+  radios.forEach(r => r.addEventListener('change', e=>{
+    addressWrap.style.display = (e.target.value === 'cargo') ? 'block' : 'none';
+  }));
+
+  qty.addEventListener('input', updateTotal);
+
+  btnConfirm.addEventListener('click', ()=>{
+    if(!currentOrderItem) return;
+    const q = Math.max(1, parseInt(qty.value||1));
+    const ship = document.querySelector('[name="odShip"]:checked')?.value || 'pickup';
+    const payload = {
+      listingId: currentOrderItem.id,
+      listingTitle: currentOrderItem.title,
+      quantity: q,
+      unitPrice: Number(currentOrderItem.price)||0,
+      currency: currentOrderItem.currency || 'TRY',
+      total: q * (Number(currentOrderItem.price)||0),
+      deliveryMethod: ship === 'cargo' ? 'cargo' : 'pickup',
+      address: ship === 'cargo' ? (address.value||'').trim() : '',
+      phone: (phone.value||'').trim(),
+      note: (note.value||'').trim()
+    };
+    console.log('Sipariş onay payload:', payload);
+    alert('Sipariş verildi!');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+  });
+
+  btnMsg.addEventListener('click', ()=>{
+    if(!currentOrderItem) return;
+    const q = Math.max(1, parseInt(qty.value||1));
+    const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
+    alert(msg);
+  });
+})();
 </script>
+
+
 </body>
 </html>
 
