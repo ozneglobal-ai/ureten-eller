@@ -384,10 +384,39 @@
   </dialog>
 
   <!-- Firebase init -->
-  <script type="module" src="/firebase-init.js"></script>
+<script type="module" src="/firebase-init.js"></script>
 
-  <script type="module">
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+<script type="module">
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    updateProfile,
+    sendPasswordResetEmail,
+    signOut
+  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  // 🔹 Giriş başarılı olunca yönlendirme fonksiyonu
+  function redirectAfterLogin() {
+    const params = new URLSearchParams(location.search);
+    let next = params.get('next') || '/home.html';
+    try {
+      const u = new URL(next, location.origin);
+      if (u.origin !== location.origin) next = '/home.html';
+      next = u.pathname + u.search + u.hash;
+    } catch (_) {
+      next = '/home.html';
+    }
+    location.replace(next);
+  }
+
+  // 🔹 Giriş başarılı olunca çağır
+  redirectAfterLogin();
+</script>
 
     /* ===== i18n – Metinler (KATEGORİLERE DOKUNMADAN) ===== */
     const I18N = {
