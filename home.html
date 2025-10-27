@@ -669,6 +669,18 @@ async function fetchAndPaint(){
   x.data.__cover = await resolveCover(x.data);
 }));
 
+// ★ Vitrin / özel ilan işareti belirle
+[...vip, ...std].forEach(x => {
+  const d = x.data;
+  const now = Date.now();
+
+  d.__isVip =
+    (d.showcase || d.isShowcase || d.vitrin || d.featured) === true ||
+    toMillis(d.showcaseUntil) > now ||
+    toMillis(d.vitrinUntil) > now ||
+    toMillis(d.featuredUntil) > now;
+});
+
 // ★ GOLD bilgisi: vitrin veya onaylı ise kartı altın çerçeve yap
 [...vip, ...std].forEach(x => {
   const isVip = isVipDoc(x.data, Date.now());
@@ -682,13 +694,23 @@ const combined = vip.slice(0,20).concat(std);
 renderList('allGrid', combined);
 window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
 
-} catch(e) {                                  // ← eksik olan catch
+} catch(e) {  // ← eksik olan catch eklendi
   console.warn('İlan yüklenemedi:', e);
-}                                             // ← try kapanışı
-}                                             // ← fetchAndPaint() fonksiyonu kapanışı
+}             // ← try kapanışı
+}             // ← fetchAndPaint() fonksiyonu kapanışı
 
-function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
-if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
+function start(){
+  if(window.__fbReady){
+    fetchAndPaint();
+  } else {
+    document.addEventListener('fb-ready', fetchAndPaint, {once:true});
+  }
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}
 })();
 
   </script>
