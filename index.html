@@ -625,7 +625,7 @@ document.getElementById('signInBtn')
 
     function redirectAfterAuth(){
   const url = new URL(location.href);
-  const next = url.searchParams.get('next') || localStorage.getItem('ue_next') || '/ilan-ver.html';
+  const next = url.searchParams.get('next') || localStorage.getItem('ue_next') || '/home.html';
   try { localStorage.removeItem('ue_next'); } catch(_) {}
   location.href = next;
 }
