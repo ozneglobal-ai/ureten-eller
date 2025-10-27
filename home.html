@@ -536,7 +536,36 @@ document.addEventListener('click', (e) => {
   if (bt) location.href = '/index.html';
 });
 
-document.getElementById('postBtn')?.addEventListener('click', () => location.href = '/ilan-ver.html');
+// ---- Ortak login kontrolü ----
+async function isLoggedIn(){
+  // 1) localStorage hızlı kontrol
+  let hasLocal = false;
+  try { hasLocal = !!localStorage.getItem('ue_user'); } catch(_) {}
+
+  // 2) Firebase ile teyit
+  try{
+    const fb = self.firebase || window.firebase;
+    if (fb?.getAuth) {
+      const auth = fb.getAuth(self.__fb?.app);
+      if (auth?.currentUser) return true;
+    } else if (fb?.auth && fb.auth().currentUser) {
+      return true;
+    }
+  } catch(_){}
+
+  return hasLocal;
+}
+
+// ---- İlan Ver butonu: koşullu yönlendirme ----
+document.getElementById('postBtn')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const next = '/ilan-ver.html';
+  if (await isLoggedIn()) {
+    location.href = next;
+  } else {
+    location.href = '/giris.html?next=' + encodeURIComponent(next);
+  }
+});
 
 // === ÇIKIŞ ===
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
