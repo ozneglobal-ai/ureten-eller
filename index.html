@@ -652,18 +652,29 @@ document.getElementById('signInBtn')
 
     function redirectHome(){ window.location.href = '/home.html'; }
 
-    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, provider); redirectHome(); }
-      catch(err){ alert('Google: '+(err?.message||err)); }
-    });
+   document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
+  try{
+    await signInWithPopup(auth, provider);
+    redirectAfterLogin();
+  }catch(err){
+    alert('Google: '+(err?.message||err));
+  }
+});
 
     document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      const pass = document.getElementById('li_pass').value;
-      if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
-      catch(err){ alert(''+(err?.message||err)); }
-    });
+  const email = document.getElementById('li_email').value.trim();
+  const pass = document.getElementById('li_pass').value;
+  if(!email || pass.length<6){
+    alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.');
+    return;
+  }
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    redirectAfterLogin();
+  }catch(err){
+    alert(''+(err?.message||err));
+  }
+});
 
     document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
       const email = document.getElementById('li_email').value.trim();
