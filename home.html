@@ -950,7 +950,8 @@ if(document.readyState==='loading'){
   modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
   document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
 
-/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi (tek blok) ==== */
+<script>
+/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
 (() => {
   // ---- Modal elemanları
   const modal = document.getElementById('listingModal');
@@ -1014,18 +1015,15 @@ if(document.readyState==='loading'){
     const data = d||{};
     currentListingId = id;
 
-    // görseller
     try { imgs = await (window.resolveImages ? window.resolveImages(data) : [data.coverUrl || data.cover || '']); }
     catch { imgs = [data.coverUrl || data.cover || '']; }
     imgs = imgs.filter(Boolean);
     idx = 0; buildThumbs(); paint();
 
-    // metinler
     mTitle.textContent = data.title || data.name || 'İlan';
     mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
     mDesc.textContent = data.description || data.desc || '';
 
-    // satıcı
     const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
     const sCity = data.sellerCity || data.city || '';
     const sId = data.sellerId || data.ownerId || data.userId || '';
@@ -1036,18 +1034,15 @@ if(document.readyState==='loading'){
     mBadge.style.display = verified ? 'inline-flex' : 'none';
     if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
 
-    // stok
     const stockNum = Number((data.stock ?? data.quantity ?? 0));
     const inStock = (data.inStock === true) || stockNum > 0;
     mStock.style.display = 'inline-flex';
     mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
     mStock.classList.toggle('red', !inStock);
 
-    // profiline link
     mProfile.href = sSlug ? `/docs/seller.html?u=${encodeURIComponent(sSlug)}`
                           : (sId ? `/docs/seller.html?id=${encodeURIComponent(sId)}` : '/docs/seller.html');
 
-    // Sipariş çekmecesine geçecek payload
     currentOrderItem = {
       id,
       title: data.title || data.name || 'İlan',
@@ -1134,7 +1129,7 @@ if(document.readyState==='loading'){
     drawer.setAttribute('aria-hidden','true');
   });
 
-    btnMsg.addEventListener('click', ()=>{
+  btnMsg.addEventListener('click', ()=>{
     if(!currentOrderItem) return;
     const q = Math.max(1, parseInt(qty.value||1));
     const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
