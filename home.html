@@ -610,7 +610,7 @@ const cardHTML = (d, id, cover, isGold=false) => {
   return `
 <a class="card" href="#" data-id="${id}">
   <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center">
-    <span class="vitrin-badge">★ Vitrin</span>
+    ${d.__isVip ? `<span class="vitrin-badge">★ Vitrin</span>` : ``}
   </div>
   <div class="body">
     <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
