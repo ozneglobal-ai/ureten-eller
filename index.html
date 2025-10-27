@@ -623,7 +623,12 @@ document.getElementById('signInBtn')
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
-    function redirectHome(){ window.location.href = '/home.html'; }
+    function redirectAfterAuth(){
+  const url = new URL(location.href);
+  const next = url.searchParams.get('next') || localStorage.getItem('ue_next') || '/ilan-ver.html';
+  try { localStorage.removeItem('ue_next'); } catch(_) {}
+  location.href = next;
+}
 
     document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
       try{ await signInWithPopup(auth, provider); redirectHome(); }
@@ -678,7 +683,24 @@ document.getElementById('signInBtn')
     document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
 
     document.getElementById('browseBtn')?.addEventListener('click', openAuth);
-    document.getElementById('postBtn')?.addEventListener('click', openAuth);
+    document.getElementById('postBtn')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  const next = '/ilan-ver.html';
+  const { getAuth } = window.firebase || {};
+  // import ile zaten yukarıda: import { getAuth } from 'firebase-auth.js'
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user) {
+    // Girişliyse direkt ilan verme sayfasına
+    location.href = next;
+  } else {
+    // Girişli değilse modalı aç ve hedefi hatırla
+    try { localStorage.setItem('ue_next', next); } catch(_) {}
+    openAuth();
+  }
+});
+
   </script>
 
   <script type="module">
