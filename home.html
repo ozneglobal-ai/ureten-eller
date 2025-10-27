@@ -243,6 +243,37 @@
   background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
   color:#111; border:1px solid #b18a37; box-shadow:0 6px 18px rgba(202,165,82,.35);
 }
+    /* ==== Modal düzenleme (scroll düzeltme) ==== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  overflow-y: auto;        /* 🔥 Kaydırma aktif */
+}
+
+.modal[open] {
+  display: flex;
+  align-items: flex-start; /* Yukarıdan başlasın */
+  justify-content: center;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  margin: 40px auto;        /* Üst-alt boşluk */
+  max-width: 680px;
+  width: 100%;
+  overflow: hidden;
+}
+    @media (max-width: 640px) {
+  .modal-card {
+    margin: 20px 10px;
+    border-radius: 8px;
+  }
+}
+
     /* ==== SİPARİŞ ÇEKMECESİ (slide-up) ==== */
 .order-drawer{position:fixed;left:0;right:0;bottom:-100%;z-index:250;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -18px 48px rgba(0,0,0,.15);transition:bottom .25s ease}
 .order-drawer.open{bottom:0}
