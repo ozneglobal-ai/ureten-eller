@@ -950,7 +950,6 @@ if(document.readyState==='loading'){
   modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
   document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
 
-<script>
 /* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
 (() => {
   // ---- Modal elemanları
