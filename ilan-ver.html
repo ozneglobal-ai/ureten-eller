@@ -143,11 +143,11 @@
 </head>
 <body>
    <script>
-    // Giriş yapılmamışsa index.html'e yönlendir
-    if (!localStorage.getItem('ue_user')) {
-      location.replace('/index.html');
-    }
-  </script>
+  // Giriş yapılmamışsa Giriş sayfasına yönlendir (geri dönüş için next paramı)
+  if (!localStorage.getItem('ue_user')) {
+    location.replace('/giris.html?next=/ilan-ver.html');
+  }
+</script>
 
   <div class="wrap">
     <div class="card">
