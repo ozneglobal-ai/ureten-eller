@@ -816,10 +816,14 @@ window.addEventListener('ue:lang', (e)=>{
 }
 
     function setListInfo(start, end, total){
-      const txt = (I18N[currentLang]['list.range']||'{start}-{end} / {total}')
-        .replace('{start}', start).replace('{end}', end).replace('{total}', total);
-      info.textContent = txt;
-    }
+  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
+  const tpl  = dict['list.range'] ?? '{start}-{end} / {total}';
+  const txt  = String(tpl)
+                .replace('{start}', start)
+                .replace('{end}', end)
+                .replace('{total}', total);
+  if (info) info.textContent = txt;
+}
 
     // ---- Cloudinary yardımcıları (firebase-init.js global fonksiyonlarını kullanır) ----
 const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
