@@ -762,7 +762,7 @@ window.addEventListener('ue:lang', (e)=>{
 
     async function cardTpl(it){
   const imgList = Array.isArray(it.photos) ? it.photos : [];
-  const mainImg = clMain(imgList[0])
+  const mainImg = clMain(imgList[0]);
   const extraImgs = imgList.slice(1);
   const showcase = !!it.showcase;
   const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
@@ -771,19 +771,17 @@ window.addEventListener('ue:lang', (e)=>{
   const id = it.id;
   const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
 
-  // satıcı bilgilerini getir
-let seller = null;
-try {
-  seller = await fetchSeller(sellerId);
-} catch {}
+  // güvenli sözlük
+  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
+  const TXT = (k, fb) => (dict[k] ?? fb);
 
-// güvenli I18N kullanımı
-const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
-const sName = seller?.displayName || seller?.name || dict['seller.default'] || 'Satıcı';
-const sAv = avatarFromSeller(seller || it);
-const verified = !!(seller?.verifiedSeller || seller?.verified);
+  // satıcı bilgileri
+  let seller = null;
+  try { seller = await fetchSeller(sellerId); } catch {}
+  const sName = seller?.displayName || seller?.name || TXT('seller.default', 'Satıcı');
+  const sAv = avatarFromSeller(seller || it);
+  const verified = !!(seller?.verifiedSeller || seller?.verified);
 
-  // ek resimleri ufak önizleme olarak göster
   const thumbRow = extraImgs.length ? `
     <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
       ${extraImgs.slice(0,3).map(url => `
@@ -796,7 +794,7 @@ const verified = !!(seller?.verifiedSeller || seller?.verified);
   return `
     <article class="card" data-id="${id}">
       <div class="ph">
-        ${showcase ? `<span class="ribbon">${I18N[currentLang]['ribbon.showcase']||'Vitrin'}</span>` : ''}
+        ${showcase ? `<span class="ribbon">${TXT('ribbon.showcase','Vitrin')}</span>` : ''}
         <img alt="${title}" loading="lazy" src="${mainImg}" width="800" height="550">
       </div>
       <div class="body">
@@ -805,13 +803,13 @@ const verified = !!(seller?.verifiedSeller || seller?.verified);
         <div class="seller">
           <div class="av"><img alt="" src="${sAv}" width="22" height="22"></div>
           <div class="name">${sName}</div>
-          ${verified ? `<span class="badge">${I18N[currentLang]['seller.verified']||'Onaylı'}</span>` : ''}
+          ${verified ? `<span class="badge">${TXT('seller.verified','Onaylı')}</span>` : ''}
         </div>
         ${thumbRow}
         <div class="price">${price}</div>
         <div class="actions">
-          <button class="btn gold" data-do="order">${I18N[currentLang]['buttons.order']||'Sipariş Ver'}</button>
-          <button class="btn ghost" data-do="msg">${I18N[currentLang]['buttons.message']||'Satıcıya Yaz'}</button>
+          <button class="btn gold" data-do="order">${TXT('buttons.order','Sipariş Ver')}</button>
+          <button class="btn ghost" data-do="msg">${TXT('buttons.message','Satıcıya Yaz')}</button>
         </div>
       </div>
     </article>`;
