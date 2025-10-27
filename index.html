@@ -867,21 +867,18 @@ function avatarFromSeller(s){
     async function render(){
   const start = page * PAGE_SIZE;
   const slice = allListings.slice(start, start + PAGE_SIZE);
-  const htmlArr = await Promise.all(slice.map(cardTpl)); // ← Promiseleri bekle
+  const htmlArr = await Promise.all(slice.map(cardTpl));
   grid.innerHTML = htmlArr.join('');
   setListInfo(allListings.length ? (start + 1) : 0, Math.min(start + PAGE_SIZE, allListings.length), allListings.length);
+
   prevBtn.disabled = page === 0;
   nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
-  prevBtn.textContent = I18N[currentLang]['buttons.prev'] || '‹ Önceki';
-  nextBtn.textContent = I18N[currentLang]['buttons.next'] || 'Sonraki ›';
-}
 
-    grid.addEventListener('click', async (e) => {
-  const card = e.target.closest('.card');
-  if (!card) return;
-  const id = card.getAttribute('data-id');
-  const listing = allListings.find(x => x.id === id);
-  if (!listing) return;
+  // ↓↓↓ HATA YAPAN KISMI BUNLARLA DEĞİŞTİR ↓↓↓
+  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
+  if (prevBtn) prevBtn.textContent = dict['buttons.prev'] ?? '‹ Önceki';
+  if (nextBtn) nextBtn.textContent = dict['buttons.next'] ?? 'Sonraki ›';
+}
 
   // "Sipariş" veya "Mesaj" butonuna basıldıysa
   if (e.target.matches('[data-do="order"], [data-do="msg"]')) {
