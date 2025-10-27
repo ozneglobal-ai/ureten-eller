@@ -165,81 +165,74 @@
     .lf-track a{color:#fff;opacity:.9;white-space:nowrap}
     .lf-track a:hover{opacity:1;text-decoration:underline}
 
-   /* === DESENLİ ALTIN ÇERÇEVE + KART ÜST BİLGİ === */
+   /* ==== SÜSLÜ GOLD KENAR — içeriği bozmaz ==== */
+.card.gold,
+.seller.gold { position: relative; z-index: 0; }
 
-/* 1) Desenli altın çerçeve (border-image ile) */
-.card.gold {
-  position: relative;
-  border: 10px solid transparent;
-  border-radius: 18px;
-  background-clip: padding-box;
-  /* inline SVG desen */
-  border-image-slice: 30 fill;
-  border-image-width: 10;
-  border-image-repeat: stretch;
-  border-image-source: url("data:image/svg+xml;utf8,\
-  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>\
-    <defs>\
-      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>\
-        <stop offset='0%' stop-color='%23f7e7b5'/>\
-        <stop offset='40%' stop-color='%23e8c972'/>\
-        <stop offset='60%' stop-color='%23d7b45d'/>\
-        <stop offset='80%' stop-color='%23caa552'/>\
-        <stop offset='100%' stop-color='%23b79343'/>\
-      </linearGradient>\
-      <pattern id='motif' width='12' height='12' patternUnits='userSpaceOnUse'>\
-        <path d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='%23fff' stroke-opacity='0.35' stroke-width='1'/>\
-      </pattern>\
-    </defs>\
-    <rect x='0' y='0' width='120' height='120' rx='16' ry='16' fill='url(%23g)'/>\
-    <rect x='3' y='3' width='114' height='114' rx='14' ry='14' fill='url(%23motif)' opacity='0.3'/>\
-  </svg>");
-  box-shadow: 0 8px 28px rgba(202,165,82,.35);
-}
+/* Kenar çerçevesi: içerik aynen kalır, süs sadece kenarda görünür */
+.card.gold::before,
+.seller.gold::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  pointer-events:none;
+  z-index:1;
 
-/* 2) Kart üst bilgi şeridi */
-.card .topbar-badge {
-  position: absolute;
-  inset: 10px 10px auto auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 800;
-  background: #111;
-  color: #fff;
-  border: 1px solid #000;
+  /* süslü altın desen (istersen FRAME_URL ile dış görsel kullanabilirsin) */
+  background:
+    url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>\
+      <defs>\
+        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>\
+          <stop offset='0%' stop-color='%23f7e7b5'/>\
+          <stop offset='40%' stop-color='%23e8c972'/>\
+          <stop offset='60%' stop-color='%23d7b45d'/>\
+          <stop offset='80%' stop-color='%23caa552'/>\
+          <stop offset='100%' stop-color='%23b79343'/>\
+        </linearGradient>\
+        <pattern id='motif' width='12' height='12' patternUnits='userSpaceOnUse'>\
+          <path d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='%23ffffff' stroke-opacity='0.35' stroke-width='1'/>\
+        </pattern>\
+      </defs>\
+      <rect x='0' y='0' width='120' height='120' rx='20' ry='20' fill='url(%23g)'/>\
+      <rect x='3' y='3' width='114' height='114' rx='18' ry='18' fill='url(%23motif)' opacity='0.35'/>\
+    </svg>") center/cover no-repeat;
+
+  /* sadece kenar kalsın, iç boş: mask tekniği */
+  padding: 10px; /* kenar kalınlığı */
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  background-clip: content-box;
+  box-shadow: 0 8px 28px rgba(202,165,82,.28);
 }
 
-/* 3) Alt bilgi satırı (avatar + ad + şehir) */
-.card .info-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+/* Foto altı satıcı bilgisi (avatar + ad + şehir + onaylı yazısı) */
+.card .info-row{
+  display:flex;align-items:center;gap:8px;margin-top:8px
 }
-.card .info-row .avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1px solid #e5e7eb; object-fit: cover; flex: 0 0 28px;
+.card .info-row .avatar{
+  width:28px;height:28px;border-radius:50%;
+  object-fit:cover;border:1px solid #e5e7eb;flex:0 0 28px
 }
-.card .info-row .who {
-  display: flex; flex-direction: column; line-height: 1.15;
-}
-.card .info-row .who .name {
-  font-size: 13px; font-weight: 800; letter-spacing: .2px;
-}
-.card .info-row .who .city {
-  font-size: 12px; color: #6b7280;
+.card .info-row .who{display:flex;flex-direction:column;line-height:1.15}
+.card .info-row .who .name{font-size:13px;font-weight:800;letter-spacing:.2px}
+.card .info-row .who .city{font-size:12px;color:#6b7280}
+
+/* “Onaylı Satıcı” mini rozet (adın yanında) */
+.card .gold-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-left:6px;
+  padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;
+  background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
+  border:1px solid #b18a37;color:#111
 }
 
-/* 4) Stok yok rozeti aynı kalsın ama üstte dursun (opsiyonel) */
-.card .stock-badge {
-  position: absolute;
-  left: 10px; top: 10px;
-  background: #991b1b; color:#fff; border:1px solid #991b1b;
-  padding: 4px 8px; border-radius: 999px; font-weight:800; font-size:12px;
+/* Stok yok rozeti (opsiyonel) */
+.card .stock-badge{
+  position:absolute;left:10px;top:10px;
+  background:#991b1b;color:#fff;border:1px solid #991b1b;
+  padding:4px 8px;border-radius:999px;font-weight:800;font-size:12px
 }
 
   </style>
