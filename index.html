@@ -384,37 +384,10 @@
   </dialog>
 
   <!-- Firebase init -->
-<script type="module" src="/firebase-init.js"></script>
+  <script type="module" src="/firebase-init.js"></script>
 
-<script type="module">
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    signInWithPopup,
-    GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    sendEmailVerification,
-    updateProfile,
-    sendPasswordResetEmail,
-    signOut
-  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-
-  // 🔹 Giriş başarılı olunca yönlendirme fonksiyonu
-  function redirectAfterLogin() {
-    const params = new URLSearchParams(location.search);
-    let next = params.get('next') || '/home.html';
-    try {
-      const u = new URL(next, location.origin);
-      if (u.origin !== location.origin) next = '/home.html';
-      next = u.pathname + u.search + u.hash;
-    } catch (_) {
-      next = '/home.html';
-    }
-    location.replace(next);
-  }
-
-</script>
+  <script type="module">
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
     /* ===== i18n – Metinler (KATEGORİLERE DOKUNMADAN) ===== */
     const I18N = {
@@ -652,29 +625,18 @@ document.getElementById('signInBtn')
 
     function redirectHome(){ window.location.href = '/home.html'; }
 
-  document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-  try{
-    await signInWithPopup(auth, provider);
-    redirectAfterLogin();
-  }catch(err){
-    alert('Google: '+(err?.message||err));
-  }
-});
+    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
+      try{ await signInWithPopup(auth, provider); redirectHome(); }
+      catch(err){ alert('Google: '+(err?.message||err)); }
+    });
 
     document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
-  const email = document.getElementById('li_email').value.trim();
-  const pass = document.getElementById('li_pass').value;
-  if(!email || pass.length<6){
-    alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.');
-    return;
-  }
-  try{
-    await signInWithEmailAndPassword(auth, email, pass);
-    redirectAfterLogin();
-  }catch(err){
-    alert(''+(err?.message||err));
-  }
-});
+      const email = document.getElementById('li_email').value.trim();
+      const pass = document.getElementById('li_pass').value;
+      if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
+      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
+      catch(err){ alert(''+(err?.message||err)); }
+    });
 
     document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
       const email = document.getElementById('li_email').value.trim();
@@ -697,8 +659,7 @@ document.getElementById('signInBtn')
         await updateProfile(cred.user, { displayName: name });
         try{ await sendEmailVerification(cred.user); }catch{}
         alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
-        redirectAfterLogin();
-
+        redirectHome();
       }catch(err){ alert(''+(err?.message||err)); }
     });
 
@@ -762,7 +723,7 @@ window.addEventListener('ue:lang', (e)=>{
 
     async function cardTpl(it){
   const imgList = Array.isArray(it.photos) ? it.photos : [];
-  const mainImg = clMain(imgList[0]);
+  const mainImg = clMain(imgList[0])
   const extraImgs = imgList.slice(1);
   const showcase = !!it.showcase;
   const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
@@ -771,17 +732,14 @@ window.addEventListener('ue:lang', (e)=>{
   const id = it.id;
   const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
 
-  // güvenli sözlük
-  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
-  const TXT = (k, fb) => (dict[k] ?? fb);
-
-  // satıcı bilgileri
+  // satıcı bilgilerini getir
   let seller = null;
   try { seller = await fetchSeller(sellerId); } catch {}
-  const sName = seller?.displayName || seller?.name || TXT('seller.default', 'Satıcı');
+  const sName = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default'] || 'Satıcı');
   const sAv = avatarFromSeller(seller || it);
   const verified = !!(seller?.verifiedSeller || seller?.verified);
 
+  // ek resimleri ufak önizleme olarak göster
   const thumbRow = extraImgs.length ? `
     <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
       ${extraImgs.slice(0,3).map(url => `
@@ -794,7 +752,7 @@ window.addEventListener('ue:lang', (e)=>{
   return `
     <article class="card" data-id="${id}">
       <div class="ph">
-        ${showcase ? `<span class="ribbon">${TXT('ribbon.showcase','Vitrin')}</span>` : ''}
+        ${showcase ? `<span class="ribbon">${I18N[currentLang]['ribbon.showcase']||'Vitrin'}</span>` : ''}
         <img alt="${title}" loading="lazy" src="${mainImg}" width="800" height="550">
       </div>
       <div class="body">
@@ -803,27 +761,23 @@ window.addEventListener('ue:lang', (e)=>{
         <div class="seller">
           <div class="av"><img alt="" src="${sAv}" width="22" height="22"></div>
           <div class="name">${sName}</div>
-          ${verified ? `<span class="badge">${TXT('seller.verified','Onaylı')}</span>` : ''}
+          ${verified ? `<span class="badge">${I18N[currentLang]['seller.verified']||'Onaylı'}</span>` : ''}
         </div>
         ${thumbRow}
         <div class="price">${price}</div>
         <div class="actions">
-          <button class="btn gold" data-do="order">${TXT('buttons.order','Sipariş Ver')}</button>
-          <button class="btn ghost" data-do="msg">${TXT('buttons.message','Satıcıya Yaz')}</button>
+          <button class="btn gold" data-do="order">${I18N[currentLang]['buttons.order']||'Sipariş Ver'}</button>
+          <button class="btn ghost" data-do="msg">${I18N[currentLang]['buttons.message']||'Satıcıya Yaz'}</button>
         </div>
       </div>
     </article>`;
 }
 
     function setListInfo(start, end, total){
-  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
-  const tpl  = dict['list.range'] ?? '{start}-{end} / {total}';
-  const txt  = String(tpl)
-                .replace('{start}', start)
-                .replace('{end}', end)
-                .replace('{total}', total);
-  if (info) info.textContent = txt;
-}
+      const txt = (I18N[currentLang]['list.range']||'{start}-{end} / {total}')
+        .replace('{start}', start).replace('{end}', end).replace('{total}', total);
+      info.textContent = txt;
+    }
 
     // ---- Cloudinary yardımcıları (firebase-init.js global fonksiyonlarını kullanır) ----
 const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
@@ -867,18 +821,21 @@ function avatarFromSeller(s){
     async function render(){
   const start = page * PAGE_SIZE;
   const slice = allListings.slice(start, start + PAGE_SIZE);
-  const htmlArr = await Promise.all(slice.map(cardTpl));
+  const htmlArr = await Promise.all(slice.map(cardTpl)); // ← Promiseleri bekle
   grid.innerHTML = htmlArr.join('');
   setListInfo(allListings.length ? (start + 1) : 0, Math.min(start + PAGE_SIZE, allListings.length), allListings.length);
-
   prevBtn.disabled = page === 0;
   nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
-
-  // ↓↓↓ HATA YAPAN KISMI BUNLARLA DEĞİŞTİR ↓↓↓
-  const dict = I18N?.[currentLang] ?? I18N?.tr ?? {};
-  if (prevBtn) prevBtn.textContent = dict['buttons.prev'] ?? '‹ Önceki';
-  if (nextBtn) nextBtn.textContent = dict['buttons.next'] ?? 'Sonraki ›';
+  prevBtn.textContent = I18N[currentLang]['buttons.prev'] || '‹ Önceki';
+  nextBtn.textContent = I18N[currentLang]['buttons.next'] || 'Sonraki ›';
 }
+
+    grid.addEventListener('click', async (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const id = card.getAttribute('data-id');
+  const listing = allListings.find(x => x.id === id);
+  if (!listing) return;
 
   // "Sipariş" veya "Mesaj" butonuna basıldıysa
   if (e.target.matches('[data-do="order"], [data-do="msg"]')) {
