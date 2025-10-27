@@ -1134,7 +1134,7 @@ if(document.readyState==='loading'){
     drawer.setAttribute('aria-hidden','true');
   });
 
-  btnMsg.addEventListener('click', ()=>{
+    btnMsg.addEventListener('click', ()=>{
     if(!currentOrderItem) return;
     const q = Math.max(1, parseInt(qty.value||1));
     const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
