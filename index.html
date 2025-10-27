@@ -631,7 +631,7 @@ document.getElementById('signInBtn')
 }
 
     document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, provider); redirectHome(); }
+      try{ await signInWithPopup(auth, provider); redirectAfterAuth(); }
       catch(err){ alert('Google: '+(err?.message||err)); }
     });
 
@@ -639,7 +639,7 @@ document.getElementById('signInBtn')
       const email = document.getElementById('li_email').value.trim();
       const pass = document.getElementById('li_pass').value;
       if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
+      try{ await signInWithEmailAndPassword(auth, email, pass); redirectAfterAuth(); }
       catch(err){ alert(''+(err?.message||err)); }
     });
 
@@ -664,7 +664,7 @@ document.getElementById('signInBtn')
         await updateProfile(cred.user, { displayName: name });
         try{ await sendEmailVerification(cred.user); }catch{}
         alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
-        redirectHome();
+        redirectAfterAuth();
       }catch(err){ alert(''+(err?.message||err)); }
     });
 
