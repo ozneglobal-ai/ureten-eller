@@ -142,12 +142,6 @@
   <script type="module" src="/firebase-init.js"></script>
 </head>
 <body>
-    <script>
-  // Giriş yapılmamışsa index.html'de login'i aç ve geri dönüş için next geçir
-  if (!localStorage.getItem('ue_user')) {
-    const next = location.pathname + location.search + location.hash;
-    location.replace('/index.html?next=' + encodeURIComponent(next) + '#login');
-  }
 </script>
   <div class="wrap">
     <div class="card">
