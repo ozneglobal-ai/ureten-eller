@@ -652,7 +652,7 @@ document.getElementById('signInBtn')
 
     function redirectHome(){ window.location.href = '/home.html'; }
 
-   document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
+  document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
   try{
     await signInWithPopup(auth, provider);
     redirectAfterLogin();
