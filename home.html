@@ -950,39 +950,6 @@ if(document.readyState==='loading'){
   modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
   document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
 
-/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
-(() => {
-  const modal = document.getElementById('listingModal');
-  const gMain = document.getElementById('gMain');
-  const gThumbs = document.getElementById('gThumbs');
-  const gPrev = document.getElementById('gPrev');
-  const gNext = document.getElementById('gNext');
-  const mTitle = document.getElementById('mTitle');
-  const mMeta = document.getElementById('mMeta');
-  const mDesc = document.getElementById('mDesc');
-  const mSellerName = document.getElementById('mSellerName');
-  const mSellerCity = document.getElementById('mSellerCity');
-  const mBadge = document.getElementById('mBadge');
-  const mStock = document.getElementById('mStock');
-  const mOrder = document.getElementById('mOrder');
-  const mProfile = document.getElementById('mProfile');
-  const mClose = document.getElementById('mClose');
-  const mSellerBox = document.querySelector('.m-info .seller');
-
-  // ---- Çekmece elemanları
-  const drawer = document.getElementById('orderDrawer');
-  const btnClose = document.getElementById('odClose');
-  const btnConfirm = document.getElementById('odConfirm');
-  const btnMsg = document.getElementById('odMsg');
-  const qty = document.getElementById('odQty');
-  const addressWrap = document.getElementById('odAddressWrap');
-  const address = document.getElementById('odAddress');
-  const phone = document.getElementById('odPhone');
-  const note = document.getElementById('odNote');
-  const totalLabel = document.getElementById('odTotal');
-  const listingInfo = document.getElementById('odListing');
-  const radios = document.querySelectorAll('[name="odShip"]');
-
   let currentListingId = null;
   let currentOrderItem = null;
   let imgs = []; let idx = 0;
@@ -1132,9 +1099,10 @@ if(document.readyState==='loading'){
     const q = Math.max(1, parseInt(qty.value||1));
     const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
     alert(msg);
-})();
+  }); // ✅ Bu parantez btnMsg.addEventListener’in kapanışı
+  
+})(); // ✅ Bu parantez ise fonksiyonun kapanışı
 </script>
 
 </body>
 </html>
-
