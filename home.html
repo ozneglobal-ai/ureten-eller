@@ -599,14 +599,15 @@ const cardHTML = (d, id, cover, isGold=false) => {
   const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
 
   return `
-<a class="card ${isGold ? 'gold' : ''}" href="#" data-id="${id}">
-  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center"></div>
+<a class="card" href="#" data-id="${id}">
+  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center">
+    ${d.__isVip ? `<span class="vitrin-badge">★ Vitrin</span>` : ``}
+  </div>
   <div class="body">
     <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
     <div class="meta">
       ${(city || '')}${(city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}
     </div>
-
     <div class="info-row">
       <img class="avatar" src="${avatar}" alt="Satıcı avatarı" onerror="this.src='/assets/img/avatar-default.png'"/>
       <div class="who">
