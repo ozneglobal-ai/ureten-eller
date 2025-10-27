@@ -951,8 +951,7 @@ if(document.readyState==='loading'){
   document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
 
 /* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
-
-  // ---- Modal elemanları
+(() => {
   const modal = document.getElementById('listingModal');
   const gMain = document.getElementById('gMain');
   const gThumbs = document.getElementById('gThumbs');
