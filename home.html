@@ -594,9 +594,15 @@ const combined = vip.slice(0,20).concat(std);
 renderList('allGrid', combined);
 window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
 
-      function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
-      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
-    })();
+} catch(e) {                                  // ← eksik olan catch
+  console.warn('İlan yüklenemedi:', e);
+}                                             // ← try kapanışı
+}                                             // ← fetchAndPaint() fonksiyonu kapanışı
+
+function start(){ if(window.__fbReady){ fetchAndPaint(); } else { document.addEventListener('fb-ready', fetchAndPaint, {once:true}); } }
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', start); } else { start(); }
+})();
+
   </script>
   <!-- İlan Detay Modal -->
   <div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-label="İlan Detayı">
