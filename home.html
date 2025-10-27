@@ -563,7 +563,7 @@ document.getElementById('postBtn')?.addEventListener('click', async (e) => {
   if (await isLoggedIn()) {
     location.href = next;
   } else {
-    location.href = '/giris.html?next=' + encodeURIComponent(next);
+    location.href = '/index.html?next=' + encodeURIComponent(next) + '#login';
   }
 });
 
