@@ -697,7 +697,8 @@ document.getElementById('signInBtn')
         await updateProfile(cred.user, { displayName: name });
         try{ await sendEmailVerification(cred.user); }catch{}
         alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
-        redirectHome();
+        redirectAfterLogin();
+
       }catch(err){ alert(''+(err?.message||err)); }
     });
 
