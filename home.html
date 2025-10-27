@@ -165,16 +165,18 @@
     .lf-track a{color:#fff;opacity:.9;white-space:nowrap}
     .lf-track a:hover{opacity:1;text-decoration:underline}
 
-    /* === GOLD ÇERÇEVE === */
-/* 1) Desenli altın çerçeve (border-image ile) */
-.card.gold {
+   /* SÜSLÜ ALTIN KENAR (sadece kenar, içeriği bozmaz) */
+.card.gold,
+.seller.gold {
   position: relative;
-  border: 10px solid transparent;
+  border: 12px solid transparent;    /* kenar kalınlığı */
   border-radius: 18px;
-  background-clip: padding-box;
-  /* inline SVG desen */
-  border-image-slice: 30 fill;
-  border-image-width: 10;
+  background-color: #fff;            /* iç zemin temiz kalsın */
+  background-clip: padding-box;      /* desen içeriğe sızmasın */
+
+  /* Desenli altın border-image (fill YOK!) */
+  border-image-slice: 34;            /* sadece kenar, içi dolmaz */
+  border-image-width: 12;
   border-image-repeat: stretch;
   border-image-source: url("data:image/svg+xml;utf8,\
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>\
@@ -187,59 +189,20 @@
         <stop offset='100%' stop-color='%23b79343'/>\
       </linearGradient>\
       <pattern id='motif' width='12' height='12' patternUnits='userSpaceOnUse'>\
-        <path d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='%23fff' stroke-opacity='0.35' stroke-width='1'/>\
+        <path d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='%23ffffff' stroke-opacity='0.35' stroke-width='1'/>\
       </pattern>\
     </defs>\
-    <rect x='0' y='0' width='120' height='120' rx='16' ry='16' fill='url(%23g)'/>\
-    <rect x='3' y='3' width='114' height='114' rx='14' ry='14' fill='url(%23motif)' opacity='0.3'/>\
+    <!-- Kenar için kalın şerit -->\
+    <rect x='0' y='0' width='120' height='120' rx='20' ry='20' fill='url(%23g)'/>\
+    <!-- Motif, kenarda parlasın -->\
+    <rect x='3' y='3' width='114' height='114' rx='18' ry='18' fill='url(%23motif)' opacity='0.35'/>\
   </svg>");
-  box-shadow: 0 8px 28px rgba(202,165,82,.35);
+  box-shadow: 0 8px 28px rgba(202,165,82,.28);
 }
 
-/* 2) Kart üst bilgi şeridi */
-.card .topbar-badge {
-  position: absolute;
-  inset: 10px 10px auto auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 800;
-  background: #111;
-  color: #fff;
-  border: 1px solid #000;
-}
+/* Görsel kutusu köşeleri uyumlu dursun */
+.card .ph { border-radius: 10px; }
 
-/* 3) Alt bilgi satırı (avatar + ad + şehir) */
-.card .info-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-.card .info-row .avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1px solid #e5e7eb; object-fit: cover; flex: 0 0 28px;
-}
-.card .info-row .who {
-  display: flex; flex-direction: column; line-height: 1.15;
-}
-.card .info-row .who .name {
-  font-size: 13px; font-weight: 800; letter-spacing: .2px;
-}
-.card .info-row .who .city {
-  font-size: 12px; color: #6b7280;
-}
-
-/* 4) Stok yok rozeti aynı kalsın ama üstte dursun (opsiyonel) */
-.card .stock-badge {
-  position: absolute;
-  left: 10px; top: 10px;
-  background: #991b1b; color:#fff; border:1px solid #991b1b;
-  padding: 4px 8px; border-radius: 999px; font-weight:800; font-size:12px;
-}
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
