@@ -600,19 +600,20 @@ const cardHTML = (d, id, cover, isGold=false) => {
 
   return `
 <a class="card ${isGold ? 'gold' : ''}" href="#" data-id="${id}">
-  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center; position:relative">
-    ${verified ? `<span class="topbar-badge">Onaylı Satıcı</span>` : ``}
-    ${!stock ? `<span class="stock-badge">Stokta yok</span>` : ``}
-  </div>
+  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center"></div>
   <div class="body">
     <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
     <div class="meta">
       ${(city || '')}${(city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}
     </div>
+
     <div class="info-row">
       <img class="avatar" src="${avatar}" alt="Satıcı avatarı" onerror="this.src='/assets/img/avatar-default.png'"/>
       <div class="who">
-        <span class="name">${name}</span>
+        <span class="name">
+          ${name}
+          ${verified ? '<span class="gold-badge">Onaylı Satıcı</span>' : ''}
+        </span>
         <span class="city">${city || ''}</span>
       </div>
     </div>
