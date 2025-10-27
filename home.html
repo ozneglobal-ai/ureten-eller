@@ -528,41 +528,61 @@
       document.addEventListener('click',(e)=>{ if(!openCatId) return; const hitTop = e.target.closest('.topcats'); const hitSubs = e.target.closest('#topSubs'); if(!hitTop && !hitSubs){ closeSubs(); } });
     }
 
-    // ===== Events / navigation =====
-    // Marka başlığı tıklanınca ana sayfa
-    document.addEventListener('click', (e)=>{ const bt=e.target.closest('#brandTitle'); if(bt){ location.href='/index.html'; }});
+   // ===== Events / navigation =====
 
-    document.getElementById('postBtn')?.addEventListener('click', ()=> location.href='/ilan-ver.html');
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+// Marka başlığı tıklanınca ana sayfa
+document.addEventListener('click', (e) => {
+  const bt = e.target.closest('#brandTitle');
+  if (bt) location.href = '/index.html';
+});
+
+document.getElementById('postBtn')?.addEventListener('click', () => location.href = '/ilan-ver.html');
+
+// === ÇIKIŞ ===
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  // 1) Firebase oturumu kapat
   try {
     const fb = self.firebase || window.firebase;
-    let auth;
     if (fb?.getAuth) {
-      auth = fb.getAuth(self.__fb?.app);
+      const auth = fb.getAuth(self.__fb?.app);
       await fb.signOut(auth);
     } else if (fb?.auth) {
-      auth = fb.auth();
-      await auth.signOut();
+      await fb.auth().signOut();
     }
   } catch (e) {
     console.warn('signOut hata:', e);
   }
-  try { ['ue_user','ue_token','ue_profile'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
-  try { sessionStorage.clear(); } catch(_) {}
+
+  // 2) Tarayıcı verilerini temizle
+  try { ['ue_user', 'ue_token', 'ue_profile'].forEach(k => localStorage.removeItem(k)); } catch (_) {}
+  try { sessionStorage.clear(); } catch (_) {}
+
+  // 3) Logout işaretle (geri tuşunu kısıtlamak için)
+  try { sessionStorage.setItem('ue_logged_out', '1'); } catch (_) {}
+
+  // 4) Index'e tek yönlü gönder
+  try {
+    history.pushState(null, '', '/index.html');
+    history.replaceState(null, '', '/index.html');
+  } catch (_) {}
   location.replace('/index.html');
 });
-    document.getElementById('searchBtn')?.addEventListener('click', ()=>{
-      const q=(document.getElementById('q')?.value||'').trim();
-      const url=q?`/index.html?q=${encodeURIComponent(q)}`:'/index.html';
-      location.href=url;
-    });
-    document.getElementById('browseBtn')?.addEventListener('click', ()=>{
-      const first=CATS[0]?.id||'yemek';
-      location.href=`/index.html?cat=${first}`;
-    });
-    document.getElementById('navProfile')?.addEventListener('click', ()=> location.href='/profile.html');
-    document.getElementById('navMsg')?.addEventListener('click', ()=> location.href='/docs/mesajlar.html');
-    document.getElementById('navNoti')?.addEventListener('click', ()=> location.href='/docs/bildirimler.html');
+
+document.getElementById('searchBtn')?.addEventListener('click', () => {
+  const q = (document.getElementById('q')?.value || '').trim();
+  const url = q ? `/index.html?q=${encodeURIComponent(q)}` : '/index.html';
+  location.href = url;
+});
+
+document.getElementById('browseBtn')?.addEventListener('click', () => {
+  const first = CATS[0]?.id || 'yemek';
+  location.href = `/index.html?cat=${first}`;
+});
+
+document.getElementById('navProfile')?.addEventListener('click', () => location.href = '/profile.html');
+document.getElementById('navMsg')?.addEventListener('click', () => location.href = '/docs/mesajlar.html');
+document.getElementById('navNoti')?.addEventListener('click', () => location.href = '/docs/bildirimler.html');
+
 
     // Alt siyah fixed legal panel kapatma
     document.getElementById('lfClose')?.addEventListener('click', ()=>{ const el=document.getElementById('legalFixed'); if(el) el.style.display='none'; });
