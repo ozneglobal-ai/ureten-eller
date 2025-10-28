@@ -30,7 +30,9 @@ module.exports = async (req, res) => {
     if (!email || !payment_amount || !user_ip || !merchant_oid)
       return res.status(400).json({ status: "error", reason: "Missing required fields" });
 
-    const user_basket = Buffer.from(JSON.stringify([[merchant_oid, Number(payment_amount), 1]])).toString("base64");
+    const user_basket = Buffer.from(
+      JSON.stringify([[merchant_oid, Number(payment_amount), 1]])
+    ).toString("base64");
 
     const hash_str =
       MERCHANT_ID +
@@ -45,7 +47,10 @@ module.exports = async (req, res) => {
       test_mode +
       MERCHANT_SALT;
 
-    const paytr_token = crypto.createHmac("sha256", MERCHANT_KEY).update(hash_str).digest("base64");
+    const paytr_token = crypto
+      .createHmac("sha256", MERCHANT_KEY)
+      .update(hash_str)
+      .digest("base64");
 
     const data = {
       merchant_id: MERCHANT_ID,
