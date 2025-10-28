@@ -1,4 +1,4 @@
-// api/getPaytrToken.js
+// api/getPaytrToken.js 
 const crypto = require("crypto");
 
 // İzinli origin listesi (CORS)
