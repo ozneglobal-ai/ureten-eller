@@ -563,7 +563,7 @@ document.getElementById('postBtn')?.addEventListener('click', async (e) => {
   if (await isLoggedIn()) {
     location.href = next;
   } else {
-    location.href = '/index.html?next=' + encodeURIComponent(next) + '#login';
+    location.href = '/index.html?auth=login&redirect=' + encodeURIComponent(next);
   }
 });
 
