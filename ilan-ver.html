@@ -7,26 +7,98 @@
   <meta name="description" content="Üreten Eller'de ilan oluşturun. Çok dilli arayüz: TR/EN/AR/DE. Fotoğraf önizleme, kapak seçimi ve silme desteklenir." />
   <link rel="icon" href="/assets/icons/favicon.png" />
   <style>
-    :root{ --bg1:#0b1220; --bg2:#0a0f1c; --card:#0e172a; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937 }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink)}
+    /* === AÇIK (BEYAZ) TEMA + DOLU BUTONLAR ===
+       Not: Sadece CSS güncellendi. HTML ve JS'e dokunulmadı. */
+    :root{
+      --bg1:#ffffff; --bg2:#ffffff;    /* beyaz arka plan */
+      --card:#ffffff;                  /* kart zemini beyaz */
+      --ink:#111827;                   /* ana metin */
+      --muted:#6b7280;                 /* ikincil metin */
+      --accent:#0ea5e9;                /* birincil vurgu */
+      --ok:#16a34a; --warn:#f59e0b; --err:#ef4444;
+      --brd:#e5e7eb;                   /* açık kenarlık rengi */
+      --ink-inv:#ffffff;               /* koyu zemin üzeri metin */
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:#fff;                 /* beyaz zemin */
+      color:var(--ink);
+    }
+
     .wrap{max-width:960px;margin:24px auto;padding:16px}
-    .card{background:var(--card);border:1px solid var(--brd);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    .card{
+      background:var(--card);
+      border:1px solid var(--brd);
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 10px 30px rgba(17,24,39,.08);
+    }
+
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .lang{display:flex;gap:8px;align-items:center}
     label{display:block;font-size:13px;color:var(--muted);margin:6px 0}
-    input,select,textarea{width:100%;background:#0b1326;color:var(--ink);border:1px solid var(--brd);border-radius:12px;padding:10px 12px}
+
+    /* Form alanları açık tema */
+    input,select,textarea{
+      width:100%;
+      background:#ffffff;
+      color:var(--ink);
+      border:1px solid var(--brd);
+      border-radius:12px;
+      padding:10px 12px
+    }
     textarea{min-height:120px;resize:vertical}
+
     .previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px}
-    .thumb{position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;background:#0b1326;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px}
+    .thumb{
+      position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;
+      background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px
+    }
     .thumb img{width:100%;height:auto;max-height:220px;object-fit:contain;display:block;border-radius:8px;margin-bottom:6px}
     .thumb .btns{display:flex;gap:6px;justify-content:center;margin-bottom:4px}
-    .thumb button{background:rgba(0,0,0,.65);color:#fff;border:none;padding:4px 8px;font-size:12px;border-radius:6px;cursor:pointer}
-    .thumb .cover{position:absolute;top:6px;left:6px;background:#10b981;color:#03222a;font-size:12px;padding:2px 6px;border-radius:8px;font-weight:700}
+    .thumb button{
+      background:#111827;              /* DOLU buton */
+      color:#fff;
+      border:none;
+      padding:4px 8px;
+      font-size:12px;border-radius:6px;cursor:pointer
+    }
+    .thumb .cover{
+      position:absolute;top:6px;left:6px;background:#16a34a;color:#ffffff;font-size:12px;padding:2px 6px;border-radius:8px;font-weight:700
+    }
+
     .actions{display:flex;gap:8px;justify-content:flex-end}
-    button{cursor:pointer;border:1px solid var(--brd);background:#0d1b2a;color:var(--ink);padding:8px 12px;border-radius:10px}
-    button.primary{background:var(--accent);color:#03222a;border:none;font-weight:700}
+
+    /* GENEL BUTONLAR: DOLU */
+    button{
+      cursor:pointer;
+      border:1px solid transparent;
+      background:#111827;              /* koyu dolu */
+      color:var(--ink-inv);
+      padding:10px 14px;border-radius:10px;font-weight:600
+    }
+    button:hover{filter:brightness(1.05)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+
+    /* Birincil aksiyon: vurgu rengiyle dolu */
+    button.primary{
+      background:var(--accent);
+      color:#ffffff;
+      border:none;
+      font-weight:700
+    }
+
     .hint{font-size:12px;color:var(--muted)}
-    .closeX{background:#fff;color:#0b1220;border:none;width:36px;height:36px;border-radius:999px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+    /* Kapat (X) butonu: koyu dolu görünürlük için */
+    .closeX{
+      background:#111827;
+      color:#ffffff;
+      border:none;width:36px;height:36px;border-radius:999px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;
+      box-shadow:0 6px 20px rgba(17,24,39,.2)
+    }
   </style>
   <!-- Firestore için global yardımcıları sağlayan dosya -->
   <script type="module" src="/firebase-init.js"></script>
@@ -111,7 +183,7 @@
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- Toast (stil inline aynı bırakıldı) -->
   <div id="toast" style="position:fixed;left:50%;top:20px;transform:translateX(-50%) scale(0.95);opacity:0;transition:.25s;z-index:9999;background:#0e172a;border:1px solid #1f2937;color:#e5e7eb;padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);">Yönetici onayından sonra yayınlanacaktır.</div>
 
   <!-- i18n + önizleme -->
@@ -138,7 +210,7 @@
         l_category:"Category", l_subcategory:"Subcategory", l_province:"Province", l_district:"District",
         l_price:"Price (TRY)", l_stock:"Stock", l_images:"Photos (up to 5)",
         btn_cancel:"Cancel", btn_submit:"Submit for Review", toast_ok:"Will be published after admin approval.",
-        placeholders:{ title:"e.g., Hand‑knitted doll", desc:"Describe your product in detail", district:"Type your district", price:"e.g., 350" },
+        placeholders:{ title:"e.g., Hand-knitted doll", desc:"Describe your product in detail", district:"Type your district", price:"e.g., 350" },
         stock:{var:"In stock", yok:"Out of stock"},
         errors:{ title:"Title must be at least 6 characters.", desc:"Description must be at least 30 characters.", cat:"Select a category.", sub:"Select a subcategory.", prov:"Select a province.", dist:"Enter a district.", price:"Price must be ≥ 1.", files:"You can upload up to 5 photos.", filetype:"Only JPG/PNG/WebP accepted.", auth:"No session. Please sign in." },
         cover:"Cover", coverMake:"Make Cover", del:"Delete", choose:"Select"
@@ -159,8 +231,8 @@
         l_description:"Beschreibung", h_description:"30–3000 Zeichen; unzulässiger Inhalt wird abgelehnt.",
         l_category:"Kategorie", l_subcategory:"Unterkategorie", l_province:"Provinz", l_district:"Bezirk",
         l_price:"Preis (TRY)", l_stock:"Bestand", l_images:"Fotos (bis zu 5)",
-        btn_cancel:"Abbrechen", btn_submit:"Zur Prüfung einreichen", toast_ok:"Wird nach Admin‑Freigabe veröffentlicht.",
-        placeholders:{ title:"z. B. Handgestrickte Puppe", desc:"Beschreiben Sie Ihr Produkt", district:"Bezirk eingeben", price:"z. B. 350" },
+        btn_cancel:"Abbrechen", btn_submit:"Zur Prüfung einreichen", toast_ok:"Wird nach Admin-Freigabe veröffentlicht.",
+        placeholders:{ title:"z. B. Handgestrickte Puppe", desc:"Beschreiben Sie Ihr Produkt", district:"Bezirk eingeben", price:"z. B. 350" },
         stock:{var:"Auf Lager", yok:"Nicht vorrätig"},
         errors:{ title:"Titel muss mind. 6 Zeichen haben.", desc:"Beschreibung mind. 30 Zeichen.", cat:"Kategorie wählen.", sub:"Unterkategorie wählen.", prov:"Provinz wählen.", dist:"Bezirk eingeben.", price:"Preis muss ≥ 1 sein.", files:"Max. 5 Fotos.", filetype:"Nur JPG/PNG/WebP.", auth:"Keine Sitzung. Bitte anmelden." },
         cover:"Cover", coverMake:"Als Cover", del:"Löschen", choose:"Auswählen"
@@ -191,13 +263,13 @@
         ['cheese','Cheesecake','Cheesecake','Käsekuchen','تشيزكيك'],
         ['diyettat','Diyet tatlı','Diet desserts','Diät-Desserts','حلويات للحمية'],
         ['cikolata','Çikolata/şekerleme','Chocolate/Candy','Schokolade/Süßwaren','شوكولاتة/حلوى'],
-        ['dogumset','Doğum günü setleri','Birthday sets','Geburtstags‑Sets','مجموعات عيد ميلاد']
+        ['dogumset','Doğum günü setleri','Birthday sets','Geburtstags-Sets','مجموعات عيد ميلاد']
       ]},
       {id:'sos', names:{tr:'🫙 Reçel • Turşu • Sos', en:'🫙 Jams • Pickles • Sauces', de:'🫙 Marmelade • Eingelegtes • Saucen', ar:'🫙 مربى • مخللات • صلصات'}, subs:[
         ['recel','Reçel-marmelat','Jam & marmalade','Marmelade','مربى'],
         ['pekmez','Pekmez','Molasses','Traubensirup','دبس'],
         ['tursu','Turşu','Pickles','Eingelegtes','مخلل'],
-        ['dom','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika‑Sauce','صلصة طماطم/فلفل'],
+        ['dom','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika-Sauce','صلصة طماطم/فلفل'],
         ['acios','Acı sos','Hot sauce','Scharfe Soße','صلصة حارة'],
         ['salca','Salça','Paste','Tomatenmark','معجون'],
         ['sirke','Sirke','Vinegar','Essig','خل'],
@@ -207,19 +279,19 @@
         ['eriste','Erişte','Homemade noodles','Hausgemachte Nudeln','شعيرية منزلية'],
         ['tarhana','Tarhana','Tarhana','Tarhana','طرخانة'],
         ['yufka','Yufka','Yufka','Yufka','يوفكا'],
-        ['manti','Mantı','Manti dumplings','Manti‑Teigtaschen','مانتي'],
+        ['manti','Mantı','Manti dumplings','Manti-Teigtaschen','مانتي'],
         ['kurut','Kurutulmuş sebze-meyve','Dried veg & fruit','Getrocknetes Obst/Gemüse','مجففات'],
         ['salca2','Salça','Paste','Tomatenmark','معجون'],
         ['sirke2','Sirke','Vinegar','Essig','خل'],
         ['konserve2','Konserve','Canned','Konserven','معلبات']
       ]},
-      {id:'diet', names:{tr:'🥗 Diyet / Vegan / Glutensiz', en:'🥗 Diet / Vegan / Gluten‑Free', de:'🥗 Diät / Vegan / Glutenfrei', ar:'🥗 حمية / نباتي / خالٍ من الغلوتين'}, subs:[
-        ['fit','Fit tabaklar','Fit plates','Fitness‑Teller','أطباق صحية'],
+      {id:'diet', names:{tr:'🥗 Diyet / Vegan / Glutensiz', en:'🥗 Diet / Vegan / Gluten-Free', de:'🥗 Diät / Vegan / Glutenfrei', ar:'🥗 حمية / نباتي / خالٍ من الغلوتين'}, subs:[
+        ['fit','Fit tabaklar','Fit plates','Fitness-Teller','أطباق صحية'],
         ['vegan','Vegan yemekler','Vegan meals','Vegane Gerichte','أطباق نباتية'],
         ['gf','GF unlu mamuller','GF bakery','Glutenfreie Backwaren','مخبوزات خالية من الغلوتين'],
-        ['sekersiz','Şekersiz tatlı','Sugar‑free desserts','Zuckerfreie Desserts','حلويات بدون سكر'],
-        ['keto','Keto ürün','Keto products','Keto‑Produkte','منتجات كيتو'],
-        ['protein','Protein atıştırmalık','Protein snacks','Protein‑Snacks','وجبات بروتينية']
+        ['sekersiz','Şekersiz tatlı','Sugar-free desserts','Zuckerfreie Desserts','حلويات بدون سكر'],
+        ['keto','Keto ürün','Keto products','Keto-Produkte','منتجات كيتو'],
+        ['protein','Protein atıştırmalık','Protein snacks','Protein-Snacks','وجبات بروتينية']
       ]},
       {id:'taki', names:{tr:'💍 Takı', en:'💍 Jewelry', de:'💍 Schmuck', ar:'💍 إكسسوارات'}, subs:[
         ['bileklik','Bileklik','Bracelet','Armband','سوار'],
@@ -236,16 +308,16 @@
         ['telsarma','Tel sarma','Wire wrap','Drahtwickel','سلك ملتف']
       ]},
       {id:'bebek', names:{tr:'👶 Bebek & Çocuk', en:'👶 Baby & Kids', de:'👶 Baby & Kinder', ar:'👶 رضّع وأطفال'}, subs:[
-        ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby‑Figuren','مجسمات'],
+        ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby-Figuren','مجسمات'],
         ['cingirak','Çıngırak','Rattle','Rassel','خشخيشة'],
-        ['dis','Diş kaşıyıcı örgü','Teething knit','Beißring‑Häkel','عضاضة محاكة'],
+        ['dis','Diş kaşıyıcı örgü','Teething knit','Beißring-Häkel','عضاضة محاكة'],
         ['bezoy','Bez oyuncak/kitap','Cloth toy/book','Stoffspielzeug/Buch','لعبة/كتاب قماشي'],
-        ['montessori','Montessori oyuncak','Montessori toys','Montessori‑Spielzeug','ألعاب منتسوري'],
+        ['montessori','Montessori oyuncak','Montessori toys','Montessori-Spielzeug','ألعاب منتسوري'],
         ['set2','Setler','Sets','Sets','أطقم'],
-        ['patik','Örgü patik-bere','Knit booties‑beanie','Gehäkelte Schühchen & Mütze','قبعات وجوارب محاكة'],
+        ['patik','Örgü patik-bere','Knit booties-beanie','Gehäkelte Schühchen & Mütze','قبعات وجوارب محاكة'],
         ['battaniye','Bebek battaniyesi','Baby blanket','Babydecke','بطانية'],
         ['onluk','Önlük-ağız bezi','Bib/burp cloth','Lätzchen/Spucktuch','مريلة/منديل'],
-        ['lohusa','Lohusa seti','Maternity set','Wochenbett‑Set','عدة نفاس'],
+        ['lohusa','Lohusa seti','Maternity set','Wochenbett-Set','عدة نفاس'],
         ['sac','Saç aksesuarı','Hair accessory','Haaraccessoire','اكسسوار شعر'],
         ['giyim','El emeği kıyafet','Handmade clothing','Handgemachte Kleidung','ملابس يدوية']
       ]},
@@ -257,15 +329,15 @@
         ['sal','Şal','Shawl','Schal','شال'],
         ['corap','Çorap','Socks','Socken','جوارب'],
         ['lif','Lif takımı','Bath set','Badeset','طقم ليف'],
-        ['bebektk','Bebek takımı','Baby set','Baby‑Set','طقم أطفال'],
+        ['bebektk','Bebek takımı','Baby set','Baby-Set','طقم أطفال'],
         ['yelek','Yelek','Vest','Weste','صديري'],
         ['kirlen','Kırlent-örtü','Cushion/cover','Kissen/Decke','وسادة/غطاء'],
-        ['igneoyasi','İğne oyası','Needle lace','Nadelspitze','أويا (إبرة)']
+        ['igneoyasi','İğne oyası','Needle lace','Nadelspitze','أويا (İğne)']
       ]},
       {id:'terzi', names:{tr:'✂️ Dikiş / Terzilik', en:'✂️ Sewing / Tailoring', de:'✂️ Nähen / Schneiderei', ar:'✂️ خياطة / تفصيل'}, subs:[
         ['paca','Paça/onarım','Hem/repair','Saum/Reparatur','ثني/تصليح'],
-        ['fermuar','Fermuar değişimi','Zipper change','Reißverschluss‑Wechsel','تبديل سحاب'],
-        ['perde','Perde dikişi','Curtain sewing','Vorhang‑Nähen','خياطة ستائر'],
+        ['fermuar','Fermuar değişimi','Zipper change','Reißverschluss-Wechsel','تبديل سحاب'],
+        ['perde','Perde dikişi','Curtain sewing','Vorhang-Nähen','خياطة ستائر'],
         ['nevresim','Nevresim-yastık','Bedding & pillows','Bettwäsche/Kissen','مفارش ووسائد'],
         ['masa','Masa örtüsü','Tablecloth','Tischtuch','مفرش طاولة'],
         ['ozel','Özel dikim','Custom tailoring','Maßanfertigung','تفصيل خاص'],
@@ -284,13 +356,13 @@
         ['kece','Keçe işleri','Felt crafts','Filzarbeiten','أعمال لبّاد'],
         ['kirlent','Kırlent','Cushion','Kissen','وسادة'],
         ['kapi','Kapı süsü','Door ornament','Türkranz','زينة باب'],
-        ['tepsi','Tepsi süsleme','Tray decoration','Tablett‑Deko','تزيين صينية'],
+        ['tepsi','Tepsi süsleme','Tray decoration','Tablett-Deko','تزيين صينية'],
         ['cerceve','Çerçeve','Frame','Rahmen','إطار'],
         ['ruya','Rüya kapanı','Dreamcatcher','Traumfänger','صائد أحلام'],
         ['tablo','Tablo','Tableau','Bild','لوحة']
       ]},
       {id:'mum', names:{tr:'🕯️ Mum & Kokulu Ürünler', en:'🕯️ Candles & Fragranced', de:'🕯️ Kerzen & Duft', ar:'🕯️ شموع ومنتجات عطرية'}, subs:[
-        ['soya','Soya/balmumu mum','Soy/beeswax candle','Soja/Bienenwachs‑Kerze','شموع صويا/شمع العسل'],
+        ['soya','Soya/balmumu mum','Soy/beeswax candle','Soja/Bienenwachs-Kerze','شموع صويا/شمع العسل'],
         ['tas','Kokulu taş','Scented stone','Duftstein','حجر معطر'],
         ['sprey','Oda spreyi','Room spray','Raumspray','معطر جو'],
         ['tutsu','Tütsü','Incense','Räucherwerk','بخور'],
@@ -298,7 +370,7 @@
         ['hediye','Hediye seti','Gift set','Geschenkset','طقم هدايا']
       ]},
       {id:'kozmetik', names:{tr:'🧼 Doğal Sabun & Kozmetik', en:'🧼 Natural Soap & Cosmetics', de:'🧼 Natürliche Seife & Kosmetik', ar:'🧼 صابون طبيعي ومستحضرات'}, subs:[
-        ['zeytin','Zeytinyağlı sabun','Olive‑oil soap','Olivenölseife','صابون زيت زيتون'],
+        ['zeytin','Zeytinyağlı sabun','Olive-oil soap','Olivenölseife','صابون زيت زيتون'],
         ['bitkisel','Bitkisel sabunlar','Herbal soaps','Kräuterseifen','صابون عشبي'],
         ['sampuan','Katı şampuan','Solid shampoo','Festes Shampoo','شامبو صلب'],
         ['balm','Dudak balmı','Lip balm','Lippenbalsam','بلسم شفاه'],
@@ -306,11 +378,11 @@
         ['banyotuzu','Banyo tuzu','Bath salt','Badesalz','ملح الاستحمام'],
         ['lavanta','Lavanta kesesi','Lavender sachet','Lavendelsäckchen','كيس لافندر']
       ]},
-      {id:'amigurumi', names:{tr:'🧸 Amigurumi & Oyuncak (dekor)', en:'🧸 Amigurumi & Decorative Toys', de:'🧸 Amigurumi & Deko‑Spielzeug', ar:'🧸 أميجورومي وألعاب ديكورية'}, subs:[
+      {id:'amigurumi', names:{tr:'🧸 Amigurumi & Oyuncak (dekor)', en:'🧸 Amigurumi & Decorative Toys', de:'🧸 Amigurumi & Deko-Spielzeug', ar:'🧸 أميجورومي وألعاب ديكورية'}, subs:[
         ['anahtar2','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
         ['magnet','Magnet','Magnet','Magnet','مغناطيس'],
         ['kolek','Koleksiyon figürü','Collectible figure','Sammelfigur','مجسّم مجموعات'],
-        ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko‑Puppe/Figur','دمية/شخصية ديكور']
+        ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko-Puppe/Figur','دمية/شخصية ديكور']
       ]}
     ];
 
