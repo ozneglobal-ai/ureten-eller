@@ -313,6 +313,7 @@
           </select>
           <button class="btn ghost" id="logoutBtn">Çıkış</button>
           <button class="btn gold" id="postBtn">İlan Ver</button>
+          <button class="btn gold" id="premiumBtn">Premium Üye Ol</button>
         </div>
       </div>
     </div>
@@ -342,6 +343,7 @@
             <p id="heroDesc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
             <div class="cta-row">
               <button class="btn gold" id="browseBtn" data-i18n="browse">Kategorileri Keşfet</button>
+              <button class="btn gold" id="premiumBtn2">Premium – 1.999 TL/Yıl</button>
             </div>
           </div>
         </div>
@@ -1088,6 +1090,44 @@ if(document.readyState==='loading'){
   }); // ✅ Bu parantez btnMsg.addEventListener’in kapanışı
   
 })(); // ✅ Bu parantez ise fonksiyonun kapanışı
+
+  <script>
+  // Premium satın alma akışı (1999 TL / yıllık)
+  function openPremium(){
+    if (window.openOrderDrawer){
+      // Çekmeceyi premium ürüne göre doldur
+      openOrderDrawer({
+        id: 'premium-annual',
+        title: 'Premium Üyelik (1 Yıl)',
+        price: 1999,
+        currency: 'TRY',
+        sellerName: 'Üreten Eller'
+      });
+
+      // Dijital ürün: teslimat/Adres alanlarını gizle
+      try{
+        // Teslimat seçeneği (elden/kargo) alanını tamamen gizle
+        const shipField = document.querySelector('.order-ship')?.closest('.field');
+        if (shipField) shipField.style.display = 'none';
+        // Adres alanını gizle
+        const addr = document.getElementById('odAddressWrap');
+        if (addr) addr.style.display = 'none';
+        // Başlığı Premium olarak güncelle (isteğe bağlı)
+        const ttl = document.querySelector('.order-title');
+        if (ttl) ttl.textContent = 'Premium Satın Al';
+        // Onay butonu metni (isteğe bağlı)
+        const ok = document.getElementById('odConfirm');
+        if (ok) ok.textContent = 'Satın Al';
+      }catch(_){}
+    } else {
+      // Yedek: ayrı ödeme sayfasına yönlendir (ileride Benpay URL'si koy)
+      location.href = '/odeme/premium.html?plan=annual&amount=1999';
+    }
+  }
+
+  // Butonları bağla
+  document.getElementById('premiumBtn')?.addEventListener('click', openPremium);
+  document.getElementById('premiumBtn2')?.addEventListener('click', openPremium);
 </script>
 
 </body>
