@@ -1076,11 +1076,20 @@ if(document.readyState==='loading'){
       phone: (phone.value||'').trim(),
       note: (note.value||'').trim()
     };
-    console.log('Sipariş onay payload:', payload);
-    alert('Sipariş verildi!');
-    drawer.classList.remove('open');
-    drawer.setAttribute('aria-hidden','true');
-  });
+
+     if (payload.listingId === 'premium-annual') {
+    const orderId = 'PREM-' + Date.now();
+    location.href = '/benpay/checkout.html?mode=test&orderId=' + orderId +
+                    '&amount=' + payload.total + '&currency=' + payload.currency +
+                    '&desc=' + encodeURIComponent('Premium Üyelik (1 Yıl)');
+    return; // alttaki alert/kapama çalışmasın
+  }
+
+  console.log('Sipariş onay payload:', payload);
+  alert('Sipariş verildi!');
+  drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden','true');
+})
 
   btnMsg.addEventListener('click', ()=>{
     if(!currentOrderItem) return;
