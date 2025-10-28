@@ -556,16 +556,12 @@ async function isLoggedIn(){
   return hasLocal;
 }
 
-// ---- İlan Ver butonu: koşullu yönlendirme ----
-document.getElementById('postBtn')?.addEventListener('click', async (e) => {
+// ---- İlan Ver butonu: doğrudan sayfaya git ----
+document.getElementById('postBtn')?.addEventListener('click', (e) => {
   e.preventDefault();
-  const next = '/ilan-ver.html';
-  if (await isLoggedIn()) {
-    location.href = next;
-  } else {
-    location.href = '/index.html?auth=login&redirect=' + encodeURIComponent(next);
-  }
+  location.href = '/ilan-ver.html';
 });
+
 
 // === ÇIKIŞ ===
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
