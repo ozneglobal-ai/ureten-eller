@@ -291,6 +291,36 @@
 .order-actions{display:flex;gap:8px;margin-top:10px}
 .btn.cancel{background:#fff;border:1px solid #e5e7eb}
 
+    /* === Detay paneli sağ sütun: özellik satırları === */
+.m-info .title{ margin:0 0 6px 0; }
+
+.m-info .specs{
+  list-style:none; margin:8px 0 10px; padding:0;
+  border:1px solid #e5e7eb; border-radius:12px; background:#fff;
+}
+.m-info .specs li{
+  display:grid; grid-template-columns:120px 1fr; gap:8px;
+  padding:10px 12px; align-items:center; border-bottom:1px dashed #eee;
+}
+.m-info .specs li:last-child{ border-bottom:0 }
+.m-info .specs .k{
+  font-weight:800; color:#374151; letter-spacing:.2px;
+}
+.m-info .specs .v{ color:#111; }
+
+.m-info .desc{
+  border:1px solid #f1f1f1; background:#fafafa;
+  padding:10px 12px; border-radius:12px; line-height:1.45;
+  margin:8px 0 10px;
+}
+
+.m-info .cta{ display:flex; flex-wrap:wrap; gap:8px; }
+
+/* küçük ekran düzeni */
+@media (max-width:640px){
+  .m-info .specs li{ grid-template-columns:100px 1fr; }
+}
+
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
@@ -825,21 +855,32 @@ if(document.readyState==='loading'){
         <div class="g-thumbs" id="gThumbs"></div>
       </div>
       <div class="m-info">
-        <h3 class="title" id="mTitle">İlan</h3>
-        <div class="meta2" id="mMeta"></div>
-        <div id="mDesc"></div>
-        <div class="seller">
-          <div style="flex:1">
-            <div id="mSellerName" style="font-weight:700">Satıcı</div>
-            <div id="mSellerCity" class="meta2"></div>
-          </div>
-          <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
-        </div>
-        <div id="mStock" class="badge" style="display:none">Stok durumu</div>
-        <div class="cta">
-          <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
-          <a id="mProfile" class="btn secondary" href="#">Profili Ziyaret Et</a>
-        </div>
+  <h3 class="title" id="mTitle">İlan</h3>
+
+  <div class="meta2" id="mMeta" style="display:none"></div>
+
+  <ul class="specs" role="list">
+    <li><span class="k">Fiyat</span> <span class="v"><strong id="mPrice">—</strong></span></li>
+    <li><span class="k">Şehir</span> <span class="v" id="mCity">—</span></li>
+    <li><span class="k">Stok</span>  <span class="v" id="mStockText">—</span></li>
+  </ul>
+
+  <div class="desc" id="mDesc"></div>
+
+  <div class="seller">
+    <div style="flex:1">
+      <div id="mSellerName" style="font-weight:700">Satıcı</div>
+      <div id="mSellerCity" class="meta2"></div>
+    </div>
+    <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
+  </div>
+
+  <div id="mStock" class="badge" style="display:none">Stok durumu</div>
+
+  <div class="cta">
+    <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
+    <a id="mProfile" class="btn secondary" href="#">Satıcı Profili</a>
+       </div>
       </div>
     </div>
   </div>
@@ -972,6 +1013,14 @@ if(document.readyState==='loading'){
     mTitle.textContent = data.title || data.name || 'İlan';
     mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
     mDesc.textContent = data.description || data.desc || '';
+    // Özellik satırlarına değerleri yaz
+   const priceNum = Number(data.price) || 0;
+   const priceCur = data.currency || data.cur || 'TRY';
+   document.getElementById('mPrice').textContent = fmtCur(priceNum, priceCur);
+   document.getElementById('mCity').textContent  = (data.sellerCity || data.city || '');
+   document.getElementById('mStockText').textContent =
+   ((data.inStock === true) || (Number(data.stock ?? data.quantity ?? 0) > 0))
+    ? 'Var' : 'Yok';
 
     // satıcı
     const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
