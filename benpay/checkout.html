@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Benpay Test Checkout</title>
+  <style>body{font-family:system-ui,Arial;margin:24px} button{padding:10px 14px;font-weight:800;border:1px solid #111;border-radius:10px;cursor:pointer}</style>
+</head>
+<body>
+  <h2>Test Ödeme</h2>
+  <p id="sum"></p>
+  <button id="pay">Ödemeyi Başarılı Tamamla</button>
+
+  <script>
+    const p=new URLSearchParams(location.search);
+    document.getElementById('sum').textContent =
+      `Sipariş: ${p.get('orderId')} • Tutar: ${p.get('amount')} ${p.get('currency')} • Açıklama: ${decodeURIComponent(p.get('desc')||'')}`;
+
+    document.getElementById('pay').addEventListener('click', ()=>{
+      // Başarılı dönüş (şimdilik teşekkür sayfasına dön)
+      location.href = '/odeme/tesekkurler.html?orderId='+encodeURIComponent(p.get('orderId'))+'&status=success';
+    });
+  </script>
+</body>
+</html>
