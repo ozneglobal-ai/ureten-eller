@@ -1,15 +1,35 @@
 // api/paytrCallback.js
 const crypto = require("crypto");
+const querystring = require("querystring");
 
 const MERCHANT_KEY = process.env.PAYTR_MERCHANT_KEY;
 const MERCHANT_SALT = process.env.PAYTR_MERCHANT_SALT;
+
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => {
+      const raw = Buffer.concat(chunks).toString("utf8") || "";
+      const ct = (req.headers["content-type"] || "").toLowerCase();
+      if (ct.includes("application/json")) {
+        try { return resolve(JSON.parse(raw || "{}")); } catch (e) { return reject(e); }
+      }
+      if (ct.includes("application/x-www-form-urlencoded")) {
+        return resolve(querystring.parse(raw));
+      }
+      // fallback: boş veya desteklenmeyen tip
+      return resolve({});
+    });
+    req.on("error", reject);
+  });
+}
 
 module.exports = async (req, res) => {
   try {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
-    // PayTR genelde x-www-form-urlencoded gönderir; Vercel body'i otomatik parse eder (Next.js edge olmayan runtime)
-    const post = req.body || {};
+    const post = await parseBody(req);
     const { merchant_oid, status, total_amount, hash } = post;
 
     if (!merchant_oid || !status || !total_amount || !hash) {
@@ -27,13 +47,12 @@ module.exports = async (req, res) => {
 
     if (status === "success") {
       console.log("✅ SUCCESS:", merchant_oid, "amount:", total_amount);
-      // TODO: burada siparişi onayla / premiumu aç / vitrin uzat
+      // TODO: sipariş onayı / premium / vitrin işlemlerini burada tamamla
     } else {
       console.log("❌ FAILED:", merchant_oid);
-      // TODO: başarısız işlem kaydı
     }
 
-    return res.status(200).send("OK");
+    return res.status(200).send("OK"); // PayTR mutlaka "OK" bekler
   } catch (err) {
     console.error("paytrCallback error:", err?.message || err);
     return res.status(500).send("ERROR");
