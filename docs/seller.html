@@ -467,18 +467,30 @@
       if(empty) empty.style.display='none';
 
       try{
-        const { collection, query, where, orderBy, getDocs } =
-          await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-        const q = query(
-          collection(window.__fb.db,'reviews'),
-          where('sellerId','==',__sellerId),
-          orderBy('createdAt','desc')
-        );
-        const snap = await getDocs(q);
-        let has = false;
+  // orderBy importunu kaldırdık
+  const { collection, query, where, getDocs } =
+    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-        snap.forEach(ds=>{
-          const r = ds.data()||{};
+  // İndeks gereksinimini aşmak için orderBy'ı kaldırıp, istemci tarafında sıralayacağız
+  const q = query(
+    collection(window.__fb.db,'reviews'),
+    where('sellerId','==',__sellerId)
+  );
+
+  const snap = await getDocs(q);
+
+  // İstemci tarafında tarihe göre (desc) sırala
+  const rows = [];
+  snap.forEach(ds => rows.push(ds.data() || {}));
+  rows.sort((a,b) => {
+    const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+    const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+    return (tb||0) - (ta||0);
+  });
+
+  let has = false; // ↓ Aşağıda rows.forEach kullanacağın için bunu burada bırak
+
+        rows.forEach(r=>{
           has = true;
           const item = document.createElement('div');
           item.className='revItem';
