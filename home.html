@@ -1117,20 +1117,18 @@ if(document.readyState==='loading'){
     mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
     mStock.classList.toggle('red', !inStock);
 
-   // Profil linkini güvenli kur (slug > sellerId > userId)
-// yoksa butonu devre dışı bırak
-const fallbackUid = data.userId || data.userid || data.userID || '';
-if (sSlug) {
-  mProfile.href = `/docs/seller.html?u=${encodeURIComponent(sSlug)}`;
-} else if (sId) {
-  mProfile.href = `/docs/seller.html?id=${encodeURIComponent(sId)}`;
-} else if (fallbackUid) {
-  mProfile.href = `/docs/seller.html?id=${encodeURIComponent(fallbackUid)}`;
+   // PROFİL LİNKİ (seller.html sadece uid ister = Firestore users doc ID)
+const uidFromData =
+  data.sellerId || data.ownerId || data.userId || data.userid || data.userID || '';
+
+// Sadece UID varsa link ver, yoksa butonu uyarıya çevir
+if (uidFromData) {
+  mProfile.href = `/docs/seller.html?uid=${encodeURIComponent(uidFromData)}`;
 } else {
   mProfile.removeAttribute('href');
   mProfile.addEventListener('click', (e) => {
     e.preventDefault();
-    alert('Satıcı profili için kimlik bulunamadı.');
+    alert('Satıcı profili için kullanıcı ID bulunamadı.');
   }, { once: true });
 }
 
