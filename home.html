@@ -364,6 +364,39 @@
 @media (max-width:640px){
   .m-info .specs li{ grid-template-columns:100px 1fr; }
 }
+    /* === ZORLAYICI MOBİL MODAL SCROLL DÜZELTMESİ (OVERRIDE) === */
+.modal{ 
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  min-height:100dvh !important;
+}
+
+.modal-card{
+  /* yüksekliği ekrana sabitle ve içeriyi kaydır */
+  max-height:calc(100dvh - 16px) !important;
+  overflow:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+/* grid çocuklarının taşmadan kayabilmesi için min-height:0 şart */
+.modal-card, .m-body, .gallery, .m-info{
+  min-height:0 !important;
+}
+
+/* içeride ikinci scroll’u engelle, alt butonlar için nefes */
+.m-body{
+  overflow:visible !important;
+  padding-bottom:10px !important;
+}
+
+/* ana görselin ekranı boğmaması için */
+.g-main{ max-height:48vh !important; }
+
+/* küçük ekranda hizalama */
+@media (max-width:640px){
+  .modal[open]{ align-items:flex-start !important; }
+  .modal-card{ margin:20px 10px !important; border-radius:8px !important; }
+}
 
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
