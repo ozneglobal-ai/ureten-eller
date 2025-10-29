@@ -1,9 +1,8 @@
 <?php
 // api/token.php
-// PayTR iFrame TOKEN üretir (backend). CORS + punycode domain düzeltildi.
+// PayTR iFrame TOKEN üretir (backend). CORS + punycode domain.
 
-// --- AYARLAR ---
-// (Not: Gerçek üretimde bu değerleri .env/panel gizli değişkenlerden okuyun.)
+// --- GİZLİ BİLGİLER ---
 $MERCHANT_ID   = "631284";
 $MERCHANT_KEY  = "B5saZnTNPEGbgd4B";
 $MERCHANT_SALT = "WxDQ8TQjkBuM17fr";
@@ -22,7 +21,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 header('Content-Type: application/json; charset=utf-8');
 
-// --- İSTEK GÖVDESİ ---
+// --- İstek gövdesi ---
 $raw  = file_get_contents('php://input');
 $body = json_decode($raw, true);
 if (!is_array($body)) {
@@ -31,12 +30,11 @@ if (!is_array($body)) {
   exit;
 }
 
-// IP tespiti (proxy arkasında ise)
+// IP tespiti (proxy ihtimali)
 function client_ip(): ?string {
   $keys = ['HTTP_X_FORWARDED_FOR','HTTP_CLIENT_IP','REMOTE_ADDR'];
   foreach ($keys as $k) {
     if (!empty($_SERVER[$k])) {
-      // X-Forwarded-For: "ip, ip, ip"
       $val = trim(explode(',', $_SERVER[$k])[0]);
       if ($val) return $val;
     }
@@ -68,12 +66,12 @@ if (!$email || !$payment_amount || !$user_ip || !$merchant_oid) {
   exit;
 }
 
-// Sepet base64 (örn: tek kalem [siparişNo, tutar, adet])
+// Sepet (ör: tek kalem [siparişNo, tutar, adet])
 $user_basket = base64_encode(
   json_encode([[ (string)$merchant_oid, (int)$payment_amount, 1 ]], JSON_UNESCAPED_UNICODE)
 );
 
-// Hash (PayTR iFrame API Adım 1)
+// iFrame API Adım 1 hash
 $hash_str = $MERCHANT_ID
           . $user_ip
           . $merchant_oid
@@ -88,7 +86,11 @@ $hash_str = $MERCHANT_ID
 
 $paytr_token = base64_encode(hash_hmac('sha256', $hash_str, $MERCHANT_KEY, true));
 
-// PayTR’a gönderilecek veriler (x-www-form-urlencoded)
+// OK/FAIL yönlendirmeleri (benpay klasörüne ayarlı)
+$ok_url   = 'https://www.xn--reteneller-8db.com/benpay/callback-ok.html';
+$fail_url = 'https://www.xn--reteneller-8db.com/benpay/checkout.html';
+
+// PayTR’a gönderilecek veriler
 $postData = [
   'merchant_id'       => $MERCHANT_ID,
   'user_ip'           => $user_ip,
@@ -104,11 +106,11 @@ $postData = [
   'user_name'         => $user_name,
   'user_address'      => $user_address,
   'user_phone'        => $user_phone,
-  'merchant_ok_url'   => 'https://www.xn--reteneller-8db.com/odeme-basarili.html',
-  'merchant_fail_url' => 'https://www.xn--reteneller-8db.com/odeme-hata.html',
+  'merchant_ok_url'   => $ok_url,
+  'merchant_fail_url' => $fail_url,
 ];
 
-// PayTR token isteği
+// PayTR token isteği (x-www-form-urlencoded)
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://www.paytr.com/odeme/api/get-token");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -127,7 +129,7 @@ if ($err) {
   exit;
 }
 
-// PayTR bazen düz metin dönebilir; JSON dene, değilse metni reason olarak gönder
+// PayTR bazen düz metin döner; JSON dene, değilse metni reason olarak gönder
 $data = json_decode($response, true);
 if (!$data) {
   http_response_code($http >= 400 ? 500 : 200);
