@@ -3,23 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Benpay Test Checkout</title>
-  <style>body{font-family:system-ui,Arial;margin:24px} button{padding:10px 14px;font-weight:800;border:1px solid #111;border-radius:10px;cursor:pointer}</style>
+  <title>PayTR Ödeme Sayfası</title>
 </head>
 <body>
-  <h2>Test Ödeme</h2>
-  <p id="sum"></p>
-  <button id="pay">Ödemeyi Başarılı Tamamla</button>
+  <h2>PayTR Ödeme Testi</h2>
+  <div id="iframe-container">Yükleniyor...</div>
 
   <script>
-    const p=new URLSearchParams(location.search);
-    document.getElementById('sum').textContent =
-      `Sipariş: ${p.get('orderId')} • Tutar: ${p.get('amount')} ${p.get('currency')} • Açıklama: ${decodeURIComponent(p.get('desc')||'')}`;
+  async function startPayment() {
+    const body = {
+      merchant_oid: "TEST_" + Date.now(),
+      email: "test@ureteneller.com",
+      payment_amount: 100, // 1 TL = 100 kuruş
+      user_name: "Test Kullanıcı",
+      user_address: "Test adres",
+      user_phone: "5555555555",
+      test_mode: 1
+    };
 
-    document.getElementById('pay').addEventListener('click', ()=>{
-      // Başarılı dönüş (şimdilik teşekkür sayfasına dön)
-      location.href = '/odeme/tesekkurler.html?orderId='+encodeURIComponent(p.get('orderId'))+'&status=success';
+    const res = await fetch("https://ureteneller.kesug.com/api/token.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
     });
+
+    const data = await res.json();
+    if (data.status === "success") {
+      document.getElementById("iframe-container").innerHTML =
+        `<iframe src="https://www.paytr.com/odeme/guvenli/${data.token}"
+          frameborder="0" scrolling="no" style="width:100%;height:700px;"></iframe>`;
+    } else {
+      document.getElementById("iframe-container").innerText =
+        "Hata: " + data.reason;
+    }
+  }
+
+  startPayment();
   </script>
 </body>
 </html>
