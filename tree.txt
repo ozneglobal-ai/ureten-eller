@@ -1,4 +1,6 @@
 .
+├── .firebaserc
+├── .gitignore
 ├── CNAME
 ├── README.md
 ├── admin
@@ -14,6 +16,31 @@
 │   │   ├── messages.js
 │   │   └── users.js
 │   └── panel.html
+├── android
+│   ├── .gitignore
+│   ├── app
+│   │   ├── .gitignore
+│   │   ├── build.gradle
+│   │   ├── capacitor.build.gradle
+│   │   ├── proguard-rules.pro
+│   │   └── src
+│   │       ├── androidTest
+│   │       ├── main
+│   │       └── test
+│   ├── build.gradle
+│   ├── capacitor.settings.gradle
+│   ├── gradle
+│   │   └── wrapper
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── settings.gradle
+│   └── variables.gradle
+├── api
+│   ├── callback.php
+│   └── token.php
+├── apple-touch-icon.png
 ├── assets
 │   ├── icons
 │   │   ├── apple-touch-icon.png
@@ -28,6 +55,10 @@
 ├── backups
 │   ├── docs-üreteneller.png.bak
 │   └── üreteneller.png.bak
+├── benpay
+│   ├── callback-ok.html
+│   └── checkout.html
+├── capacitor.config.json
 ├── docs
 │   ├── .deploy-bump
 │   ├── .nojekyll
@@ -52,19 +83,30 @@
 │   │       └── avatar-default.png
 │   ├── bildirimler.html
 │   ├── firebase-init.js
+│   ├── firebase-messaging-sw.js
 │   ├── ilan-ver.html
 │   ├── index.html
 │   ├── mesajlar.html
 │   ├── notify.wav
+│   ├── odeme.html
 │   ├── orders.html
 │   ├── profile.html
+│   ├── seller.html
 │   └── üreteneller.png
+├── favicon-32x32.png
+├── favicon.ico
+├── firebase-functions
+│   └── index.js
 ├── firebase-init.js
+├── firebase.json
 ├── home.html
 ├── i18n.js
 ├── ilan-ver.html
 ├── index.html
 ├── index.html.bak
+├── js
+│   ├── ilan.page.js
+│   └── index.page.js
 ├── legal
 │   ├── cerez-politikasi.html
 │   ├── gizlilik-politikasi.html
@@ -76,9 +118,18 @@
 │   ├── teslimat-iade-iptal.html
 │   ├── topluluk-kurallari.html
 │   └── yasakli-urunler.html
+├── listings.html
 ├── notify.wav
+├── odeme
+│   └── tesekkurler.html
+├── package-lock.json
+├── package.json
 ├── profile.html
+├── robots.txt
+├── service-worker.js
+├── site.webmanifest
+├── sitemap.xml
 ├── tree.txt
-└── üreteneller.png
+└── vercel.json
 
-16 directories, 66 files
+29 directories, 104 files
