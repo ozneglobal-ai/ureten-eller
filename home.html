@@ -1216,12 +1216,11 @@ if (uidFromData) {
 
      if (payload.listingId === 'premium-annual') {
   const orderId = (window.__orderId || ('PREM-' + Date.now()));
-  location.href = '/odeme/paytr.html?oid=' + encodeURIComponent(orderId) +
+  location.href = 'https://ureteneller.kesug.com/odeme/paytr.html?oid=' + encodeURIComponent(orderId) +
                   '&amount=' + encodeURIComponent(payload.total) +
                   '&email=' + encodeURIComponent('ozneglobal@gmail.com');
-  return; // alttakiler çalışmasın
+  return;
 }
-
 
   console.log('Sipariş onay payload:', payload);
   alert('Sipariş verildi!');
