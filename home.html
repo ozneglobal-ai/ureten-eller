@@ -1215,10 +1215,15 @@ if (uidFromData) {
     }; 
 
      if (payload.listingId === 'premium-annual') {
-  const orderId = (window.__orderId || ('PREM-' + Date.now()));
-  location.href = 'https://ureteneller.kesug.com/odeme/paytr.html?oid=' + encodeURIComponent(orderId) +
-                  '&amount=' + encodeURIComponent(payload.total) +
-                  '&email=' + encodeURIComponent('ozneglobal@gmail.com');
+  // PayTR için yalnızca alfanümerik karakterler (tire yok)
+  const orderId = (window.__orderId || ('PREM' + Date.now())).replace(/[^a-z0-9]/gi, '');
+  
+  // Kesug üzerindeki ödeme sayfasına yönlendir
+  location.href =
+    'https://ureteneller.kesug.com/odeme/paytr.html?' +
+    'oid=' + encodeURIComponent(orderId) +
+    '&amount=' + encodeURIComponent(payload.total) +
+    '&email=' + encodeURIComponent('ozneglobal@gmail.com');
   return;
 }
 
