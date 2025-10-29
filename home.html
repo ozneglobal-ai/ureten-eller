@@ -1215,12 +1215,13 @@ if (uidFromData) {
     };
 
      if (payload.listingId === 'premium-annual') {
-    const orderId = 'PREM-' + Date.now();
-    location.href = '/benpay/checkout.html?mode=test&orderId=' + orderId +
-                    '&amount=' + payload.total + '&currency=' + payload.currency +
-                    '&desc=' + encodeURIComponent('Premium Üyelik (1 Yıl)');
-    return; // alttaki alert/kapama çalışmasın
-  }
+  const orderId = (window.__orderId || ('PREM-' + Date.now()));
+  location.href = '/odeme/paytr.html?oid=' + encodeURIComponent(orderId) +
+                  '&amount=' + encodeURIComponent(payload.total) +
+                  '&email=' + encodeURIComponent('ozneglobal@gmail.com');
+  return; // alttakiler çalışmasın
+}
+
 
   console.log('Sipariş onay payload:', payload);
   alert('Sipariş verildi!');
