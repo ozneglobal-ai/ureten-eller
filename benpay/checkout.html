@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>PayTR Ödeme Sayfası</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 20px; }
+    #iframe-container { text-align: center; padding: 20px; }
+    .err { background: #fee2e2; color: #7f1d1d; padding: 12px; border-radius: 8px; border: 1px solid #fecaca; }
+  </style>
 </head>
 <body>
   <h2>PayTR Ödeme Testi</h2>
@@ -21,20 +26,28 @@
       test_mode: 1
     };
 
-    const res = await fetch("https://ureteneller.kesug.com/api/token.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+    try {
+      const res = await fetch("/api/token.php", {   // ✅ artık aynı domainden çağırıyor
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
 
-    const data = await res.json();
-    if (data.status === "success") {
+      const data = await res.json();
+
+      if (data.status === "success" && data.token) {
+        document.getElementById("iframe-container").innerHTML = `
+          <iframe src="https://www.paytr.com/odeme/guvenli/${data.token}"
+            frameborder="0" scrolling="no"
+            style="width:100%;height:700px;border:none;"></iframe>`;
+      } else {
+        document.getElementById("iframe-container").innerHTML =
+          "<div class='err'>Hata: " + (data.reason || "Bilinmeyen hata") + "</div>";
+      }
+
+    } catch (err) {
       document.getElementById("iframe-container").innerHTML =
-        `<iframe src="https://www.paytr.com/odeme/guvenli/${data.token}"
-          frameborder="0" scrolling="no" style="width:100%;height:700px;"></iframe>`;
-    } else {
-      document.getElementById("iframe-container").innerText =
-        "Hata: " + data.reason;
+        "<div class='err'>İstek başarısız: " + err.message + "</div>";
     }
   }
 
