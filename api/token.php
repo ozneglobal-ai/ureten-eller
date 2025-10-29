@@ -11,8 +11,7 @@ $MERCHANT_SALT = "WxDQ8TQjkBuM17fr";
 $allowed = [
   "https://www.xn--reteneller-8db.com",
   "https://xn--reteneller-8db.com",
-  "https://ureteneller.com",
-  "https://www.ureteneller.com"
+  "https://ureteneller.kesug.com"
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -39,7 +38,7 @@ if (!is_array($body)) {
 }
 
 // IP tespiti
-function client_ip(): ?string {
+function client_ip(): string {
   $keys = ['HTTP_X_FORWARDED_FOR','HTTP_CLIENT_IP','REMOTE_ADDR'];
   foreach ($keys as $k) {
     if (!empty($_SERVER[$k])) {
@@ -47,7 +46,7 @@ function client_ip(): ?string {
       if ($val) return $val;
     }
   }
-  return '127.0.0.1';
+  return '127.0.0.1'; // boş gelirse default
 }
 
 $email           = $body['email']           ?? null;
