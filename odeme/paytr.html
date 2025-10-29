@@ -38,12 +38,13 @@
       };
 
       try {
-        const res = await fetch('https://www.xn--reteneller-8db.com/api/token.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-
+        const res = await fetch('https://ureteneller.kesug.com/api/token.php', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+  credentials: 'omit'
+});
+        
         // Eğer 405, 404 alıyorsan burada catch'e düşer veya res.ok false olur
         if (!res.ok) {
           const txt = await res.text();
