@@ -1198,52 +1198,111 @@ if (uidFromData) {
   
   <!-- ... önceki kodlar ... -->
 
-// Siteniz üzerindeki PayTR ödeme sayfasına yönlendir
-location.href =
-  'https://xn--reteneller-8db.com/odeme/paytr.html?' +
-  'oid=' + encodeURIComponent(orderId) +
-  '&amount=' + encodeURIComponent(payload.total) +   // TL cinsinden (paytr.html içinde ×100 yapılıyor)
-  '&email=' + encodeURIComponent('ozneglobal@gmail.com');
-return;
-}
+  // Güvenli kısa yardımcılar
+  const qs = (s) => document.querySelector(s);
+  const qsa = (s) => Array.from(document.querySelectorAll(s));
+  const origin = location.origin.replace(/\/$/, '');
 
-console.log('Sipariş onay payload:', payload);
-alert('Sipariş verildi!');
-drawer.classList.remove('open');
-drawer.setAttribute('aria-hidden','true');
-})
+  // Ayarlar (gerekirse değiştir)
+  const PREMIUM_PRICE_TL = 1999;
+  const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
 
-btnMsg.addEventListener('click', ()=>{
-  if(!currentOrderItem) return;
-  const q = Math.max(1, parseInt(qty.value||1));
-  const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
-  alert(msg);
-}); // ✅ Bu parantez btnMsg.addEventListener’in kapanışı
+  // --- 1) odConfirm - satın alma butonu üzerine "capture" ile öncelikli listener ---
+  const odConfirm = qs('#odConfirm');
+  if (odConfirm) {
+    odConfirm.addEventListener('click', function (e) {
+      try {
+        // Varsayılan preventedirsede bizim kontrolümüzü yap
+        // currentOrderItem globali kodunda tanımlıysa onu kullan
+        const item = window.currentOrderItem || window.__currentOrderItem || window.__orderItem || window.__order || null;
+        // fallback olarak DOM içinden title (gerekliyse)
+        const titleElem = document.getElementById('odListing');
+        const titleText = titleElem ? titleElem.textContent : '';
 
-})(); // ✅ Bu parantez ise fonksiyonun kapanışı
+        const idIsPremium = (item && (item.id === 'premium-annual' || item.id === 'premium'));
+        // bazı eski kodlarda payload oluşturup sonra premium kontrolü yapıldığı için
+        // title ile de basit kontrol yapıyoruz:
+        const titleSuggestsPremium = /Premium/i.test((item && item.title) || titleText || '');
 
-function openPremium(){
-  // Premium'u direkt ödeme sayfasına yönlendir
-  const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi,''); // alfanümerik
-  const amountTl = 1999; // TL (paytr.html içinde kuruşa çevriliyor)
-  const email = 'ozneglobal@gmail.com';
+        if (idIsPremium || titleSuggestsPremium) {
+          e.preventDefault();
+          e.stopImmediatePropagation && e.stopImmediatePropagation(); // diğer handler'ları durdur
+          e.stopPropagation && e.stopPropagation();
 
-  location.href =
-    'https://xn--reteneller-8db.com/odeme/paytr.html?' +
-    'oid=' + encodeURIComponent(orderId) +
-    '&amount=' + encodeURIComponent(amountTl) +
-    '&email=' + encodeURIComponent(email);
-}
+          // Tekil orderId alfanumerik
+          const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
 
-// Butonları bağla
-document.getElementById('premiumBtn')?.addEventListener('click', (e)=>{
-  e.preventDefault();
-  openPremium();
-});
-document.getElementById('premiumBtn2')?.addEventListener('click', (e)=>{
-  e.preventDefault();
-  openPremium();
-});
+          // Tutar
+          const amountTl = (item && Number(item.price)) || PREMIUM_PRICE_TL;
+
+          // Oluşturulacak URL (site köküne göre)
+          const payUrl = `${origin}/odeme.html` +
+            `?oid=${encodeURIComponent(orderId)}` +
+            `&amount=${encodeURIComponent(amountTl)}` +
+            `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+            `&plan=annual`;
+
+          // Yönlendir
+          location.href = payUrl;
+        }
+        // değilse bırak diğer handler'lar çalışsın (biz capture olarak önce çalıştık)
+      } catch (err) {
+        // Hata olsa bile diğer handler'ların çalışmasına izin veriyoruz
+        console.warn('premium-override hata:', err);
+      }
+    }, /* useCapture */ true);
+  }
+
+  // --- 2) Premium butonları: drawer açma mantığını atla, direkt ödeme sayfasına git ---
+  function bindPremiumButton(selector) {
+    qsa(selector).forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation && ev.stopPropagation();
+
+        const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
+        const payUrl = `${origin}/odeme.html` +
+          `?oid=${encodeURIComponent(orderId)}` +
+          `&amount=${encodeURIComponent(PREMIUM_PRICE_TL)}` +
+          `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+          `&plan=annual`;
+
+        location.href = payUrl;
+      }, { once: false });
+    });
+  }
+
+  bindPremiumButton('#premiumBtn');
+  bindPremiumButton('#premiumBtn2');
+
+  // --- 3) Guard: eğer openOrderDrawer global varsa premium açıldığında drawer'ı kapat (çakışma olmasın) ---
+  try {
+    if (window.openOrderDrawer) {
+      const orig = window.openOrderDrawer;
+      window.openOrderDrawer = function(item) {
+        // Eğer premium geliyorsa drawer'ı açma, redirect et
+        if (item && (item.id === 'premium-annual' || /premium/i.test(item.title || ''))) {
+          const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
+          const payUrl = `${origin}/odeme.html` +
+            `?oid=${encodeURIComponent(orderId)}` +
+            `&amount=${encodeURIComponent(item.price || PREMIUM_PRICE_TL)}` +
+            `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+            `&plan=annual`;
+          location.href = payUrl;
+          return;
+        }
+        // değilse normal davranış
+        return orig.apply(this, arguments);
+      };
+    }
+  } catch (e) {
+    // Eğer override başarısız olursa, sessizce devam et
+    console.warn('openOrderDrawer override başarısız:', e);
+  }
+
+  // Bilgilendirme (isteğe bağlı - log)
+  console.info('Premium redirect override aktif. (tek script bloğu)');
+})();
 </script>
 
 </body>
