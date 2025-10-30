@@ -1207,103 +1207,97 @@ if (uidFromData) {
   const PREMIUM_PRICE_TL = 1999;
   const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
 
-  // --- 1) odConfirm - satın alma butonu üzerine "capture" ile öncelikli listener ---
+  <script>
+(function () {
+  // === Ayarlar ===
+  const ORIGIN = location.origin;                 // https://xn--reteneller-8db.com
+  const PREMIUM_PRICE_TL = 1999;                  // Premium tutarı (TL)
+  const PREMIUM_EMAIL = 'ozneglobal@gmail.com';   // Ödeme sayfasına iletilecek e-posta
+
+  // Kısa yardımcılar
+  const qs  = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  // Tek noktadan premium yönlendirme
+  function goPremium(amount) {
+    const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
+    const amt = Number(amount ?? PREMIUM_PRICE_TL) || PREMIUM_PRICE_TL;
+    const payUrl =
+      `${ORIGIN}/odeme.html` +
+      `?oid=${encodeURIComponent(orderId)}` +
+      `&amount=${encodeURIComponent(amt)}` +
+      `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+      `&plan=annual`;
+    location.href = payUrl;
+  }
+
+  // --- 1) "Satın Al" (odConfirm) için premium yakalayıcı (capture:true) ---
   const odConfirm = qs('#odConfirm');
   if (odConfirm) {
     odConfirm.addEventListener('click', function (e) {
       try {
-        // Varsayılan preventedirsede bizim kontrolümüzü yap
-        // currentOrderItem globali kodunda tanımlıysa onu kullan
-        const item = window.currentOrderItem || window.__currentOrderItem || window.__orderItem || window.__order || null;
-        // fallback olarak DOM içinden title (gerekliyse)
-        const titleElem = document.getElementById('odListing');
-        const titleText = titleElem ? titleElem.textContent : '';
+        const item =
+          window.currentOrderItem ||
+          window.__currentOrderItem ||
+          window.__orderItem ||
+          window.__order ||
+          null;
 
-        const idIsPremium = (item && (item.id === 'premium-annual' || item.id === 'premium'));
-        // bazı eski kodlarda payload oluşturup sonra premium kontrolü yapıldığı için
-        // title ile de basit kontrol yapıyoruz:
-        const titleSuggestsPremium = /Premium/i.test((item && item.title) || titleText || '');
+        // Title fallback
+        const titleText = (qs('#odListing')?.textContent || '').trim();
+
+        const idIsPremium = !!(item && (item.id === 'premium-annual' || item.id === 'premium'));
+        const titleSuggestsPremium = /premium/i.test(((item && item.title) || '') + ' ' + titleText);
 
         if (idIsPremium || titleSuggestsPremium) {
           e.preventDefault();
-          e.stopImmediatePropagation && e.stopImmediatePropagation(); // diğer handler'ları durdur
-          e.stopPropagation && e.stopPropagation();
+          e.stopImmediatePropagation?.();
+          e.stopPropagation?.();
 
-          // Tekil orderId alfanumerik
-          const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
-
-          // Tutar
-          const amountTl = (item && Number(item.price)) || PREMIUM_PRICE_TL;
-
-          // Oluşturulacak URL (site köküne göre)
-          const payUrl = `${origin}/odeme.html` +
-            `?oid=${encodeURIComponent(orderId)}` +
-            `&amount=${encodeURIComponent(amountTl)}` +
-            `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
-            `&plan=annual`;
-
-          // Yönlendir
-          location.href = payUrl;
+          const amount = Number(item?.price) || PREMIUM_PRICE_TL;
+          goPremium(amount);
+          return; // diğer handler'lar çalışmasın
         }
-        // değilse bırak diğer handler'lar çalışsın (biz capture olarak önce çalıştık)
+        // Premium değilse diğer handler'lara izin ver
       } catch (err) {
-        // Hata olsa bile diğer handler'ların çalışmasına izin veriyoruz
         console.warn('premium-override hata:', err);
+        // Hata olsa da normal akış sürsün
       }
-    }, /* useCapture */ true);
+    }, true); // capture
   }
 
-  // --- 2) Premium butonları: drawer açma mantığını atla, direkt ödeme sayfasına git ---
+  // --- 2) Premium butonları: drawer açmadan direkt ödeme sayfasına götür ---
   function bindPremiumButton(selector) {
     qsa(selector).forEach(btn => {
       btn.addEventListener('click', (ev) => {
         ev.preventDefault();
-        ev.stopPropagation && ev.stopPropagation();
-
-        const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
-        const payUrl = `${origin}/odeme.html` +
-          `?oid=${encodeURIComponent(orderId)}` +
-          `&amount=${encodeURIComponent(PREMIUM_PRICE_TL)}` +
-          `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
-          `&plan=annual`;
-
-        location.href = payUrl;
-      }, { once: false });
+        ev.stopPropagation?.();
+        goPremium(PREMIUM_PRICE_TL);
+      });
     });
   }
-
   bindPremiumButton('#premiumBtn');
   bindPremiumButton('#premiumBtn2');
 
-  // --- 3) Guard: eğer openOrderDrawer global varsa premium açıldığında drawer'ı kapat (çakışma olmasın) ---
+  // --- 3) Varsa openOrderDrawer'ı premiumda override et ---
   try {
-    if (window.openOrderDrawer) {
+    if (typeof window.openOrderDrawer === 'function') {
       const orig = window.openOrderDrawer;
-      window.openOrderDrawer = function(item) {
-        // Eğer premium geliyorsa drawer'ı açma, redirect et
+      window.openOrderDrawer = function (item) {
         if (item && (item.id === 'premium-annual' || /premium/i.test(item.title || ''))) {
-          const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
-          const payUrl = `${origin}/odeme.html` +
-            `?oid=${encodeURIComponent(orderId)}` +
-            `&amount=${encodeURIComponent(item.price || PREMIUM_PRICE_TL)}` +
-            `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
-            `&plan=annual`;
-          location.href = payUrl;
+          goPremium(Number(item.price) || PREMIUM_PRICE_TL);
           return;
         }
-        // değilse normal davranış
         return orig.apply(this, arguments);
       };
     }
   } catch (e) {
-    // Eğer override başarısız olursa, sessizce devam et
     console.warn('openOrderDrawer override başarısız:', e);
   }
 
-  // Bilgilendirme (isteğe bağlı - log)
-  console.info('Premium redirect override aktif. (tek script bloğu)');
+  console.info('Premium redirect override aktif.');
 })();
+       
 </script>
-
 </body>
 </html>
