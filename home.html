@@ -994,7 +994,7 @@ if(document.readyState==='loading'){
 </div>
 
 <script>
-/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi ==== */
+/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi (temiz) ==== */
 (() => {
   // ---- Modal elemanları
   const modal = document.getElementById('listingModal');
@@ -1037,6 +1037,34 @@ if(document.readyState==='loading'){
     catch(_) { return `${v||0} ${cur}`; }
   };
 
+  // --- Premium yönlendirme yardımcıları (KESUG yok, kendi /odeme.html)
+  const ORIGIN = location.origin;
+  const PREMIUM_PRICE_TL = 1999;
+  const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
+  function goPremium(amount){
+    const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
+    const amt = Number(amount ?? PREMIUM_PRICE_TL) || PREMIUM_PRICE_TL;
+    const payUrl =
+      `${ORIGIN}/odeme.html` +
+      `?oid=${encodeURIComponent(orderId)}` +
+      `&amount=${encodeURIComponent(amt)}` +
+      `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+      `&plan=annual`;
+    location.href = payUrl;
+  }
+  function bindPremiumButton(selector){
+    document.querySelectorAll(selector).forEach(btn=>{
+      btn.addEventListener('click',(ev)=>{
+        ev.preventDefault();
+        ev.stopPropagation?.();
+        goPremium(PREMIUM_PRICE_TL);
+      });
+    });
+  }
+  // Sayfadaki premium butonları (varsa)
+  bindPremiumButton('#premiumBtn');
+  bindPremiumButton('#premiumBtn2');
+
   function paint(){
     if(!imgs.length) return;
     idx = Math.max(0, Math.min(idx, imgs.length-1));
@@ -1068,20 +1096,16 @@ if(document.readyState==='loading'){
     mTitle.textContent = data.title || data.name || 'İlan';
     mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
     mDesc.textContent = data.description || data.desc || '';
-    // Özellik satırlarına değerleri yaz
-   const priceNum = Number(data.price) || 0;
-   const priceCur = data.currency || data.cur || 'TRY';
-   document.getElementById('mPrice').textContent = fmtCur(priceNum, priceCur);
-   document.getElementById('mCity').textContent  = (data.sellerCity || data.city || '');
-   document.getElementById('mStockText').textContent =
-   ((data.inStock === true) || (Number(data.stock ?? data.quantity ?? 0) > 0))
-    ? 'Var' : 'Yok';
+    const priceNum = Number(data.price) || 0;
+    const priceCur = data.currency || data.cur || 'TRY';
+    document.getElementById('mPrice').textContent = fmtCur(priceNum, priceCur);
+    document.getElementById('mCity').textContent  = (data.sellerCity || data.city || '');
+    document.getElementById('mStockText').textContent =
+      ((data.inStock === true) || (Number(data.stock ?? data.quantity ?? 0) > 0)) ? 'Var' : 'Yok';
 
     // satıcı
     const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
     const sCity = data.sellerCity || data.city || '';
-    const sId = data.sellerId || data.ownerId || data.userId || '';
-    const sSlug = data.sellerSlug || sId || '';
     const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
     mSellerName.textContent = sName;
     mSellerCity.textContent = sCity;
@@ -1095,22 +1119,19 @@ if(document.readyState==='loading'){
     mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
     mStock.classList.toggle('red', !inStock);
 
-   // PROFİL LİNKİ (seller.html sadece uid ister = Firestore users doc ID)
-const uidFromData =
-  data.sellerId || data.ownerId || data.userId || data.userid || data.userID || '';
+    // profil link
+    const uidFromData = data.sellerId || data.ownerId || data.userId || data.userid || data.userID || '';
+    if (uidFromData) {
+      mProfile.href = `/docs/seller.html?uid=${encodeURIComponent(uidFromData)}`;
+    } else {
+      mProfile.removeAttribute('href');
+      mProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Satıcı profili için kullanıcı ID bulunamadı.');
+      }, { once: true });
+    }
 
-// Sadece UID varsa link ver, yoksa butonu uyarıya çevir
-if (uidFromData) {
-  mProfile.href = `/docs/seller.html?uid=${encodeURIComponent(uidFromData)}`;
-} else {
-  mProfile.removeAttribute('href');
-  mProfile.addEventListener('click', (e) => {
-    e.preventDefault();
-    alert('Satıcı profili için kullanıcı ID bulunamadı.');
-  }, { once: true });
-}
-
-    // Sipariş çekmecesine geçecek payload
+    // sipariş payload
     currentOrderItem = {
       id,
       title: data.title || data.name || 'İlan',
@@ -1130,7 +1151,7 @@ if (uidFromData) {
     if(item){ openListingDetail(id,item.data); }
   });
 
-  // Modal içi buton: Sipariş Ver → çekmeceyi aç
+  // Modal içi: Sipariş Ver → çekmece
   mOrder.addEventListener('click', (e)=>{
     e.preventDefault();
     if (!currentOrderItem) return;
@@ -1190,107 +1211,23 @@ if (uidFromData) {
       address: ship === 'cargo' ? (address.value||'').trim() : '',
       phone: (phone.value||'').trim(),
       note: (note.value||'').trim()
-    }; 
+    };
 
-     if (payload.listingId === 'premium-annual') {
-  // PayTR için yalnızca alfanümerik karakterler (tire yok)
-  const orderId = (window.__orderId || ('PREM' + Date.now())).replace(/[^a-z0-9]/gi, '');
-  
-  <!-- ... önceki kodlar ... -->
+    // --- PREMIUM kısayol: /odeme.html’e yönlendir
+    const isPremium =
+      payload.listingId === 'premium-annual' ||
+      /premium/i.test(payload.listingTitle || '');
 
-  // Güvenli kısa yardımcılar
-  const qs = (s) => document.querySelector(s);
-  const qsa = (s) => Array.from(document.querySelectorAll(s));
-  const origin = location.origin.replace(/\/$/, '');
-
-  // Ayarlar (gerekirse değiştir)
-  const PREMIUM_PRICE_TL = 1999;
-  const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
-
-(function () {
-  // === AYARLAR ===
-  const ORIGIN = location.origin;                 // https://xn--reteneller-8db.com
-  const PREMIUM_PRICE_TL = 1999;                  // Premium tutarı (TL)
-  const PREMIUM_EMAIL = 'ozneglobal@gmail.com';   // Ödeme sayfasına iletilecek e-posta
-
-  // Yardımcılar
-  const qs  = (sel, root = document) => root.querySelector(sel);
-  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  // Tek noktadan premium yönlendirme
-  function goPremium(amount) {
-    const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
-    const amt = Number(amount ?? PREMIUM_PRICE_TL) || PREMIUM_PRICE_TL;
-    const payUrl =
-      `${ORIGIN}/odeme.html` +
-      `?oid=${encodeURIComponent(orderId)}` +
-      `&amount=${encodeURIComponent(amt)}` +
-      `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
-      `&plan=annual`;
-    location.href = payUrl; // <-- artık KESUG YOK, kendi odeme.html
-  }
-
-  // 1) "Satın Al" (odConfirm) için premium yakalayıcı (capture:true)
-  const odConfirm = qs('#odConfirm');
-  if (odConfirm) {
-    odConfirm.addEventListener('click', function (e) {
-      try {
-        const item =
-          window.currentOrderItem ||
-          window.__currentOrderItem ||
-          window.__orderItem ||
-          window.__order ||
-          null;
-
-        const titleText = (qs('#odListing')?.textContent || '').trim();
-        const idIsPremium = !!(item && (item.id === 'premium-annual' || item.id === 'premium'));
-        const titleSuggestsPremium = /premium/i.test(((item && item.title) || '') + ' ' + titleText);
-
-        if (idIsPremium || titleSuggestsPremium) {
-          e.preventDefault();
-          e.stopImmediatePropagation?.();
-          e.stopPropagation?.();
-
-          const amount = Number(item?.price) || PREMIUM_PRICE_TL;
-          goPremium(amount);
-          return;
-        }
-      } catch (err) {
-        console.warn('premium-override hata:', err);
-      }
-    }, true);
-  }
-
-  // 2) Premium butonları: çekmece açmadan direkt ödeme
-  function bindPremiumButton(selector) {
-    qsa(selector).forEach(btn => {
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation?.();
-        goPremium(PREMIUM_PRICE_TL);
-      });
-    });
-  }
-  bindPremiumButton('#premiumBtn');
-  bindPremiumButton('#premiumBtn2');
-
-  // 3) Varsa openOrderDrawer'ı premiumda override et
-  try {
-    if (typeof window.openOrderDrawer === 'function') {
-      const orig = window.openOrderDrawer;
-      window.openOrderDrawer = function (item) {
-        if (item && (item.id === 'premium-annual' || /premium/i.test(item.title || ''))) {
-          goPremium(Number(item.price) || PREMIUM_PRICE_TL);
-          return;
-        }
-        return orig.apply(this, arguments);
-      };
+    if (isPremium) {
+      goPremium(Number(currentOrderItem.price) || PREMIUM_PRICE_TL);
+      return;
     }
-  } catch (e) {
-    console.warn('openOrderDrawer override başarısız:', e);
-  }
 
-  console.info('Premium redirect override aktif (KESUG kaldırıldı).');
+    // --- Normal sipariş akışı (buraya kendi backend entegrasyonunu koy)
+    alert('Siparişiniz alındı.');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+  });
 })();
 </script>
 
