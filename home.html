@@ -1038,18 +1038,19 @@ if(document.readyState==='loading'){
   };
 
   // --- Premium yönlendirme yardımcıları (KESUG yok, kendi /odeme.html)
-  const ORIGIN = location.origin;
+  const PAY_HOST = 'https://xn--reteneller-8db.com'; // hostingteki alan (apex) ya da pay.alt-alan
   const PREMIUM_PRICE_TL = 1999;
   const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
   function goPremium(amount){
     const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
     const amt = Number(amount ?? PREMIUM_PRICE_TL) || PREMIUM_PRICE_TL;
     const payUrl =
-      `${ORIGIN}/odeme.html` +
-      `?oid=${encodeURIComponent(orderId)}` +
-      `&amount=${encodeURIComponent(amt)}` +
-      `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
-      `&plan=annual`;
+      `const payUrl =
+  `${PAY_HOST}/odeme.html` +
+  `?oid=${encodeURIComponent(orderId)}` +
+  `&amount=${encodeURIComponent(amt)}` +
+  `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+  `&plan=annual`;
     location.href = payUrl;
   }
   function bindPremiumButton(selector){
