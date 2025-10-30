@@ -60,7 +60,16 @@
     .wrap,.content,.topcats,.grid{min-width:0}
     .page{overflow-x:hidden}
 
-    .hero{border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:center;background:#fafafa;min-width:0}
+    /* Varsayılan: tek kolon */
+.hero{
+  border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;
+  display:grid;grid-template-columns:1fr;gap:20px;align-items:center;
+  background:#fafafa;min-width:0
+}
+/* İleride hero’ya görsel vs. 2. bir blok eklemek isterseniz .two sınıfını verin */
+.hero.two{ grid-template-columns:1.5fr 1fr; }
+@media (max-width:900px){ .hero.two{ grid-template-columns:1fr } }
+
     @media (max-width: 900px){.hero{grid-template-columns:1fr}}
     /* Başlık ve açıklamayı mobilde küçült */
     .hero h2{font-size:clamp(16px,4.3vw,20px);margin:0 0 6px 0;letter-spacing:.1px;line-height:1.18}
