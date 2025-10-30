@@ -1196,62 +1196,54 @@ if (uidFromData) {
   // PayTR için yalnızca alfanümerik karakterler (tire yok)
   const orderId = (window.__orderId || ('PREM' + Date.now())).replace(/[^a-z0-9]/gi, '');
   
-  // Kesug üzerindeki ödeme sayfasına yönlendir
-  location.href =
-    'https://ureteneller.kesug.com/odeme/paytr.html?' +
-    'oid=' + encodeURIComponent(orderId) +
-    '&amount=' + encodeURIComponent(payload.total) +
-    '&email=' + encodeURIComponent('ozneglobal@gmail.com');
-  return;
+  <!-- ... önceki kodlar ... -->
+
+// Siteniz üzerindeki PayTR ödeme sayfasına yönlendir
+location.href =
+  'https://xn--reteneller-8db.com/odeme/paytr.html?' +
+  'oid=' + encodeURIComponent(orderId) +
+  '&amount=' + encodeURIComponent(payload.total) +   // TL cinsinden (paytr.html içinde ×100 yapılıyor)
+  '&email=' + encodeURIComponent('ozneglobal@gmail.com');
+return;
 }
 
-  console.log('Sipariş onay payload:', payload);
-  alert('Sipariş verildi!');
-  drawer.classList.remove('open');
-  drawer.setAttribute('aria-hidden','true');
+console.log('Sipariş onay payload:', payload);
+alert('Sipariş verildi!');
+drawer.classList.remove('open');
+drawer.setAttribute('aria-hidden','true');
 })
 
-  btnMsg.addEventListener('click', ()=>{
-    if(!currentOrderItem) return;
-    const q = Math.max(1, parseInt(qty.value||1));
-    const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
-    alert(msg);
-  }); // ✅ Bu parantez btnMsg.addEventListener’in kapanışı
-  
+btnMsg.addEventListener('click', ()=>{
+  if(!currentOrderItem) return;
+  const q = Math.max(1, parseInt(qty.value||1));
+  const msg = `Merhaba ${currentOrderItem.sellerName || 'Satıcı'}, '${currentOrderItem.title}' için ${q} adet sipariş verdim.${note.value ? ' Not: '+note.value : ''}`;
+  alert(msg);
+}); // ✅ Bu parantez btnMsg.addEventListener’in kapanışı
+
 })(); // ✅ Bu parantez ise fonksiyonun kapanışı
 
- function openPremium(){
-  // ✅ Order ID tek yerde oluşturulsun
-  window.__orderId = 'PREM-' + Date.now();
+function openPremium(){
+  // Premium'u direkt ödeme sayfasına yönlendir
+  const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi,''); // alfanümerik
+  const amountTl = 1999; // TL (paytr.html içinde kuruşa çevriliyor)
+  const email = 'ozneglobal@gmail.com';
 
-  if (window.openOrderDrawer){
-    openOrderDrawer({
-      id: 'premium-annual',
-      title: 'Premium Üyelik (1 Yıl)',
-      price: 1999,
-      currency: 'TRY',
-      sellerName: 'Üreten Eller'
-    });
-
-    // adres / teslimat alanlarını gizleme kısmı aynı kalsın
-    try{
-      const shipField = document.querySelector('.order-ship')?.closest('.field');
-      if (shipField) shipField.style.display = 'none';
-      const addr = document.getElementById('odAddressWrap');
-      if (addr) addr.style.display = 'none';
-      const ttl = document.querySelector('.order-title');
-      if (ttl) ttl.textContent = 'Premium Satın Al';
-      const ok = document.getElementById('odConfirm');
-      if (ok) ok.textContent = 'Satın Al';
-    }catch(_){}
-  } else {
-    location.href = '/odeme/premium.html?plan=annual&amount=1999';
-  }
+  location.href =
+    'https://xn--reteneller-8db.com/odeme/paytr.html?' +
+    'oid=' + encodeURIComponent(orderId) +
+    '&amount=' + encodeURIComponent(amountTl) +
+    '&email=' + encodeURIComponent(email);
 }
 
-  // Butonları bağla
-  document.getElementById('premiumBtn')?.addEventListener('click', openPremium);
-  document.getElementById('premiumBtn2')?.addEventListener('click', openPremium);
+// Butonları bağla
+document.getElementById('premiumBtn')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  openPremium();
+});
+document.getElementById('premiumBtn2')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  openPremium();
+});
 </script>
 
 </body>
