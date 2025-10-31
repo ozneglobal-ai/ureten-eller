@@ -379,6 +379,16 @@
   </style>
   <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
+  document.addEventListener('fb-ready', () => {
+  try {
+    const fb = window.firebase || self.firebase;
+    const auth = fb?.getAuth ? fb.getAuth(self.__fb?.app) : (fb?.auth && fb.auth());
+    console.log('AUTH_READY', !!auth, 'USER', !!(auth && auth.currentUser));
+  } catch(e) {
+    console.log('AUTH_ERR', e);
+  }
+});
+  </script>
 </head>
 <body>
   <div class="page">
