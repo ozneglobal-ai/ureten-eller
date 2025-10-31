@@ -204,6 +204,14 @@ html,body{
 /* Alt gezinme butonları uyumu (ikonlar) */
 .bbtn{ border:1px solid rgba(202,162,58,.6); }
 .bicon{ fill:currentColor; }
+    /* Alt bar: aktif buton da altın cam olsun */
+.bbtn[aria-current="page"]{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55)) !important;
+  border-color: rgba(202,162,58,.85) !important;
+  color: var(--ink-on-gold) !important;
+}
 
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
