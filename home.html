@@ -375,6 +375,16 @@
   .modal[open]{ align-items:flex-start !important; }
   .modal-card{ margin:20px 10px !important; border-radius:8px !important; }
 }
+    /* premium satıcı rozeti (kart foto üzerinde sağ-üst) */
+.card .premium-badge{
+  position:absolute; top:10px; right:10px;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px;
+  font-size:12.5px; font-weight:800;
+  background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
+  color:#111; border:1px solid #b18a37; box-shadow:0 6px 18px rgba(202,165,82,.35);
+}
+
  </style>
       <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
   <script type="module" src="/firebase-init.js"></script>
@@ -734,6 +744,14 @@ document.getElementById('navNoti')?.addEventListener('click', () => location.hre
       const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
       const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
 
+      // Premium satıcıyı algıla
+function isPremiumSeller(d){
+  return d?.sellerPremium === true
+      || d?.isPremiumSeller === true
+      || d?.premium === true
+      || String(d?.plan || '').toLowerCase() === 'premium';
+}
+
       // ==== Cloudinary yardımcıları + kart render ==== 
 const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
 
@@ -778,17 +796,21 @@ async function resolveImages(d){
 }
 window.resolveImages = resolveImages;
 
-const cardHTML = (d, id, cover, isGold=false) => {
-  const name = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
-  const city = d.district || d.city || d.province || '';
+// KART HTML — premium/verified/vitrin için gold panel + rozet
+const cardHTML = (d, id, cover, isGold = false) => {
+  const name   = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
+  const city   = d.district || d.city || d.province || '';
   const avatar = d.sellerAvatarUrl || '/assets/img/avatar-default.png';
-  const verified = d.sellerVerified === true;
-  const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
+
+  const verified = (d.sellerVerified === true) || (d.isVerifiedSeller === true) || (d.verified === true);
+  const premium  = isPremiumSeller(d);
+  const showGold = isGold || premium || verified; // gold panel kararı
 
   return `
-<a class="card" href="#" data-id="${id}">
+<a class="card ${showGold ? 'gold' : ''}" href="#" data-id="${id}">
   <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center">
     ${d.__isVip ? `<span class="vitrin-badge">★ Vitrin</span>` : ``}
+    ${(premium || verified) ? `<span class="premium-badge">✔ Onaylı Satıcı</span>` : ``}
   </div>
   <div class="body">
     <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
@@ -800,7 +822,7 @@ const cardHTML = (d, id, cover, isGold=false) => {
       <div class="who">
         <span class="name">
           ${name}
-          ${verified ? '<span class="gold-badge">Onaylı Satıcı</span>' : ''}
+          ${(premium || verified) ? '<span class="gold-badge">Onaylı Satıcı</span>' : ''}
         </span>
         <span class="city">${city || ''}</span>
       </div>
@@ -846,24 +868,23 @@ async function fetchAndPaint(){
     await Promise.all([...vip, ...std].map(async x => {
   x.data.__cover = await resolveCover(x.data);
 }));
-
-// ★ Vitrin / özel ilan işareti belirle
-[...vip, ...std].forEach(x => {
-  const d = x.data;
+    [...vip, ...std].forEach(x => {
   const now = Date.now();
+  const isVip = isVipDoc(x.data, now);
+  const isVerified = x.data.sellerVerified === true
+                  || x.data.isVerifiedSeller === true
+                  || x.data.verified === true;
+  const isPrem = isPremiumSeller(x.data);
 
-  d.__isVip =
-    (d.showcase || d.isShowcase || d.vitrin || d.featured) === true ||
-    toMillis(d.showcaseUntil) > now ||
-    toMillis(d.vitrinUntil) > now ||
-    toMillis(d.featuredUntil) > now;
-});
+  // premium/verified/vitrin → gold çerçeve
+  x.data.__goldCard = isVip || isVerified || isPrem;
 
-// ★ GOLD bilgisi: vitrin veya onaylı ise kartı altın çerçeve yap
-[...vip, ...std].forEach(x => {
-  const isVip = isVipDoc(x.data, Date.now());
-  const isVerified = x.data.sellerVerified === true;
-  x.data.__goldCard = isVip || isVerified;
+  // vitrin rozeti için mevcut işaret kalsın:
+  x.data.__isVip =
+    (x.data.showcase || x.data.isShowcase || x.data.vitrin || x.data.featured) === true ||
+    toMillis(x.data.showcaseUntil) > now ||
+    toMillis(x.data.vitrinUntil) > now ||
+    toMillis(x.data.featuredUntil) > now;
 });
 
 const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
