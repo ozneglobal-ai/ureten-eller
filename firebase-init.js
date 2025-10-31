@@ -187,12 +187,3 @@ self.getDocs = getDocs;
 self.__fbReady = true;
 try { document.dispatchEvent(new Event('fb-ready')); } catch (_) {}
 console.debug('[firebase-init] ready:', app.options.projectId);
-
-// --- Global fallback (tarayıcı modül yükleme düzeltmesi) ---
-if (typeof window !== 'undefined') {
-  window.firebase = self.firebase;
-  window.__fb = self.__fb;
-  window.auth = self.auth;
-  window.db = self.db;
-}
-
