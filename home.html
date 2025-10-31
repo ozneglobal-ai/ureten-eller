@@ -1210,9 +1210,7 @@ if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
       // Bu IIFE içinde zaten "let currentOrderItem = null;" ve openOrderDrawer() var.
       if (!currentOrderItem) { alert('Ürün bulunamadı.'); return; }
 
-      // Firebase kullanıcı kontrolü
-      // 🔽 Kullanıcı oturum kontrolü (güvenli)
-const user = await getCurrentUserOnce();
+   const user = auth.currentUser || await getCurrentUserOnce();
 if (!user || !user.uid) {
   alert('Sipariş vermek için lütfen giriş yapın.');
   return;
