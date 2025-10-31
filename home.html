@@ -1355,7 +1355,7 @@ function goPremium(amount) {
       const listingCover = data.__cover || data.coverUrl || data.cover || '';
       const orderNo = 'ORD' + Date.now();
       const total = q * (Number(__orderItem.price)||0);
-
+ 
       const { addDoc, collection, serverTimestamp } =
         await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
