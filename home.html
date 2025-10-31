@@ -1284,11 +1284,6 @@ btn.disabled = true;
   const priceNum = Number(currentOrderItem.price || ldata.price || 0);
   const currency = (currentOrderItem.currency || ldata.currency || ldata.cur || 'TRY') || 'TRY';
 
-  // satıcı bilgileri
-  const sellerId   = ldata.sellerId || ldata.ownerId || ldata.userId || ldata.userid || ldata.userID || '';
-  const sellerName = ldata.sellerName || ldata.ownerName || ldata.userName || 'Satıcı';
-  const listingCover = ldata.__cover || ldata.coverUrl || ldata.cover || '';
-
   // 4) Premium DEĞİL kontrolü — premium’a DOKUNMUYORUZ
   const looksPremium =
     currentOrderItem.id === 'premium-annual' ||
