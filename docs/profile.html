@@ -212,6 +212,116 @@ html,body{
   border-color: rgba(202,162,58,.85) !important;
   color: var(--ink-on-gold) !important;
 }
+    /* Fix: Dil seçici (select.lang) cam-parlak altın */
+select.lang{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55)) !important;
+  color: var(--ink-on-gold) !important;
+  border:1px solid rgba(202,162,58,.85) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    0 6px 18px rgba(202,162,58,.35);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  border-radius:10px;
+  padding:.5rem 2rem .5rem .75rem; /* oka yer aç */
+  line-height:1.2;
+}
+
+/* Sağ tarafa altın ok */
+select.lang{
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55)),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%23a07f24'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat,no-repeat,no-repeat;
+  background-position:left top, left bottom, right .6rem center;
+  background-size:auto, auto, 14px 14px;
+}
+
+select.lang:hover{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 28px rgba(202,162,58,.5);
+}
+
+select.lang:focus-visible{
+  outline:2px solid rgba(234,179,8,.8);
+  outline-offset:2px;
+}
+
+/* Açılan seçeneklerin rengi (destekleyen tarayıcılarda) */
+select.lang option{
+  background:#ffffff;
+  color:#0b1220;
+}
+/* --- STEP 3: Sekmeler, Durum Etiketleri, Bilgi Kutuları Altın --- */
+
+/* Sekme / durum / etiket kutuları */
+.tab,
+.status,
+.badge,
+.tag,
+.label,
+.pill{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55));
+  border:1px solid rgba(202,162,58,.75);
+  color:var(--ink-on-gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    0 4px 12px rgba(202,162,58,.35),
+    0 0 0 1px rgba(234,179,8,.2);
+  border-radius:12px;
+  backdrop-filter:blur(6px) saturate(140%);
+  -webkit-backdrop-filter:blur(6px) saturate(140%);
+  transition:all .2s ease;
+}
+
+/* Hover efekti */
+.tab:hover,
+.status:hover,
+.badge:hover,
+.tag:hover,
+.label:hover,
+.pill:hover{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 6px 16px rgba(202,162,58,.55),
+    0 0 0 1px rgba(234,179,8,.35);
+  transform:translateY(-1px);
+}
+
+/* Fiyat / bilgi alanları */
+.price,
+.info,
+.notice,
+.empty-state{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55));
+  border:1px solid rgba(202,162,58,.75);
+  color:var(--ink-on-gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 6px 18px rgba(202,162,58,.35);
+  border-radius:16px;
+  padding:1rem;
+}
+
+/* "Kayıt yok." metni */
+.empty-state,
+.no-records{
+  text-align:center;
+  font-weight:500;
+  color:var(--ink-on-gold);
+}
 
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
