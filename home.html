@@ -1266,7 +1266,6 @@ if (!user || !user.uid) {
 const btn = document.getElementById('odConfirm');
 btn.disabled = true;
 
-try {
   // 1) Oturum tekrar doğrula
   const user = await getCurrentUserOnce();
   if (!user || !user.uid) {
@@ -1371,7 +1370,7 @@ try {
 }
 });
 })();
-  })();
+})();
 </script>
 
 </body>
