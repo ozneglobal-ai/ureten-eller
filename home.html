@@ -1267,7 +1267,6 @@ const btn = document.getElementById('odConfirm');
 btn.disabled = true;
 
   // 1) Oturum tekrar doğrula
-  const user = await getCurrentUserOnce();
   if (!user || !user.uid) {
     alert('Sipariş vermek için lütfen giriş yapın.');
     btn.disabled = false;
