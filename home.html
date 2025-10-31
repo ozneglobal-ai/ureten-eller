@@ -781,12 +781,15 @@ window.resolveImages = resolveImages;
 const cardHTML = (d, id, cover, isGold=false) => {
   const name = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
   const city = d.district || d.city || d.province || '';
-  const avatar = d.sellerAvatarUrl || '/assets/img/avatar-default.png';
+  const rawAvatar = d.sellerAvatarUrl || '';
+const avatar = rawAvatar
+  ? (self.fetchThumb ? self.fetchThumb(rawAvatar) : rawAvatar)
+  : '';
   const verified = d.sellerVerified === true;
   const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
 
   return `
-<a class="card" href="#" data-id="${id}">
+ <a class="card ${isGold ? 'gold' : ''}" href="#" data-id="${id}">
   <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center">
     ${d.__isVip ? `<span class="vitrin-badge">★ Vitrin</span>` : ``}
   </div>
@@ -857,6 +860,63 @@ async function fetchAndPaint(){
     toMillis(d.showcaseUntil) > now ||
     toMillis(d.vitrinUntil) > now ||
     toMillis(d.featuredUntil) > now;
+});
+
+    // --- 1) satıcı uid'lerini topla
+const sellerIds = new Set();
+[...vip, ...std].forEach(x => {
+  const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
+  if (uid) sellerIds.add(uid);
+});
+
+// --- 2) users koleksiyonundan bu satıcıları çek
+async function loadUsersMap(uids){
+  const map = {};
+  const fb = self.firebase || window.firebase;
+  const db = self.__fb?.db;
+  if (!fb || !db) return map;
+
+  const ids = [...uids];
+  const chunks = [];
+  while (ids.length) chunks.push(ids.splice(0, 10)); // Firestore IN limit 10
+
+  for (const chunk of chunks) {
+    try {
+      const { getDocs, q, where, col } = fb;
+      const snap = await getDocs(q(
+        col('users'),
+        where('__name__', 'in', chunk)
+      ));
+      snap.forEach(docSnap => { map[docSnap.id] = docSnap.data() || {}; });
+    } catch (e) {
+      console.warn('user load error', e);
+    }
+  }
+  return map;
+}
+
+const usersMap = await loadUsersMap(sellerIds);
+const now = Date.now();
+
+// --- 3) kullanıcı bilgilerini ilanlara işle (verified + avatar)
+[...vip, ...std].forEach(x => {
+  const d = x.data || {};
+  const uid = d.sellerId || d.ownerId || d.userId || d.userid || d.userID;
+  const u  = uid ? usersMap[uid] : null;
+
+  if (u) {
+    const untilMs = u.premiumUntil
+      ? (u.premiumUntil.toMillis?.() || (u.premiumUntil.seconds * 1000))
+      : 0;
+    const isProActive = (u.isPremium === true) && (!untilMs || untilMs > now);
+    const isVerified  = (u.isVerified === true) || isProActive;
+
+    if (isVerified) d.sellerVerified = true;   // rozet tetikleyici
+
+    if (!d.sellerAvatarUrl && typeof u.avatar === 'string' && u.avatar) {
+      d.sellerAvatarUrl = u.avatar; // avatar fallback
+    }
+  }
 });
 
 // ★ GOLD bilgisi: vitrin veya onaylı ise kartı altın çerçeve yap
@@ -1086,13 +1146,13 @@ function goPremium(amount) {
   window.openListingDetail = async function(id, d){
     const data = d||{};
     currentListingId = id;
-
+    
     // görseller
     try { imgs = await (window.resolveImages ? window.resolveImages(data) : [data.coverUrl || data.cover || '']); }
     catch { imgs = [data.coverUrl || data.cover || '']; }
     imgs = imgs.filter(Boolean);
     idx = 0; buildThumbs(); paint();
-
+    
     // metinler
     mTitle.textContent = data.title || data.name || 'İlan';
     mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
