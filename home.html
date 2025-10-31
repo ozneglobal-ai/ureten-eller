@@ -1203,6 +1203,8 @@ if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
   if (!btnConfirm) return;
 
   btnConfirm.addEventListener('click', async () => {
+    const btn = document.getElementById('odConfirm');
+
     try {
       // Modal/Drawer içindeki currentOrderItem, blok başında tanımlı.
       // Bu IIFE içinde zaten "let currentOrderItem = null;" ve openOrderDrawer() var.
