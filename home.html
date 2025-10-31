@@ -1104,15 +1104,6 @@ function goPremium(amount) {
     document.getElementById('mStockText').textContent =
       ((data.inStock === true) || (Number(data.stock ?? data.quantity ?? 0) > 0)) ? 'Var' : 'Yok';
 
-    // satıcı
-    const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
-    const sCity = data.sellerCity || data.city || '';
-    const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
-    mSellerName.textContent = sName;
-    mSellerCity.textContent = sCity;
-    mBadge.style.display = verified ? 'inline-flex' : 'none';
-    if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
-
     // stok
     const stockNum = Number((data.stock ?? data.quantity ?? 0));
     const inStock = (data.inStock === true) || stockNum > 0;
@@ -1272,14 +1263,6 @@ btn.disabled = true;
     btn.disabled = false;
     return;
   }
-
-  // 2) Form değerleri
-  const qEl   = document.getElementById('odQty');
-  const note  = (document.getElementById('odNote')?.value || '').trim();
-  const phone = (document.getElementById('odPhone')?.value || '').trim();
-  const ship  = (document.querySelector('[name="odShip"]:checked')?.value || 'pickup');
-  const addr  = ship === 'cargo' ? (document.getElementById('odAddress')?.value || '').trim() : '';
-  const qtyNum = Math.max(1, parseInt(qEl?.value || '1', 10));
 
   if (ship === 'cargo' && !addr) {
     alert('Kargo için adresi giriniz.');
