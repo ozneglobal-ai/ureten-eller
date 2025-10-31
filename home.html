@@ -1198,22 +1198,96 @@ function goPremium(amount) {
 
   qty.addEventListener('input', updateTotal);
 
-  btnConfirm.addEventListener('click', ()=>{
-    if(!currentOrderItem) return;
-    const q = Math.max(1, parseInt(qty.value||1));
+ <!-- home.html içinde, order drawer JS'inde: -->
+btnConfirm.addEventListener('click', async () => {
+  if (!currentOrderItem) return;
+
+  // Buyer (giriş yapmış kullanıcı) kontrolü
+  try {
+    const fb = window.firebase || self.firebase;
+    const auth = fb?.getAuth ? fb.getAuth(self.__fb?.app) : (fb?.auth && fb.auth());
+    const user = auth?.currentUser || (fb?.auth && fb.auth().currentUser);
+    if (!user) {
+      alert('Sipariş vermek için lütfen giriş yapın.');
+      location.href = '/docs/index.html';
+      return;
+    }
+
+    const q = Math.max(1, parseInt(qty.value || 1));
     const ship = document.querySelector('[name="odShip"]:checked')?.value || 'pickup';
-    const payload = {
+
+    // Satıcı kim? (ilan verisinden çekiyoruz)
+    const data = window.__UE_LISTINGS?.[currentOrderItem.id]?.data || {};
+    const sellerId = data.sellerId || data.ownerId || data.userId || data.userid || data.userID || '';
+    const sellerName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
+    const listingCover = data.__cover || data.coverUrl || data.cover || '';
+
+    // PREMİUM kısa yol (mevcut akış aynı kalsın)
+    const isPremium =
+      currentOrderItem.id === 'premium-annual' ||
+      /premium/i.test(currentOrderItem.title || '');
+    if (isPremium) {
+      goPremium(Number(currentOrderItem.price) || PREMIUM_PRICE_TL);
+      return;
+    }
+
+    // Firestore'a SİPARİŞ OLUŞTUR
+    const { addDoc, collection, serverTimestamp } =
+      await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+    const orderDoc = {
+      // ZORUNLU alanlar (orders.html bunları okuyor)
+      sellerId: sellerId,                 // ← orders.html burada filtreliyor
+      buyerId: user.uid,
       listingId: currentOrderItem.id,
-      listingTitle: currentOrderItem.title,
-      quantity: q,
-      unitPrice: Number(currentOrderItem.price)||0,
+      listingTitle: currentOrderItem.title || 'İlan',
+      listingCover: listingCover,
+
+      // Tutarlar
+      price: Number(currentOrderItem.price) || 0,
+      qty: q,
+      total: q * (Number(currentOrderItem.price) || 0),
       currency: currentOrderItem.currency || 'TRY',
-      total: q * (Number(currentOrderItem.price)||0),
+
+      // Durum & meta
+      status: 'new',
+      note: (note.value || '').trim(),
       deliveryMethod: ship === 'cargo' ? 'cargo' : 'pickup',
-      address: ship === 'cargo' ? (address.value||'').trim() : '',
-      phone: (phone.value||'').trim(),
-      note: (note.value||'').trim()
+      address: ship === 'cargo' ? (address.value || '').trim() : '',
+      phone: (phone.value || '').trim(),
+
+      // Gösterim/filtre alanları
+      archivedBySeller: false,
+      createdAt: serverTimestamp(),
+
+      // Görsellik / isimler (liste satırı için)
+      buyerName: user.displayName || 'Müşteri',
+      buyerAvatar: user.photoURL || '',
+      buyerEmail: user.email || '',
+
+      sellerName: sellerName || 'Satıcı'
     };
+
+    // Eksik sellerId varsa yine de yazalım ama uyaralım
+    if (!sellerId) {
+      console.warn('sellerId bulunamadı; orders ekranında görünmeyebilir.');
+    }
+
+    const ref = await addDoc(collection(window.__fb.db, 'orders'), orderDoc);
+
+    // Temizlik & kapatma
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    alert('Siparişiniz alındı.'); // istersen toast’a çevirebilirsin
+
+    // (Opsiyonel) Satıcıya mesaj ekranına geçiş için:
+    // location.href = '/docs/mesajlar.html?peer=' + encodeURIComponent(sellerId);
+
+  } catch (e) {
+    console.warn('order create error', e);
+    alert('Sipariş alınamadı. Lütfen tekrar deneyin.');
+  }
+});
 
     // --- PREMIUM kısayol: /odeme.html’e yönlendir
     const isPremium =
