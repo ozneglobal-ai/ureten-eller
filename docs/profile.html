@@ -755,6 +755,10 @@
       window.daysLeft=function(date){ const d=new Date(date); const diff=d.getTime()-Date.now(); return Math.max(0, Math.ceil(diff/86400000)); };
 
       window.uploadToCloudinary=async function(file){
+        if (!navigator.onLine) {
+  window.toast && toast('İnternet bağlantısı yok — görsel yüklenemedi');
+  return null;
+}
         if(!file) return null;
         const cfg=window.__CLOUDINARY||{};
         const cloudName=cfg.cloudName; const preset=cfg.uploadPreset; const folder = cfg.folder || 'avatars';
@@ -767,23 +771,64 @@
         finally { __uploadingAvatar=false; }
       };
 
-      window.handleAvatarFile=async function(e){
-        const f=e.target.files&&e.target.files[0]; if(!f) return;
-        const local=URL.createObjectURL(f); const edAv=document.getElementById('edAvatar'); if(edAv) edAv.style.backgroundImage=`url('${local}')`;
-        const url=await window.uploadToCloudinary(f);
-        if(url){
-          window.user.avatar=url; window.cacheSave&&cacheSave();
-          const av=document.getElementById('avatar'); if(av) av.style.backgroundImage=`url('${url}')`;
-          try{
-            if(window.__fb?.auth?.currentUser){
-              const uid=window.__fb.auth.currentUser.uid;
-              const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-              await setDoc(doc(window.__fb.db,'users',uid),{avatar:url,updatedAt:serverTimestamp()},{merge:true});
-            }
-          }catch(err){ console.warn('FS avatar',err); }
-          window.toast&&toast('Avatar yüklendi ✅');
-        }
-      };
+      window.handleAvatarFile = async function (e) {
+  try {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    // 🔹 Anında önizleme
+    const localUrl = URL.createObjectURL(file);
+    const edAv = document.getElementById('edAvatar');
+    if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
+
+    // 🔹 Eğer offline ise yüklemeye çalışma
+    if (!navigator.onLine) {
+      window.toast && toast('Bağlantı yok — avatar yüklenemedi');
+      URL.revokeObjectURL(localUrl);
+      return;
+    }
+
+    // 🔹 Cloudinary yüklemesi
+    const res = await (window.uploadToCloudinary
+      ? window.uploadToCloudinary(file)
+      : window.clUnsignedUpload(file, 'avatars').catch(() => null));
+
+    // 🔹 Upload başarısızsa çık
+    if (!res || !res.secure_url) {
+      window.toast && toast('Yükleme başarısız ⚠️');
+      URL.revokeObjectURL(localUrl);
+      return;
+    }
+
+    const url = res.secure_url;
+    window.user.avatar = url;
+    window.cacheSave && cacheSave();
+
+    // 🔹 Ana avatar önizleme
+    const mainAv = document.getElementById('avatar');
+    if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
+
+    // 🔹 Firestore’a kaydet
+    if (window.__fb?.auth?.currentUser) {
+      const uid = window.__fb.auth.currentUser.uid;
+      const { doc, setDoc, serverTimestamp } = await import(
+        'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'
+      );
+      await setDoc(
+        doc(window.__fb.db, 'users', uid),
+        { avatar: url, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    }
+
+    window.toast && toast('Avatar yüklendi ✅');
+    URL.revokeObjectURL(localUrl); // 🔹 blob’u temizle
+
+  } catch (err) {
+    console.warn('Avatar yükleme hatası:', err);
+    window.toast && toast('Avatar yüklenemedi ❌');
+  }
+};
 
       window.openEdit=function(){
         const g=id=>document.getElementById(id);
@@ -794,27 +839,119 @@
         const nm=g('edName'); if(nm) nm.value=window.user.name||'';
         const m=document.getElementById('editModal'); m.style.display='block'; m.setAttribute('aria-hidden','false');
       };
+      // 🔽 AVATAR DEĞİŞTİRME (Cloudinary upload)
+document.getElementById('edAvatar').addEventListener('click', async () => {
+  try {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Cloudinary unsigned upload (firebase-init.js'teki clUnsignedUpload fonksiyonunu kullanıyoruz)
+      if (!window.clUnsignedUpload) {
+        alert('Cloudinary başlatılmadı!');
+        return;
+      }
+
+      const res = await window.clUnsignedUpload(file, 'avatars');
+      if (res.secure_url) {
+        window.user.avatar = res.secure_url;
+
+        // UI önizleme
+        const edAv = document.getElementById('edAvatar');
+        if (edAv) edAv.style.backgroundImage = `url('${res.secure_url}')`;
+
+        const mainAv = document.getElementById('avatar');
+        if (mainAv) mainAv.style.backgroundImage = `url('${res.secure_url}')`;
+
+        // Firestore’a kaydet
+        const uid = window.__fb?.auth?.currentUser?.uid;
+        if (uid) {
+          const { doc, updateDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+          await updateDoc(doc(window.__fb.db, 'users', uid), {
+            avatar: res.secure_url,
+            updatedAt: serverTimestamp()
+          });
+        }
+
+        window.toast && toast('Avatar güncellendi ✅');
+      }
+    };
+    input.click();
+  } catch (err) {
+    console.warn('Avatar yükleme hatası:', err);
+    window.toast && toast('Avatar yüklenemedi');
+  }
+});
       window.closeEdit=function(){ const m=document.getElementById('editModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); };
-      window.saveEdit=async function(){
-        const g=id=>document.getElementById(id);
-        const newName=(g('edName')?.value||'').trim(); if(newName){ window.user.name=newName; const un=g('uName'); if(un) un.textContent=window.user.name; }
-        window.user.city=g('edCity').value; window.user.district=g('edDistrict').value; const uCity=g('uCity'); if(uCity) uCity.textContent=window.user.city||'—';
-        window.user.bio=g('edBio').value.trim(); const uBio=g('uBio'); if(uBio) uBio.textContent=window.user.bio||'—';
-        const av=g('avatar'); if(av && window.user.avatar){ av.style.backgroundImage=`url('${window.user.avatar}')`; }
-        window.applyHeaderBadges&&applyHeaderBadges(); window.cacheSave&&cacheSave(); window.toast&&toast((window.I18N?.[window.getLang?.()||'tr']?.save)||'Kaydedildi');
-        try{
-          if(window.__fb?.auth?.currentUser){
-            const uid=window.__fb.auth.currentUser.uid;
-            const {doc,setDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-            await setDoc(doc(window.__fb.db,'users',uid),{
-              name:window.user.name||'', city:window.user.city||'', district:window.user.district||'', phone:window.user.phone||'',
-              bio:window.user.bio||'', isPremium:!!window.user.isPremium, isVerified:!!window.user.isVerified,
-              avatar:window.user.avatar||'/assets/img/avatar-default.png', updatedAt:serverTimestamp()
-            },{merge:true});
-          }
-        }catch(e){ console.warn('Profil yazma hatası:',e); }
-        window.closeEdit();
-      };
+     window.saveEdit = async function(){
+  const g = id => document.getElementById(id);
+
+  // Güncellenen alanları oku ve UI'yi güncelle
+  const newName = (g('edName')?.value || '').trim();
+  if (newName) {
+    window.user.name = newName;
+    const un = g('uName');
+    if (un) un.textContent = window.user.name;
+  }
+
+  window.user.city = g('edCity').value;
+  window.user.district = g('edDistrict').value;
+  const uCity = g('uCity');
+  if (uCity) uCity.textContent = window.user.city || '—';
+
+  window.user.bio = g('edBio').value.trim();
+  const uBio = g('uBio');
+  if (uBio) uBio.textContent = window.user.bio || '—';
+
+  // Eğer kullanıcı avatarı yoksa güvenli varsayılan ata
+  if (!window.user.avatar || !window.user.avatar.trim()) {
+    window.user.avatar = 'https://res.cloudinary.com/ozneglobal/image/upload/v1760721503/%C3%BCreteneller_do60yg.png';
+  }
+
+  // UI avatar güncelle
+  const av = g('avatar');
+  if (av && window.user.avatar) {
+    av.style.backgroundImage = `url('${window.user.avatar}')`;
+  }
+
+  // Yerel işlemler
+  window.applyHeaderBadges && applyHeaderBadges();
+  window.cacheSave && cacheSave();
+  window.toast && toast((window.I18N?.[window.getLang?.()||'tr']?.save) || 'Kaydedildi');
+
+  // Firestore'a kaydet
+  try {
+    if (window.__fb?.auth?.currentUser) {
+      const uid = window.__fb.auth.currentUser.uid;
+      const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      await setDoc(
+        doc(window.__fb.db, 'users', uid),
+        {
+          name: window.user.name || '',
+          city: window.user.city || '',
+          district: window.user.district || '',
+          phone: window.user.phone || '',
+          bio: window.user.bio || '',
+          isPremium: !!window.user.isPremium,
+          isVerified: !!window.user.isVerified,
+          // avatar kesin burada gönderiliyor
+          avatar: window.user.avatar || '',
+          status: 'active',
+          lastLoginAt: new Date().toISOString(),
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+  } catch (e) {
+    console.warn('Profil yazma hatası:', e);
+  }
+
+  window.closeEdit && closeEdit();
+};
 
       window.openPricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='block'; m.setAttribute('aria-hidden','false'); };
       window.closePricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); };
@@ -878,6 +1015,40 @@
         try { toast('İlanlar yüklenemedi'); } catch {}
       }
     }
+    // 🔽 GİRİŞ SONRASI PROFİLİ GERİ YÜKLE
+(async () => {
+  try {
+    // Firebase hazır mı?
+    if (!window.__fb?.auth) return;
+    const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+    onAuthStateChanged(window.__fb.auth, async (user) => {
+      if (user) {
+        const snap = await getDoc(doc(window.__fb.db, 'users', user.uid));
+        if (snap.exists()) {
+          window.user = Object.assign({}, window.user || {}, snap.data());
+          console.debug('[profile] Firestore’dan kullanıcı verisi geri yüklendi:', window.user);
+
+          // UI güncelle
+          const av = document.getElementById('avatar');
+          if (av) av.style.backgroundImage = `url('${window.user.avatar || '/assets/img/avatar-default.png'}')`;
+
+          const uName = document.getElementById('uName');
+          if (uName) uName.textContent = window.user.name || '—';
+
+          const uCity = document.getElementById('uCity');
+          if (uCity) uCity.textContent = window.user.city || '—';
+
+          const uBio = document.getElementById('uBio');
+          if (uBio) uBio.textContent = window.user.bio || '—';
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('Profil yükleme hatası:', err);
+  }
+})();
   </script>
 </body>
 </html>
