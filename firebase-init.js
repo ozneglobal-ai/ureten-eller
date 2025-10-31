@@ -32,10 +32,12 @@ const firebaseConfig = (window.__FIREBASE_CONFIG) || {
 // === Init (idempotent) ===
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-import { setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-await setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// 🔽 Persistence ayarını buraya ekle (fonksiyon içinde)
+import { setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
 // Global fallbacks (index/home kodu self.* bekliyor)
 self.app = app; 
