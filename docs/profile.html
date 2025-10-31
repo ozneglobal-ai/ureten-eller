@@ -94,6 +94,117 @@
     .legalGrid a{display:block;color:#d1d5db;word-break:break-word}
     .legalFoot{border-top:1px solid var(--brd);background:#000;margin-top:1rem}
     select.lang{background:#0b1220;border:1px solid var(--brd);color:var(--ink);border-radius:10px;padding:.5rem}
+    /* --- STEP 1: White theme --- */
+:root{
+  /* Arka planı tamamen beyaz yap */
+  --bg1:#ffffff;
+  --bg2:#ffffff;
+
+  /* Metni koyu yap ki beyaz zeminde okunabilir olsun */
+  --ink:#0b1220;
+
+  /* Kartları da beyaza al; kenarlığı yumuşat */
+  --card:#ffffff;
+  --card2:#ffffff;
+  --brd:#e5e7eb;
+}
+
+/* Gradientleri devre dışı bırakıp düz beyaz zemin ver */
+html,body{
+  background:#ffffff !important;
+  /* mevcut radial/linear gradientleri ezmek için */
+}
+
+/* Kartların koyu parlamasını azalt */
+.card:hover{
+  box-shadow:0 0 0 1px var(--brd), 0 0 18px #00000014;
+}
+
+/* Alt barı da beyaza yaklaştır (istenirse) */
+.bottomBar{
+  background:#ffffff;
+  border-top:1px solid var(--brd);
+  box-shadow:none;
+  color:#0b1220;
+}
+    /* --- STEP 2: Glassy Gold Buttons --- */
+:root{
+  --gold-50:#fff7d9;
+  --gold-300:#f0d36e;
+  --gold-400:#e4bd3f;
+  --gold-500:#caa23a;
+  --gold-600:#a07f24;
+  --ink-on-gold:#1a1505; /* altın üzerinde koyu metin */
+}
+
+/* Tüm butonlar: cam + altın */
+.btn,
+.bbtn{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55));
+  border:1px solid rgba(202,162,58,.75);
+  color:var(--ink-on-gold);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    0 6px 18px rgba(202,162,58,.40),
+    0 0 0 1px rgba(234,179,8,.25);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+
+/* Varyantların hepsi altına geçsin */
+.btn.primary,
+.btn.warn,
+.btn.danger,
+.btn.ghost{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.06)),
+    linear-gradient(180deg, rgba(240,211,110,.45), rgba(234,179,8,.55));
+  border-color: rgba(202,162,58,.85);
+  color:var(--ink-on-gold);
+}
+
+/* Hover/active/parlaklık */
+.btn:hover,
+.bbtn:hover{
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 28px rgba(202,162,58,.55),
+    0 0 0 1px rgba(234,179,8,.35);
+}
+
+.btn:active,
+.bbtn:active{
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 6px rgba(160,127,36,.55),
+    0 6px 18px rgba(202,162,58,.45);
+}
+
+/* Klavye odak halkası */
+.btn:focus-visible,
+.bbtn:focus-visible{
+  outline:2px solid rgba(234,179,8,.8);
+  outline-offset:2px;
+  box-shadow:
+    0 0 0 4px rgba(234,179,8,.20),
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* Devre dışı */
+.btn[disabled]{
+  opacity:.75;
+  filter:saturate(.8) brightness(.98);
+  box-shadow:none;
+  cursor:not-allowed;
+}
+
+/* Alt gezinme butonları uyumu (ikonlar) */
+.bbtn{ border:1px solid rgba(202,162,58,.6); }
+.bicon{ fill:currentColor; }
+
   </style>
   <!-- docs/ altında çalıştığı için bağıl yol -->
   <script type="module" src="/firebase-init.js"></script>
