@@ -123,6 +123,18 @@
     }
 
     /* ===== FOOTER ===== */
+    /* Ödeme / Güvenlik bantı (legal üstünde) */
+.payments{
+  max-width:1200px;
+  margin:0 auto 12px;      /* footer’dan önce hafif boşluk */
+  padding:8px 12px;
+}
+.payments img{
+  width:100%;
+  height:auto;
+  display:block;
+  object-fit:contain;
+}
     .legal{ background:#000; color:#fff; }
     .legal .inner{ max-width:1200px; margin:0 auto; padding:16px; }
     .legal .row{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -302,9 +314,17 @@
           <button class="btn ghost" id="nextPage" disabled data-i18n="buttons.next">Sonraki ›</button>
         </div>
       </section>
-    </main>
+       </main>
+
+    <!-- Ödeme / Güvenlik Logoları -->
+    <section class="payments" aria-label="Ödeme ve güvenlik">
+      <img src="/assets/img/paytr.logo.png"
+           alt="Visa, MasterCard, TROY, PayTR, 256-Bit SSL"
+           loading="lazy">
+    </section>
 
     <footer class="legal">
+
       <div class="inner">
         <div class="row">
           <div class="links">
