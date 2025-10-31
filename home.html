@@ -1210,11 +1210,14 @@ if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
       // Bu IIFE içinde zaten "let currentOrderItem = null;" ve openOrderDrawer() var.
       if (!currentOrderItem) { alert('Ürün bulunamadı.'); return; }
 
-   const user = auth.currentUser || await getCurrentUserOnce();
+   // 🔹 Kullanıcı ve miktar kontrolü
+const user = auth.currentUser || await getCurrentUserOnce();
 if (!user || !user.uid) {
   alert('Sipariş vermek için lütfen giriş yapın.');
   return;
 }
+
+const qtyNum = Math.max(1, parseInt(document.getElementById('odQty')?.value || '1', 10));
 
       async function getCurrentUserOnce() {
   try {
