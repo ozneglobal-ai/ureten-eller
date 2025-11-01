@@ -950,14 +950,6 @@ window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
   // premium/verified/vitrin → gold çerçeve
   x.data.__goldCard = isVip || isVerified || isPrem;
 
-  // vitrin rozeti için mevcut işaret kalsın:
-  x.data.__isVip =
-    (x.data.showcase || x.data.isShowcase || x.data.vitrin || x.data.featured) === true ||
-    toMillis(x.data.showcaseUntil) > now ||
-    toMillis(x.data.vitrinUntil) > now ||
-    toMillis(x.data.featuredUntil) > now;
-});
-
 const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
 vip.sort(sortBy); std.sort(sortBy);
 const combined = vip.slice(0,20).concat(std);
