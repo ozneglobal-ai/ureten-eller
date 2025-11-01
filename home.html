@@ -508,7 +508,68 @@
     </div>
   </aside>
 
-  <script>
+  
+
+    <script type="module">
+  import { getAuth, onAuthStateChanged, sendEmailVerification } 
+  from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  // 🔒 Email doğrulaması yapılmadan /home.html içeriği görüntülenmesin
+  function guardHomePage() {
+    const auth = getAuth(self.__fb?.app);
+
+    onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        openAuth?.(); // hiç giriş yoksa giriş modalı aç
+        return;
+      }
+
+      const usesPassword = u.providerData?.some(p => p.providerId === 'password');
+      await u.reload();
+
+      if (usesPassword && !u.emailVerified) {
+        try { await sendEmailVerification(u); } catch {}
+        document.querySelector('main')?.setAttribute('inert', '');
+        document.querySelector('main').style.filter = 'blur(4px)';
+
+        if (!document.getElementById('verifyBanner')) {
+          const div = document.createElement('div');
+          div.id = 'verifyBanner';
+          div.style.cssText = 'max-width:1200px;margin:12px auto;padding:12px;border:1px solid #f59e0b;background:#fff7ed;border-radius:12px';
+          div.innerHTML = currentLang === 'en'
+            ? '<strong>Verify your email</strong> to access this page. After clicking the link in your email, return here and press “I verified”. <button class="btn gold" id="iVerified">I verified</button>'
+            : '<strong>Bu sayfaya erişmek için e-postanızı doğrulayın.</strong> E-postadaki linke tıkladıktan sonra buraya dönüp “Doğruladım”a basın. <button class="btn gold" id="iVerified">Doğruladım</button>';
+          document.querySelector('.topbar')?.after(div);
+
+          document.getElementById('iVerified')?.addEventListener('click', async () => {
+            await u.reload();
+            if (u.emailVerified) {
+              document.querySelector('main')?.removeAttribute('inert');
+              document.querySelector('main').style.filter = '';
+              div.remove();
+            } else {
+              alert(currentLang === 'en'
+                ? 'Still not verified. Please check your inbox/SPAM.'
+                : 'Hâlâ doğrulanmadı. Lütfen gelen kutusu/Spam klasörünü kontrol edin.');
+            }
+          });
+        }
+
+        openAuth?.();
+        return;
+      }
+
+      // ✅ Doğrulanmış kullanıcıysa sayfa serbest
+      document.querySelector('main')?.removeAttribute('inert');
+      document.querySelector('main').style.filter = '';
+    });
+  }
+
+  // Sadece home sayfasında çalıştır
+  if (location.pathname.endsWith('/home.html')) {
+    guardHomePage();
+  }
+      
     /* ===== I18N ===== */
     const I18N = {
       tr: { brand: 'Üreten Eller', post: 'İlan Ver', profile:'Profil', searchPlaceholder: 'Ara: ürün, kategori, ilçe…', search: 'Ara', categories: 'Kategoriler', browse: 'Kategorileri Keşfet', nav:{home:'Ana Sayfa', msg:'Mesajlar', noti:'Bildirimler'}, chat:{title:'🛎️ Canlı Destek', hi1:'Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?', hi2:'Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.'}, heroLines: [ { t: 'El emeği & yerel lezzetler tek çatı altında', d: 'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.' }, { t: 'Mahallenden üreticiye doğrudan destek', d: 'Yakınınızdaki üreticileri bulun, taze ve el emeği ürünleri keşfedin.' }, { t: 'Kendi ürününü kolayca satışa çıkar', d: 'Ücretsiz ilan ver, güvenli mesajlaşma ve sipariş yönetimi ile hızlı başla.' } ], cats: { yemek: '🍲 Yemekler', pasta: '🎂 Pasta & Tatlı', sos: '🫙 Reçel • Turşu • Sos', yoresel: '🌾 Yöresel / Kışlık', diet: '🥗 Diyet / Vegan / GF', taki: '💍 Takı', bebek: '👶 Bebek & Çocuk', orgu: '🧶 Örgü / Triko', terzi: '✂️ Dikiş / Terzilik', makrome: '🧵 Makrome & Dekor', evdekor: '🏠 Ev Dekor & Aksesuar', mum: '🕯️ Mum & Kokulu', kozmetik: '🧼 Doğal Sabun & Kozmetik', amigurumi: '🧸 Amigurumi & Oyuncak' }, sub: { evyemek: 'Ev yemekleri', borek: 'Börek-çörek', corba: 'Çorba', zeytiny: 'Zeytinyağlı', pilav: 'Pilav-makarna', et: 'Et-tavuk', kahvalti: 'Kahvaltılık', meze: 'Meze', dondur: 'Dondurulmuş', cocuk: 'Çocuk öğünleri', diyetvegf: 'Diyet/vegan/gf', yaspasta: 'Yaş pasta', kek: 'Kek-cupcake', kurabiye: 'Kurabiye', serbetli: 'Şerbetli', sutlu: 'Sütlü', cheese: 'Cheesecake', diyettat: 'Diyet tatlı', cikolata: 'Çikolata/şekerleme', dogumset: 'Doğum günü setleri', recel: 'Reçel-marmelat', pekmez: 'Pekmez', tursu: 'Turşu', dom: 'Domates/biber sos', acios: 'Acı sos', salca: 'Salça', sirke: 'Sirke', konserve: 'Konserve', eriste: 'Erişte', tarhana: 'Tarhana', yufka: 'Yufka', manti: 'Mantı', kurut: 'Kurutulmuş', fit: 'Fit tabaklar', vegan: 'Vegan yemekler', gf: 'GF unlu mamuller', sekersiz: 'Şekersiz tatlı', keto: 'Keto ürün', protein: 'Protein atıştırmalık', bileklik: 'Bileklik', kolye: 'Kolye', kupe: 'Küpe', yuzuk: 'Yüzük', halhal: 'Halhal', bros: 'Broş', set: 'Setler', isimli: 'Kişiye özel', makrome: 'Makrome', dogaltas: 'Doğal taş', recine: 'Reçine', telsarma: 'Tel sarma', fig: 'Figürler', cingirak: 'Çıngırak', dis: 'Diş kaşıyıcı', bezoy: 'Bez oyuncak/kitap', montessori: 'Montessori', set2: 'Setler', patik: 'Patik-bere', battaniye: 'Battaniye', onluk: 'Önlük', lohusa: 'Lohusa seti', sac: 'Saç aksesuarı', giyim: 'El emeği kıyafet', hirka: 'Hırka', kazak: 'Kazak', atkibere: 'Atkı-bere', panco: 'Panço', sal: 'Şal', corap: 'Çorap', lif: 'Lif takımı', bepektk: 'Bebek takımı', yelek: 'Yelek', kirlen: 'Kırlent-örtü', igneoyasi: 'İğne oyası', paca: 'Paça/onarım', fermuar: 'Fermuar değişimi', perde: 'Perde', nevresim: 'Nevresim', masa: 'Masa örtüsü', ozel: 'Özel dikim', kostum: 'Kostüm', duvar: 'Duvar süsü', saksı: 'Saksı askısı', anahtar: 'Anahtarlık', avize: 'Avize', runner: 'Runner', sepet: 'Sepet', raf: 'Raf/dekor', kece: 'Keçe işleri', kirlent: 'Kırlent', kapi: 'Kapı süsü', tepsi: 'Tepsi süs', cerceve: 'Çerçeve', ruya: 'Rüya kapanı', tablo: 'Tablo', soya: 'Soya/balmumu', tas: 'Kokulu taş', sprey: 'Oda spreyi', tutsu: 'Tütsü', jel: 'Jel mum', hediye: 'Hediye seti', zeytin: 'Zeytinyağlı sabun', bitkisel: 'Bitkisel sabun', sampuan: 'Katı şampuan', balm: 'Dudak balmı', krem: 'Krem/merhem', banyotuzu: 'Banyo tuzu', lavanta: 'Lavanta kesesi', anahtar2: 'Anahtarlık', magnet: 'Magnet', kolek: 'Koleksiyon', dekorbebek: 'Dekor bebek' }, legal:{terms:'Kullanım Şartları', privacy:'Gizlilik Politikası', kvkk:'KVKK Aydınlatma', community:'Topluluk Kuralları', prohibited:'Yasaklı Ürünler', distance:'Mesafeli Satış', preinfo:'Ön Bilgilendirme', return:'Teslimat/İade', contact:'İletişim'} , item:{ manti:{title:'Ev Yapımı Mantı', meta:'Kadıköy • 350 TL'}, makrome:{title:'Makrome Duvar Süsü', meta:'Konya • 420 TL'}, sabun:{title:'Zeytinyağlı Sabun', meta:'Ayvalık • 95 TL'} } },
@@ -1293,7 +1354,27 @@ if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
       // Bu IIFE içinde zaten "let currentOrderItem = null;" ve openOrderDrawer() var.
       if (!currentOrderItem) { alert('Ürün bulunamadı.'); return; }
 
-   // 🔹 Kullanıcı ve miktar kontrolü
+  // 🔹 Kullanıcı ve miktar kontrolü
+const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+const auth = getAuth(self.__fb?.app);
+
+async function getCurrentUserOnce() {
+  try {
+    if (auth?.currentUser) return auth.currentUser;
+    return await new Promise(resolve => {
+      const unsub = onAuthStateChanged(auth, u => {
+        unsub();
+        resolve(u || null);
+      }, _e => {
+        unsub();
+        resolve(null);
+      });
+    });
+  } catch (_) {
+    return null;
+  }
+}
+
 const user = auth.currentUser || await getCurrentUserOnce();
 if (!user || !user.uid) {
   alert('Sipariş vermek için lütfen giriş yapın.');
@@ -1301,28 +1382,6 @@ if (!user || !user.uid) {
 }
 
 const qtyNum = Math.max(1, parseInt(document.getElementById('odQty')?.value || '1', 10));
-
-      async function getCurrentUserOnce() {
-  try {
-    const fb = window.firebase || self.firebase;
-    if (fb?.getAuth) {
-      const auth = fb.getAuth(self.__fb?.app);
-      if (auth?.currentUser) return auth.currentUser;
-
-      const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-      return await new Promise(resolve => {
-        const unsub = onAuthStateChanged(auth, u => { unsub(); resolve(u || null); }, _e => { unsub(); resolve(null); });
-      });
-    } else if (fb?.auth) {
-      const u = fb.auth().currentUser;
-      if (u) return u;
-      return await new Promise(resolve => {
-        const off = fb.auth().onAuthStateChanged(u2 => { off(); resolve(u2 || null); });
-      });
-    }
-  } catch(_) {}
-  return null;
-}
 
       // Form alanları
       const qEl   = document.getElementById('odQty');
