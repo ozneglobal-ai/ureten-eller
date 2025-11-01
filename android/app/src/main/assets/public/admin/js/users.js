@@ -213,10 +213,19 @@ export async function mountAdminUsers({ container }) {
         await setDoc(doc(db,'users',uid), { proUntil: 0, updatedAt: serverTimestamp() }, { merge:true });
         const i = usersCache.findIndex(x => x.id === uid); if (i >= 0) usersCache[i].proUntil = 0;
       }
-      else if (btn.dataset.action === 'ban') {
-        await setDoc(doc(db,'users',uid), { banned: true, updatedAt: serverTimestamp() }, { merge:true });
-        const i = usersCache.findIndex(x => x.id === uid); if (i >= 0) usersCache[i].banned = true;
-      }
+      if (btn.dataset.action === 'pro12') {
+  const until = Date.now() + 365*24*60*60*1000; // 12 ay
+  await setDoc(doc(db,'users',uid), {
+    proUntil: until,
+    isVerified: true, // ✅ Premium verildiğinde otomatik onayla
+    updatedAt: serverTimestamp()
+  }, { merge:true });
+  const i = usersCache.findIndex(x => x.id === uid);
+  if (i >= 0) {
+    usersCache[i].proUntil = until;
+    usersCache[i].isVerified = true; // frontend cache'i de güncelle
+  }
+}
       else if (btn.dataset.action === 'unban') {
         await setDoc(doc(db,'users',uid), { banned: false, updatedAt: serverTimestamp() }, { merge:true });
         const i = usersCache.findIndex(x => x.id === uid); if (i >= 0) usersCache[i].banned = false;
