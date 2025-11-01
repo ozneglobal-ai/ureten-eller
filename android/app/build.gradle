@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.ureteneller.app"
     compileSdk rootProject.ext.compileSdkVersion
+
     defaultConfig {
         applicationId "com.ureteneller.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -16,9 +17,22 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // 🔐 Release imzası (ortam değişkenleriyle)
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.findProperty("MYAPP_UPLOAD_STORE_FILE"))
+            storePassword (System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD"))
+            keyAlias (System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.findProperty("MYAPP_UPLOAD_KEY_ALIAS"))
+            keyPassword (System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD"))
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
