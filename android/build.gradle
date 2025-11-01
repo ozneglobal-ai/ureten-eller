@@ -10,17 +10,27 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
+            // Modern web app varlıkları için önerilen ignore kalıbı
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
 
-    // 🔐 İMZA AYARLARI (BURADA OLMALI)
+    // 🔐 İMZA AYARLARI
+    // Öncelik: ENV -> gradle.properties
     signingConfigs {
         release {
-            storeFile file(System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.findProperty("MYAPP_UPLOAD_STORE_FILE"))
-            storePassword (System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD"))
-            keyAlias (System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.findProperty("MYAPP_UPLOAD_KEY_ALIAS"))
-            keyPassword (System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD"))
+            def ksPath = System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.findProperty("MYAPP_UPLOAD_STORE_FILE")
+            def ksPass = System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD")
+            def ka     = System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")
+            def kaPass = System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")
+
+            if (ksPath == null || ksPath.toString().trim().isEmpty()) {
+                throw new GradleException("Keystore yolu (MYAPP_UPLOAD_STORE_FILE) tanımlı değil.")
+            }
+            storeFile file(ksPath)
+            storePassword ksPass
+            keyAlias ka
+            keyPassword kaPass
         }
     }
 
@@ -29,8 +39,13 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // debug imza Android Studio'nun default debug.keystore'udur
         }
     }
 }
-
