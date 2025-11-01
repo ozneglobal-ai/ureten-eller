@@ -892,74 +892,62 @@ async function fetchAndPaint(){
   try{
     const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
     const ref = col('listings');
+
     let snap;
     try {
       snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200)));
     } catch(e) {
       snap = await getDocs(q(ref, limit(200)));
     }
+
     const now = Date.now();
     const vip = [], std = [];
-    snap.forEach(doc => {
-      const d = doc.data() || {};
-      (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data() || {};
+      (isVipDoc(d, now) ? vip : std).push({ id: docSnap.id, data: d });
     });
-   // Kapak görsellerini çöz
-await Promise.all([...vip, ...std].map(async x => {
-  x.data.__cover = await resolveCover(x.data);
-}));
 
-// 🔻 Satıcı bilgilerini (premium/verified/plan vs.) kullanıcı belgelerinden çek
-await hydrateSellers([...vip, ...std]);
+    // Kapakları çöz
+    await Promise.all([...vip, ...std].map(async x => {
+      x.data.__cover = await resolveCover(x.data);
+    }));
 
-// Kartların altın çerçeve / vitrin rozet kararlarını hesapla
-[...vip, ...std].forEach(x => {
-  const now = Date.now();
+    // Satıcı bilgilerini hydrate et
+    await hydrateSellers([...vip, ...std]);
 
-  const isVip =
-    (x.data.featured === true || x.data.vitrin === true || x.data.isShowcase === true) ||
-    toMillis(x.data.featuredUntil) > now ||
-    toMillis(x.data.vitrinUntil) > now ||
-    toMillis(x.data.showcaseUntil) > now;
+    // Kart işaretleri
+    [...vip, ...std].forEach(x => {
+      const now2 = Date.now();
+      const isVip =
+        (x.data.featured === true || x.data.vitrin === true || x.data.isShowcase === true) ||
+        toMillis(x.data.featuredUntil) > now2 ||
+        toMillis(x.data.vitrinUntil) > now2 ||
+        toMillis(x.data.showcaseUntil) > now2;
 
-  const isVerified =
-    x.data.sellerVerified === true ||
-    x.data.isVerifiedSeller === true ||
-    x.data.verified === true;
+      const isVerified =
+        x.data.sellerVerified === true ||
+        x.data.isVerifiedSeller === true ||
+        x.data.verified === true;
 
-  const isPrem = isPremiumSeller(x.data);
+      const isPrem = isPremiumSeller(x.data);
 
-  // Kartın altın çerçeve alması
-  x.data.__goldCard = isVip || isVerified || isPrem;
+      x.data.__goldCard = isVip || isVerified || isPrem; // altın çerçeve
+      x.data.__isVip    = isVip;                         // “Vitrin” rozeti
+    });
 
-  // Vitrin rozeti
-  x.data.__isVip =
-    (x.data.showcase || x.data.isShowcase || x.data.vitrin || x.data.featured) === true ||
-    toMillis(x.data.showcaseUntil) > now ||
-    toMillis(x.data.vitrinUntil) > now ||
-    toMillis(x.data.featuredUntil) > now;
-});
+    // Sırala + render
+    const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
+    vip.sort(sortBy);
+    std.sort(sortBy);
 
-// Sıralama + render
-const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
-vip.sort(sortBy); std.sort(sortBy);
-const combined = vip.slice(0,20).concat(std);
-renderList('allGrid', combined);
-window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
-
-  // premium/verified/vitrin → gold çerçeve
-  x.data.__goldCard = isVip || isVerified || isPrem;
-
-const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
-vip.sort(sortBy); std.sort(sortBy);
-const combined = vip.slice(0,20).concat(std);
-renderList('allGrid', combined);
-window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
-
-} catch(e) {  // ← eksik olan catch eklendi
-  console.warn('İlan yüklenemedi:', e);
-}             // ← try kapanışı
-}             // ← fetchAndPaint() fonksiyonu kapanışı
+    const combined = vip.slice(0,20).concat(std);
+    renderList('allGrid', combined);
+    window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
+  } catch(e) {
+    console.warn('İlan yüklenemedi:', e);
+  }
+}
 
 function start(){
   if(window.__fbReady){
