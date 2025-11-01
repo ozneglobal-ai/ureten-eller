@@ -781,7 +781,7 @@ window.resolveImages = resolveImages;
 const cardHTML = (d, id, cover, isGold=false) => {
   const name = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
   const city = d.district || d.city || d.province || '';
-  const avatar = d.sellerAvatarUrl || '/assets/img/avatar-default.png';
+  const avatar = d.sellerAvatarUrl || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png';
   const verified = d.sellerVerified === true;
   const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
 
@@ -885,7 +885,7 @@ for (const uid of uids) {
       const u = snap.data() || {};
       userCache[uid] = {
         name: u.name || u.displayName || 'Satıcı',
-        avatar: u.avatar || u.photoURL || '/assets/img/avatar-default.png',
+        avatar: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png',
         verified: !!u.isVerified,
         city: u.district || u.city || u.province || ''
       };
@@ -929,10 +929,15 @@ if(document.readyState==='loading'){
 })();
     // ——— Tek seferlik backfill: listings -> seller* alanlarını doldurur ———
 (async () => {
-  const { getFirestore, collection, getDocs, query, limit, updateDoc, doc } =
-    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+  const { collection, getDocs, query, limit, updateDoc, doc } =
+  await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-  const db = self.__fb?.db || getFirestore();
+async function waitForDb(){
+  if (self.__fb?.db) return self.__fb.db;
+  await new Promise(res => document.addEventListener('fb-ready', () => res(), { once:true }));
+  return self.__fb.db;
+}
+const db = await waitForDb();
 
   // 1) İlanları çek (gerekirse limit'i artırıp sayfa sayfa koşarsın)
   const snap = await getDocs(query(collection(db, 'listings'), limit(500)));
