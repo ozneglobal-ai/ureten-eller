@@ -776,10 +776,6 @@
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-   // 🔹 Anında önizleme
-const file = e.target.files[0];
-if (!file) return;
-
 const localUrl = URL.createObjectURL(file);
 const edAv = document.getElementById('edAvatar');
 if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
