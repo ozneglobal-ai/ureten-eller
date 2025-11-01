@@ -99,3 +99,19 @@ app/src/main/assets/public
 app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml
+
+# Android local/secrets/build
+android/local.properties
+android/*.keystore
+android/**/*.keystore
+android/.gradle/
+android/app/build/
+android/captures/
+
+# Android local/secrets/build
+android/local.properties
+android/*.keystore
+android/**/*.keystore
+android/.gradle/
+android/app/build/
+android/captures/
