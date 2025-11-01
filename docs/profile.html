@@ -771,7 +771,7 @@
         finally { __uploadingAvatar=false; }
       };
 
-// === AVATAR YÜKLEME ===
+// === AVATAR YÜKLEME (sade ve parantezsiz await) ===
 window.handleAvatarFile = async function (e) {
   try {
     const file = e.target && e.target.files ? e.target.files[0] : null;
@@ -789,15 +789,16 @@ window.handleAvatarFile = async function (e) {
       return;
     }
 
-    // Cloudinary yüklemesi (iki yöntemden biri)
-    const res = await (
-      window.uploadToCloudinary
-        ? window.uploadToCloudinary(file) // string URL dönebilir
-        : (window.clUnsignedUpload
-            ? window.clUnsignedUpload(file, 'avatars').catch(() => null) // {secure_url} dönebilir
-            : null
-          )
-    );
+    // Cloudinary yüklemesi (iki alternatiften biri)
+    let res;
+    if (window.uploadToCloudinary) {
+      res = await window.uploadToCloudinary(file);           // string URL dönebilir
+    } else if (window.clUnsignedUpload) {
+      res = await window.clUnsignedUpload(file, 'avatars')   // {secure_url} dönebilir
+               .catch(() => null);
+    } else {
+      res = null;
+    }
 
     // URL'yi normalize et
     const url = (typeof res === 'string') ? res : (res && res.secure_url) || null;
@@ -840,37 +841,20 @@ window.handleAvatarFile = async function (e) {
 window.openEdit = function () {
   const g = (id) => document.getElementById(id);
 
-  // Form alanlarını doldur
-  const cityEl = g('edCity');
-  if (cityEl) cityEl.value = window.user.city || '';
-
-  const distEl = g('edDistrict');
-  if (distEl) distEl.value = window.user.district || '';
-
-  const oldEl = g('edOld');
-  if (oldEl) oldEl.value = '';
-
-  const n1 = g('edNew1');
-  if (n1) n1.value = '';
-
-  const n2 = g('edNew2');
-  if (n2) n2.value = '';
+  const cityEl = g('edCity');      if (cityEl) cityEl.value = window.user.city || '';
+  const distEl = g('edDistrict');  if (distEl) distEl.value = window.user.district || '';
+  const oldEl  = g('edOld');       if (oldEl) oldEl.value = '';
+  const n1     = g('edNew1');      if (n1) n1.value = '';
+  const n2     = g('edNew2');      if (n2) n2.value = '';
 
   const avEl = g('edAvatar');
   if (avEl) avEl.style.backgroundImage = `url('${window.user.avatar || '/assets/img/avatar-default.png'}')`;
 
-  const bioEl = g('edBio');
-  if (bioEl) bioEl.value = window.user.bio || '';
+  const bioEl = g('edBio'); if (bioEl) bioEl.value = window.user.bio || '';
+  const nm    = g('edName'); if (nm) nm.value = window.user.name || '';
 
-  const nm = g('edName');
-  if (nm) nm.value = window.user.name || '';
-
-  // Modalı aç
   const m = g('editModal');
-  if (m) {
-    m.style.display = 'block';
-    m.setAttribute('aria-hidden', 'false');
-  }
+  if (m) { m.style.display = 'block'; m.setAttribute('aria-hidden', 'false'); }
 };
 
       // 🔽 AVATAR DEĞİŞTİRME (Cloudinary upload)
