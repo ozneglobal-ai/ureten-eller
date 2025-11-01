@@ -408,6 +408,51 @@
 
   <script type="module">
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+// 🔒 Email doğrulaması yapılmadan /home.html içeriği görüntülenemesin
+function guardHomePage(){
+  const auth = getAuth();
+  onAuthStateChanged(auth, async (u)=>{
+    // hiç giriş yoksa → giriş/kayıt aç
+    if(!u){
+      openAuth?.();
+      return;
+    }
+    // email/şifre ile giriş yaptıysa ve doğrulanmadıysa → içeriği kilitle
+    const usesPassword = u.providerData?.some(p=>p.providerId==='password');
+    await u.reload();
+    if (usesPassword && !u.emailVerified){
+      try { await sendEmailVerification(u); } catch {}
+      // Sayfayı kilitle ve kullanıcıya doğrulama uyarısı göster
+      document.querySelector('main')?.setAttribute('inert','');
+      document.querySelector('main').style.filter = 'blur(4px)';
+      if (!document.getElementById('verifyBanner')){
+        const div = document.createElement('div');
+        div.id = 'verifyBanner';
+        div.style.cssText = 'max-width:1200px;margin:12px auto;padding:12px;border:1px solid #f59e0b;background:#fff7ed;border-radius:12px';
+        div.innerHTML = currentLang==='en'
+          ? '<strong>Verify your email</strong> to access this page. After clicking the link in your email, return here and press “I verified”. <button class="btn gold" id="iVerified">I verified</button>'
+          : '<strong>Bu sayfaya erişmek için e-postanızı doğrulayın.</strong> E-postadaki linke tıkladıktan sonra buraya dönüp “Doğruladım”a basın. <button class="btn gold" id="iVerified">Doğruladım</button>';
+        document.querySelector('.topbar')?.after(div);
+        document.getElementById('iVerified')?.addEventListener('click', async ()=>{
+          await u.reload();
+          if (u.emailVerified){
+            document.querySelector('main')?.removeAttribute('inert');
+            document.querySelector('main').style.filter = '';
+            div.remove();
+          } else {
+            alert(currentLang==='en'?'Still not verified. Please check your inbox/SPAM.':'Hâlâ doğrulanmadı. Lütfen gelen kutusu/Spam klasörünü kontrol edin.');
+          }
+        });
+      }
+      openAuth?.();
+      return;
+    }
+    // Doğrulanmış → sayfa serbest
+    document.querySelector('main')?.removeAttribute('inert');
+    document.querySelector('main').style.filter = '';
+  });
+}
+guardHomePage();
 
     /* ===== i18n – Metinler (KATEGORİLERE DOKUNMADAN) ===== */
     const I18N = {
@@ -651,12 +696,34 @@ document.getElementById('signInBtn')
     });
 
     document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
-      const email = document.getElementById('li_email').value.trim();
-      const pass = document.getElementById('li_pass').value;
-      if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
-      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
-      catch(err){ alert(''+(err?.message||err)); }
-    });
+  const email = document.getElementById('li_email').value.trim();
+  const pass  = document.getElementById('li_pass').value;
+
+  if(!email || pass.length < 6){
+    alert(currentLang==='en'
+      ? 'Check email & password.'
+      : 'E-posta ve şifreyi kontrol edin.');
+    return;
+  }
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    await cred.user.reload();
+
+    if (!cred.user.emailVerified){
+      try { await sendEmailVerification(cred.user); } catch {}
+      alert(currentLang==='en'
+         ? 'Please verify your email before continuing. We sent you a verification email.'
+    : 'Devam etmeden önce e-postanızı doğrulayın. Spam kutunuzu kontrol etmeyi unutmayın. Doğrulama e-postası gönderildi.');
+    return; // doğrulanmadan içeri alma
+    }
+
+    redirectHome(); // yalnız doğrulanmışsa
+  } catch(err) {
+    alert(''+(err?.message || err));
+  }
+});
+
 
     document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
       const email = document.getElementById('li_email').value.trim();
@@ -666,22 +733,41 @@ document.getElementById('signInBtn')
     });
 
     document.getElementById('registerBtn')?.addEventListener('click', async ()=>{
-      const username = document.getElementById('su_username').value.trim();
-      const name = document.getElementById('su_name').value.trim();
-      const province = document.getElementById('su_province').value;
-      const district = document.getElementById('su_district').value.trim();
-      const email = document.getElementById('su_email').value.trim();
-      const pass = document.getElementById('su_pass').value;
-      const pass2 = document.getElementById('su_pass2').value;
-      if(!username || !name || !province || !district || !email || pass.length<6 || pass!==pass2){ alert(currentLang==='en'?'Please fill all fields correctly.':'Lütfen tüm alanları doğru doldurun.'); return; }
-      try{
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: name });
-        try{ await sendEmailVerification(cred.user); }catch{}
-        alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
-        redirectHome();
-      }catch(err){ alert(''+(err?.message||err)); }
-    });
+  const username = document.getElementById('su_username').value.trim();
+  const name     = document.getElementById('su_name').value.trim();
+  const province = document.getElementById('su_province').value;
+  const district = document.getElementById('su_district').value.trim();
+  const email    = document.getElementById('su_email').value.trim();
+  const pass     = document.getElementById('su_pass').value;
+  const pass2    = document.getElementById('su_pass2').value;
+
+  if (!username || !name || !province || !district || !email || pass.length < 6 || pass !== pass2){
+    alert(currentLang==='en' ? 'Please fill all fields correctly.' : 'Lütfen tüm alanları doğru doldurun.');
+    return;
+  }
+
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: name });
+
+    // Doğrulama e-postası gönder
+    try { await sendEmailVerification(cred.user); } catch {}
+
+    // Kullanıcıyı içeri almıyoruz; doğrulama zorunlu
+    alert(currentLang==='en'
+      ? 'Registration completed. Please verify your email. Check Inbox/SPAM.'
+      : 'Kayıt tamamlandı. Lütfen e-postanızı doğrulayın. Gelen kutusu/Spam klasörünü kontrol edin.');
+
+    // Oturumu kapat ki doğrulanmadan /home.html’a geçemesin
+    try { await signOut(auth); } catch {}
+
+    // İstersen giriş modali açık kalsın; yönlendirme YOK.
+    // redirectHome();  ← kaldırıldı
+
+  }catch(err){
+    alert(''+(err?.message||err));
+  }
+});
 
     onAuthStateChanged(auth, (u)=>{
       const authArea = document.getElementById('authArea');
