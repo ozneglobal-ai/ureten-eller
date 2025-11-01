@@ -376,9 +376,33 @@
   .modal-card{ margin:20px 10px !important; border-radius:8px !important; }
 }
  </style>
-      <script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
-  <script type="module" src="/firebase-init.js"></script>
+
+<script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
+
+<!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
 </head>
+
 <body>
 
   <div class="page">
