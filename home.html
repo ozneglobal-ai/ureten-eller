@@ -649,33 +649,22 @@ document.getElementById('postBtn')?.addEventListener('click', (e) => {
 });
 
 
-// === ÇIKIŞ ===
+// === ÇIKIŞ (temiz ve güvenli) ===
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-  // 1) Firebase oturumu kapat
   try {
-    const fb = self.firebase || window.firebase;
-    if (fb?.getAuth) {
-      const auth = fb.getAuth(self.__fb?.app);
-      await fb.signOut(auth);
-    } else if (fb?.auth) {
-      await fb.auth().signOut();
-    }
+    // firebase-auth modülünü dinamik içe aktar (klasik <script>’te de çalışır)
+    const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const auth = getAuth(self.__fb?.app);
+    await signOut(auth);
   } catch (e) {
     console.warn('signOut hata:', e);
   }
 
-  // 2) Tarayıcı verilerini temizle
-  try { ['ue_user', 'ue_token', 'ue_profile'].forEach(k => localStorage.removeItem(k)); } catch (_) {}
-  try { sessionStorage.clear(); } catch (_) {}
+  // Tarayıcı verilerini temizle (opsiyonel)
+  try { ['ue_user', 'ue_token', 'ue_profile'].forEach(k => localStorage.removeItem(k)); } catch {}
+  try { sessionStorage.clear(); } catch {}
 
-  // 3) Logout işaretle (geri tuşunu kısıtlamak için)
-  try { sessionStorage.setItem('ue_logged_out', '1'); } catch (_) {}
-
-  // 4) Index'e tek yönlü gönder
-  try {
-    history.pushState(null, '', '/index.html');
-    history.replaceState(null, '', '/index.html');
-  } catch (_) {}
+  // Tek adım güvenli yönlendirme
   location.replace('/index.html');
 });
 
