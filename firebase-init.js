@@ -117,6 +117,7 @@ self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'up
   if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
   return res.json(); // { public_id, secure_url, ... }
 };
+self.uploadToCloudinary = self.clUnsignedUpload;
 
 // === Örnek kullanımlar ===
 self.avatarUrl = (publicId) => self.clUrl(publicId, { c:'fill', w:600, h:600, q:'auto', f:'auto', radius:'max' });
