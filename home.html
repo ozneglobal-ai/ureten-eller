@@ -781,7 +781,7 @@ window.resolveImages = resolveImages;
 const cardHTML = (d, id, cover, isGold=false) => {
   const name = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
   const city = d.district || d.city || d.province || '';
-  const avatar = d.sellerAvatarUrl || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png';
+  const avatar = d.sellerAvatarUrl || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png';
   const verified = d.sellerVerified === true;
   const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
 
@@ -796,7 +796,10 @@ const cardHTML = (d, id, cover, isGold=false) => {
       ${(city || '')}${(city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}
     </div>
     <div class="info-row">
-      <img class="avatar" src="${avatar}" alt="Satıcı avatarı" onerror="this.src='/assets/img/avatar-default.png'"/>
+      <img class="avatar"
+     src="${avatar}"
+     alt="Satıcı avatarı"
+     onerror="this.src='https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png'"/>
       <div class="who">
         <span class="name">
           ${name}
@@ -885,7 +888,7 @@ for (const uid of uids) {
       const u = snap.data() || {};
       userCache[uid] = {
         name: u.name || u.displayName || 'Satıcı',
-        avatar: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png',
+        avatar: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png',
         verified: !!u.isVerified,
         city: u.district || u.city || u.province || ''
       };
@@ -963,7 +966,7 @@ const db = await waitForDb();
       // 3) İlanda alanları kalıcı yaz
       const payload = {
         sellerName: u.name || u.displayName || 'Satıcı',
-        sellerAvatarUrl: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png',
+        sellerAvatarUrl: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png',
         sellerCity: u.district || u.city || u.province || '',
         sellerVerified: !!u.isVerified,
         updatedAt: new Date(),
