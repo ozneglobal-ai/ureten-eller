@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "4688234885",
+    "project_id": "flutter-ai-playground-38ddf",
+    "storage_bucket": "flutter-ai-playground-38ddf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4688234885:android:685cb919ad4d311cca5cec",
+        "android_client_info": {
+          "package_name": "com.ureteneller.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "4688234885-gjtlrq95n6us8nkv08o7p5smefs9ja0k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJMiubtr0k1Yunu0V_nkPip8GtN4oMteU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "4688234885-gjtlrq95n6us8nkv08o7p5smefs9ja0k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
