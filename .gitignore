@@ -10,3 +10,11 @@ android/gradle.properties
 
 android/*.keystore
 android/**/*.keystore
+
+# Android (secrets & build)
+android/app/build/
+android/.gradle/
+android/captures/
+android/*.keystore
+android/**/*.keystore
+android/app/google-services.json
