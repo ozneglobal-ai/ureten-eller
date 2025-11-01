@@ -776,12 +776,15 @@
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-    // 🔹 Anında önizleme
-    const localUrl = URL.createObjectURL(file);
-    const edAv = document.getElementById('edAvatar');
-    if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
+   // 🔹 Anında önizleme
+const file = e.target.files && e.target.files[0];
+if (!file) return;
 
-    // 🔹 Eğer offline ise yüklemeye çalışma
+const localUrl = URL.createObjectURL(file);
+const edAv = document.getElementById('edAvatar');
+if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
+
+// 🔹 Eğer offline ise yüklemeye çalışma
 if (!navigator.onLine) {
   window.toast && toast('Bağlantı yok — avatar yüklenemedi');
   URL.revokeObjectURL(localUrl);
@@ -790,11 +793,12 @@ if (!navigator.onLine) {
 
 // 🔹 Cloudinary yüklemesi
 const res = await (window.uploadToCloudinary
-  ? window.uploadToCloudinary(file)         // string URL dönebilir
-  : window.clUnsignedUpload(file, 'avatars').catch(() => null)); // {secure_url} döner
+  ? window.uploadToCloudinary(file) // string URL dönebilir
+  : (window.clUnsignedUpload ? window.clUnsignedUpload(file, 'avatars').catch(() => null) : null) // {secure_url} döner
+);
 
-// 🔹 URL'yi iki ihtimal için de yakala
-const url = typeof res === 'string' ? res : res?.secure_url;
+// 🔹 URL'yi iki ihtimal için de yakala (optional chaining yerine güvenli kontrol)
+const url = (typeof res === 'string') ? res : (res && res.secure_url) || null;
 
 // 🔹 Upload başarısızsa çık
 if (!url) {
@@ -805,28 +809,21 @@ if (!url) {
 
 // 🔹 Başarılıysa kullanıcıya yaz
 window.user.avatar = url;
-
 window.cacheSave && cacheSave();
 
 // 🔹 Ana avatar önizleme
 const mainAv = document.getElementById('avatar');
 if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
 
-    // 🔹 Firestore’a kaydet
-    if (window.__fb?.auth?.currentUser) {
-      const uid = window.__fb.auth.currentUser.uid;
-      const { doc, setDoc, serverTimestamp } = await import(
-        'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'
-      );
-      await setDoc(
-        doc(window.__fb.db, 'users', uid),
-        { avatar: url, updatedAt: serverTimestamp() },
-        { merge: true }
-      );
-    }
+// 🔹 Firestore’a kaydet
+if (window.__fb?.auth?.currentUser) {
+  const uid = window.__fb.auth.currentUser.uid;
+  const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+  await setDoc(doc(window.__fb.db, 'users', uid), { avatar: url, updatedAt: serverTimestamp() }, { merge: true });
+}
 
-    window.toast && toast('Avatar yüklendi ✅');
-    URL.revokeObjectURL(localUrl); // 🔹 blob’u temizle
+window.toast && toast('Avatar yüklendi ✅');
+URL.revokeObjectURL(localUrl); // blob’u temizle
 
   } catch (err) {
     console.warn('Avatar yükleme hatası:', err);
