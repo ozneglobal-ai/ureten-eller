@@ -48,12 +48,10 @@ self.storage = storage;
 // >>> EKLENDİ: home.html’in beklediği nesne
 self.__fb = { app, auth, db, storage };
 
-// =================== Cloudinary (ozneglobal) ===================
 // Not: API SECRET asla frontend'e konulmaz.
-// Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
-const CLOUD_NAME = 'ozneglobal';        // Cloud name (hesabında gözüken)
-const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
-const UPLOAD_PRESET = 'unsigned_avatars'; // Cloudinary'deki unsigned preset adın
+ const CLOUD_CFG = (self.__CLOUDINARY) || { cloudName:'dbntnzogo', uploadPreset:'unsigned_avatars', folder:'avatars' };
+ const CLOUD_NAME = CLOUD_CFG.cloudName;
+ const UPLOAD_PRESET = CLOUD_CFG.uploadPreset;
 
 // Yardımcı sabitler
 const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
@@ -62,12 +60,9 @@ const CL_FETCH = `${CL_IMAGE}/fetch`;
 const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 // Global'e aktar (mevcut kodunla uyumlu)
-self.CLOUDINARY_CLOUD = CLOUD_NAME;
-self.CLOUDINARY = {
+  self.CLOUDINARY = {
   cloud: CLOUD_NAME,
-  apiKey: CLOUD_API_KEY,
-  uploadPreset: UPLOAD_PRESET,
-  base: CL_BASE,
+  uploadPreset: UPLOAD_PRESET,  base: CL_BASE,
   imageBase: CL_IMAGE,
   fetchBase: CL_FETCH,
   uploadEndpoint: CL_UPLOAD
@@ -107,15 +102,18 @@ self.clFetch = function clFetch(srcUrl, opts = {}) {
 };
 
 // UNSIGNED upload (form file veya blob)
-self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = 'uploads') {
+  self.clUnsignedUpload = async function clUnsignedUpload(fileOrBlob, folder = (CLOUD_CFG.folder || 'uploads')) {
   const form = new FormData();
   form.append('upload_preset', UPLOAD_PRESET);
   form.append('file', fileOrBlob);
   if (folder) form.append('folder', folder);
   // Opsiyonel: public_id, tags, context vs. ekleyebilirsin
   const res = await fetch(CL_UPLOAD, { method: 'POST', body: form });
-  if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.status}`);
-  return res.json(); // { public_id, secure_url, ... }
+if (!res.ok) {
+  const txt = await res.text().catch(() => '');
+  throw new Error(`Cloudinary upload failed: ${res.status} ${txt}`);
+}
+return res.json(); // { public_id, secure_url, ... }
 };
 self.uploadToCloudinary = self.clUnsignedUpload;
 
