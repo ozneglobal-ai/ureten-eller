@@ -59,7 +59,7 @@ const UPLOAD_PRESET = 'unsigned_avatars'; // Cloudinary'deki unsigned preset adÄ
 const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
 const CL_IMAGE = `${CL_BASE}/image`;
 const CL_FETCH = `${CL_IMAGE}/fetch`;
-const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
+const CL_UPLOAD = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 // Global'e aktar (mevcut kodunla uyumlu)
 self.CLOUDINARY_CLOUD = CLOUD_NAME;
