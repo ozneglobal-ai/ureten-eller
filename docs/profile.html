@@ -771,71 +771,108 @@
         finally { __uploadingAvatar=false; }
       };
 
-      window.handleAvatarFile = async function (e) {
+// === AVATAR YÜKLEME ===
+window.handleAvatarFile = async function (e) {
   try {
-    const file = e.target.files && e.target.files[0];
+    const file = e.target && e.target.files ? e.target.files[0] : null;
     if (!file) return;
 
-const localUrl = URL.createObjectURL(file);
-const edAv = document.getElementById('edAvatar');
-if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
+    // Anında önizleme
+    const localUrl = URL.createObjectURL(file);
+    const edAv = document.getElementById('edAvatar');
+    if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
 
-// 🔹 Eğer offline ise yüklemeye çalışma
-if (!navigator.onLine) {
-  window.toast && toast('Bağlantı yok — avatar yüklenemedi');
-  URL.revokeObjectURL(localUrl);
-  return;
-}
+    // Offline ise dur
+    if (!navigator.onLine) {
+      window.toast && toast('Bağlantı yok — avatar yüklenemedi');
+      URL.revokeObjectURL(localUrl);
+      return;
+    }
 
-// 🔹 Cloudinary yüklemesi
-const res = await (window.uploadToCloudinary
-  ? window.uploadToCloudinary(file) // string URL dönebilir
-  : (window.clUnsignedUpload ? window.clUnsignedUpload(file, 'avatars').catch(() => null) : null) // {secure_url} döner
-);
+    // Cloudinary yüklemesi (iki yöntemden biri)
+    const res = await (
+      window.uploadToCloudinary
+        ? window.uploadToCloudinary(file) // string URL dönebilir
+        : (window.clUnsignedUpload
+            ? window.clUnsignedUpload(file, 'avatars').catch(() => null) // {secure_url} dönebilir
+            : null
+          )
+    );
 
-// 🔹 URL'yi iki ihtimal için de yakala (optional chaining yerine güvenli kontrol)
-const url = (typeof res === 'string') ? res : (res && res.secure_url) || null;
+    // URL'yi normalize et
+    const url = (typeof res === 'string') ? res : (res && res.secure_url) || null;
 
-// 🔹 Upload başarısızsa çık
-if (!url) {
-  window.toast && toast('Yükleme başarısız ⚠️');
-  URL.revokeObjectURL(localUrl);
-  return;
-}
+    // Başarısızsa çık
+    if (!url) {
+      window.toast && toast('Yükleme başarısız ⚠️');
+      URL.revokeObjectURL(localUrl);
+      return;
+    }
 
-// 🔹 Başarılıysa kullanıcıya yaz
-window.user.avatar = url;
-window.cacheSave && cacheSave();
+    // Kullanıcı objesine yaz + cache
+    window.user.avatar = url;
+    window.cacheSave && cacheSave();
 
-// 🔹 Ana avatar önizleme
-const mainAv = document.getElementById('avatar');
-if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
+    // Ana avatar önizleme
+    const mainAv = document.getElementById('avatar');
+    if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
 
-// 🔹 Firestore’a kaydet
-if (window.__fb?.auth?.currentUser) {
-  const uid = window.__fb.auth.currentUser.uid;
-  const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-  await setDoc(doc(window.__fb.db, 'users', uid), { avatar: url, updatedAt: serverTimestamp() }, { merge: true });
-}
+    // Firestore’a kaydet
+    if (window.__fb?.auth?.currentUser) {
+      const uid = window.__fb.auth.currentUser.uid;
+      const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      await setDoc(
+        doc(window.__fb.db, 'users', uid),
+        { avatar: url, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+    }
 
-window.toast && toast('Avatar yüklendi ✅');
-URL.revokeObjectURL(localUrl); // blob’u temizle
-
+    window.toast && toast('Avatar yüklendi ✅');
+    URL.revokeObjectURL(localUrl); // blob’u temizle
   } catch (err) {
     console.warn('Avatar yükleme hatası:', err);
     window.toast && toast('Avatar yüklenemedi ❌');
   }
 };
 
-      window.openEdit=function(){
-        const g=id=>document.getElementById(id);
-        g('edCity').value=window.user.city||''; g('edDistrict').value=window.user.district||'';
-        g('edOld').value=''; g('edNew1').value=''; g('edNew2').value='';
-        g('edAvatar').style.backgroundImage=`url('${window.user.avatar||'/assets/img/avatar-default.png'}')`;
-        g('edBio').value=window.user.bio||'';
-        const nm=g('edName'); if(nm) nm.value=window.user.name||'';
-        const m=document.getElementById('editModal'); m.style.display='block'; m.setAttribute('aria-hidden','false');
-      };
+// === PROFİL DÜZENLE AÇ ===
+window.openEdit = function () {
+  const g = (id) => document.getElementById(id);
+
+  // Form alanlarını doldur
+  const cityEl = g('edCity');
+  if (cityEl) cityEl.value = window.user.city || '';
+
+  const distEl = g('edDistrict');
+  if (distEl) distEl.value = window.user.district || '';
+
+  const oldEl = g('edOld');
+  if (oldEl) oldEl.value = '';
+
+  const n1 = g('edNew1');
+  if (n1) n1.value = '';
+
+  const n2 = g('edNew2');
+  if (n2) n2.value = '';
+
+  const avEl = g('edAvatar');
+  if (avEl) avEl.style.backgroundImage = `url('${window.user.avatar || '/assets/img/avatar-default.png'}')`;
+
+  const bioEl = g('edBio');
+  if (bioEl) bioEl.value = window.user.bio || '';
+
+  const nm = g('edName');
+  if (nm) nm.value = window.user.name || '';
+
+  // Modalı aç
+  const m = g('editModal');
+  if (m) {
+    m.style.display = 'block';
+    m.setAttribute('aria-hidden', 'false');
+  }
+};
+
       // 🔽 AVATAR DEĞİŞTİRME (Cloudinary upload)
 document.getElementById('edAvatar').addEventListener('click', async () => {
   try {
