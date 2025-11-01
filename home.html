@@ -927,6 +927,55 @@ if(document.readyState==='loading'){
   start();
 }
 })();
+    // ——— Tek seferlik backfill: listings -> seller* alanlarını doldurur ———
+(async () => {
+  const { getFirestore, collection, getDocs, query, limit, updateDoc, doc } =
+    await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+  const db = self.__fb?.db || getFirestore();
+
+  // 1) İlanları çek (gerekirse limit'i artırıp sayfa sayfa koşarsın)
+  const snap = await getDocs(query(collection(db, 'listings'), limit(500)));
+
+  let ok = 0, skip = 0, fail = 0;
+  for (const d of snap.docs) {
+    const li = d.data() || {};
+    // Zaten doluysa atla
+    const already =
+      li.sellerName || li.sellerAvatarUrl || li.sellerCity || (li.sellerVerified === true);
+    if (already) { skip++; continue; }
+
+    // UID bul
+    const uid = li.sellerId || li.ownerId || li.userId || li.userid || li.userID;
+    if (!uid) { skip++; continue; }
+
+    // 2) Kullanıcıyı oku
+    try {
+      const uSnap = await self.firebase.getDoc(`users/${uid}`);
+      if (!uSnap?.exists()) { skip++; continue; }
+      const u = uSnap.data() || {};
+
+      // 3) İlanda alanları kalıcı yaz
+      const payload = {
+        sellerName: u.name || u.displayName || 'Satıcı',
+        sellerAvatarUrl: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1/defaults/avatar-default.png',
+        sellerCity: u.district || u.city || u.province || '',
+        sellerVerified: !!u.isVerified,
+        updatedAt: new Date(),
+      };
+
+      await updateDoc(doc(db, 'listings', d.id), payload);
+      ok++;
+      // Küçük nefes (quota/cost için)
+      await new Promise(r => setTimeout(r, 30));
+    } catch (e) {
+      console.warn('backfill fail', d.id, e);
+      fail++;
+    }
+  }
+
+  console.log(`Backfill bitti ✅  ok:${ok}  skip:${skip}  fail:${fail}`);
+})();
 
   </script>
   <!-- İlan Detay Modal -->
