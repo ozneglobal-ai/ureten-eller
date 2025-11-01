@@ -1,51 +1,27 @@
-android {
-    namespace "com.ureteneller.app"
-    compileSdk rootProject.ext.compileSdkVersion
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-    defaultConfig {
-        applicationId "com.ureteneller.app"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        aaptOptions {
-            // Modern web app varlıkları için önerilen ignore kalıbı
-            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
-        }
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
     }
-
-    // 🔐 İMZA AYARLARI
-    // Öncelik: ENV -> gradle.properties
-    signingConfigs {
-        release {
-            def ksPath = System.getenv("MYAPP_UPLOAD_STORE_FILE") ?: project.findProperty("MYAPP_UPLOAD_STORE_FILE")
-            def ksPass = System.getenv("MYAPP_UPLOAD_STORE_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_STORE_PASSWORD")
-            def ka     = System.getenv("MYAPP_UPLOAD_KEY_ALIAS") ?: project.findProperty("MYAPP_UPLOAD_KEY_ALIAS")
-            def kaPass = System.getenv("MYAPP_UPLOAD_KEY_PASSWORD") ?: project.findProperty("MYAPP_UPLOAD_KEY_PASSWORD")
-
-            if (ksPath == null || ksPath.toString().trim().isEmpty()) {
-                throw new GradleException("Keystore yolu (MYAPP_UPLOAD_STORE_FILE) tanımlı değil.")
-            }
-            storeFile file(ksPath)
-            storePassword ksPass
-            keyAlias ka
-            keyPassword kaPass
-        }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.7.2'
+        classpath 'com.google.gms:google-services:4.4.4'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
     }
+}
 
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            shrinkResources false
-            debuggable false
-            jniDebuggable false
-            renderscriptDebuggable false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            // debug imza Android Studio'nun default debug.keystore'udur
-        }
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
