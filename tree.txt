@@ -38,7 +38,7 @@
 │   ├── settings.gradle
 │   └── variables.gradle
 ├── api
-│   ├── callback.php
+│   ├── paytr-callback.php
 │   └── token.php
 ├── apple-touch-icon.png
 ├── assets
@@ -121,6 +121,7 @@
 ├── listings.html
 ├── notify.wav
 ├── odeme
+│   ├── paytr.html
 │   └── tesekkurler.html
 ├── package-lock.json
 ├── package.json
@@ -129,7 +130,6 @@
 ├── service-worker.js
 ├── site.webmanifest
 ├── sitemap.xml
-├── tree.txt
-└── vercel.json
+└── tree.txt
 
 29 directories, 104 files
