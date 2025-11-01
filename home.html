@@ -869,6 +869,43 @@ async function fetchAndPaint(){
 const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
 vip.sort(sortBy); std.sort(sortBy);
 const combined = vip.slice(0,20).concat(std);
+    // --- Satıcı profili join (users -> listings) ---
+const uids = new Set();
+combined.forEach(x => {
+  const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
+  const hasSellerFields = x.data.sellerName || x.data.sellerAvatarUrl || x.data.sellerCity || (x.data.sellerVerified === true);
+  if (uid && !hasSellerFields) uids.add(uid);
+});
+
+const userCache = {};
+for (const uid of uids) {
+  try {
+    const snap = await self.firebase.getDoc(`users/${uid}`);
+    if (snap && snap.exists()) {
+      const u = snap.data() || {};
+      userCache[uid] = {
+        name: u.name || u.displayName || 'Satıcı',
+        avatar: u.avatar || u.photoURL || '/assets/img/avatar-default.png',
+        verified: !!u.isVerified,
+        city: u.district || u.city || u.province || ''
+      };
+    }
+  } catch (e) {
+    // Anonim iken profilePublic=false ise burada düşer — görmezden gel
+  }
+}
+
+combined.forEach(x => {
+  const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
+  const u = uid && userCache[uid];
+  if (u) {
+    x.data.sellerName       = x.data.sellerName       || u.name;
+    x.data.sellerAvatarUrl  = x.data.sellerAvatarUrl  || u.avatar;
+    x.data.sellerVerified   = (x.data.sellerVerified === true) || u.verified;
+    x.data.sellerCity       = x.data.sellerCity       || u.city;
+  }
+});
+
 renderList('allGrid', combined);
 window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
 
