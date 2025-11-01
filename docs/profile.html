@@ -782,31 +782,36 @@
     if (edAv) edAv.style.backgroundImage = `url('${localUrl}')`;
 
     // 🔹 Eğer offline ise yüklemeye çalışma
-    if (!navigator.onLine) {
-      window.toast && toast('Bağlantı yok — avatar yüklenemedi');
-      URL.revokeObjectURL(localUrl);
-      return;
-    }
+if (!navigator.onLine) {
+  window.toast && toast('Bağlantı yok — avatar yüklenemedi');
+  URL.revokeObjectURL(localUrl);
+  return;
+}
 
-    // 🔹 Cloudinary yüklemesi
-    const res = await (window.uploadToCloudinary
-      ? window.uploadToCloudinary(file)
-      : window.clUnsignedUpload(file, 'avatars').catch(() => null));
+// 🔹 Cloudinary yüklemesi
+const res = await (window.uploadToCloudinary
+  ? window.uploadToCloudinary(file)         // string URL dönebilir
+  : window.clUnsignedUpload(file, 'avatars').catch(() => null)); // {secure_url} döner
 
-    // 🔹 Upload başarısızsa çık
-    if (!res || !res.secure_url) {
-      window.toast && toast('Yükleme başarısız ⚠️');
-      URL.revokeObjectURL(localUrl);
-      return;
-    }
+// 🔹 URL'yi iki ihtimal için de yakala
+const url = typeof res === 'string' ? res : res?.secure_url;
 
-    const url = res.secure_url;
-    window.user.avatar = url;
-    window.cacheSave && cacheSave();
+// 🔹 Upload başarısızsa çık
+if (!url) {
+  window.toast && toast('Yükleme başarısız ⚠️');
+  URL.revokeObjectURL(localUrl);
+  return;
+}
 
-    // 🔹 Ana avatar önizleme
-    const mainAv = document.getElementById('avatar');
-    if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
+// 🔹 Başarılıysa kullanıcıya yaz
+window.user.avatar = url;
+}; 
+
+window.cacheSave && cacheSave();
+
+// 🔹 Ana avatar önizleme
+const mainAv = document.getElementById('avatar');
+if (mainAv) mainAv.style.backgroundImage = `url('${url}')`;
 
     // 🔹 Firestore’a kaydet
     if (window.__fb?.auth?.currentUser) {
@@ -922,36 +927,31 @@ document.getElementById('edAvatar').addEventListener('click', async () => {
   window.cacheSave && cacheSave();
   window.toast && toast((window.I18N?.[window.getLang?.()||'tr']?.save) || 'Kaydedildi');
 
-  // Firestore'a kaydet
-  try {
-    if (window.__fb?.auth?.currentUser) {
-      const uid = window.__fb.auth.currentUser.uid;
-      const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
-      await setDoc(
-        doc(window.__fb.db, 'users', uid),
-        {
-          name: window.user.name || '',
-          city: window.user.city || '',
-          district: window.user.district || '',
-          phone: window.user.phone || '',
-          bio: window.user.bio || '',
-          isPremium: !!window.user.isPremium,
-          isVerified: !!window.user.isVerified,
-          // avatar kesin burada gönderiliyor
-          avatar: window.user.avatar || '',
-          status: 'active',
-          lastLoginAt: new Date().toISOString(),
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-    }
-  } catch (e) {
-    console.warn('Profil yazma hatası:', e);
-  }
+ // Firestore'a kaydet
+try {
+  if (window.__fb?.auth?.currentUser) {
+    const uid = window.__fb.auth.currentUser.uid;
+    const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
-  window.closeEdit && closeEdit();
-};
+    const payload = {
+      name: window.user.name || '',
+      city: window.user.city || '',
+      district: window.user.district || '',
+      phone: window.user.phone || '',
+      bio: window.user.bio || '',
+      avatar: window.user.avatar || '',
+      status: 'active',
+      lastLoginAt: new Date().toISOString(),
+      updatedAt: serverTimestamp()
+    };
+
+    await setDoc(doc(window.__fb.db, 'users', uid), payload, { merge: true });
+  }
+} catch (e) {
+  console.warn('Profil yazma hatası:', e);
+}
+
+window.closeEdit && closeEdit();
 
       window.openPricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='block'; m.setAttribute('aria-hidden','false'); };
       window.closePricing=function(){ const m=document.getElementById('pricingModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); };
