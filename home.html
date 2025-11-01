@@ -731,18 +731,14 @@ document.getElementById('navNoti')?.addEventListener('click', () => location.hre
       if(!allGrid) return;
 
       function ensureFirebaseReady(){
-        if (!self.__fb || !self.__fb.db || !self.firebase || !self.getDocs){
-          throw new Error('Firebase hazır değil. Lütfen /firebase-init.js yüklü olsun.');
-        }
-        const { db } = self.__fb;
-        const { col, q, orderBy, limit } = self.firebase;
-        const { getDocs } = self;
-        return { db, col, q, orderBy, limit, getDocs };
-      }
-
-      const fmtPrice = (v, cur='TRY')=>{ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v)); }catch(_){ return (v||'')+' '+cur; } };
-      const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
-      const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
+  if (!self.__fb || !self.__fb.db || !self.firebase || !self.getDocs){
+    throw new Error('Firebase hazır değil. Lütfen /firebase-init.js yüklü olsun.');
+  }
+  const { db } = self.__fb;
+  const { col, q, orderBy, limit, doc } = self.firebase; // ← doc eklendi
+  const { getDocs, getDoc } = self;                      // ← getDoc eklendi
+  return { db, col, q, orderBy, limit, getDocs, doc, getDoc };
+}
 
       // Premium satıcıyı algıla
 function isPremiumSeller(d){
@@ -750,6 +746,49 @@ function isPremiumSeller(d){
       || d?.isPremiumSeller === true
       || d?.premium === true
       || String(d?.plan || '').toLowerCase() === 'premium';
+}
+
+      const fmtPrice = (v, cur='TRY')=>{ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v)); }catch(_){ return (v||'')+' '+cur; } };
+      const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
+      const isVipDoc = (d, now) =>
+  (d.featured === true || d.vitrin === true || d.isShowcase === true) ||
+  toMillis(d.featuredUntil) > now ||
+  toMillis(d.vitrinUntil) > now ||
+  toMillis(d.showcaseUntil) > now;
+// Listing içinden satıcı id'yi bul
+const getSellerId = (d) =>
+  d?.sellerId || d?.ownerId || d?.userId || d?.userid || d?.userID || '';
+
+// Listing listesini gezip users/{uid} belgelerinden premium/verified bilgilerini ekle
+async function hydrateSellers(items){
+  const { db, doc, getDoc } = ensureFirebaseReady();
+  const uids = [...new Set(items.map(x => getSellerId(x.data)).filter(Boolean))];
+  if (!uids.length) return;
+
+  const cache = new Map();
+  await Promise.all(uids.map(async uid => {
+    try{
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap?.exists?.()) cache.set(uid, snap.data() || {});
+    }catch(_){}
+  }));
+
+  items.forEach(x => {
+    const uid = getSellerId(x.data);
+    const s = uid ? (cache.get(uid) || {}) : {};
+
+    if (s.displayName && !x.data.sellerName) x.data.sellerName = s.displayName;
+    if (s.city && !x.data.sellerCity) x.data.sellerCity = s.city;
+
+    // premium / verified bayrakları
+    x.data.sellerVerified   = x.data.sellerVerified   ?? (s.sellerVerified || s.isVerifiedSeller || s.verified) || false;
+    x.data.isVerifiedSeller = x.data.isVerifiedSeller ?? (s.isVerifiedSeller || s.sellerVerified || s.verified) || false;
+    x.data.verified         = x.data.verified         ?? (s.verified || s.isVerifiedSeller || s.sellerVerified) || false;
+    x.data.plan             = x.data.plan ?? s.plan ?? '';
+    x.data.sellerPremium    = x.data.sellerPremium ?? (s.sellerPremium || s.isPremiumSeller || s.premium) || false;
+    x.data.isPremiumSeller  = x.data.isPremiumSeller ?? (s.isPremiumSeller || s.sellerPremium || s.premium) || false;
+    x.data.premium          = x.data.premium ?? (s.premium || false);
+  });
 }
 
       // ==== Cloudinary yardımcıları + kart render ==== 
@@ -865,16 +904,48 @@ async function fetchAndPaint(){
       const d = doc.data() || {};
       (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
     });
-    await Promise.all([...vip, ...std].map(async x => {
+   // Kapak görsellerini çöz
+await Promise.all([...vip, ...std].map(async x => {
   x.data.__cover = await resolveCover(x.data);
 }));
-    [...vip, ...std].forEach(x => {
+
+// 🔻 Satıcı bilgilerini (premium/verified/plan vs.) kullanıcı belgelerinden çek
+await hydrateSellers([...vip, ...std]);
+
+// Kartların altın çerçeve / vitrin rozet kararlarını hesapla
+[...vip, ...std].forEach(x => {
   const now = Date.now();
-  const isVip = isVipDoc(x.data, now);
-  const isVerified = x.data.sellerVerified === true
-                  || x.data.isVerifiedSeller === true
-                  || x.data.verified === true;
+
+  const isVip =
+    (x.data.featured === true || x.data.vitrin === true || x.data.isShowcase === true) ||
+    toMillis(x.data.featuredUntil) > now ||
+    toMillis(x.data.vitrinUntil) > now ||
+    toMillis(x.data.showcaseUntil) > now;
+
+  const isVerified =
+    x.data.sellerVerified === true ||
+    x.data.isVerifiedSeller === true ||
+    x.data.verified === true;
+
   const isPrem = isPremiumSeller(x.data);
+
+  // Kartın altın çerçeve alması
+  x.data.__goldCard = isVip || isVerified || isPrem;
+
+  // Vitrin rozeti
+  x.data.__isVip =
+    (x.data.showcase || x.data.isShowcase || x.data.vitrin || x.data.featured) === true ||
+    toMillis(x.data.showcaseUntil) > now ||
+    toMillis(x.data.vitrinUntil) > now ||
+    toMillis(x.data.featuredUntil) > now;
+});
+
+// Sıralama + render
+const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
+vip.sort(sortBy); std.sort(sortBy);
+const combined = vip.slice(0,20).concat(std);
+renderList('allGrid', combined);
+window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
 
   // premium/verified/vitrin → gold çerçeve
   x.data.__goldCard = isVip || isVerified || isPrem;
@@ -1128,11 +1199,27 @@ function goPremium(amount) {
     // satıcı bilgileri
 const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
 const sCity = data.sellerCity || data.city || '';
-const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
+
+const isVerified =
+  data.sellerVerified === true ||
+  data.isVerifiedSeller === true ||
+  data.verified === true;
+
+const isPrem =
+  data.sellerPremium === true ||
+  data.isPremiumSeller === true ||
+  data.premium === true ||
+  String(data.plan || '').toLowerCase() === 'premium';
+
+const showGold = isVerified || isPrem;
+
 mSellerName.textContent = sName;
 mSellerCity.textContent = sCity;
-mBadge.style.display = verified ? 'inline-flex' : 'none';
-if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
+
+// rozet + çerçeve
+mBadge.style.display = showGold ? 'inline-flex' : 'none';
+mBadge.textContent = showGold ? '✔ Onaylı Satıcı' : '';
+if (mSellerBox) mSellerBox.classList.toggle('gold', showGold);
 
     // stok
     const stockNum = Number((data.stock ?? data.quantity ?? 0));
@@ -1232,7 +1319,7 @@ if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
       if (!currentOrderItem) { alert('Ürün bulunamadı.'); return; }
 
    // 🔹 Kullanıcı ve miktar kontrolü
-const user = auth.currentUser || await getCurrentUserOnce();
+const user = await getCurrentUserOnce();
 if (!user || !user.uid) {
   alert('Sipariş vermek için lütfen giriş yapın.');
   return;
