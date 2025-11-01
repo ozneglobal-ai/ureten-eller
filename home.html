@@ -773,21 +773,26 @@ async function hydrateSellers(items){
     }catch(_){}
   }));
 
+  // ⬇⬇⬇ ESKİ items.forEach(...) BLOĞUNU SİL, BUNU KOY ⬇⬇⬇
   items.forEach(x => {
     const uid = getSellerId(x.data);
     const s = uid ? (cache.get(uid) || {}) : {};
+    const d = x.data;
 
-    if (s.displayName && !x.data.sellerName) x.data.sellerName = s.displayName;
-    if (s.city && !x.data.sellerCity) x.data.sellerCity = s.city;
+    // isim/şehir
+    if (!d.sellerName && s.displayName) d.sellerName = s.displayName;
+    if (!d.sellerCity && s.city)        d.sellerCity  = s.city;
 
-    // premium / verified bayrakları — DÜZELTİLDİ
-x.data.sellerVerified   = (x.data.sellerVerified   ?? (s.sellerVerified || s.isVerifiedSeller || s.verified))   ?? false;
-x.data.isVerifiedSeller = (x.data.isVerifiedSeller ?? (s.isVerifiedSeller || s.sellerVerified || s.verified))   ?? false;
-x.data.verified         = (x.data.verified         ?? (s.verified || s.isVerifiedSeller || s.sellerVerified))   ?? false;
-x.data.plan             = (x.data.plan ?? s.plan) ?? '';
-x.data.sellerPremium    = (x.data.sellerPremium    ?? (s.sellerPremium || s.isPremiumSeller || s.premium))      ?? false;
-x.data.isPremiumSeller  = (x.data.isPremiumSeller  ?? (s.isPremiumSeller || s.sellerPremium || s.premium))      ?? false;
-x.data.premium          = (x.data.premium ?? s.premium) ?? false;
+    // premium / verified bayrakları (null/undefined ise doldur; mevcut true/false'a dokunma)
+    if (d.sellerVerified   == null) d.sellerVerified   = !!(s.sellerVerified || s.isVerifiedSeller || s.verified);
+    if (d.isVerifiedSeller == null) d.isVerifiedSeller = !!(s.isVerifiedSeller || s.sellerVerified  || s.verified);
+    if (d.verified         == null) d.verified         = !!(s.verified        || s.isVerifiedSeller || s.sellerVerified);
+
+    if (d.plan == null) d.plan = s.plan || '';
+
+    if (d.sellerPremium    == null) d.sellerPremium    = !!(s.sellerPremium   || s.isPremiumSeller || s.premium);
+    if (d.isPremiumSeller  == null) d.isPremiumSeller  = !!(s.isPremiumSeller || s.sellerPremium   || s.premium);
+    if (d.premium          == null) d.premium          = !!s.premium;
   });
 }
 
