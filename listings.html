@@ -84,9 +84,30 @@
     @keyframes pulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
   </style>
 
-  <!-- Firebase init (projenizdeki dosya) -->
-  <script type="module" src="/firebase-init.js"></script>
+  <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
 </head>
+
 <body>
   <div class="wrap">
     <!-- ÜST BAR -->
