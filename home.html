@@ -780,14 +780,14 @@ async function hydrateSellers(items){
     if (s.displayName && !x.data.sellerName) x.data.sellerName = s.displayName;
     if (s.city && !x.data.sellerCity) x.data.sellerCity = s.city;
 
-    // premium / verified bayrakları
-    x.data.sellerVerified   = x.data.sellerVerified   ?? (s.sellerVerified || s.isVerifiedSeller || s.verified) || false;
-    x.data.isVerifiedSeller = x.data.isVerifiedSeller ?? (s.isVerifiedSeller || s.sellerVerified || s.verified) || false;
-    x.data.verified         = x.data.verified         ?? (s.verified || s.isVerifiedSeller || s.sellerVerified) || false;
-    x.data.plan             = x.data.plan ?? s.plan ?? '';
-    x.data.sellerPremium    = x.data.sellerPremium ?? (s.sellerPremium || s.isPremiumSeller || s.premium) || false;
-    x.data.isPremiumSeller  = x.data.isPremiumSeller ?? (s.isPremiumSeller || s.sellerPremium || s.premium) || false;
-    x.data.premium          = x.data.premium ?? (s.premium || false);
+    // premium / verified bayrakları — DÜZELTİLDİ
+x.data.sellerVerified   = (x.data.sellerVerified   ?? (s.sellerVerified || s.isVerifiedSeller || s.verified))   ?? false;
+x.data.isVerifiedSeller = (x.data.isVerifiedSeller ?? (s.isVerifiedSeller || s.sellerVerified || s.verified))   ?? false;
+x.data.verified         = (x.data.verified         ?? (s.verified || s.isVerifiedSeller || s.sellerVerified))   ?? false;
+x.data.plan             = (x.data.plan ?? s.plan) ?? '';
+x.data.sellerPremium    = (x.data.sellerPremium    ?? (s.sellerPremium || s.isPremiumSeller || s.premium))      ?? false;
+x.data.isPremiumSeller  = (x.data.isPremiumSeller  ?? (s.isPremiumSeller || s.sellerPremium || s.premium))      ?? false;
+x.data.premium          = (x.data.premium ?? s.premium) ?? false;
   });
 }
 
