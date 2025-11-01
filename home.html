@@ -780,21 +780,20 @@ async function hydrateSellers(items){
     const d = x.data;
 
     // isim/şehir
-    if (!d.sellerName && s.displayName) d.sellerName = s.displayName;
-    if (!d.sellerCity && s.city)        d.sellerCity  = s.city;
+if (!d.sellerName && s.displayName) d.sellerName = s.displayName;
+if (!d.sellerCity && s.city)        d.sellerCity  = s.city;
 
-    // premium / verified bayrakları (null/undefined ise doldur; mevcut true/false'a dokunma)
-    if (d.sellerVerified   == null) d.sellerVerified   = !!(s.sellerVerified || s.isVerifiedSeller || s.verified);
-    if (d.isVerifiedSeller == null) d.isVerifiedSeller = !!(s.isVerifiedSeller || s.sellerVerified  || s.verified);
-    if (d.verified         == null) d.verified         = !!(s.verified        || s.isVerifiedSeller || s.sellerVerified);
+// ✅ verified / premium bayrakları (true'yu koru; değilse profilden doldur)
+if (d.sellerVerified   !== true) d.sellerVerified   = !!(s.sellerVerified || s.isVerifiedSeller || s.verified);
+if (d.isVerifiedSeller !== true) d.isVerifiedSeller = !!(s.isVerifiedSeller || s.sellerVerified  || s.verified);
+if (d.verified         !== true) d.verified         = !!(s.verified        || s.isVerifiedSeller || s.sellerVerified);
 
-    if (d.plan == null) d.plan = s.plan || '';
+if (!d.plan) d.plan = s.plan || '';
 
-    if (d.sellerPremium    == null) d.sellerPremium    = !!(s.sellerPremium   || s.isPremiumSeller || s.premium);
-    if (d.isPremiumSeller  == null) d.isPremiumSeller  = !!(s.isPremiumSeller || s.sellerPremium   || s.premium);
-    if (d.premium          == null) d.premium          = !!s.premium;
-  });
-}
+if (d.sellerPremium    !== true) d.sellerPremium    = !!(s.sellerPremium   || s.isPremiumSeller || s.premium);
+if (d.isPremiumSeller  !== true) d.isPremiumSeller  = !!(s.isPremiumSeller || s.sellerPremium   || s.premium);
+if (d.premium          !== true) d.premium          = !!s.premium;
+
 
       // ==== Cloudinary yardımcıları + kart render ==== 
 const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
