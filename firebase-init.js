@@ -53,7 +53,7 @@ self.__fb = { app, auth, db, storage };
 // Aşağıdaki cloudName ve apiKey güvenle tutulabilir; upload için UNSIGNED PRESET kullan.
 const CLOUD_NAME = 'ozneglobal';        // Cloud name (hesabında gözüken)
 const CLOUD_API_KEY = '321492881526576';// API Key (SECRET değil)
-const UPLOAD_PRESET = 'ue_unsigned';    // Cloudinary Console > Upload > Upload Presets > unsigned preset oluştur
+const UPLOAD_PRESET = 'unsigned_avatars'; // Cloudinary'deki unsigned preset adın
 
 // Yardımcı sabitler
 const CL_BASE = `https://res.cloudinary.com/${CLOUD_NAME}`;
