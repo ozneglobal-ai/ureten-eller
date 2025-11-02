@@ -42,7 +42,16 @@
     @media(min-width:720px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media(min-width:1120px){.grid{grid-template-columns:repeat(3,1fr)}}
 
-    .card{position:relative;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));overflow:hidden;transition:box-shadow .25s,transform .15s}
+    .card{
+  position:relative;
+  border-radius:16px;
+  background:#fff8e7;       /* Açık krem */
+  border:1px solid #e0c080; /* Koyu bej kenar */
+  box-shadow:0 2px 8px rgba(184,134,11,0.1);
+  overflow:hidden;
+  transition:box-shadow .25s,transform .15s;
+}
+
     .card:hover{
   transform:translateY(-2px);
   box-shadow:0 0 0 1px #b8860b,0 0 26px #ffd700; /* koyu-altın + parlak-altın */
