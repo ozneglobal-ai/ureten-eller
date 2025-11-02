@@ -7,9 +7,28 @@
   <link rel="icon" href="./assets/icons/favicon.png" />
   <style>
     :root{
-      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee;
-      --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
-    }
+  /* Aydınlık tema değişkenleri */
+  --bg1:#ffffff;
+  --bg2:#ffffff;
+
+  /* Metin renkleri – JS, input rengi için --ink'i kullanıyor */
+  --ink:#111111;        /* ÖNEMLİ: input yazısı artık siyah görünecek */
+  --muted:#555555;
+
+  /* Kenarlık ve kartlar */
+  --brd:#e5e7eb;
+  --card:#ffffff;
+  --card2:#ffffff;
+
+  /* Aksiyon rengi (FAB dâhil) altın */
+  --accent:#ffd700;
+
+  /* Durum renkleri (gerekirse) */
+  --ok:#10b981;
+  --warn:#f59e0b;
+  --err:#ef4444;
+}
+
     *{box-sizing:border-box}
    html,body{
   margin:0;padding:0;
@@ -113,14 +132,39 @@
     .chatTop .mini{color:var(--muted);font-size:.9rem}
 
     .chatBody{
-      overflow:auto;
-      padding:12px;
-      display:flex;flex-direction:column;gap:8px;
-      min-height:0; /* sticky footer için */
-    }
-    .msg{max-width:80%;padding:10px 12px;border:1px solid var(--brd);border-radius:12px;background:#0b1326;white-space:pre-wrap;word-wrap:break-word}
-    .me{align-self:flex-end;background:#0e2233}
-    .other{align-self:flex-start}
+  overflow:auto;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  background:#fff;
+  min-height:0;
+}
+
+/* Mesaj balonları */
+.msg{
+  max-width:80%;
+  padding:10px 14px;
+  border:1px solid #ddd;
+  border-radius:12px;
+  background:#f9f9f9;
+  color:#000;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  line-height:1.4;
+}
+
+.me{
+  align-self:flex-end;
+  background:#fff8dc; /* açık altın tonlu */
+  border-color:#ffd700;
+}
+
+.other{
+  align-self:flex-start;
+  background:#ffffff;
+  border-color:#ddd;
+}
 
     /* Alt bar her zaman görünsün */
     .chatInput{
@@ -159,12 +203,29 @@
 
     /* Sağ altta yedek FAB gönder (mobilde asla kaybolmasın) */
     .fab-send{
-      position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));
-      width:56px;height:56px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      border:1px solid var(--brd);background:var(--accent);color:#03222a;font-weight:900;
-      box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer;z-index:20;
-    }
+  position:fixed;
+  right:14px;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #b8860b;
+  background:linear-gradient(180deg,#ffd700,#b8860b);
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 6px 18px rgba(184,134,11,0.5);
+  cursor:pointer;
+  z-index:20;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.fab-send:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(184,134,11,0.7);
+}
+
     @media(min-width:901px){ .fab-send{ display:none; } } /* sadece mobil/tablet */
     /* --- Son dokunuş: genel hizalama ve scrollbar görünümü --- */
 body {
