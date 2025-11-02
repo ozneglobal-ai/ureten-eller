@@ -558,17 +558,22 @@
     }catch{}
 
     (function waitForFirebase(){
-      if(!window.__fb){ setTimeout(waitForFirebase,50); return; }
-      const {auth,onAuthStateChanged} = window.__fb;
-      onAuthStateChanged(auth, async (u)=>{
+  if(!window.__fb){ setTimeout(waitForFirebase,50); return; }
+
+  const { auth } = window.__fb;
+  import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js')
+    .then(({ onAuthStateChanged }) => {
+      onAuthStateChanged(auth, async (u) => {
         if(!u){ location.href='/docs/index.html'; return; }
-        __uid=u.uid;
+        __uid = u.uid;
         await watchOrders(__uid);
 
-        const openId = qs('open'); if(openId){ setTimeout(()=>openOrder(openId), 300); }
+        const openId = qs('open');
+        if(openId){ setTimeout(()=>openOrder(openId), 300); }
       });
-    })();
-  })();
+    })
+    .catch((e)=>console.warn('auth import fail:', e));
+})();
   </script>
 
 </body>
