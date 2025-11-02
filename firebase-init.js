@@ -46,7 +46,7 @@ self.db = db;
 self.storage = storage;
 
 // >>> EKLENDİ: home.html’in beklediği nesne
-self.__fb = { app, auth, db, storage };
+self.__fb = { app, auth, db, storage, onAuthStateChanged: _onAuthStateChanged };
 
 // Not: API SECRET asla frontend'e konulmaz.
  const CLOUD_CFG = (self.__CLOUDINARY) || { cloudName:'dbntnzogo', uploadPreset:'unsigned_avatars', folder:'avatars' };
