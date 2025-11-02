@@ -131,14 +131,16 @@
    .chatTop .name{font-weight:900;cursor:pointer}
     .chatTop .mini{color:var(--muted);font-size:.9rem}
 
-    .chatBody{
-  overflow:auto;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  background:#fff;
-  min-height:0;
+    .chatBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  overflow-y: auto;
+  padding: 12px 12px 90px; /* 90px = alt bar yüksekliği kadar boşluk */
+  scroll-behavior: smooth;
+  min-height: 0;
 }
 
 /* Mesaj balonları */
@@ -232,7 +234,7 @@
 }
 
     @media(min-width:901px){ .fab-send{ display:none; } } /* sadece mobil/tablet */
-    /* --- Son dokunuş: genel hizalama ve scrollbar görünümü --- */
+   /* --- Son dokunuş: genel hizalama ve scrollbar görünümü --- */
 body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -256,13 +258,20 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a47c0a;
 }
-    /* Seçim modu görselliği */
-.msg{ position:relative; }
-.msg.selectable{ cursor:pointer; }
-.msg.selected{
-  border-color:#ef4444 !important;
-  background:#fff0f0 !important;
-  box-shadow:0 0 0 2px rgba(239,68,68,.25) inset;
+
+/* Seçim modu görselliği */
+.msg {
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.msg.selectable {
+  cursor: pointer;
+}
+.msg.selected {
+  border-color: #ef4444 !important;
+  background: #fff0f0 !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.25) inset;
 }
 
   </style>
