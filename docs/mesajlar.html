@@ -199,7 +199,12 @@
 }
 
     .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border:1px solid var(--brd);border-radius:999px}
-    .pill.badge{background:#0b1326}
+    .pill.badge{
+  background:#ffd700;        /* Altın renkli arka plan */
+  color:#000;                /* Siyah yazı */
+  font-weight:800;
+  border:1px solid #b8860b;  /* Altın kenar */
+}
 
     /* Sağ altta yedek FAB gönder (mobilde asla kaybolmasın) */
     .fab-send{
@@ -251,6 +256,15 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a47c0a;
 }
+    /* Seçim modu görselliği */
+.msg{ position:relative; }
+.msg.selectable{ cursor:pointer; }
+.msg.selected{
+  border-color:#ef4444 !important;
+  background:#fff0f0 !important;
+  box-shadow:0 0 0 2px rgba(239,68,68,.25) inset;
+}
+
   </style>
 
  <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
@@ -342,6 +356,9 @@ body {
   let __soundUnlocked=false;
   let __hiddenThreads=new Set();
   let __lastSeenMap={};
+  let __selectedMsgIds = new Set();
+  let __delBtn = null;
+
 
   // === FCM CONFIG ===
   const FCM_VAPID_KEY = 'WEB_PUSH_CERTIFICATE_PUBLIC_VAPID_KEY'; // Firebase Console > Cloud Messaging > Web Push
@@ -555,29 +572,87 @@ body {
     const q=query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
     const chat=$('#chat'); chat.innerHTML='';
     __msgsUnsub = onSnapshot(q, snap=>{
-      chat.innerHTML=''; snap.forEach(ds=>{
-        const m=ds.data()||{}; const div=document.createElement('div');
-        div.className='msg '+(m.from===__me.uid?'me':'other'); div.textContent=m.text||''; chat.appendChild(div);
-      });
-      chat.scrollTop=chat.scrollHeight;
-    }, err=>console.warn('[msg] listenMessages err',err));
+      
+  // Kullanıcı alttaysa otomatik kaydır, değilse dokunma
+  const atBottom = (chat.scrollTop + chat.clientHeight + 40) >= chat.scrollHeight;
+
+  chat.innerHTML='';
+  snap.forEach(ds=>{
+    const m=ds.data()||{};
+    const div=document.createElement('div');
+    div.className='msg '+(m.from===__me.uid?'me':'other');
+div.textContent=m.text||'';
+div.dataset.id = ds.id;
+div.classList.add('selectable');
+div.addEventListener('click', () => toggleMsgSelection(ds.id, div));
+chat.appendChild(div);
+  });
+
+  if (atBottom) {
+    chat.scrollTop = chat.scrollHeight;
   }
+}, err=>console.warn('[msg] listenMessages err',err));
+  }
+// --- Mesaj seçme ve silme fonksiyonları ---
+function toggleMsgSelection(id, el){
+  if(__selectedMsgIds.has(id)){
+    __selectedMsgIds.delete(id);
+    el.classList.remove('selected');
+  } else {
+    __selectedMsgIds.add(id);
+    el.classList.add('selected');
+  }
+  if(__selectedMsgIds.size > 0){
+    __delBtn.style.display = 'inline-flex';
+    __delBtn.textContent = `🗑️ Seçiliyi Sil (${__selectedMsgIds.size})`;
+  } else {
+    __delBtn.style.display = 'none';
+  }
+}
+
+async function deleteSelectedMessages(){
+  if(!__curThreadId || __selectedMsgIds.size === 0) return;
+  if(!confirm('Seçili mesajları silmek istediğine emin misin?')) return;
+  try{
+    const { doc, deleteDoc } = await api();
+    for(const mid of __selectedMsgIds){
+      await deleteDoc(doc(self.db, 'messages', __curThreadId, 'items', mid));
+    }
+    __selectedMsgIds.clear();
+    __delBtn.style.display = 'none';
+  }catch(e){
+    console.warn('Mesaj silme hatası', e);
+    alert('Silme sırasında bir hata oluştu.');
+  }
+}
 
   async function openThread(threadId, peerUid, brief=null){
-    __curThreadId=threadId; __curPeerUid=peerUid;
-    const info = brief || await getUserBrief(peerUid);
-    $('#peerAva').style.backgroundImage=`url('${info.avatar||'/assets/img/avatar-default.png'}')`;
-    $('#peerName').textContent=info.name||'Kullanıcı';
-    $('#peerInfo').textContent=peerUid;
-    $('#peerName').onclick=()=>{ location.href=`/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
-    try{
-      const {doc,updateDoc,serverTimestamp}=await api();
-      await updateDoc(doc(self.db,'messages',threadId), { [`seen.${__me.uid}`]: serverTimestamp() });
-    }catch{}
-    await listenMessages(threadId);
-    // odakla
-    $('#msgInput').focus({preventScroll:true});
+  __curThreadId = threadId;
+  __curPeerUid = peerUid;
+
+  const info = brief || await getUserBrief(peerUid);
+  $('#peerAva').style.backgroundImage = `url('${info.avatar||'/assets/img/avatar-default.png'}')`;
+  $('#peerName').textContent = info.name || 'Kullanıcı';
+  $('#peerInfo').textContent = peerUid;
+  $('#peerName').onclick = ()=>{ location.href = `/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
+
+  try{
+    const {doc,updateDoc,serverTimestamp} = await api();
+    await updateDoc(doc(self.db,'messages',threadId), { [`seen.${__me.uid}`]: serverTimestamp() });
+  }catch{}
+
+  await listenMessages(threadId);
+
+  // Konuşma değişince seçim temizle
+  __selectedMsgIds.clear();
+  if(__delBtn){
+    __delBtn.style.display = 'none';
+    __delBtn.textContent = '🗑️ Seçiliyi Sil (0)';
   }
+
+  // odakla
+  $('#msgInput').focus({preventScroll:true});
+}
 
   async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
     const {collection,query,where,getDocs,doc,setDoc,serverTimestamp}=await api();
@@ -616,6 +691,17 @@ body {
 
   function boot(){
     __ding=$('#ding'); bindButtons(); updateNotifLabel(); updateSoundLabel();
+    // Seçili mesajları sil butonu (chatTop içine ekle)
+__delBtn = document.createElement('button');
+__delBtn.id = 'btnDelSel';
+__delBtn.className = 'btn';
+__delBtn.textContent = '🗑️ Seçiliyi Sil (0)';
+__delBtn.style.display = 'none';
+__delBtn.style.background = 'linear-gradient(180deg,#ef4444,#7a1b1b)';
+__delBtn.style.borderColor = '#7a1b1b';
+__delBtn.style.color = '#fff';
+__delBtn.addEventListener('click', deleteSelectedMessages);
+document.querySelector('.chatTop')?.appendChild(__delBtn);
     // iOS renk kontrast hatası yaşayan tarayıcılar için fix
     try{ document.querySelector('.chatInput input').style.color = getComputedStyle(document.body).getPropertyValue('--ink'); }catch{}
 
