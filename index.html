@@ -782,8 +782,10 @@ document.getElementById('signInBtn')
     });
 
     document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
+document.getElementById('browseBtn')?.addEventListener('click', () => {
+  location.href = '/listings.html';
+});
 
-    document.getElementById('browseBtn')?.addEventListener('click', openAuth);
     document.getElementById('postBtn')?.addEventListener('click', openAuth);
   </script>
 
