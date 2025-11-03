@@ -760,8 +760,8 @@ document.getElementById('searchBtn')?.addEventListener('click', () => {
 });
 
 document.getElementById('browseBtn')?.addEventListener('click', () => {
-  const first = CATS[0]?.id || 'yemek';
-  location.href = `/index.html?cat=${first}`;
+  const first = CATS[0]?.id || 'kategoriler';
+  location.href = `/listings.html?cat=${first}`;
 });
 
 document.getElementById('navProfile')?.addEventListener('click', () => location.href = '/profile.html');
