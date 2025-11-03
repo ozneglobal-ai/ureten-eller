@@ -155,6 +155,9 @@
   white-space:pre-wrap;
   word-wrap:break-word;
   line-height:1.4;
+    box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .me{
@@ -180,7 +183,10 @@
   z-index:5;
   background:#fff;
   flex-wrap:wrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
+    
 .chatInput input{
   flex:1;
   border:1px solid #ccc;
@@ -280,6 +286,13 @@ body {
   cursor: pointer;
 }
 .msg.selected {
+  border-color: #ef4444 !important;
+  background: #fff0f0 !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.25) inset;
+}
+    /* Sol liste çoklu seçim görselliği */
+.th.selectable { cursor: pointer; }
+.th.selected {
   border-color: #ef4444 !important;
   background: #fff0f0 !important;
   box-shadow: 0 0 0 2px rgba(239,68,68,0.25) inset;
@@ -555,7 +568,25 @@ body {
             <div class="thSub">${escapeHtml(r.d.lastText||'')}</div>
           </div>
           <div class="thTime">${r.d.lastAt? fmtDate(r.d.lastAt):''}</div>`;
-        t.addEventListener('click', ()=> openThread(r.id, r.otherUid, other));
+        // Kutuyu seçilebilir yap
+t.classList.add('selectable');
+
+// Masaüstü: Ctrl/Cmd ile tıklayınca seç/deselect; normal tık -> aç
+t.addEventListener('click', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    toggleThreadSelection(r.id, t);
+  } else {
+    openThread(r.id, r.otherUid, other);
+  }
+});
+
+// Mobil: uzun basınca seç/deselect (600ms)
+let pressTimer;
+t.addEventListener('touchstart', () => {
+  pressTimer = setTimeout(() => toggleThreadSelection(r.id, t), 600);
+}, {passive: true});
+t.addEventListener('touchend',   () => clearTimeout(pressTimer));
+t.addEventListener('touchmove',  () => clearTimeout(pressTimer));
         listEl.appendChild(t);
 
         const prev = __lastSeenMap[r.id] || 0;
@@ -568,8 +599,16 @@ body {
         __lastSeenMap[r.id]=lastMillis||prev;
       }
       $('#unreadBadge').textContent=String(unread);
+      // Görünmeyen satırları seçim setinden temizle
+for (const tid of Array.from(__selectedThreads)) {
+  if (!document.querySelector(`.th[data-id="${tid}"]`)) {
+    __selectedThreads.delete(tid);
+  }
+}
+   updateThreadDeleteBtn();
     })();
   }
+    
 
   async function listenThreads(){
     if(__threadsUnsub){ try{__threadsUnsub();}catch{} __threadsUnsub=null; }
@@ -591,6 +630,7 @@ body {
     const {collection,query,orderBy,onSnapshot}=await api();
     const q=query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
     __msgsUnsub = onSnapshot(q, snap=>{
+      const chat = $('#chat'); // kaydırma hesapları için lazım
       
   // Kullanıcı alttaysa otomatik kaydır, değilse dokunma
 const atBottom = (chat.scrollTop + chat.clientHeight + 40) >= chat.scrollHeight;
@@ -670,6 +710,7 @@ async function deleteSelectedMessages(){
   $('#peerAva').style.backgroundImage = `url('${info.avatar||'/assets/img/avatar-default.png'}')`;
   $('#peerName').textContent = info.name || 'Kullanıcı';
   $('#peerInfo').textContent = peerUid;
+  $('#peerInfo').style.display = 'none';
   $('#peerName').onclick = ()=>{ location.href = `/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
 
   try{
@@ -719,6 +760,66 @@ async function deleteSelectedMessages(){
     // mobilde yazdıktan sonra Gönder görünür kalsın
     setTimeout(()=>{ $('#msgInput').blur(); }, 10);
   }
+    // --- Sol panelde konuşma seçme ve silme sistemi ---
+const __selectedThreads = new Set();
+let __delThreadBtn = null;
+
+// Sol panelde konuşma kutusuna tıklayınca seç/deselect yap
+function toggleThreadSelection(id, el){
+  if(__selectedThreads.has(id)){
+    __selectedThreads.delete(id);
+    el.classList.remove('selected');
+  } else {
+    __selectedThreads.add(id);
+    el.classList.add('selected');
+  }
+  updateThreadDeleteBtn();
+}
+
+// Seçili konuşmaları sol panelden kaldır
+async function deleteSelectedThreads(){
+  if(__selectedThreads.size === 0) return;
+  if(!confirm('Seçili konuşmaları kendi panelinden kalıcı olarak kaldırmak istiyor musun?')) return;
+
+  try {
+    const { doc, updateDoc, arrayUnion, arrayRemove } = await api();
+    for(const tid of __selectedThreads){
+      // Kullanıcı için gizlenen listeye ekle
+      __hiddenThreads.add(tid);
+      setHiddenThreads(__me.uid, __hiddenThreads);
+
+    }
+    __selectedThreads.clear();
+    updateThreadDeleteBtn();
+    listenThreads(); // Listeyi güncelle
+  } catch(e){
+    console.warn('Konuşma silme hatası', e);
+    alert('Silme sırasında bir hata oluştu.');
+  }
+}
+
+// Silme butonunu oluştur veya güncelle
+function updateThreadDeleteBtn(){
+  if(!__delThreadBtn){
+    __delThreadBtn = document.createElement('button');
+    __delThreadBtn.id = 'btnDelThread';
+    __delThreadBtn.className = 'btn';
+    __delThreadBtn.textContent = '🗑️ Seçili Konuşmaları Sil (0)';
+    __delThreadBtn.style.display = 'none';
+    __delThreadBtn.style.background = 'linear-gradient(180deg,#ef4444,#7a1b1b)';
+    __delThreadBtn.style.borderColor = '#7a1b1b';
+    __delThreadBtn.style.color = '#fff';
+    document.querySelector('.topbar')?.appendChild(__delThreadBtn); // sol panelin üst barı
+    __delThreadBtn.addEventListener('click', deleteSelectedThreads);
+  }
+
+  if(__selectedThreads.size > 0){
+    __delThreadBtn.style.display = 'inline-flex';
+    __delThreadBtn.textContent = `🗑️ Seçili Konuşmaları Sil (${__selectedThreads.size})`;
+  } else {
+    __delThreadBtn.style.display = 'none';
+  }
+}
 
   function hideCurrentThreadForMe(){
     if(!__curThreadId || !__me) return;
