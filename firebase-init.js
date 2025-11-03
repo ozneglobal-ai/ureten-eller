@@ -35,6 +35,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// --- listings.html için gerekli ekler ---
+window.firebaseApp = app;
+window.firebaseConfig = firebaseConfig;
+window.__ffns = { collection, getDocs, query, where, orderBy, limit };
+window.firebase = { app, db };
+
+
 // 🔽 Persistence ayarını buraya ekle (fonksiyon içinde)
 import { setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 setPersistence(auth, browserLocalPersistence).catch(()=>{});
