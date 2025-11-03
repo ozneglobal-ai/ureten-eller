@@ -141,6 +141,7 @@
   padding: 12px 12px 90px; /* 90px = alt bar yüksekliği kadar boşluk */
   scroll-behavior: smooth;
   min-height: 0;
+  overflow-x: hidden;
 }
 
 /* Mesaj balonları */
@@ -262,6 +263,11 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a47c0a;
+}
+    
+    /* Mobilde gerçek ekran yüksekliğini kullan */
+@media (max-width: 900px){
+  .page{ height: 100dvh; }
 }
 
 /* Seçim modu görselliği */
