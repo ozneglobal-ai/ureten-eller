@@ -638,7 +638,7 @@
         const { collection, getDocs, query, where, orderBy, limit } = ffns;
         const col = collection(db,'listings');
         let qref;
-        try{ qref = query(col, where('status','==','active'), orderBy('createdAt','desc'), limit(300)); }
+        try{ qref = query(col, where('status','in',['approved','active']), orderBy('createdAt','desc'), limit(300)); }
         catch(_){ qref = query(col, limit(300)); }
         const snap = await getDocs(qref);
         const arr = []; snap.forEach(d=>{ const x=d.data(); x.id=d.id; arr.push(x); });
