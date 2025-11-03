@@ -661,8 +661,7 @@
         const row=document.createElement('div'); row.className='cat'; row.setAttribute('aria-expanded','false');
         const btn=document.createElement('button'); const title=L.cats?.[cat.id]||cat.id; btn.innerHTML=`<span class="cat-title">${title}</span><span class="chev">▶</span>`;
         const sub=document.createElement('div'); sub.className='sublist';
-        // YÖNLENDİRME DÜZELTİLMİŞ: listings.html yerine index.html (aynı sayfa)
-        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
+        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
         btn.addEventListener('click',()=>{ const exp=row.getAttribute('aria-expanded')==='true'; row.setAttribute('aria-expanded', String(!exp)); sub.style.display = exp?'none':'block'; });
         row.append(btn,sub); box.append(row);
       });
@@ -689,7 +688,8 @@
         const subHtml = cat.subs.map(([sid,label])=>{
           const name=(L.sub?.[sid]||label);
           // YÖNLENDİRME DÜZELTİLMİŞ
-          return `<a href=\"/index.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}\">${name}</a>`;
+          return `<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}">${name}</a>`;
+
         }).join('');
         subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
         openCatId = id;
