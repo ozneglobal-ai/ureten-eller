@@ -36,7 +36,6 @@
   color:#000;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
       max-width:100%;
-      overflow:hidden;
     }
 
     .page{
@@ -238,6 +237,10 @@
 body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+  #chat {
+  overflow-y: auto;
+  height: 100%;
 }
 
 ::-webkit-scrollbar {
@@ -579,27 +582,43 @@ body {
     if(__msgsUnsub){ try{__msgsUnsub();}catch{} __msgsUnsub=null; }
     const {collection,query,orderBy,onSnapshot}=await api();
     const q=query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
-    const chat=$('#chat'); chat.innerHTML='';
     __msgsUnsub = onSnapshot(q, snap=>{
       
   // Kullanıcı alttaysa otomatik kaydır, değilse dokunma
-  const atBottom = (chat.scrollTop + chat.clientHeight + 40) >= chat.scrollHeight;
+const atBottom = (chat.scrollTop + chat.clientHeight + 40) >= chat.scrollHeight;
 
-  chat.innerHTML='';
-  snap.forEach(ds=>{
-    const m=ds.data()||{};
-    const div=document.createElement('div');
-    div.className='msg '+(m.from===__me.uid?'me':'other');
-div.textContent=m.text||'';
-div.dataset.id = ds.id;
-div.classList.add('selectable');
-div.addEventListener('click', () => toggleMsgSelection(ds.id, div));
-chat.appendChild(div);
-  });
+// Değişiklik bazlı işleme: eklenen/silinen mesajları doğru yönet
+snap.docChanges().forEach(change => {
+  const ds = change.doc;
+  const m = ds.data() || {};
+  const msgId = ds.id;
 
-  if (atBottom) {
-    chat.scrollTop = chat.scrollHeight;
+  if (change.type === 'added') {
+    // Varsa tekrar eklemeyi engelle
+    if (document.getElementById(`msg-${msgId}`)) return;
+
+    const div = document.createElement('div');
+    div.id = `msg-${msgId}`;
+    div.className = 'msg ' + (m.from === __me.uid ? 'me' : 'other');
+    div.textContent = m.text || '';
+    div.dataset.id = msgId;
+    div.classList.add('selectable');
+    div.addEventListener('click', () => toggleMsgSelection(msgId, div));
+    chat.appendChild(div);
   }
+
+  if (change.type === 'removed') {
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) el.remove();              // Ekrandan da kaldır
+    __selectedMsgIds.delete(msgId);   // Seçili listeden çıkar
+  }
+});
+
+// Alttaysa veya ilk yükleme ise dibe kaydır
+if (atBottom || (snap.size > 0 && chat.scrollTop === 0)) {
+  chat.scrollTop = chat.scrollHeight;
+}
+
 }, err=>console.warn('[msg] listenMessages err',err));
   }
 // --- Mesaj seçme ve silme fonksiyonları ---
@@ -651,6 +670,11 @@ async function deleteSelectedMessages(){
   }catch{}
 
   await listenMessages(threadId);
+    setTimeout(() => {
+  const chat = $('#chat');
+  chat.scrollTop = chat.scrollHeight;
+}, 0);
+
 
   // Konuşma değişince seçim temizle
   __selectedMsgIds.clear();
