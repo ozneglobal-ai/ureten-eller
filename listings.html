@@ -86,25 +86,6 @@
 
   <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
 <script type="module" src="/firebase-init.js"></script>
-
-<!-- GİRİŞ KORUMASI -->
-<script type="module">
-  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-
-  (function protectPage(){
-    try{
-      const auth = getAuth(self.__fb?.app);
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) { location.replace('/index.html'); return; }
-        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
-        try { await user.reload(); } catch(_) {}
-        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
-      });
-    }catch(e){
-      console.warn('protectPage hata', e);
-      try{ location.replace('/index.html'); }catch(_){}
-    }
-  })();
 </script>
 </head>
 
@@ -604,28 +585,48 @@
     }
 
     function bindCardActions(){
-      document.addEventListener('click',(e)=>{
-        const b = e.target.closest('[data-act]'); if(!b) return;
-        const act=b.getAttribute('data-act');
-        const requireAuth=()=>{
-          const u = window.UE?.firebase?.auth?.currentUser || window.firebase?.auth?.currentUser;
-          if(!u){ alert(LANG==='en'? 'Please log in.' : (LANG==='de'?'Bitte anmelden.':(LANG==='ar'?'يُرجى تسجيل الدخول.':'Lütfen giriş yapın.')));
-            window.dispatchEvent(new CustomEvent('ue-open-auth',{detail:'login'}));
-            return false; }
-          return true;
-        };
-        if(act==='order'){
-          if(!requireAuth()) return;
-          const id=b.getAttribute('data-id');
-          location.href = `docs/orders.html?listing=${encodeURIComponent(id)}`;
-        }else if(act==='profile'){
-          if(!requireAuth()) return;
-          const uid=b.getAttribute('data-id')||'';
-          location.href = `docs/seller.html?uid=${encodeURIComponent(uid)}`;
-        }
-      });
-    }
+  document.addEventListener('click', async (e)=>{
+    const b = e.target.closest('[data-act]'); if(!b) return;
+    const act = b.getAttribute('data-act');
 
+    // 🔐 Hem "Sipariş Ver" hem "Profil İncele" için şart: oturum + (password ise) email doğrulaması
+    const requireAuth = async () => {
+      try{
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+        const auth = getAuth(self.__fb?.app);
+        const u = auth.currentUser;
+        if (!u) {
+          alert(LANG==='en'?'Please log in to continue.'
+               :LANG==='de'?'Bitte melden Sie sich an.'
+               :LANG==='ar'?'يُرجى تسجيل الدخول للمتابعة.'
+               :'Devam etmek için lütfen giriş yapın.');
+          window.dispatchEvent(new CustomEvent('ue-open-auth',{detail:'login'}));
+          return false;
+        }
+        const usesPassword = u.providerData?.some(p=>p.providerId==='password');
+        if (usesPassword && !u.emailVerified) {
+          alert(LANG==='en'?'Please verify your email first.'
+               :LANG==='de'?'Bitte E-Mail zuerst verifizieren.'
+               :LANG==='ar'?'يُرجى تأكيد البريد الإلكتروني أولاً.'
+               :'Önce e-postanızı doğrulayın.');
+          return false;
+        }
+        return true;
+      }catch{ return false; }
+    };
+
+    if (act === 'order') {
+      if(!(await requireAuth())) return;
+      const id = b.getAttribute('data-id');
+      location.href = `docs/orders.html?listing=${encodeURIComponent(id)}`;
+    } else if (act === 'profile') {
+      if(!(await requireAuth())) return;
+      const uid = b.getAttribute('data-id')||'';
+      location.href = `docs/seller.html?uid=${encodeURIComponent(uid)}`;
+    }
+  });
+}
+    
     /* === Debounce yardımcı === */
     function debounce(fn,ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),ms); }; }
 
