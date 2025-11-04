@@ -18,24 +18,62 @@
 │   └── panel.html
 ├── android
 │   ├── .gitignore
+│   ├── .gradle
+│   │   ├── 8.11.1
+│   │   │   ├── checksums
+│   │   │   ├── executionHistory
+│   │   │   ├── expanded
+│   │   │   ├── fileChanges
+│   │   │   ├── fileHashes
+│   │   │   ├── gc.properties
+│   │   │   └── vcsMetadata
+│   │   ├── buildOutputCleanup
+│   │   │   ├── buildOutputCleanup.lock
+│   │   │   ├── cache.properties
+│   │   │   └── outputFiles.bin
+│   │   └── vcs-1
+│   │       └── gc.properties
 │   ├── app
 │   │   ├── .gitignore
+│   │   ├── build
+│   │   │   ├── generated
+│   │   │   ├── gmpAppId
+│   │   │   ├── intermediates
+│   │   │   ├── outputs
+│   │   │   └── tmp
 │   │   ├── build.gradle
 │   │   ├── capacitor.build.gradle
+│   │   ├── google-services.json
 │   │   ├── proguard-rules.pro
 │   │   └── src
 │   │       ├── androidTest
 │   │       ├── main
 │   │       └── test
+│   ├── build
+│   │   └── reports
+│   │       └── problems
 │   ├── build.gradle
+│   ├── capacitor-cordova-android-plugins
+│   │   ├── build
+│   │   │   ├── .transforms
+│   │   │   ├── generated
+│   │   │   ├── intermediates
+│   │   │   └── outputs
+│   │   ├── build.gradle
+│   │   ├── cordova.variables.gradle
+│   │   └── src
+│   │       └── main
 │   ├── capacitor.settings.gradle
 │   ├── gradle
 │   │   └── wrapper
 │   │       ├── gradle-wrapper.jar
 │   │       └── gradle-wrapper.properties
+│   ├── gradle.properties
 │   ├── gradlew
 │   ├── gradlew.bat
+│   ├── local.properties
 │   ├── settings.gradle
+│   ├── ureteneller-upload.keystore
 │   └── variables.gradle
 ├── api
 │   ├── paytr-callback.php
@@ -51,7 +89,8 @@
 │   │   ├── icon-512.png
 │   │   └── ureteneller.png
 │   └── img
-│       └── avatar-default.png
+│       ├── avatar-default.png
+│       └── paytr.logo.png
 ├── backups
 │   ├── docs-üreteneller.png.bak
 │   └── üreteneller.png.bak
@@ -88,7 +127,6 @@
 │   ├── index.html
 │   ├── mesajlar.html
 │   ├── notify.wav
-│   ├── odeme.html
 │   ├── orders.html
 │   ├── profile.html
 │   ├── seller.html
@@ -123,6 +161,7 @@
 ├── odeme
 │   ├── paytr.html
 │   └── tesekkurler.html
+├── odeme.html
 ├── package-lock.json
 ├── package.json
 ├── profile.html
@@ -130,6 +169,135 @@
 ├── service-worker.js
 ├── site.webmanifest
 ├── sitemap.xml
-└── tree.txt
+├── tree.txt
+└── ureten-eller
+    ├── .firebaserc
+    ├── .gitignore
+    ├── CNAME
+    ├── README.md
+    ├── admin
+    │   ├── css
+    │   │   └── admin.css
+    │   ├── index.html
+    │   ├── js
+    │   │   ├── admin-guard.js
+    │   │   ├── admin-login.js
+    │   │   ├── admin-panel.js
+    │   │   ├── firebase-init.js
+    │   │   ├── listings.js
+    │   │   ├── messages.js
+    │   │   └── users.js
+    │   └── panel.html
+    ├── android
+    │   ├── .gitignore
+    │   ├── app
+    │   │   ├── .gitignore
+    │   │   ├── build.gradle
+    │   │   ├── capacitor.build.gradle
+    │   │   ├── google-services.json
+    │   │   ├── proguard-rules.pro
+    │   │   └── src
+    │   ├── build
+    │   │   └── reports
+    │   ├── build.gradle
+    │   ├── capacitor-cordova-android-plugins
+    │   │   ├── build
+    │   │   ├── build.gradle
+    │   │   ├── cordova.variables.gradle
+    │   │   └── src
+    │   ├── capacitor.settings.gradle
+    │   ├── gradle
+    │   │   └── wrapper
+    │   ├── gradle.properties
+    │   ├── gradlew
+    │   ├── gradlew.bat
+    │   ├── local.properties
+    │   ├── settings.gradle
+    │   └── variables.gradle
+    ├── api
+    │   ├── paytr-callback.php
+    │   └── token.php
+    ├── apple-touch-icon.png
+    ├── assets
+    │   ├── icons
+    │   │   ├── apple-touch-icon.png
+    │   │   ├── favicon-32x32.png
+    │   │   ├── favicon.ico
+    │   │   ├── favicon.png
+    │   │   ├── icon-192.png
+    │   │   ├── icon-512.png
+    │   │   └── ureteneller.png
+    │   └── img
+    │       ├── avatar-default.png
+    │       └── paytr.logo.png
+    ├── backups
+    │   ├── docs-üreteneller.png.bak
+    │   └── üreteneller.png.bak
+    ├── benpay
+    │   ├── callback-ok.html
+    │   └── checkout.html
+    ├── capacitor.config.json
+    ├── docs
+    │   ├── .deploy-bump
+    │   ├── .nojekyll
+    │   ├── 404.html
+    │   ├── admin
+    │   │   ├── css
+    │   │   ├── index.html
+    │   │   ├── js
+    │   │   └── panel.html
+    │   ├── assets
+    │   │   ├── icons
+    │   │   └── img
+    │   ├── bildirimler.html
+    │   ├── firebase-init.js
+    │   ├── firebase-messaging-sw.js
+    │   ├── ilan-ver.html
+    │   ├── index.html
+    │   ├── mesajlar.html
+    │   ├── notify.wav
+    │   ├── orders.html
+    │   ├── profile.html
+    │   ├── seller.html
+    │   └── üreteneller.png
+    ├── favicon-32x32.png
+    ├── favicon.ico
+    ├── firebase-functions
+    │   └── index.js
+    ├── firebase-init.js
+    ├── firebase.json
+    ├── home.html
+    ├── i18n.js
+    ├── ilan-ver.html
+    ├── index.html
+    ├── index.html.bak
+    ├── js
+    │   ├── ilan.page.js
+    │   └── index.page.js
+    ├── legal
+    │   ├── cerez-politikasi.html
+    │   ├── gizlilik-politikasi.html
+    │   ├── iletisim-impressum.html
+    │   ├── kullanim-sartlari.html
+    │   ├── kvkk-aydinlatma.html
+    │   ├── mesafeli-satis-sozlesmesi.html
+    │   ├── on-bilgilendirme-formu.html
+    │   ├── teslimat-iade-iptal.html
+    │   ├── topluluk-kurallari.html
+    │   └── yasakli-urunler.html
+    ├── listings.html
+    ├── notify.wav
+    ├── odeme
+    │   ├── paytr.html
+    │   └── tesekkurler.html
+    ├── odeme.html
+    ├── package-lock.json
+    ├── package.json
+    ├── profile.html
+    ├── robots.txt
+    ├── service-worker.js
+    ├── site.webmanifest
+    ├── sitemap.xml
+    └── tree.txt
 
-29 directories, 104 files
+87 directories, 214 files
