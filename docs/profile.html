@@ -1005,6 +1005,7 @@ html, body {
                 const dbUser=snap.data()||{};
                 const backfill={};
                 if(!dbUser.name && authData.name) backfill.name=authData.name;
+                if(!dbUser.mNo){ const uid=(u&&u.uid)||''; const base=(uid.replace(/[^a-z0-9]/gi,'').slice(-6)||Math.random().toString(36).slice(2,8)).toUpperCase(); const dt=new Date(); const y=String(dt.getFullYear()).slice(-2), m=String(dt.getMonth()+1).padStart(2,'0'), d=String(dt.getDate()).padStart(2,'0'); backfill.mNo=`UE${y}${m}${d}-${base}`; }
                 if(!dbUser.email && authData.email) backfill.email=authData.email;
                 if(!dbUser.phone && authData.phone) backfill.phone=authData.phone;
                 if((!dbUser.avatar || dbUser.avatar==='/assets/img/avatar-default.png') && authData.avatarFromAuth) backfill.avatar=authData.avatarFromAuth;
@@ -1030,11 +1031,31 @@ html, body {
 } catch(e){ console.warn('auto-verify fail', e); }
 
               } else {
-                const initial={ name:authData.name, email:authData.email, phone:authData.phone, isPremium:false, isVerified:false, avatar:authData.avatarFromAuth||window.user?.avatar||'/assets/img/avatar-default.png', createdAt:serverTimestamp() };
-                await setDoc(ref,initial,{merge:true});
-                Object.assign(window.user,initial);
-                cacheSave();
-              }
+  // mNo üret
+  const uid = (u && u.uid) || '';
+  const base = (uid.replace(/[^a-z0-9]/gi,'').slice(-6) || Math.random().toString(36).slice(2,8)).toUpperCase();
+  const dt = new Date();
+  const y = String(dt.getFullYear()).slice(-2);
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  const mNo = `UE${y}${m}${d}-${base}`;
+
+  const initial = {
+    name: authData.name,
+    email: authData.email,
+    phone: authData.phone,
+    mNo,
+    isPremium: false,
+    isVerified: false,
+    avatar: authData.avatarFromAuth || window.user?.avatar || '/assets/img/avatar-default.png',
+    createdAt: serverTimestamp()
+  };
+
+  await setDoc(ref, initial, { merge:true });
+  Object.assign(window.user, initial);
+  cacheSave();
+}
+
               try{
                 $('#uName').textContent=user.name||'—';
                 $('#uCity').textContent=user.city||'—';
@@ -1537,38 +1558,63 @@ window.closeEdit && closeEdit();
         try { toast('İlanlar yüklenemedi'); } catch {}
       }
     }
-    // 🔽 GİRİŞ SONRASI PROFİLİ GERİ YÜKLE
+    
+    // 🔽 GİRİŞ SONRASI PROFİLİ GERİ YÜKLE (düzeltilmiş)
 (async () => {
   try {
-    // Firebase hazır mı?
     if (!window.__fb?.auth) return;
-    const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+    const { onAuthStateChanged } =
+      await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const { doc, getDoc } =
+      await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
 
     onAuthStateChanged(window.__fb.auth, async (user) => {
-      if (user) {
-        const snap = await getDoc(doc(window.__fb.db, 'users', user.uid));
-        if (snap.exists()) {
-          window.user = Object.assign({}, window.user || {}, snap.data());
-          console.debug('[profile] Firestore’dan kullanıcı verisi geri yüklendi:', window.user);
+      try {
+        if (user) {
+          const ref = doc(window.__fb.db, 'users', user.uid);
+          const snap = await getDoc(ref);
 
-          // UI güncelle
-          const av = document.getElementById('avatar');
-          if (av) av.style.backgroundImage = `url('${window.user.avatar || '/assets/img/avatar-default.png'}')`;
+          if (snap.exists()) {
+            // Firestore’dan kullanıcı verisi
+            window.user = Object.assign({}, window.user || {}, snap.data());
 
-          const uName = document.getElementById('uName');
-          if (uName) uName.textContent = window.user.name || '—';
+            // mNo göster + kalıcı sakla
+            const mEl = document.getElementById('mNo');
+            const mNo = window.user.mNo || localStorage.getItem('ue_mno') || '—';
+            if (mEl) mEl.textContent = mNo;
+            if (window.user.mNo) localStorage.setItem('ue_mno', window.user.mNo);
 
-          const mNo = document.getElementById('mNo');
-          if (mNo) mNo.textContent = window.user.mNo || '—';
-
-          const uCity = document.getElementById('uCity');
-          if (uCity) uCity.textContent = window.user.city || '—';
-
-          const uBio = document.getElementById('uBio');
-          if (uBio) uBio.textContent = window.user.bio || '—';
+          } else {
+            console.warn('[profile] Kullanıcı belgesi yok:', user.uid);
+          }
+        } else {
+          // Oturum kapalıyken son bilinen mNo
+          const mEl = document.getElementById('mNo');
+          const last = localStorage.getItem('ue_mno');
+          if (mEl) mEl.textContent = last || '—';
         }
+
+        // UI güncelle
+        const av    = document.getElementById('avatar');
+        const uName = document.getElementById('uName');
+        const uCity = document.getElementById('uCity');
+        const uBio  = document.getElementById('uBio');
+        if (av)    av.style.backgroundImage = `url('${(window.user && window.user.avatar) || '/assets/img/avatar-default.png'}')`;
+        if (uName) uName.textContent = (window.user && window.user.name) || '—';
+        if (uCity) uCity.textContent = (window.user && window.user.city) || '—';
+        if (uBio)  uBio.textContent  = (window.user && window.user.bio)  || '—';
+
+      } catch (err) {
+        console.error('[profile] onAuthStateChanged hata:', err);
       }
+    });
+
+    // Sayfa açılır açılmaz localStorage’daki mNo’yu göster
+    window.addEventListener('DOMContentLoaded', () => {
+      const last = localStorage.getItem('ue_mno');
+      const mEl = document.getElementById('mNo');
+      if (last && mEl) mEl.textContent = last;
     });
   } catch (err) {
     console.warn('Profil yükleme hatası:', err);
