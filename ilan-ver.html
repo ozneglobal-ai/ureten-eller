@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İlan Oluştur • Üreten Eller</title>
+  <meta name="description" content="Üreten Eller'de ilan oluşturun. Çok dilli arayüz: TR/EN/AR/DE. Fotoğraf önizleme, kapak seçimi ve silme desteklenir." />
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <style>
+    /* === AÇIK (BEYAZ) TEMA + DOLU BUTONLAR ===
+       Not: Sadece CSS güncellendi. HTML ve JS'e dokunulmadı. */
+    :root{
+      --bg1:#ffffff; --bg2:#ffffff;    /* beyaz arka plan */
+      --card:#ffffff;                  /* kart zemini beyaz */
+      --ink:#111827;                   /* ana metin */
+      --muted:#6b7280;                 /* ikincil metin */
+      --accent:#0ea5e9;                /* birincil vurgu */
+      --ok:#16a34a; --warn:#f59e0b; --err:#ef4444;
+      --brd:#e5e7eb;                   /* açık kenarlık rengi */
+      --ink-inv:#ffffff;               /* koyu zemin üzeri metin */
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:#fff;                 /* beyaz zemin */
+      color:var(--ink);
+    }
+
+    .wrap{max-width:960px;margin:24px auto;padding:16px}
+    .card{
+      background:var(--card);
+      border:1px solid var(--brd);
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 10px 30px rgba(17,24,39,.08);
+    }
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .lang{display:flex;gap:8px;align-items:center}
+    label{display:block;font-size:13px;color:var(--muted);margin:6px 0}
+
+    /* Form alanları açık tema */
+    input,select,textarea{
+      width:100%;
+      background:#ffffff;
+      color:var(--ink);
+      border:1px solid var(--brd);
+      border-radius:12px;
+      padding:10px 12px
+    }
+    textarea{min-height:120px;resize:vertical}
+
+    .previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px}
+    .thumb{
+      position:relative;border:1px solid var(--brd);border-radius:10px;overflow:hidden;
+      background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px
+    }
+    .thumb img{width:100%;height:auto;max-height:220px;object-fit:contain;display:block;border-radius:8px;margin-bottom:6px}
+    .thumb .btns{display:flex;gap:6px;justify-content:center;margin-bottom:4px}
+    .thumb button{
+      background:#111827;              /* DOLU buton */
+      color:#fff;
+      border:none;
+      padding:4px 8px;
+      font-size:12px;border-radius:6px;cursor:pointer
+    }
+    .thumb .cover{
+      position:absolute;top:6px;left:6px;background:#16a34a;color:#ffffff;font-size:12px;padding:2px 6px;border-radius:8px;font-weight:700
+    }
+
+    .actions{display:flex;gap:8px;justify-content:flex-end}
+
+    /* GENEL BUTONLAR: DOLU */
+    button{
+      cursor:pointer;
+      border:1px solid transparent;
+      background:#111827;              /* koyu dolu */
+      color:var(--ink-inv);
+      padding:10px 14px;border-radius:10px;font-weight:600
+    }
+    button:hover{filter:brightness(1.05)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+
+    /* Birincil aksiyon: vurgu rengiyle dolu */
+    button.primary{
+      background:var(--accent);
+      color:#ffffff;
+      border:none;
+      font-weight:700
+    }
+
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* Kapat (X) butonu: koyu dolu görünürlük için */
+    .closeX{
+      background:#111827;
+      color:#ffffff;
+      border:none;width:36px;height:36px;border-radius:999px;font-size:20px;line-height:36px;text-align:center;cursor:pointer;
+      box-shadow:0 6px 20px rgba(17,24,39,.2)
+    }
+  </style>
+
+    <!-- Firestore için global yardımcıları sağlayan dosya -->
+  <script type="module" src="/firebase-init.js"></script>
+
+  <!-- >>> BURAYA YAPIŞTIR <<< -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+    (function protectPage(){
+      try{
+        const auth = getAuth(self.__fb?.app);
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) { location.replace('/index.html'); return; }
+          const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+          try { await user.reload(); } catch(_) {}
+          if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+        });
+      }catch(e){
+        console.warn('protectPage hata', e);
+        try{ location.replace('/index.html'); }catch(_){}
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1 id="t_title">İlan Oluştur</h1>
+          <p class="hint" id="t_sub">PREMIUM: <strong>10 ilan</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.</p>
+        </div>
+        <div class="lang">
+          <label id="t_lang" for="langSel">Dil</label>
+          <select id="langSel">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+        <button id="closeBtn" class="closeX" aria-label="Kapat">×</button>
+      </div>
+
+      <form id="listingForm" novalidate style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+        <div class="full" style="grid-column:1/-1">
+          <label id="l_title">Başlık</label>
+          <input id="title" required placeholder="Örn: El yapımı örgü bebek" maxlength="80" />
+          <div class="hint" id="h_title">6–80 karakter</div>
+        </div>
+        <div class="full" style="grid-column:1/-1">
+          <label id="l_description">Açıklama</label>
+          <textarea id="description" required placeholder="Ürünü detaylı anlatın" maxlength="3000"></textarea>
+          <div class="hint" id="h_description">30–3000 karakter, uygunsuz içerik reddedilir.</div>
+        </div>
+
+        <div>
+          <label id="l_category">Kategori</label>
+          <select id="category" required></select>
+        </div>
+        <div>
+          <label id="l_subcategory">Alt Kategori</label>
+          <select id="subcategory" required disabled></select>
+        </div>
+
+        <div>
+          <label id="l_province">İl</label>
+          <select id="province" required></select>
+        </div>
+        <div>
+          <label id="l_district">İlçe</label>
+          <input id="districtInput" required placeholder="İlçenizi yazın" />
+        </div>
+
+        <div>
+          <label id="l_price">Fiyat (TL)</label>
+          <input id="price" type="number" min="1" step="1" placeholder="Örn: 350" required />
+        </div>
+        <div>
+          <label id="l_stock">Stok</label>
+          <select id="stock" required>
+            <option value="var">Var</option>
+            <option value="yok">Yok</option>
+          </select>
+        </div>
+
+        <div class="full" style="grid-column:1/-1">
+          <label id="l_images">Fotoğraflar (en fazla 5)</label>
+          <input id="images" type="file" accept="image/*" multiple />
+          <div id="previews" class="previews"></div>
+        </div>
+
+        <div class="full actions" style="grid-column:1/-1">
+          <button type="reset" id="b_cancel">İptal</button>
+          <button type="submit" class="primary" id="b_submit">Kaydet</button>
+        </div>
+
+        <div class="full" style="grid-column:1/-1">
+          <div id="msg" class="hint"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast (stil inline aynı bırakıldı) -->
+  <div id="toast" style="position:fixed;left:50%;top:20px;transform:translateX(-50%) scale(0.95);opacity:0;transition:.25s;z-index:9999;background:#0e172a;border:1px solid #1f2937;color:#e5e7eb;padding:10px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35);">Yönetici onayından sonra yayınlanacaktır.</div>
+
+  <!-- i18n + önizleme -->
+  <script>
+  (function(){
+    'use strict';
+
+    // === i18n (TR/EN/AR/DE) ===
+    const i18n = {
+      tr:{ title:"İlan Oluştur", sub:"PREMIUM: <strong>10 ilan</strong>. FREE: <strong>5 ilan</strong>. Tüm ilanlar <strong>30 gün</strong> yayında.", lang:"Dil",
+        l_title:"Başlık", h_title:"6–80 karakter",
+        l_description:"Açıklama", h_description:"30–3000 karakter, uygunsuz içerik reddedilir.",
+        l_category:"Kategori", l_subcategory:"Alt Kategori", l_province:"İl", l_district:"İlçe",
+        l_price:"Fiyat (TL)", l_stock:"Stok", l_images:"Fotoğraflar (en fazla 5)",
+        btn_cancel:"İptal", btn_submit:"İlana Gönder (Onaya)", toast_ok:"Yönetici onayından sonra yayınlanacaktır.",
+        placeholders:{ title:"Örn: El yapımı örgü bebek", desc:"Ürünü detaylı anlatın", district:"İlçenizi yazın", price:"Örn: 350" },
+        stock:{var:"Var", yok:"Yok"},
+        errors:{ title:"Başlık en az 6 karakter olmalı.", desc:"Açıklama en az 30 karakter olmalı.", cat:"Kategori seçiniz.", sub:"Alt kategori seçiniz.", prov:"İl seçiniz.", dist:"İlçe yazınız.", price:"Fiyat 1 TL ve üzeri olmalı.", files:"En fazla 5 fotoğraf yükleyebilirsiniz.", filetype:"Sadece JPG/PNG/WebP kabul edilir.", auth:"Oturum bulunamadı. Lütfen giriş yapın." },
+        cover:"Kapak", coverMake:"Kapak Yap", del:"Sil", choose:"Seçiniz"
+      },
+      en:{ title:"Create Listing", sub:"PREMIUM: <strong>10 listings</strong>. FREE: <strong>5 listings</strong>. All listings stay live for <strong>30 days</strong>.", lang:"Language",
+        l_title:"Title", h_title:"6–80 characters",
+        l_description:"Description", h_description:"30–3000 characters; inappropriate content is rejected.",
+        l_category:"Category", l_subcategory:"Subcategory", l_province:"Province", l_district:"District",
+        l_price:"Price (TRY)", l_stock:"Stock", l_images:"Photos (up to 5)",
+        btn_cancel:"Cancel", btn_submit:"Submit for Review", toast_ok:"Will be published after admin approval.",
+        placeholders:{ title:"e.g., Hand-knitted doll", desc:"Describe your product in detail", district:"Type your district", price:"e.g., 350" },
+        stock:{var:"In stock", yok:"Out of stock"},
+        errors:{ title:"Title must be at least 6 characters.", desc:"Description must be at least 30 characters.", cat:"Select a category.", sub:"Select a subcategory.", prov:"Select a province.", dist:"Enter a district.", price:"Price must be ≥ 1.", files:"You can upload up to 5 photos.", filetype:"Only JPG/PNG/WebP accepted.", auth:"No session. Please sign in." },
+        cover:"Cover", coverMake:"Make Cover", del:"Delete", choose:"Select"
+      },
+      ar:{ title:"إنشاء إعلان", sub:"المميز: <strong>10 إعلانات</strong>. المجاني: <strong>5 إعلانات</strong>. كل إعلان يبقى <strong>30 يوماً</strong>.", lang:"اللغة",
+        l_title:"العنوان", h_title:"6–80 حرفاً",
+        l_description:"الوصف", h_description:"30–3000 حرفاً؛ يتم رفض المحتوى غير الملائم.",
+        l_category:"الفئة", l_subcategory:"الفئة الفرعية", l_province:"الولاية", l_district:"القضاء",
+        l_price:"السعر (ليرة)", l_stock:"التوفّر", l_images:"صور (حتى 5)",
+        btn_cancel:"إلغاء", btn_submit:"إرسال للمراجعة", toast_ok:"سيُنشر بعد موافقة الإدارة.",
+        placeholders:{ title:"مثال: دمية محاكة", desc:"صف المنتج بالتفصيل", district:"اكتب اسم القضاء", price:"مثال: 350" },
+        stock:{var:"متوفر", yok:"غير متوفر"},
+        errors:{ title:"يجب أن يكون العنوان 6 أحرف على الأقل.", desc:"الوصف يجب أن يكون 30 حرفاً على الأقل.", cat:"اختر فئة.", sub:"اختر فئة فرعية.", prov:"اختر ولاية.", dist:"أدخل القضاء.", price:"السعر يجب أن يكون ≥ 1.", files:"يمكنك رفع حتى 5 صور.", filetype:"يُقبل فقط JPG/PNG/WebP.", auth:"لا توجد جلسة. يرجى تسجيل الدخول." },
+        cover:"غلاف", coverMake:"اجعله غلافاً", del:"حذف", choose:"اختر"
+      },
+      de:{ title:"Anzeige erstellen", sub:"PREMIUM: <strong>10 Anzeigen</strong>. FREE: <strong>5 Anzeigen</strong>. Jede Anzeige bleibt <strong>30 Tage</strong> online.", lang:"Sprache",
+        l_title:"Titel", h_title:"6–80 Zeichen",
+        l_description:"Beschreibung", h_description:"30–3000 Zeichen; unzulässiger Inhalt wird abgelehnt.",
+        l_category:"Kategorie", l_subcategory:"Unterkategorie", l_province:"Provinz", l_district:"Bezirk",
+        l_price:"Preis (TRY)", l_stock:"Bestand", l_images:"Fotos (bis zu 5)",
+        btn_cancel:"Abbrechen", btn_submit:"Zur Prüfung einreichen", toast_ok:"Wird nach Admin-Freigabe veröffentlicht.",
+        placeholders:{ title:"z. B. Handgestrickte Puppe", desc:"Beschreiben Sie Ihr Produkt", district:"Bezirk eingeben", price:"z. B. 350" },
+        stock:{var:"Auf Lager", yok:"Nicht vorrätig"},
+        errors:{ title:"Titel muss mind. 6 Zeichen haben.", desc:"Beschreibung mind. 30 Zeichen.", cat:"Kategorie wählen.", sub:"Unterkategorie wählen.", prov:"Provinz wählen.", dist:"Bezirk eingeben.", price:"Preis muss ≥ 1 sein.", files:"Max. 5 Fotos.", filetype:"Nur JPG/PNG/WebP.", auth:"Keine Sitzung. Bitte anmelden." },
+        cover:"Cover", coverMake:"Als Cover", del:"Löschen", choose:"Auswählen"
+      }
+    };
+
+    // === Kategoriler === (kısaltılmış; gerekirse genişletilebilir)
+    const cats = [
+      {id:'yemek', names:{tr:'🍲 Yemekler', en:'🍲 Meals', de:'🍲 Mahlzeiten', ar:'🍲 وجبات'}, subs:[
+        ['evyemek','Ev yemekleri','Home-cooked','Hausmannskost','وجبات منزلية'],
+        ['borek','Börek-çörek','Savory pastries','Herzhaftes Gebäck','فطائر مالحة'],
+        ['corba','Çorba','Soup','Suppe','شوربة'],
+        ['zeytiny','Zeytinyağlı','Olive-oil dishes','Gerichte mit Olivenöl','أطباق بزيت الزيتون'],
+        ['pilav','Pilav-makarna','Rice & pasta','Reis & Pasta','أرز ومعكرونة'],
+        ['et','Et-tavuk','Meat & chicken','Fleisch & Huhn','لحوم ودجاج'],
+        ['kahvalti','Kahvaltılık','Breakfast items','Frühstück','مأكولات الإفطار'],
+        ['meze','Meze','Mezes','Vorspeisen','مقبلات'],
+        ['dondur','Dondurulmuş','Frozen','Tiefgekühlt','مجمد'],
+        ['cocuk','Çocuk öğünleri','Kids meals','Kindergerichte','وجبات الأطفال'],
+        ['diyetvegf','Diyet/vegan/gf','Diet/Vegan/GF','Diät/Vegan/GF','حمية/نباتي/خالٍ من الغلوتين']
+      ]},
+      {id:'pasta', names:{tr:'🎂 Pasta & Tatlı', en:'🎂 Cakes & Sweets', de:'🎂 Torten & Süßes', ar:'🎂 كعك وحلويات'}, subs:[
+        ['yaspasta','Yaş pasta','Fresh cakes','Torten','كيك طازج'],
+        ['kek','Kek-cupcake','Cakes & cupcakes','Kuchen & Cupcakes','كيك وكب كيك'],
+        ['kurabiye','Kurabiye','Cookies','Kekse','بسكويت'],
+        ['serbetli','Şerbetli','Syrup desserts','Sirup-Desserts','حلويات شرقية'],
+        ['sutlu','Sütlü','Milky desserts','Milchige Desserts','حلويات بالحليب'],
+        ['cheese','Cheesecake','Cheesecake','Käsekuchen','تشيزكيك'],
+        ['diyettat','Diyet tatlı','Diet desserts','Diät-Desserts','حلويات للحمية'],
+        ['cikolata','Çikolata/şekerleme','Chocolate/Candy','Schokolade/Süßwaren','شوكولاتة/حلوى'],
+        ['dogumset','Doğum günü setleri','Birthday sets','Geburtstags-Sets','مجموعات عيد ميلاد']
+      ]},
+      {id:'sos', names:{tr:'🫙 Reçel • Turşu • Sos', en:'🫙 Jams • Pickles • Sauces', de:'🫙 Marmelade • Eingelegtes • Saucen', ar:'🫙 مربى • مخللات • صلصات'}, subs:[
+        ['recel','Reçel-marmelat','Jam & marmalade','Marmelade','مربى'],
+        ['pekmez','Pekmez','Molasses','Traubensirup','دبس'],
+        ['tursu','Turşu','Pickles','Eingelegtes','مخلل'],
+        ['dom','Domates/biber sos','Tomato/pepper sauce','Tomaten/Paprika-Sauce','صلصة طماطم/فلفل'],
+        ['acios','Acı sos','Hot sauce','Scharfe Soße','صلصة حارة'],
+        ['salca','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke','Sirke','Vinegar','Essig','خل'],
+        ['konserve','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'yoresel', names:{tr:'🌾 Yöresel / Kışlık', en:'🌾 Local / Winter Prep', de:'🌾 Regional / Wintervorrat', ar:'🌾 محلي / مؤونة الشتاء'}, subs:[
+        ['eriste','Erişte','Homemade noodles','Hausgemachte Nudeln','شعيرية منزلية'],
+        ['tarhana','Tarhana','Tarhana','Tarhana','طرخانة'],
+        ['yufka','Yufka','Yufka','Yufka','يوفكا'],
+        ['manti','Mantı','Manti dumplings','Manti-Teigtaschen','مانتي'],
+        ['kurut','Kurutulmuş sebze-meyve','Dried veg & fruit','Getrocknetes Obst/Gemüse','مجففات'],
+        ['salca2','Salça','Paste','Tomatenmark','معجون'],
+        ['sirke2','Sirke','Vinegar','Essig','خل'],
+        ['konserve2','Konserve','Canned','Konserven','معلبات']
+      ]},
+      {id:'diet', names:{tr:'🥗 Diyet / Vegan / Glutensiz', en:'🥗 Diet / Vegan / Gluten-Free', de:'🥗 Diät / Vegan / Glutenfrei', ar:'🥗 حمية / نباتي / خالٍ من الغلوتين'}, subs:[
+        ['fit','Fit tabaklar','Fit plates','Fitness-Teller','أطباق صحية'],
+        ['vegan','Vegan yemekler','Vegan meals','Vegane Gerichte','أطباق نباتية'],
+        ['gf','GF unlu mamuller','GF bakery','Glutenfreie Backwaren','مخبوزات خالية من الغلوتين'],
+        ['sekersiz','Şekersiz tatlı','Sugar-free desserts','Zuckerfreie Desserts','حلويات بدون سكر'],
+        ['keto','Keto ürün','Keto products','Keto-Produkte','منتجات كيتو'],
+        ['protein','Protein atıştırmalık','Protein snacks','Protein-Snacks','وجبات بروتينية']
+      ]},
+      {id:'taki', names:{tr:'💍 Takı', en:'💍 Jewelry', de:'💍 Schmuck', ar:'💍 إكسسوارات'}, subs:[
+        ['bileklik','Bileklik','Bracelet','Armband','سوار'],
+        ['kolye','Kolye','Necklace','Halskette','عقد'],
+        ['kupe','Küpe','Earrings','Ohrringe','أقراط'],
+        ['yuzuk','Yüzük','Ring','Ring','خاتم'],
+        ['halhal','Halhal','Anklet','Fußkettchen','خلخال'],
+        ['bros','Broş','Brooch','Brosche','بروش'],
+        ['set','Setler','Sets','Sets','أطقم'],
+        ['isimli','İsimli/kişiye özel','Personalized','Personalisiert','مخصص بالاسم'],
+        ['makrome','Makrome','Macramé','Makramee','مكرمية'],
+        ['dogaltas','Doğal taş','Gemstone','Edelstein','أحجار طبيعية'],
+        ['recine','Reçine','Resin','Harz','ريزن'],
+        ['telsarma','Tel sarma','Wire wrap','Drahtwickel','سلك ملتف']
+      ]},
+      {id:'bebek', names:{tr:'👶 Bebek & Çocuk', en:'👶 Baby & Kids', de:'👶 Baby & Kinder', ar:'👶 رضّع وأطفال'}, subs:[
+        ['fig','Hayvan/bebek figürleri','Animal/baby figures','Tier/Baby-Figuren','مجسمات'],
+        ['cingirak','Çıngırak','Rattle','Rassel','خشخيشة'],
+        ['dis','Diş kaşıyıcı örgü','Teething knit','Beißring-Häkel','عضاضة محاكة'],
+        ['bezoy','Bez oyuncak/kitap','Cloth toy/book','Stoffspielzeug/Buch','لعبة/كتاب قماشي'],
+        ['montessori','Montessori oyuncak','Montessori toys','Montessori-Spielzeug','ألعاب منتسوري'],
+        ['set2','Setler','Sets','Sets','أطقم'],
+        ['patik','Örgü patik-bere','Knit booties-beanie','Gehäkelte Schühchen & Mütze','قبعات وجوارب محاكة'],
+        ['battaniye','Bebek battaniyesi','Baby blanket','Babydecke','بطانية'],
+        ['onluk','Önlük-ağız bezi','Bib/burp cloth','Lätzchen/Spucktuch','مريلة/منديل'],
+        ['lohusa','Lohusa seti','Maternity set','Wochenbett-Set','عدة نفاس'],
+        ['sac','Saç aksesuarı','Hair accessory','Haaraccessoire','اكسسوار شعر'],
+        ['giyim','El emeği kıyafet','Handmade clothing','Handgemachte Kleidung','ملابس يدوية']
+      ]},
+      {id:'orgu', names:{tr:'🧶 Örgü / Triko', en:'🧶 Knitting / Crochet', de:'🧶 Strick / Häkeln', ar:'🧶 حياكة / كروشيه'}, subs:[
+        ['hirka','Hırka','Cardigan','Strickjacke','كارديغان'],
+        ['kazak','Kazak','Sweater','Pullover','كنزة'],
+        ['atkibere','Atkı-bere','Scarf & beanie','Schal & Mütze','وشاح وقبعة'],
+        ['panco','Panço','Poncho','Poncho','بونشو'],
+        ['sal','Şal','Shawl','Schal','شال'],
+        ['corap','Çorap','Socks','Socken','جوارب'],
+        ['lif','Lif takımı','Bath set','Badeset','طقم ليف'],
+        ['bebektk','Bebek takımı','Baby set','Baby-Set','طقم أطفال'],
+        ['yelek','Yelek','Vest','Weste','صديري'],
+        ['kirlen','Kırlent-örtü','Cushion/cover','Kissen/Decke','وسادة/غطاء'],
+        ['igneoyasi','İğne oyası','Needle lace','Nadelspitze','أويا (İğne)']
+      ]},
+      {id:'terzi', names:{tr:'✂️ Dikiş / Terzilik', en:'✂️ Sewing / Tailoring', de:'✂️ Nähen / Schneiderei', ar:'✂️ خياطة / تفصيل'}, subs:[
+        ['paca','Paça/onarım','Hem/repair','Saum/Reparatur','ثني/تصليح'],
+        ['fermuar','Fermuar değişimi','Zipper change','Reißverschluss-Wechsel','تبديل سحاب'],
+        ['perde','Perde dikişi','Curtain sewing','Vorhang-Nähen','خياطة ستائر'],
+        ['nevresim','Nevresim-yastık','Bedding & pillows','Bettwäsche/Kissen','مفارش ووسائد'],
+        ['masa','Masa örtüsü','Tablecloth','Tischtuch','مفرش طاولة'],
+        ['ozel','Özel dikim','Custom tailoring','Maßanfertigung','تفصيل خاص'],
+        ['kostum','Kostüm','Costume','Kostüm','زيّ']
+      ]},
+      {id:'makrome', names:{tr:'🧵 Makrome & Dekor', en:'🧵 Macramé & Decor', de:'🧵 Makramee & Deko', ar:'🧵 مكرمية وديكور'}, subs:[
+        ['duvar','Duvar süsü','Wall hanging','Wandbehang','ديكور جداري'],
+        ['saksi','Saksı askısı','Plant hanger','Pflanzenhänger','حامل نباتات'],
+        ['anahtar','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['avize','Avize','Chandelier','Deckenleuchte','ثريا'],
+        ['runner','Amerikan servis/runner','Placemat/runner','Tischset/Runner','مفرش سفرة'],
+        ['sepet','Sepet','Basket','Korb','سلة'],
+        ['raf','Raf/duvar dekoru','Shelf/wall decor','Regal/Wanddeko','رف/ديكور']
+      ]},
+      {id:'evdekor', names:{tr:'🏠 Ev Dekor & Aksesuar', en:'🏠 Home Decor & Accessories', de:'🏠 Wohndeko & Accessoires', ar:'🏠 ديكور المنزل وإكسسوارات'}, subs:[
+        ['kece','Keçe işleri','Felt crafts','Filzarbeiten','أعمال لبّاد'],
+        ['kirlent','Kırlent','Cushion','Kissen','وسادة'],
+        ['kapi','Kapı süsü','Door ornament','Türkranz','زينة باب'],
+        ['tepsi','Tepsi süsleme','Tray decoration','Tablett-Deko','تزيين صينية'],
+        ['cerceve','Çerçeve','Frame','Rahmen','إطار'],
+        ['ruya','Rüya kapanı','Dreamcatcher','Traumfänger','صائد أحلام'],
+        ['tablo','Tablo','Tableau','Bild','لوحة']
+      ]},
+      {id:'mum', names:{tr:'🕯️ Mum & Kokulu Ürünler', en:'🕯️ Candles & Fragranced', de:'🕯️ Kerzen & Duft', ar:'🕯️ شموع ومنتجات عطرية'}, subs:[
+        ['soya','Soya/balmumu mum','Soy/beeswax candle','Soja/Bienenwachs-Kerze','شموع صويا/شمع العسل'],
+        ['tas','Kokulu taş','Scented stone','Duftstein','حجر معطر'],
+        ['sprey','Oda spreyi','Room spray','Raumspray','معطر جو'],
+        ['tutsu','Tütsü','Incense','Räucherwerk','بخور'],
+        ['jel','Jel mum','Gel candle','Gelkerze','شمعة جل'],
+        ['hediye','Hediye seti','Gift set','Geschenkset','طقم هدايا']
+      ]},
+      {id:'kozmetik', names:{tr:'🧼 Doğal Sabun & Kozmetik', en:'🧼 Natural Soap & Cosmetics', de:'🧼 Natürliche Seife & Kosmetik', ar:'🧼 صابون طبيعي ومستحضرات'}, subs:[
+        ['zeytin','Zeytinyağlı sabun','Olive-oil soap','Olivenölseife','صابون زيت زيتون'],
+        ['bitkisel','Bitkisel sabunlar','Herbal soaps','Kräuterseifen','صابون عشبي'],
+        ['sampuan','Katı şampuan','Solid shampoo','Festes Shampoo','شامبو صلب'],
+        ['balm','Dudak balmı','Lip balm','Lippenbalsam','بلسم شفاه'],
+        ['krem','Krem/merhem','Cream/ointment','Creme/Salbe','كريم/مرهم'],
+        ['banyotuzu','Banyo tuzu','Bath salt','Badesalz','ملح الاستحمام'],
+        ['lavanta','Lavanta kesesi','Lavender sachet','Lavendelsäckchen','كيس لافندر']
+      ]},
+      {id:'amigurumi', names:{tr:'🧸 Amigurumi & Oyuncak (dekor)', en:'🧸 Amigurumi & Decorative Toys', de:'🧸 Amigurumi & Deko-Spielzeug', ar:'🧸 أميجورومي وألعاب ديكورية'}, subs:[
+        ['anahtar2','Anahtarlık','Keychain','Schlüsselanhänger','ميدالية'],
+        ['magnet','Magnet','Magnet','Magnet','مغناطيس'],
+        ['kolek','Koleksiyon figürü','Collectible figure','Sammelfigur','مجسّم مجموعات'],
+        ['dekorbebek','Dekor bebek/karakter','Decor doll/character','Deko-Puppe/Figur','دمية/شخصية ديكور']
+      ]}
+    ];
+
+    const PROVINCES = ["Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan","Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır","Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri","Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa","Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak","Van","Yalova","Yozgat","Zonguldak"].sort((a,b)=>a.localeCompare(b,'tr'));
+
+    // === Helpers ===
+    window.$ = (id)=> document.getElementById(id);
+    function setLang(lng){
+      const t = i18n[lng]||i18n.tr; document.documentElement.lang=lng; document.documentElement.dir=(lng==='ar')?'rtl':'ltr';
+      $('t_title').textContent=t.title; $('t_sub').innerHTML=t.sub; $('t_lang').textContent=t.lang;
+      $('l_title').textContent=t.l_title; $('h_title').textContent=t.h_title;
+      $('l_description').textContent=t.l_description; $('h_description').textContent=t.h_description;
+      $('l_category').textContent=t.l_category; $('l_subcategory').textContent=t.l_subcategory;
+      $('l_province').textContent=t.l_province; $('l_district').textContent=t.l_district;
+      $('l_price').textContent=t.l_price; $('l_stock').textContent=t.l_stock; $('l_images').textContent=t.l_images;
+      $('b_cancel').textContent=t.btn_cancel; $('b_submit').textContent=t.btn_submit;
+      $('title').placeholder=t.placeholders.title; $('description').placeholder=t.placeholders.desc; $('districtInput').placeholder=t.placeholders.district; $('price').placeholder=t.placeholders.price;
+      const stock=$('stock'); stock.options[0].textContent=t.stock.var; stock.options[1].textContent=t.stock.yok;
+      rebuildCategories(lng); fillProvinces(lng);
+      window.__t = t; $('toast').textContent = t.toast_ok;
+    }
+
+    function rebuildCategories(lng){
+      const selCat=$('category'); const selSub=$('subcategory');
+      selCat.innerHTML = `<option value="" disabled selected>${i18n[lng].choose}</option>` +
+        cats.map(c=>`<option value="${c.id}">${c.names[lng]||c.names.tr}</option>`).join('');
+      selSub.disabled = true; selSub.innerHTML = `<option value="" disabled selected>${i18n[lng].choose}</option>`;
+      selCat.onchange = ()=>{
+        const c=cats.find(x=>x.id===selCat.value); selSub.disabled = !c;
+        const idx = {tr:1,en:2,de:3,ar:4}[lng] || 1;
+        selSub.innerHTML = `<option value="" disabled selected>${i18n[lng].choose}</option>` +
+          (c? c.subs.map(s=>`<option value="${s[0]}">${s[idx]}</option>`).join('') : '');
+      };
+    }
+
+    function fillProvinces(lng){
+      const selProv=$('province'); const choose=i18n[lng].choose || 'Seçiniz';
+      selProv.innerHTML = `<option value="" disabled selected>${choose}</option>` + PROVINCES.map(p=>`<option value="${p}">${p}</option>`).join('');
+    }
+
+    // === Fotoğraf Önizleme + Kapak + Sil ===
+    const inputEl = $('images');
+    const previewsEl = $('previews');
+    let __items = [];          // [{file: File, dataUrl: string}]
+    let __coverIndex = -1;     // -1 yok, 0..n kapak
+
+    function syncInputFromSelected(){
+      const dt = new DataTransfer();
+      __items.forEach(it=> dt.items.add(it.file));
+      inputEl.files = dt.files;
+    }
+
+    function renderPreviews(){
+      const t = window.__t || i18n.tr;
+      previewsEl.innerHTML = '';
+      __items.forEach((it, idx)=>{
+        const box = document.createElement('div');
+        box.className = 'thumb' + (idx===__coverIndex? ' coverSel':'');
+
+        const img = document.createElement('img');
+        img.alt = `${t.l_images} ${idx+1}`;
+        img.src = it.dataUrl || 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#111827"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9CA3AF" font-family="Arial" font-size="12">No Preview</text></svg>');
+        box.appendChild(img);
+
+        if(idx===__coverIndex){
+          const badge=document.createElement('div');
+          badge.className='cover';
+          badge.textContent=t.cover;
+          box.appendChild(badge);
+        }
+
+        const btns = document.createElement('div');
+        btns.className = 'btns';
+        const bCover = document.createElement('button');
+        bCover.type='button'; bCover.textContent = t.coverMake;
+        bCover.onclick = (ev)=>{ ev.preventDefault(); __coverIndex = idx; renderPreviews(); };
+        const bDel = document.createElement('button');
+        bDel.type='button'; bDel.textContent = t.del;
+        bDel.onclick = (ev)=>{ ev.preventDefault(); __items.splice(idx,1); if(__items.length===0){ __coverIndex=-1; } else if(__coverIndex===idx){ __coverIndex=0; } else if(__coverIndex>idx){ __coverIndex--; } syncInputFromSelected(); renderPreviews(); };
+        btns.appendChild(bCover);
+        btns.appendChild(bDel);
+        box.appendChild(btns);
+
+        previewsEl.appendChild(box);
+      });
+    }
+
+    inputEl.addEventListener('change', ()=>{
+      const files = Array.from(inputEl.files || []).slice(0,5);
+      __items = [];
+      if(files.length){ __coverIndex = 0; }
+      let done = 0;
+      files.forEach((f, i)=>{
+        const fr = new FileReader();
+        fr.onload = (e)=>{ __items[i] = { file: f, dataUrl: e.target.result }; done++; if(done===files.length) { syncInputFromSelected(); renderPreviews(); } };
+        fr.onerror = ()=>{ __items[i] = { file: f, dataUrl: '' }; done++; if(done===files.length) { syncInputFromSelected(); renderPreviews(); } };
+        fr.readAsDataURL(f);
+      });
+      if(files.length===0){ previewsEl.innerHTML=''; __coverIndex=-1; }
+    });
+
+    // Başlangıç dili TR ve kapatma
+    const sel=$('langSel'); sel.value='tr'; setLang('tr');
+    const closeBtn = $('closeBtn'); if(closeBtn){ closeBtn.onclick = ()=>{ window.location.href='home.html'; }; }
+    sel.addEventListener('change', ()=> setLang(sel.value));
+    fillProvinces('tr'); rebuildCategories('tr');
+
+  })();
+  </script>
+
+  <!-- Firestore + BULUT (Cloudinary) yükleme -->
+  <script type="module">
+    // ==== Bulut AYARLARI (yalnızca bu 3 sabiti kendi hesabına göre düzenle) ====
+    const CLOUD_NAME    = 'dbntnzogo';           // Bulut adınız (ör: dbntnzogo)
+    const UPLOAD_PRESET = 'unsigned_avatars';   // İmzalanmamış preset (tarayıcıdan güvenli yükleme için)
+    const API_KEY       = '321492881526576';     // İsteğe bağlı; unsigned için şart değil
+    // GÜVENLİK: API SECRET asla tarayıcıya koyulmaz.
+
+    // ==== firebase-init.js içinden gelmesi beklenen yardımcılar ====
+    const app   = window.app   || window.firebaseApp;
+    const auth  = window.auth  || (window.firebase && window.firebase.auth);
+    const db    = window.db    || (window.firebase && window.firebase.db);
+
+    // Firestore köprüleri (compat/modular)
+    function serverNow(){ return (window.firebase && window.firebase.serverTimestamp) ? window.firebase.serverTimestamp() : new Date(); }
+    async function setDocX(path, data){
+      if (window.firebase && window.firebase.setDoc) return window.firebase.setDoc(path, data);
+      if (window._setDoc) return window._setDoc(path, data);
+      throw new Error('setDoc fonksiyonu yok (firebase-init.js kontrol edin)');
+    }
+
+    function getAuthUser(){ return (auth && auth.currentUser) ? auth.currentUser : null; }
+
+    // === Cloudinary'ye çoklu foto yükleme (unsigned) ===
+    async function uploadAllToCloud(uid, docId, files){
+      const urls = [];
+      if(!files || !files.length) return urls;
+      const folder = `listings/${uid}/${docId}`; // Medya klasörü
+      for (let i=0;i<files.length;i++){
+        const f = files[i];
+        const form = new FormData();
+        form.append('file', f);
+        form.append('upload_preset', UPLOAD_PRESET);
+        form.append('folder', folder);
+        // form.append('api_key', API_KEY); // unsigned için gerekmez
+        // form.append('context', `alt=${encodeURIComponent(f.name)}`);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: 'POST', body: form
+        });
+        if(!res.ok){
+          const txt = await res.text();
+          throw new Error('Buluta yükleme hatası: '+txt);
+        }
+        const json = await res.json();
+        urls.push(json.secure_url || json.url);
+      }
+      return urls;
+    }
+
+    // === Form işlemleri ===
+    const $ = (id)=> document.getElementById(id);
+    const form = $('listingForm');
+    const msg  = $('msg');
+    const toast = $('toast');
+
+    function t(){ return (window.__t) || { errors:{}, toast_ok:'Kaydedildi.' }; }
+    function showMsg(text, ok=false){ msg.style.color = ok ? 'var(--ok)' : 'var(--muted)'; msg.textContent = text; }
+    function showToast(text){
+      toast.textContent = text || t().toast_ok; toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) scale(1)';
+      setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateX(-50%) scale(0.95)'; }, 1800);
+    }
+    function getCoverIndex(){
+      const list = Array.from(document.querySelectorAll('#previews .thumb'));
+      const i = list.findIndex(el => el.querySelector('.cover'));
+      return (i >= 0 ? i : (list.length ? 0 : -1));
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const user = getAuthUser();
+      if(!user){ showMsg(t().errors.auth || 'Giriş yapın.'); return; }
+
+      const lang = document.documentElement.lang || 'tr';
+      const title = $('title').value.trim();
+      const description = $('description').value.trim();
+      const category = $('category').value;
+      const subcategory = $('subcategory').value;
+      const province = $('province').value;
+      const district = $('districtInput').value.trim();
+      const price = parseInt(($('price').value||'0'), 10) || 0;
+      const stock = $('stock').value;
+
+      if(title.length < 6){ showMsg(t().errors.title || 'Başlık kısa.'); return; }
+      if(description.length < 30){ showMsg(t().errors.desc || 'Açıklama kısa.'); return; }
+      if(!category){ showMsg(t().errors.cat || 'Kategori seçin.'); return; }
+      if(!subcategory){ showMsg(t().errors.sub || 'Alt kategori seçin.'); return; }
+      if(!province){ showMsg(t().errors.prov || 'İl seçin.'); return; }
+      if(!district){ showMsg(t().errors.dist || 'İlçe girin.'); return; }
+      if(price < 1){ showMsg(t().errors.price || 'Fiyat en az 1.'); return; }
+
+      const files = Array.from(($('images').files||[])).slice(0,5);
+      if(files.length > 5){ showMsg(t().errors.files || 'En fazla 5 foto.'); return; }
+      for(const f of files){ if(!/image\/(jpeg|png|webp)/i.test(f.type)){ showMsg(t().errors.filetype || 'Sadece JPG/PNG/WebP.'); return; } }
+
+      const submitBtn = $('b_submit');
+      submitBtn.disabled = true; submitBtn.textContent = 'Kaydediliyor…';
+      showMsg('');
+
+      try{
+        // doc id oluştur
+        const autoId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+        const docPath = `listings/${autoId}`;
+
+        // 1) FOTOĞRAFLARI BULUTA YÜKLE
+        let photoURLs = [];
+        try{ photoURLs = await uploadAllToCloud(user.uid, autoId, files); }
+        catch(upErr){ console.warn('upload fail', upErr); showMsg('Fotoğraf yükleme hatası: '+upErr.message); }
+
+        const coverIndex = (getCoverIndex());
+        const coverUrl = (photoURLs[coverIndex] || photoURLs[0] || '');
+
+        // 2) VERİLERİ FIRESTORE'A KAYDET
+        const payload = {
+          title, description, category, subcategory,
+          province, district, price, stock,
+          status: 'pending',
+          showcase: false, showcasePending: false,
+          photos: photoURLs,
+          coverIndex: (coverIndex>=0?coverIndex:0),
+          coverUrl: coverUrl,
+          userId: user.uid,
+          locale: lang,
+          createdAt: serverNow(),
+          updatedAt: serverNow()
+        };
+        await setDocX(docPath, payload);
+
+        showToast(t().toast_ok || 'Kaydedildi.');
+        form.reset();
+        setTimeout(()=>{ window.location.href = 'profile.html'; }, 900);
+      }catch(err){
+        console.error(err);
+        showMsg('Kaydetme hatası: '+ (err && err.message ? err.message : err));
+      }finally{
+        submitBtn.disabled = false; submitBtn.textContent = (window.__t?.btn_submit) || 'Kaydet';
+      }
+    });
+
+  </script>
+</body>
+</html>

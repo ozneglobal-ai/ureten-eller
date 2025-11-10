@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E-posta Doğrulama • Üreteneller</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220}
+    .wrap{max-width:720px;margin:40px auto;padding:0 16px}
+    .card{border:1px solid #e5e7eb;border-radius:14px;padding:18px}
+    .title{font-weight:900;font-size:20px;margin:0 0 8px}
+    .muted{color:#6b7280}
+    .ok{color:#065f46;background:#ecfdf5;border:1px solid #10b981;padding:10px;border-radius:10px;margin:10px 0}
+    .err{color:#991b1b;background:#fef2f2;border:1px solid #ef4444;padding:10px;border-radius:10px;margin:10px 0}
+    .btn{appearance:none;border:1px solid #e5e7eb;background:#fff;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
+    .btn.gold{background:linear-gradient(180deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);border:1px solid #b18a37;color:#111}
+    .spinner{width:18px;height:18px;border:3px solid #e5e7eb;border-top-color:#caa552;border-radius:50%;display:inline-block;animation:spin .8s linear infinite;vertical-align:-4px;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">E-posta Doğrulama</h1>
+      <div id="status" class="muted"><span class="spinner"></span>Doğrulama işleniyor…</div>
+      <div id="msg"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <a id="goHome" class="btn gold" href="/home.html">Ana sayfaya dön</a>
+        <a id="goLogin" class="btn" href="/index.html">Giriş / Kayıt</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projenin Firebase app'ini yükle -->
+  <script type="module" src="/firebase-init.js"></script>
+
+  <!-- İş mantığı -->
+  <script type="module">
+    import { getAuth, applyActionCode, checkActionCode } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+    const qs = new URLSearchParams(location.search);
+    const mode    = qs.get('mode');        // verifyEmail / resetPassword / recoverEmail ...
+    const oobCode = qs.get('oobCode');
+    const lang    = (localStorage.getItem('ue_lang') || 'tr');
+
+    const $status = document.getElementById('status');
+    const $msg    = document.getElementById('msg');
+
+    function t(tr, en){
+      return (lang === 'en') ? en : tr;
+    }
+
+    async function run(){
+      if (!oobCode) {
+        $status.textContent = t('Kod bulunamadı.', 'Missing code.');
+        return;
+      }
+
+      const auth = getAuth(); // default app (firebase-init.js yükledi)
+      try {
+        if (mode === 'verifyEmail') {
+          // Kod geçerli mi, ön kontrol:
+          await checkActionCode(auth, oobCode);
+          // Doğrulamayı uygula:
+          await applyActionCode(auth, oobCode);
+
+          $status.textContent = t('E-posta başarıyla doğrulandı.', 'Email verified successfully.');
+          $msg.innerHTML = `<div class="ok">${t('Hesabınız aktifleştirildi. Giriş panelinden devam edebilirsiniz.', 'Your account is now active. You can continue from the sign-in page.')}</div>`;
+        } else {
+          $status.textContent = t('Desteklenmeyen işlem.', 'Unsupported action.');
+          $msg.innerHTML = `<div class="err">${t('Bu bağlantı doğrulama için değildir.', 'This link is not for verification.')}</div>`;
+        }
+      } catch (e) {
+        console.warn(e);
+        $status.textContent = t('Doğrulama tamamlanamadı.', 'Verification failed.');
+        const reason = (e && e.code) || '';
+        const tr = reason.includes('expired') ? 'Bağlantının süresi dolmuş olabilir.' :
+                  reason.includes('invalid') ? 'Bağlantı geçersiz olabilir.' :
+                  'Lütfen yeni bir doğrulama e-postası isteyin.';
+        const en = reason.includes('expired') ? 'The link may have expired.' :
+                  reason.includes('invalid') ? 'The link may be invalid.' :
+                  'Please request a new verification email.';
+        $msg.innerHTML = `<div class="err">${t(tr, en)}</div>`;
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>

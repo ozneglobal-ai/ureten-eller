@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Üreten Eller • Ana Sayfa</title>
+  <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Arayın, keşfedin, ilan verin." />
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <style>
+    /* ==== GENEL ==== */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+
+    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+
+    /* ==== TOPBAR ==== */
+    .topbar{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #e5e7eb}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .logo{display:none}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800;cursor:pointer}
+    .actions{display:flex;align-items:center;gap:8px}
+    .btn{appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;transition:transform .06s ease, box-shadow .2s ease}
+    .btn:active{transform:translateY(1px)}
+    .btn.gold{color:#111;background:linear-gradient(180deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 4px 18px rgba(202,165,82,.35)}
+    .btn.ghost{background:#fff;border:1px solid #e5e7eb}
+    .lang{border:1px solid #e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600;background:#fff}
+
+    /* ==== LAYOUT (SOL KATEGORİ MASAÜSTÜ/TABLET, MOBİLDE ÜSTTE) ==== */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;display:grid;gap:16px;grid-template-columns:280px 1fr}
+    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
+
+    /* ==== SIDEBAR ==== */
+    .sidebar{position:relative;min-width:0}
+    @media (max-width:980px){.sidebar{display:none}}
+    .sidebar{position:relative;min-width:0}
+
+    .search{position:sticky;top:70px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.03);min-width:0}
+    .search input{flex:1;border:0;outline:0;background:transparent;font-size:14px;min-width:0}
+
+    .catbox{margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;position:sticky;top:132px;background:#fff}
+    .cathead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;padding:10px 14px;background:#fafafa;border-bottom:1px solid #eee}
+    .catlist{max-height:calc(100vh - 240px); /* üst bar + arama + alt bar payı */ overflow:auto}
+    .cat{border-bottom:1px dashed #eee}
+    .cat:last-child{border-bottom:0}
+    .cat > button{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:#fff;border:0;cursor:pointer;font-weight:700}
+    .cat > button:hover{background:#fafafa}
+    .cat-title{display:flex;align-items:center;gap:8px;min-width:0}
+    .chev{transition:transform .2s ease}
+    .cat[aria-expanded="true"] .chev{transform:rotate(90deg)}
+    .sublist{display:none;padding:8px 10px 14px 38px}
+    .sublist a{display:block;padding:6px 4px;border-radius:8px;font-size:14px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sublist a:hover{background:#f3f4f6}
+
+    /* ==== CONTENT ==== */
+    /* Mobilde yatay kaymayı kesin önlemek için min-width sıfırlamaları */
+    .wrap,.content,.topcats,.grid{min-width:0}
+    .page{overflow-x:hidden}
+
+    /* Varsayılan: tek kolon */
+.hero{
+  border:1px solid #e5e7eb;border-radius:20px;padding:18px 14px;
+  display:grid;grid-template-columns:1fr;gap:20px;align-items:center;
+  background:#fafafa;min-width:0
+}
+/* İleride hero’ya görsel vs. 2. bir blok eklemek isterseniz .two sınıfını verin */
+.hero.two{ grid-template-columns:1.5fr 1fr; }
+@media (max-width:900px){ .hero.two{ grid-template-columns:1fr } }
+
+    /* Başlık ve açıklamayı mobilde küçült */
+    .hero h2{font-size:clamp(16px,4.3vw,20px);margin:0 0 6px 0;letter-spacing:.1px;line-height:1.18}
+    .hero p{margin:0 0 10px 0;color:#4b5563;font-size:clamp(11.5px,3.6vw,13.5px);line-height:1.45}
+    @media (max-width:640px){.hero{padding:12px 10px}.cta-row .btn{padding:7px 10px;font-size:13px}}
+    .cta-row{display:flex;flex-wrap:wrap;gap:8px}
+    @media (max-width:480px){
+      .hero{padding:10px 8px}
+      .hero h2{font-size:clamp(15px,3.9vw,18px)}
+      .hero p{font-size:clamp(11px,3.2vw,13px)}
+      .cta-row .btn{padding:6px 9px;font-size:12.5px}
+    }
+
+    /* Üst kategori şeridi: sadece mobil/tablet (≤980px) görünsün */
+    .topcats{display:none}
+    @media (max-width:980px){
+      .topcats{display:flex;gap:8px;overflow:auto;padding:8px 2px 6px;scroll-snap-type:x mandatory}
+      .topcats::-webkit-scrollbar{height:6px}
+      .topcats .chip{flex:0 0 auto;scroll-snap-align:start;border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
+      .topcats .chip:active{transform:translateY(1px)}
+      /* aktif chip görünürlüğü */
+      .topcats .chip[aria-pressed="true"], .topcats .chip.active{background:#111;color:#fff;border-color:#111}
+    }
+    @media (max-width:640px){.topcats{padding:6px 2px 4px}.topcats .chip{padding:7px 10px;font-size:13px}}
+    @media (max-width:480px){.topcats .chip{padding:6px 9px;font-size:12.5px}}
+
+    /* Üstte tıklanan kategoriye ait alt kategoriler bloğu */
+    .topsubs{display:none;margin-top:6px}
+    @media (max-width:980px){.topsubs{display:block}}
+    .topsubs .subwrap{border:1px solid #e5e7eb;border-radius:12px;padding:8px;background:#fff}
+    .topsubs .subwrap h4{margin:0 0 6px 0;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+    .topsubs .subs{display:flex;flex-direction:column;gap:6px}
+    .topsubs .subs a{display:block;padding:8px 10px;border-radius:10px;font-size:14px;color:#374151;border:1px solid #f1f1f1}
+    .topsubs .subs a:hover{background:#f9fafb}
+
+    .grid{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width: 1100px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width: 640px){.grid{grid-template-columns:repeat(2,1fr)}}
+    .card{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.04)}
+    .card .ph{aspect-ratio:16/11;background:linear-gradient(180deg,#f3f4f6,#fff)}
+    .card .body{padding:12px}
+    .card .title{font-weight:700;margin:0 0 4px 0}
+    .card .meta{font-size:12px;color:#6b7280}
+    /* ==== Modal düzenleme (scroll düzeltme) ==== */
+.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,.5);
+  display: none;
+  overflow-y: auto;                  /* dış kabuk kayar */
+  overscroll-behavior: contain;
+  min-height: 100dvh;                /* mobil viewport güvenli */
+}
+
+.modal[open]{
+  display: flex;
+  align-items: flex-start;           /* yukarıdan başlasın */
+  justify-content: center;
+}
+
+.modal-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  margin: 20px 10px;
+  max-width: min(980px,96vw);
+  width:100%;
+  max-height: calc(100dvh - 24px);   /* yükseklik sınırı */
+  overflow: auto;                    /* İÇİ kayar (önceden hidden’dı) */
+  -webkit-overflow-scrolling: touch; /* iOS ivmeli scroll */
+  display:grid;
+  grid-template-columns:1.25fr 1fr;
+  gap:16px;
+}
+
+.m-body{
+  overflow: visible;                 /* içte ikinci scroll oluşmasın */
+  padding:12px 12px 8px;
+}
+
+@media (max-width:900px){
+  .modal-card{ grid-template-columns:1fr; }
+}
+@media (max-width:640px){
+  .modal-card{ border-radius:8px; }
+}
+
+    /* ==== LEGAL FOOTER ==== */
+    .legal{background:#000;color:#fff;padding:20px 0;margin-top:30px}
+    .legal .inner{max-width:1200px;margin:auto;padding:0 16px}
+    .legal .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+    .legal a{color:#fff;opacity:.9;text-decoration:none}
+    .legal a:hover{opacity:1;text-decoration:underline}
+    .legal .copy{text-align:center;margin-top:10px;font-size:14px;color:#aaa}
+
+    /* ==== ALT BAR ==== */
+    .bottomBar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;justify-content:space-around;gap:.5rem;padding:.5rem;z-index:100}
+    .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
+    .bbtn[aria-current="page"]{border-color:#e5e7eb;background:#fafafa}
+    .bicon{width:22px;height:22px;display:block}
+
+    /* ==== CANLI DESTEK ==== */
+.chatBubble {
+  position: fixed;
+  right: 16px;
+  bottom: 76px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #111;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 120;
+}
+
+.chatPanel {
+  position: fixed;
+  right: 16px;
+  bottom: 140px;
+  width: min(380px, 92vw);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  color: #000;
+  display: none;
+  z-index: 121;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.chatHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.chatBody {
+  max-height: 42vh;
+  overflow: auto;
+  padding: 0.6rem;
+}
+
+.chatMsg {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.45rem 0.6rem;
+  margin: 0.3rem 0;
+  max-width: 80%;
+  background: #f3f4f6;
+  white-space: pre-wrap; /* Satır sonlarını korur */
+}
+
+.chatMsg.me {
+  margin-left: auto;
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.chatFoot {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.chatFoot input {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+}
+
+    /* ==== İLAN DETAY MODAL ==== */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:200;align-items:center;justify-content:center;padding:16px}
+    .modal[open]{display:flex}
+    .modal-card{background:#fff;border-radius:16px;max-width:min(980px,96vw);width:100%;max-height:92vh;display:grid;grid-template-columns:1.25fr 1fr;gap:16px;overflow:hidden;border:1px solid #e5e7eb}
+    .m-head, .m-body { grid-column: 1 / -1; }
+    @media (max-width:900px){.modal-card{grid-template-columns:1fr;max-height:94vh}}
+    .m-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #f1f1f1;background:#fafafa}
+    .m-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px;overflow:auto}
+    @media (max-width:900px){.m-body{grid-template-columns:1fr}}
+    .gallery{display:grid;grid-template-rows:auto auto 1fr;gap:10px}
+    .g-main{aspect-ratio:16/11;border-radius:12px;overflow:hidden;border:1px solid #eee;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .g-main img{max-width:100%;max-height:100%;object-fit:contain}
+    .g-thumbs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
+    .g-thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:2px solid transparent;flex:0 0 auto}
+    .g-thumbs img[aria-current="true"]{border-color:#111}
+    .g-controls{display:flex;gap:8px}
+    .g-btn{border:1px solid #e5e7eb;border-radius:10px;background:#fff;padding:8px 10px;font-weight:700;cursor:pointer}
+    .m-info{display:grid;gap:10px}
+    .title{font-weight:800;font-size:20px;margin:0}
+    .meta2{color:#6b7280}
+    .seller{display:flex;align-items:center;gap:10px;border:1px solid #f0f0f0;border-radius:12px;padding:10px}
+    .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 8px;border-radius:999px;background:#ecfdf5;border:1px solid #10b981;color:#065f46;font-weight:700}
+    .badge.red{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+    .cta{display:flex;flex-wrap:wrap;gap:8px}
+    .btn.primary{background:#111;color:#fff;border:1px solid #111}
+    .btn.secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
+
+    /* ==== ALT SİYAH HIZLI LEGAL PANEL (YENİ) ==== */
+    .legal-fixed{position:fixed;left:0;right:0;bottom:64px;background:#000;color:#fff;border-top:1px solid #111;z-index:140}
+    @media (min-width:981px){.legal-fixed{bottom:64px}}
+    .legal-fixed .inner{max-width:1200px;margin:0 auto;padding:8px 12px;display:flex;align-items:center;gap:10px}
+    .lf-close{margin-left:auto;background:transparent;border:1px solid #333;color:#fff;border-radius:10px;padding:4px 8px;cursor:pointer}
+    .lf-track{display:flex;gap:14px;overflow:auto;padding:4px 0}
+    .lf-track a{color:#fff;opacity:.9;white-space:nowrap}
+    .lf-track a:hover{opacity:1;text-decoration:underline}
+
+   /* ==== SÜSLÜ GOLD KENAR — içeriği bozmaz ==== */
+.card.gold,
+.seller.gold { position: relative; z-index: 0; }
+
+/* Kenar çerçevesi: içerik aynen kalır, süs sadece kenarda görünür */
+.card.gold::before,
+.seller.gold::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  pointer-events:none;
+  z-index:1;
+
+  /* süslü altın desen (istersen FRAME_URL ile dış görsel kullanabilirsin) */
+  background:
+    url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>\
+      <defs>\
+        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>\
+          <stop offset='0%' stop-color='%23f7e7b5'/>\
+          <stop offset='40%' stop-color='%23e8c972'/>\
+          <stop offset='60%' stop-color='%23d7b45d'/>\
+          <stop offset='80%' stop-color='%23caa552'/>\
+          <stop offset='100%' stop-color='%23b79343'/>\
+        </linearGradient>\
+        <pattern id='motif' width='12' height='12' patternUnits='userSpaceOnUse'>\
+          <path d='M6 0 L12 6 L6 12 L0 6 Z' fill='none' stroke='%23ffffff' stroke-opacity='0.35' stroke-width='1'/>\
+        </pattern>\
+      </defs>\
+      <rect x='0' y='0' width='120' height='120' rx='20' ry='20' fill='url(%23g)'/>\
+      <rect x='3' y='3' width='114' height='114' rx='18' ry='18' fill='url(%23motif)' opacity='0.35'/>\
+    </svg>") center/cover no-repeat;
+
+  /* sadece kenar kalsın, iç boş: mask tekniği */
+  padding: 10px; /* kenar kalınlığı */
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  background-clip: content-box;
+  box-shadow: 0 8px 28px rgba(202,165,82,.28);
+}
+
+/* Foto altı satıcı bilgisi (avatar + ad + şehir + onaylı yazısı) */
+.card .info-row{
+  display:flex;align-items:center;gap:8px;margin-top:8px
+}
+.card .info-row .avatar{
+  width:28px;height:28px;border-radius:50%;
+  object-fit:cover;border:1px solid #e5e7eb;flex:0 0 28px
+}
+.card .info-row .who{display:flex;flex-direction:column;line-height:1.15}
+.card .info-row .who .name{font-size:13px;font-weight:800;letter-spacing:.2px}
+.card .info-row .who .city{font-size:12px;color:#6b7280}
+
+/* “Onaylı Satıcı” mini rozet (adın yanında) */
+.card .gold-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-left:6px;
+  padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;
+  background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
+  border:1px solid #b18a37;color:#111
+}
+
+/* Stok yok rozeti (opsiyonel) */
+.card .stock-badge{
+  position:absolute;left:10px;top:10px;
+  background:#991b1b;color:#fff;border:1px solid #991b1b;
+  padding:4px 8px;border-radius:999px;font-weight:800;font-size:12px
+}
+    .card .ph { position: relative; }
+.card .vitrin-badge{
+  position:absolute; top:10px; right:10px;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px;
+  font-size:12.5px; font-weight:800;
+  background:linear-gradient(135deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);
+  color:#111; border:1px solid #b18a37; box-shadow:0 6px 18px rgba(202,165,82,.35);
+}
+    
+    /* ==== SİPARİŞ ÇEKMECESİ (slide-up) ==== */
+.order-drawer{position:fixed;left:0;right:0;bottom:-100%;z-index:250;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -18px 48px rgba(0,0,0,.15);transition:bottom .25s ease}
+.order-drawer.open{bottom:0}
+.order-inner{max-width:680px;margin:0 auto;padding:14px 12px}
+.order-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.order-title{font-weight:800;margin:0;font-size:16px}
+.order-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.order-form{grid-template-columns:1fr}}
+.order-form .field{display:flex;flex-direction:column;gap:6px}
+.order-form input,.order-form textarea,.order-form select{border:1px solid #e5e7eb;border-radius:10px;padding:10px}
+.order-form textarea{min-height:80px;resize:vertical}
+.order-row{display:flex;gap:10px;align-items:center}
+.order-ship{display:flex;gap:10px;align-items:center}
+.order-summary{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed #eee;margin-top:10px;padding-top:10px;font-weight:800}
+.order-actions{display:flex;gap:8px;margin-top:10px}
+.btn.cancel{background:#fff;border:1px solid #e5e7eb}
+
+    /* === Detay paneli sağ sütun: özellik satırları === */
+.m-info .title{ margin:0 0 6px 0; }
+
+.m-info .specs{
+  list-style:none; margin:8px 0 10px; padding:0;
+  border:1px solid #e5e7eb; border-radius:12px; background:#fff;
+}
+.m-info .specs li{
+  display:grid; grid-template-columns:120px 1fr; gap:8px;
+  padding:10px 12px; align-items:center; border-bottom:1px dashed #eee;
+}
+.m-info .specs li:last-child{ border-bottom:0 }
+.m-info .specs .k{
+  font-weight:800; color:#374151; letter-spacing:.2px;
+}
+.m-info .specs .v{ color:#111; }
+
+.m-info .desc{
+  border:1px solid #f1f1f1; background:#fafafa;
+  padding:10px 12px; border-radius:12px; line-height:1.45;
+  margin:8px 0 10px;
+}
+
+.m-info .cta{ display:flex; flex-wrap:wrap; gap:8px; }
+
+/* küçük ekran düzeni */
+@media (max-width:640px){
+  .m-info .specs li{ grid-template-columns:100px 1fr; }
+}
+    /* === ZORLAYICI MOBİL MODAL SCROLL DÜZELTMESİ (OVERRIDE) === */
+.modal{ 
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  min-height:100dvh !important;
+}
+
+.modal-card{
+  /* yüksekliği ekrana sabitle ve içeriyi kaydır */
+  max-height:calc(100dvh - 16px) !important;
+  overflow:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+/* grid çocuklarının taşmadan kayabilmesi için min-height:0 şart */
+.modal-card, .m-body, .gallery, .m-info{
+  min-height:0 !important;
+}
+
+/* içeride ikinci scroll’u engelle, alt butonlar için nefes */
+.m-body{
+  overflow:visible !important;
+  padding-bottom:10px !important;
+}
+
+/* ana görselin ekranı boğmaması için */
+.g-main{ max-height:48vh !important; }
+
+/* küçük ekranda hizalama */
+@media (max-width:640px){
+  .modal[open]{ align-items:flex-start !important; }
+  .modal-card{ margin:20px 10px !important; border-radius:8px !important; }
+}
+ </style>
+
+<script>window.CLOUDINARY_CLOUD='ozneglobal';</script>
+
+<!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
+</head>
+
+<body>
+
+  <div class="page">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <!-- LOGO REMOVED FROM TOPBAR PER REQUEST -->
+          <h1 id="brandTitle">Üreten Eller</h1>
+        </div>
+        <div class="actions">
+          <select id="lang" class="lang" aria-label="Dil">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+          </select>
+          <button class="btn ghost" id="logoutBtn">Çıkış</button>
+          <button class="btn gold" id="postBtn">İlan Ver</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <main class="wrap">
+      <aside class="sidebar">
+        <div class="search" role="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M15.5 15.5L21 21" stroke="#111" stroke-width="1.6" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="#111" stroke-width="1.6"/></svg>
+          <input id="q" data-i18n-placeholder="searchPlaceholder" placeholder="Ara: ürün, kategori, ilçe…" />
+          <button class="btn gold" id="searchBtn" aria-label="Ara" data-i18n="search">Ara</button>
+        </div>
+
+        <!-- Sol Kategoriler -->
+        <div class="catbox" aria-label="Kategoriler">
+          <div class="cathead" data-i18n="categories">Kategoriler</div>
+          <div id="catlist" class="catlist"></div>
+        </div>
+      </aside>
+
+      <section class="content">
+        <div class="topcats" id="topCats" aria-label="Kategoriler"></div>
+        <div id="topSubs" class="topsubs" aria-live="polite"></div>
+        <div class="hero">
+          <div>
+            <h2 id="heroTitle">El emeği & yerel lezzetler tek çatı altında</h2>
+            <p id="heroDesc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
+            <div class="cta-row">
+              <button class="btn gold" id="browseBtn" data-i18n="browse">Kategorileri Keşfet</button>
+              <button class="btn gold" id="premiumBtn2">Premium – 1.999 TL/Yıl</button>
+            </div>
+          </div>
+        </div>
+        <section aria-label="İlanlar">
+          <div class="grid listGrid" id="allGrid"></div>
+        </section>
+    </main>
+
+    <!-- Siyah Legal Panel -->
+    <footer class="legal">
+      <div class="inner">
+        <div class="links">
+          <a href="/legal/kullanim-sartlari.html" data-i18n="legal.terms">Kullanım Şartları</a>
+          <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+          <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+          <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
+          <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
+          <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
+          <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
+          <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
+          <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+        </div>
+        <div class="copy">© <span id="yfoot"></span> <span data-i18n="brand">Üreten Eller</span></div>
+      </div>
+    </footer>
+
+    <!-- Alt bar (navigasyon) -->
+    <nav class="bottomBar" aria-label="Alt gezinme">
+      <button class="bbtn" id="navProfile">
+        <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a4 4 0 1 0-0.001-8.001A4 4 0 0 0 12 12zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/></svg>
+        <span class="mini" id="navProfileLabel">Profil</span>
+      </button>
+      <button class="bbtn" id="navMsg">
+        <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
+        <span class="mini" id="navMsgLabel" data-i18n="nav.msg">Mesajlar</span>
+      </button>
+      <button class="bbtn" id="navNoti">
+        <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span class="mini" id="navNotiLabel" data-i18n="nav.noti">Bildirimler</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Alt siyah Hızlı Legal (fixed) -->
+  <div id="legalFixed" class="legal-fixed" role="region" aria-label="Hızlı Yasal Linkler">
+    <div class="inner">
+      <div class="lf-track">
+        <a href="/legal/kullanim-sartlari.html" data-i18n="legal.terms">Kullanım Şartları</a>
+        <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+        <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+        <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
+        <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
+        <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
+        <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
+        <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.return">Teslimat/İade</a>
+        <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+      </div>
+      <button class="lf-close" id="lfClose" aria-label="Kapat">✕</button>
+    </div>
+  </div>
+
+  <!-- Canlı Destek Baloncuğu -->
+  <button id="chatBubble" class="chatBubble" aria-label="Canlı Destek">
+    <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
+  </button>
+  <aside id="chatPanel" class="chatPanel" aria-live="polite" aria-label="Canlı Destek">
+    <div class="chatHead">
+      <strong id="chatTitle">🛎️ Canlı Destek</strong>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn ghost" id="chatMin">_</button>
+        <button class="btn ghost" id="chatClose">✕</button>
+      </div>
+    </div>
+    <div id="chatBody" class="chatBody"></div>
+    <div class="chatFoot">
+      <input id="chatInput" type="text" placeholder="Mesaj yazın…" />
+      <button class="btn gold" id="chatSend">Gönder</button>
+    </div>
+  </aside>
+
+  
+
+    <script type="module">
+  import { getAuth, onAuthStateChanged, sendEmailVerification } 
+  from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  // 🔒 Email doğrulaması yapılmadan /home.html içeriği görüntülenmesin
+  function guardHomePage() {
+    const auth = getAuth(self.__fb?.app);
+
+    onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        openAuth?.(); // hiç giriş yoksa giriş modalı aç
+        return;
+      }
+
+      const usesPassword = u.providerData?.some(p => p.providerId === 'password');
+      await u.reload();
+
+      if (usesPassword && !u.emailVerified) {
+        try { await sendEmailVerification(u); } catch {}
+        document.querySelector('main')?.setAttribute('inert', '');
+        document.querySelector('main').style.filter = 'blur(4px)';
+
+        if (!document.getElementById('verifyBanner')) {
+          const div = document.createElement('div');
+          div.id = 'verifyBanner';
+          div.style.cssText = 'max-width:1200px;margin:12px auto;padding:12px;border:1px solid #f59e0b;background:#fff7ed;border-radius:12px';
+          div.innerHTML = currentLang === 'en'
+            ? '<strong>Verify your email</strong> to access this page. After clicking the link in your email, return here and press “I verified”. <button class="btn gold" id="iVerified">I verified</button>'
+            : '<strong>Bu sayfaya erişmek için e-postanızı doğrulayın.</strong> E-postadaki linke tıkladıktan sonra buraya dönüp “Doğruladım”a basın. <button class="btn gold" id="iVerified">Doğruladım</button>';
+          document.querySelector('.topbar')?.after(div);
+
+          document.getElementById('iVerified')?.addEventListener('click', async () => {
+            await u.reload();
+            if (u.emailVerified) {
+              document.querySelector('main')?.removeAttribute('inert');
+              document.querySelector('main').style.filter = '';
+              div.remove();
+            } else {
+              alert(currentLang === 'en'
+                ? 'Still not verified. Please check your inbox/SPAM.'
+                : 'Hâlâ doğrulanmadı. Lütfen gelen kutusu/Spam klasörünü kontrol edin.');
+            }
+          });
+        }
+
+        openAuth?.();
+        return;
+      }
+
+      // ✅ Doğrulanmış kullanıcıysa sayfa serbest
+      document.querySelector('main')?.removeAttribute('inert');
+      document.querySelector('main').style.filter = '';
+    });
+  }
+
+  // Sadece home sayfasında çalıştır
+  if (location.pathname.endsWith('/home.html')) {
+    guardHomePage();
+  }
+      
+    /* ===== I18N ===== */
+    const I18N = {
+      tr: { brand: 'Üreten Eller', post: 'İlan Ver', profile:'Profil', searchPlaceholder: 'Ara: ürün, kategori, ilçe…', search: 'Ara', categories: 'Kategoriler', browse: 'Kategorileri Keşfet', nav:{home:'Ana Sayfa', msg:'Mesajlar', noti:'Bildirimler'}, chat:{title:'🛎️ Canlı Destek', hi1:'Üreten Eller canlı desteğe hoş geldiniz, size nasıl yardımcı olabilirim?', hi2:'Lütfen probleminizi belirtiniz... 1=Premium üyelik 2=Vitrin ilanları 3=Üyelik sorunu 4=Diğer.'}, heroLines: [ { t: 'El emeği & yerel lezzetler tek çatı altında', d: 'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.' }, { t: 'Mahallenden üreticiye doğrudan destek', d: 'Yakınınızdaki üreticileri bulun, taze ve el emeği ürünleri keşfedin.' }, { t: 'Kendi ürününü kolayca satışa çıkar', d: 'Ücretsiz ilan ver, güvenli mesajlaşma ve sipariş yönetimi ile hızlı başla.' } ], cats: { yemek: '🍲 Yemekler', pasta: '🎂 Pasta & Tatlı', sos: '🫙 Reçel • Turşu • Sos', yoresel: '🌾 Yöresel / Kışlık', diet: '🥗 Diyet / Vegan / GF', taki: '💍 Takı', bebek: '👶 Bebek & Çocuk', orgu: '🧶 Örgü / Triko', terzi: '✂️ Dikiş / Terzilik', makrome: '🧵 Makrome & Dekor', evdekor: '🏠 Ev Dekor & Aksesuar', mum: '🕯️ Mum & Kokulu', kozmetik: '🧼 Doğal Sabun & Kozmetik', amigurumi: '🧸 Amigurumi & Oyuncak' }, sub: { evyemek: 'Ev yemekleri', borek: 'Börek-çörek', corba: 'Çorba', zeytiny: 'Zeytinyağlı', pilav: 'Pilav-makarna', et: 'Et-tavuk', kahvalti: 'Kahvaltılık', meze: 'Meze', dondur: 'Dondurulmuş', cocuk: 'Çocuk öğünleri', diyetvegf: 'Diyet/vegan/gf', yaspasta: 'Yaş pasta', kek: 'Kek-cupcake', kurabiye: 'Kurabiye', serbetli: 'Şerbetli', sutlu: 'Sütlü', cheese: 'Cheesecake', diyettat: 'Diyet tatlı', cikolata: 'Çikolata/şekerleme', dogumset: 'Doğum günü setleri', recel: 'Reçel-marmelat', pekmez: 'Pekmez', tursu: 'Turşu', dom: 'Domates/biber sos', acios: 'Acı sos', salca: 'Salça', sirke: 'Sirke', konserve: 'Konserve', eriste: 'Erişte', tarhana: 'Tarhana', yufka: 'Yufka', manti: 'Mantı', kurut: 'Kurutulmuş', fit: 'Fit tabaklar', vegan: 'Vegan yemekler', gf: 'GF unlu mamuller', sekersiz: 'Şekersiz tatlı', keto: 'Keto ürün', protein: 'Protein atıştırmalık', bileklik: 'Bileklik', kolye: 'Kolye', kupe: 'Küpe', yuzuk: 'Yüzük', halhal: 'Halhal', bros: 'Broş', set: 'Setler', isimli: 'Kişiye özel', makrome: 'Makrome', dogaltas: 'Doğal taş', recine: 'Reçine', telsarma: 'Tel sarma', fig: 'Figürler', cingirak: 'Çıngırak', dis: 'Diş kaşıyıcı', bezoy: 'Bez oyuncak/kitap', montessori: 'Montessori', set2: 'Setler', patik: 'Patik-bere', battaniye: 'Battaniye', onluk: 'Önlük', lohusa: 'Lohusa seti', sac: 'Saç aksesuarı', giyim: 'El emeği kıyafet', hirka: 'Hırka', kazak: 'Kazak', atkibere: 'Atkı-bere', panco: 'Panço', sal: 'Şal', corap: 'Çorap', lif: 'Lif takımı', bepektk: 'Bebek takımı', yelek: 'Yelek', kirlen: 'Kırlent-örtü', igneoyasi: 'İğne oyası', paca: 'Paça/onarım', fermuar: 'Fermuar değişimi', perde: 'Perde', nevresim: 'Nevresim', masa: 'Masa örtüsü', ozel: 'Özel dikim', kostum: 'Kostüm', duvar: 'Duvar süsü', saksı: 'Saksı askısı', anahtar: 'Anahtarlık', avize: 'Avize', runner: 'Runner', sepet: 'Sepet', raf: 'Raf/dekor', kece: 'Keçe işleri', kirlent: 'Kırlent', kapi: 'Kapı süsü', tepsi: 'Tepsi süs', cerceve: 'Çerçeve', ruya: 'Rüya kapanı', tablo: 'Tablo', soya: 'Soya/balmumu', tas: 'Kokulu taş', sprey: 'Oda spreyi', tutsu: 'Tütsü', jel: 'Jel mum', hediye: 'Hediye seti', zeytin: 'Zeytinyağlı sabun', bitkisel: 'Bitkisel sabun', sampuan: 'Katı şampuan', balm: 'Dudak balmı', krem: 'Krem/merhem', banyotuzu: 'Banyo tuzu', lavanta: 'Lavanta kesesi', anahtar2: 'Anahtarlık', magnet: 'Magnet', kolek: 'Koleksiyon', dekorbebek: 'Dekor bebek' }, legal:{terms:'Kullanım Şartları', privacy:'Gizlilik Politikası', kvkk:'KVKK Aydınlatma', community:'Topluluk Kuralları', prohibited:'Yasaklı Ürünler', distance:'Mesafeli Satış', preinfo:'Ön Bilgilendirme', return:'Teslimat/İade', contact:'İletişim'} , item:{ manti:{title:'Ev Yapımı Mantı', meta:'Kadıköy • 350 TL'}, makrome:{title:'Makrome Duvar Süsü', meta:'Konya • 420 TL'}, sabun:{title:'Zeytinyağlı Sabun', meta:'Ayvalık • 95 TL'} } },
+      en: { brand: 'Üreten Eller', post: 'Post Listing', profile:'Profile', searchPlaceholder: 'Search: product, category, district…', search: 'Search', categories: 'Categories', browse: 'Browse Categories', nav:{home:'Home', msg:'Messages', noti:'Notifications'}, chat:{title:'🛎️ Live Support', hi1:'Welcome to live support, how can I help?', hi2:'Please specify… 1=Premium 2=Showcase 3=Account 4=Other.'}, heroLines: [ { t: 'Handmade & local flavors in one place', d: 'Shop from local women producers and artisans. Search by location or explore by categories.' }, { t: 'Support nearby makers directly', d: 'Find producers around you and discover fresh, handmade goods.' }, { t: 'List your product in minutes', d: 'Create a free listing and start selling with secure messaging and orders.' } ], cats: { yemek: '🍲 Meals', pasta: '🎂 Cakes & Desserts', sos: '🫙 Jam • Pickle • Sauce', yoresel: '🌾 Local / Seasonal', diet: '🥗 Diet / Vegan / GF', taki: '💍 Jewelry', bebek: '👶 Baby & Kids', orgu: '🧶 Knitting / Crochet', terzi: '✂️ Sewing / Tailor', makrome: '🧵 Macrame & Decor', evdekor: '🏠 Home Decor & Accessories', mum: '🕯️ Candles & Scents', kozmetik: '🧼 Natural Soap & Cosmetics', amigurumi: '🧸 Amigurumi & Toys' }, sub: {}, legal:{terms:'Terms', privacy:'Privacy', kvkk:'KVKK Notice', community:'Community Guidelines', prohibited:'Prohibited Items', distance:'Distance Sales', preinfo:'Pre‑Information', return:'Delivery/Returns', contact:'Contact'}, item:{ manti:{title:'Homemade Mantı', meta:'Kadıköy • 350 TRY'}, makrome:{title:'Macrame Wall Hanging', meta:'Konya • 420 TRY'}, sabun:{title:'Olive Oil Soap', meta:'Ayvalık • 95 TRY'} } },
+      ar: { brand: 'أُنتِجَت بالأيدي', post: 'أنشئ إعلانًا', profile:'الملف الشخصي', searchPlaceholder: 'ابحث: منتج، فئة، حي…', search: 'بحث', categories: 'الفئات', browse: 'استكشاف الفئات', nav:{home:'الرئيسية', msg:'الرسائل', noti:'الإشعارات'}, chat:{title:'🛎️ دعم مباشر', hi1:'مرحبًا، كيف يمكنني المساعدة؟', hi2:'اذكر المشكلة… 1=بريميوم 2=الواجهة 3=الحساب 4=أخرى.'}, heroLines: [ { t: 'حِرَف ونكهات محلية في مكان واحد', d: 'تسوّق من المنتجين المحليين والحرفيين. ابحث حسب الموقع أو استكشف الفئات.' }, { t: 'ادعم المنتجين القريبين منك مباشرة', d: 'اكتشف المنتجات الطازجة والمصنوعة يدويًا حولك.' }, { t: 'اعرض منتجك بسهولة', d: 'أنشئ إعلانًا مجانًا وابدأ البيع برسائل وطلبات آمنة.' } ], cats: { yemek: '🍲 أطعمة', pasta: '🎂 كيك وحلويات', sos: '🫙 مربى • مخللات • صلصات', yoresel: '🌾 محلي/موسمي', diet: '🥗 حِمية/نباتي/خالٍ من الغلوتين', taki: '💍 مجوهرات', bebek: '👶 أطفال', orgu: '🧶 حياكة/كروشيه', terzi: '✂️ خياطة/تفصيل', makrome: '🧵 مكرمية وديكور', evdekor: '🏠 ديكور المنزل', mum: '🕯️ شموع وروائح', kozmetik: '🧼 صابون طبيعي ومستحضرات', amigurumi: '🧸 أميغورومي وألعاب' }, sub: {}, legal:{terms:'الشروط', privacy:'الخصوصية', kvkk:'إشعار KVKK', community:'قواعد المجتمع', prohibited:'المنتجات الممنوعة', distance:'البيع عن بُعد', preinfo:'معلومات أولية', return:'التسليم/الإرجاع', contact:'اتصال'}, item:{ manti:{title:'مانطي منزلي', meta:'Kadıköy • 350 ليرة'}, makrome:{title:'تعليقة جدارية مكرمية', meta:'Konya • 420 ليرة'}, sabun:{title:'صابون بزيت الزيتون', meta:'Ayvalık • 95 ليرة'} } },
+      de: { brand: 'Üreten Eller', post: 'Anzeige erstellen', profile:'Profil', searchPlaceholder: 'Suche: Produkt, Kategorie, Bezirk…', search: 'Suchen', categories: 'Kategorien', browse: 'Kategorien entdecken', nav:{home:'Startseite', msg:'Nachrichten', noti:'Benachrichtigungen'}, chat:{title:'🛎️ Live-Support', hi1:'Willkommen im Live‑Support. Wie kann ich helfen?', hi2:'Bitte Anliegen nennen… 1=Premium 2=Schaufenster 3=Konto 4=Sonstiges.'}, heroLines: [ { t: 'Handgemachtes & lokale Köstlichkeiten', d: 'Kaufe bei lokalen Produzentinnen und Handwerker:innen. Suche nach Standort oder stöbere nach Kategorien.' }, { t: 'Unterstütze Hersteller in deiner Nähe', d: 'Finde Produzenten in der Umgebung und entdecke handgemachte Produkte.' }, { t: 'Stelle dein Produkt in Minuten ein', d: 'Kostenlose Anzeige, sichere Nachrichten und Bestellungen.' } ], cats: { yemek: '🍲 Gerichte', pasta: '🎂 Kuchen & Desserts', sos: '🫙 Marmelade • Eingelegtes • Saucen', yoresel: '🌾 Regional / Saisonal', diet: '🥗 Diät / Vegan / GF', taki: '💍 Schmuck', bebek: '👶 Baby & Kinder', orgu: '🧶 Stricken / Häkeln', terzi: '✂️ Schneiderei', makrome: '🧵 Makramee & Deko', evdekor: '🏠 Wohndeko & Accessoires', mum: '🕯️ Kerzen & Düfte', kozmetik: '🧼 Naturseife & Kosmetik', amigurumi: '🧸 Amigurumi & Spielzeug' }, sub: {}, legal:{terms:'Nutzungsbedingungen', privacy:'Datenschutz', kvkk:'KVKK Hinweis', community:'Community‑Regeln', prohibited:'Verbotene Artikel', distance:'Fernabsatz', preinfo:'Vorabinformation', return:'Lieferung/Retouren', contact:'Kontakt'}, item:{ manti:{title:'Hausgemachte Mantı', meta:'Kadıköy • 350 TRY'}, makrome:{title:'Makramee Wandbehang', meta:'Konya • 420 TRY'}, sabun:{title:'Olivenölseife', meta:'Ayvalık • 95 TRY'} } }
+    };
+
+    const PROVINCES=[]; // not used here, kept for parity
+
+    const CATS = [
+      {id:'yemek', subs:[["evyemek","Ev yemekleri"],["borek","Börek-çörek"],["corba","Çorba"],["zeytiny","Zeytinyağlı"],["pilav","Pilav-makarna"],["et","Et-tavuk"],["kahvalti","Kahvaltılık"],["meze","Meze"],["dondur","Dondurulmuş"],["cocuk","Çocuk öğünleri"],["diyetvegf","Diyet/vegan/gf"]]},
+      {id:'pasta', subs:[["yaspasta","Yaş pasta"],["kek","Kek-cupcake"],["kurabiye","Kurabiye"],["serbetli","Şerbetli"],["sutlu","Sütlü"],["cheese","Cheesecake"],["diyettat","Diyet tatlı"],["cikolata","Çikolata/şekerleme"],["dogumset","Doğum günü setleri"]]},
+      {id:'sos', subs:[["recel","Reçel-marmelat"],["pekmez","Pekmez"],["tursu","Turşu"],["dom","Domates/biber sos"],["acios","Acı sos"],["salca","Salça"],["sirke","Sirke"],["konserve","Konserve"]]},
+      {id:'yoresel', subs:[["eriste","Erişte"],["tarhana","Tarhana"],["yufka","Yufka"],["manti","Mantı"],["kurut","Kurutulmuş"],["salca2","Salça"],["sirke2","Sirke"],["konserve2","Konserve"]]},
+      {id:'diet', subs:[["fit","Fit tabaklar"],["vegan","Vegan yemekler"],["gf","GF unlu mamuller"],["sekersiz","Şekersiz tatlı"],["keto","Keto ürün"],["protein","Protein atıştırmalık"]]},
+      {id:'taki', subs:[["bileklik","Bileklik"],["kolye","Kolye"],["kupe","Küpe"],["yuzuk","Yüzük"],["halhal","Halhal"],["bros","Broş"],["set","Setler"],["isimli","Kişiye özel"],["makrome","Makrome"],["dogaltas","Doğal taş"],["recine","Reçine"],["telsarma","Tel sarma"]]},
+      {id:'bebek', subs:[["fig","Figürler"],["cingirak","Çıngırak"],["dis","Diş kaşıyıcı"],["bezoy","Bez oyuncak/kitap"],["montessori","Montessori"],["set2","Setler"],["patik","Patik-bere"],["battaniye","Battaniye"],["onluk","Önlük"],["lohusa","Lohusa seti"],["sac","Saç aksesuarı"],["giyim","El emeği kıyafet"]]},
+      {id:'orgu', subs:[["hirka","Hırka"],["kazak","Kazak"],["atkibere","Atkı-bere"],["panco","Panço"],["sal","Şal"],["corap","Çorap"],["lif","Lif takımı"],["bebektk","Bebek takımı"],["yelek","Yelek"],["kirlen","Kırlent-örtü"],["igneoyasi","İğne oyası"]]},
+      {id:'terzi', subs:[["paca","Paça/onarım"],["fermuar","Fermuar değişimi"],["perde","Perde"],["nevresim","Nevresim"],["masa","Masa örtüsü"],["ozel","Özel dikim"],["kostum","Kostüm"]]},
+      {id:'makrome', subs:[["duvar","Duvar süsü"],["saksi","Saksı askısı"],["anahtar","Anahtarlık"],["avize","Avize"],["runner","Runner"],["sepet","Sepet"],["raf","Raf/dekor"]]},
+      {id:'evdekor', subs:[["kece","Keçe işleri"],["kirlent","Kırlent"],["kapi","Kapı süsü"],["tepsi","Tepsi süs"],["cerceve","Çerçeve"],["ruya","Rüya kapanı"],["tablo","Tablo"]]},
+      {id:'mum', subs:[["soya","Soya/balmumu"],["tas","Kokulu taş"],["sprey","Oda spreyi"],["tutsu","Tütsü"],["jel","Jel mum"],["hediye","Hediye seti"]]},
+      {id:'kozmetik', subs:[["zeytin","Zeytinyağlı sabun"],["bitkisel","Bitkisel sabun"],["sampuan","Katı şampuan"],["balm","Dudak balmı"],["krem","Krem/merhem"],["banyotuzu","Banyo tuzu"],["lavanta","Lavanta kesesi"]]},
+      {id:'amigurumi', subs:[["anahtar2","Anahtarlık"],["magnet","Magnet"],["kolek","Koleksiyon"],["dekorbebek","Dekor bebek"]]},
+    ];
+
+    // ===== Helpers =====
+    const $ = (s,root=document)=>root.querySelector(s);
+    const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
+    const getLang = ()=>localStorage.getItem('ue_lang')||'tr';
+    const setLang = l=>{ localStorage.setItem('ue_lang', l); document.documentElement.lang = l; document.documentElement.dir = (l==='ar'?'rtl':'ltr'); };
+    function tLookup(obj, path){ return path.split('.').reduce((o,k)=>o&&o[k], obj); }
+
+    function applyI18n(){
+      const L = I18N[getLang()]||I18N.tr;
+      $('#brandTitle').textContent = L.brand || 'Üreten Eller';
+      $('#postBtn').textContent = L.post || 'İlan Ver';
+      const loBtn=$('#logoutBtn'); if(loBtn) loBtn.textContent = 'Çıkış';
+      $('[data-i18n="categories"]').textContent = L.categories;
+      $('[data-i18n="browse"]').textContent = L.browse;
+      const pLab=$('#navProfileLabel'); if(pLab) pLab.textContent = L.profile || 'Profil';
+      $('#navMsgLabel').textContent  = L.nav?.msg  || 'Mesajlar';
+      $('#navNotiLabel').textContent = L.nav?.noti || 'Bildirimler';
+      const inp=$('#q'); if (inp){ const ph = L.searchPlaceholder || inp.getAttribute('placeholder'); inp.setAttribute('placeholder', ph); }
+      const sBtn=$('#searchBtn'); if(sBtn) sBtn.textContent = L.search || 'Ara';
+      $('#chatTitle').textContent = L.chat?.title || '🛎️ Canlı Destek';
+      // hero lines (first)
+      const it=(L.heroLines||I18N.tr.heroLines)[0]; $('#heroTitle').textContent=it.t; $('#heroDesc').textContent=it.d;
+      // sample items (guarded — elements may not exist on this page)
+      const map=L.item||{};
+      const mTitle=$('[data-i18n="item.manti.title"]'); if(mTitle) mTitle.textContent=map.manti?.title||'Ev Yapımı Mantı';
+      const mMeta =$('[data-i18n="item.manti.meta"]'); if(mMeta)  mMeta.textContent =map.manti?.meta ||'Kadıköy • 350 TL';
+      const kTitle=$('[data-i18n=\"item.makrome.title\"]'); if(kTitle) kTitle.textContent=map.makrome?.title||'Makrome Duvar Süsü';
+      const kMeta =$('[data-i18n=\"item.makrome.meta\"]'); if(kMeta)  kMeta.textContent =map.makrome?.meta ||'Konya • 420 TL';
+      const sTitle=$('[data-i18n=\"item.sabun.title\"]'); if(sTitle) sTitle.textContent=map.sabun?.title||'Zeytinyağlı Sabun';
+      const sMeta =$('[data-i18n=\"item.sabun.meta\"]'); if(sMeta)  sMeta.textContent =map.sabun?.meta ||'Ayvalık • 95 TL';
+      // legal links (footer + fixed panel)
+      const LL=L.legal||{}; $$('footer .links a, #legalFixed .lf-track a').forEach(a=>{ const key=[...a.getAttribute('data-i18n')? [a.getAttribute('data-i18n')] : []][0]; if(!key) return; const v=tLookup(L,key); if(typeof v==='string') a.textContent=v; });
+    }
+
+    function buildCats(){
+      const L = I18N[getLang()]||I18N.tr; const box=$('#catlist'); box.innerHTML='';
+      CATS.forEach(cat=>{
+        const row=document.createElement('div'); row.className='cat'; row.setAttribute('aria-expanded','false');
+        const btn=document.createElement('button'); const title=L.cats?.[cat.id]||cat.id; btn.innerHTML=`<span class="cat-title">${title}</span><span class="chev">▶</span>`;
+        const sub=document.createElement('div'); sub.className='sublist';
+        sub.innerHTML=cat.subs.map(([id,label])=>`<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(id)}">${(L.sub?.[id]||label)}</a>`).join('');
+        btn.addEventListener('click',()=>{ const exp=row.getAttribute('aria-expanded')==='true'; row.setAttribute('aria-expanded', String(!exp)); sub.style.display = exp?'none':'block'; });
+        row.append(btn,sub); box.append(row);
+      });
+    }
+
+    function buildTopCats(){
+      const L = I18N[getLang()]||I18N.tr; const top=$('#topCats'); const subsBox=$('#topSubs'); if(!top||!subsBox) return;
+      top.innerHTML = CATS.map(cat=>{ const title=L.cats?.[cat.id]||cat.id; return `<button class=\"chip\" data-cat=\"${cat.id}\" aria-pressed=\"false\">${title}</button>`; }).join('');
+
+      // --- toggle ---
+      let openCatId = null;
+
+      function closeSubs(){
+        subsBox.innerHTML = '';
+        openCatId = null;
+        $$('.topcats .chip', top).forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      }
+
+      top.addEventListener('click',(e)=>{
+        const b=e.target.closest('.chip'); if(!b) return; const id=b.getAttribute('data-cat');
+        if(openCatId === id){ closeSubs(); return; }
+        const cat=CATS.find(c=>c.id===id); if(!cat){ closeSubs(); return; }
+        const title=L.cats?.[cat.id]||cat.id;
+        const subHtml = cat.subs.map(([sid,label])=>{
+          const name=(L.sub?.[sid]||label);
+          // YÖNLENDİRME DÜZELTİLMİŞ
+          return `<a href="/listings.html?cat=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sid)}">${name}</a>`;
+
+        }).join('');
+        subsBox.innerHTML = `<div class=\"subwrap\"><h4>${title}</h4><div class=\"subs\">${subHtml}</div></div>`;
+        openCatId = id;
+        $$('.topcats .chip', top).forEach(el=>{ const on = el.getAttribute('data-cat')===id; el.classList.toggle('active', on); el.setAttribute('aria-pressed', on?'true':'false'); });
+      });
+
+      document.addEventListener('click',(e)=>{ if(!openCatId) return; const hitTop = e.target.closest('.topcats'); const hitSubs = e.target.closest('#topSubs'); if(!hitTop && !hitSubs){ closeSubs(); } });
+    }
+
+   // ===== Events / navigation =====
+
+// Marka başlığı tıklanınca ana sayfa
+document.addEventListener('click', (e) => {
+  const bt = e.target.closest('#brandTitle');
+  if (bt) location.href = '/index.html';
+});
+
+// ---- Ortak login kontrolü ----
+async function isLoggedIn(){
+  // 1) localStorage hızlı kontrol
+  let hasLocal = false;
+  try { hasLocal = !!localStorage.getItem('ue_user'); } catch(_) {}
+
+  // 2) Firebase ile teyit
+  try{
+    const fb = self.firebase || window.firebase;
+    if (fb?.getAuth) {
+      const auth = fb.getAuth(self.__fb?.app);
+      if (auth?.currentUser) return true;
+    } else if (fb?.auth && fb.auth().currentUser) {
+      return true;
+    }
+  } catch(_){}
+
+  return hasLocal;
+}
+
+// ---- İlan Ver butonu: doğrudan sayfaya git ----
+document.getElementById('postBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  location.href = '/ilan-ver.html';
+});
+
+
+// === ÇIKIŞ (temiz ve güvenli) ===
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+  try {
+    // firebase-auth modülünü dinamik içe aktar (klasik <script>’te de çalışır)
+    const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const auth = getAuth(self.__fb?.app);
+    await signOut(auth);
+  } catch (e) {
+    console.warn('signOut hata:', e);
+  }
+
+  // Tarayıcı verilerini temizle (opsiyonel)
+  try { ['ue_user', 'ue_token', 'ue_profile'].forEach(k => localStorage.removeItem(k)); } catch {}
+  try { sessionStorage.clear(); } catch {}
+
+  // Tek adım güvenli yönlendirme
+  location.replace('/index.html');
+});
+
+document.getElementById('searchBtn')?.addEventListener('click', () => {
+  const q = (document.getElementById('q')?.value || '').trim();
+  const url = q ? `/index.html?q=${encodeURIComponent(q)}` : '/index.html';
+  location.href = url;
+});
+
+document.getElementById('browseBtn')?.addEventListener('click', () => {
+  location.href = '/listings.html';
+});
+
+document.getElementById('navProfile')?.addEventListener('click', () => location.href = '/profile.html');
+document.getElementById('navMsg')?.addEventListener('click', () => location.href = '/docs/mesajlar.html');
+document.getElementById('navNoti')?.addEventListener('click', () => location.href = '/docs/bildirimler.html');
+
+
+    // Alt siyah fixed legal panel kapatma
+    document.getElementById('lfClose')?.addEventListener('click', ()=>{ const el=document.getElementById('legalFixed'); if(el) el.style.display='none'; });
+
+    // Lang init
+    (function init(){
+      const y=document.getElementById('yfoot'); if(y) y.textContent=new Date().getFullYear();
+      const initial=getLang(); setLang(initial); const sel=document.getElementById('lang'); sel.value=initial;
+      applyI18n(); buildCats(); buildTopCats();
+      sel.addEventListener('change', ()=>{ setLang(sel.value); applyI18n(); buildCats(); buildTopCats(); });
+    })();
+
+    // ===== Live Chat (support) =====
+const chatBubble = $('#chatBubble');
+const chatPanel  = $('#chatPanel');
+const chatBody   = $('#chatBody');
+const chatInput  = $('#chatInput');
+
+function chatPush(text, me = false){
+  const m = document.createElement('div');
+  m.className = 'chatMsg' + (me ? ' me' : '');
+  m.textContent = text;
+  chatBody.appendChild(m);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function openChat(){
+  chatPanel.style.display = 'block';
+
+  // Karşılama mesajını sadece ilk açılışta gönder
+  if (!chatBody.dataset.welcome) {
+    const hi1 = '🤝 Üreten Eller canlı desteğe hoş geldiniz!\n\nBen size yardımcı olmak için buradayım 💬';
+    const hi2 = `🔎 Lütfen probleminizi belirtiniz:\n\n1️⃣ ✨ Premium üyelik\n2️⃣ 🏷️ Vitrin ilanları\n3️⃣ 👤 Üyelik sorunu\n4️⃣ 💬 Diğer`;
+
+    // Ekrana yaz
+    chatPush(hi1);
+    chatPush(hi2);
+
+    // Admin tarafı da görsün (Firestore’a “system” mesajı olarak yaz)
+    (async () => {
+      try {
+        await __ue_sendSystemMessage(hi1);
+        await __ue_sendSystemMessage(hi2);
+      } catch (_) {}
+    })();
+
+    chatBody.dataset.welcome = '1';
+  }
+}
+
+// Balon tıklandığında aç/kapat
+chatBubble?.addEventListener('click', () => {
+  if (chatPanel.style.display === 'block') {
+    chatPanel.style.display = 'none';
+  } else {
+    openChat();
+  }
+});
+
+// Küçült
+document.getElementById('chatMin')?.addEventListener('click', () => {
+  chatPanel.style.display = 'none';
+});
+
+// Tam kapat (sohbeti sıfırlar; tekrar açıldığında karşılama yeniden gelir)
+document.getElementById('chatClose')?.addEventListener('click', () => {
+  chatPanel.style.display = 'none';
+  chatBody.innerHTML = '';
+  delete chatBody.dataset.welcome;
+});
+
+    // Firestore'a destek mesajı yazan yardımcılar (dinamik import ile)
+async function __ue_getUser(){
+  const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+  const auth = getAuth(self.__fb?.app);
+  if (auth.currentUser) return auth.currentUser;
+  return await new Promise(res=>{
+    const off = onAuthStateChanged(auth, u=>{ off(); res(u||null); }, _=>{ off(); res(null); });
+  });
+}
+
+async function __ue_sendSupportMessage(text){
+  const [{ getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp, updateDoc }] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js')
+  ]);
+  const db = (self.__fb && self.__fb.db) ? self.__fb.db : getFirestore(self.__fb?.app);
+
+  const user = await __ue_getUser();
+  if (!user) throw new Error('AUTH_REQUIRED');
+
+ const tRef = doc(db, 'conversations', user.uid);
+  const tSnap = await getDoc(tRef);
+  if (!tSnap.exists()){
+    await setDoc(tRef, {
+      userId: user.uid,
+      status: 'open',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: { text: 'Başlatıldı', from: 'system' }
+    });
+  }else{
+    await updateDoc(tRef, { updatedAt: serverTimestamp() });
+  }
+
+  await addDoc(collection(tRef, 'messages'), {
+  text,
+  from: user.uid,                    // ← 'user' yerine kullanıcı UID
+  userId: user.uid,
+  displayName: user.displayName || '',
+  createdAt: serverTimestamp()
+});
+await updateDoc(tRef, {
+  updatedAt: serverTimestamp(),
+  lastMessage: { text, from: user.uid }  // ← burada da UID
+});
+  }
+
+// GÖNDER butonu: ekrana yansıt + Firestore'a yaz
+document.getElementById('chatSend')?.addEventListener('click', async () => {
+  const v = (chatInput.value||'').trim();
+  if(!v) return;
+
+  // önce kullanıcıya hemen göster
+  chatPush(v, true);
+  chatInput.value = '';
+
+  try {
+    const isFirstMessage = !(window.__ue_hasThreadStarted);
+    await __ue_sendSupportMessage(v);
+
+    // 📨 Sadece ilk mesajda bilgi ver
+    if (isFirstMessage) {
+      window.__ue_hasThreadStarted = true;
+      const reply = '📨 Sizi ilgili birime yönlendiriyorum, lütfen mesaj alanınızı (X) kapatmayın...';
+      chatPush(reply);
+      try { await __ue_sendSystemMessage(reply); } catch(_){}
+    }
+
+  } catch(e) {
+    if (String(e && e.message) === 'AUTH_REQUIRED') {
+      chatPush('Lütfen giriş yapın.');
+    } else {
+      console.warn('support send error', e);
+      chatPush('Gönderilemedi. Ağ hatası.');
+    }
+  }
+});  // ← EKLENDİ: bu satır eksikti!
+
+// Enter tuşu ile gönder
+chatInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('chatSend')?.click();
+  }
+});
+      // 🔔 Admin mesajlarını anlık dinle
+(async () => {
+  const [{ getFirestore, doc, collection, query, orderBy, onSnapshot }] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js')
+  ]);
+  const db = (self.__fb && self.__fb.db) ? self.__fb.db : getFirestore(self.__fb?.app);
+  const user = await __ue_getUser();
+  if (!user) return;
+
+  const convRef = doc(db, 'conversations', user.uid);
+  const q = query(collection(convRef, 'messages'), orderBy('createdAt', 'asc'));
+
+  onSnapshot(q, (snap) => {
+    const msgs = snap.docs.map(d => d.data());
+    const last = msgs[msgs.length - 1];
+    if (!last) return;
+
+    // sadece admin tarafından gönderilen (byAdmin: true) yeni mesajlarda tetiklenir
+if (last.byAdmin && last.to === user.uid) {
+  chatPush(last.text, false);
+  try {
+    const audio = new Audio('/notify.wav');
+    audio.play().catch(()=>{});
+  } catch(_){}
+}
+  });
+})();
+
+    // ==== İLANLAR: Tek panel (üst 20 vitrin + sonrası standart) ====
+    (function(){
+      const allGrid = document.getElementById('allGrid');
+      if(!allGrid) return;
+
+      function ensureFirebaseReady(){
+        if (!self.__fb || !self.__fb.db || !self.firebase || !self.getDocs){
+          throw new Error('Firebase hazır değil. Lütfen /firebase-init.js yüklü olsun.');
+        }
+        const { db } = self.__fb;
+        const { col, q, orderBy, limit } = self.firebase;
+        const { getDocs } = self;
+        return { db, col, q, orderBy, limit, getDocs };
+      }
+
+      const fmtPrice = (v, cur='TRY')=>{ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v)); }catch(_){ return (v||'')+' '+cur; } };
+      const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
+      const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
+
+      // ==== Cloudinary yardımcıları + kart render ==== 
+const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
+
+const isHttp = (u) => /^https?:\/\//i.test(u || '');
+const isPid  = (u) => u && !isHttp(u) && /[\/_\.-]/.test(String(u));
+const cdn = (pid, { w, h, crop='fill', fmt='auto', q='auto' } = {}) =>
+  `https://res.cloudinary.com/${CLOUD}/image/upload/${[q&&`q_${q}`, fmt&&`f_${fmt}`, w&&`w_${w}`, h&&`h_${h}`, crop&&`c_${crop}`].filter(Boolean).join(',')}/` +
+  String(pid).replace(/^image\/upload\//,'');
+
+async function resolveURL(raw){
+  if (!raw) return '';
+  if (isHttp(raw)) return raw;
+  if (isPid(raw))  return cdn(raw, { w:600, h:450 });
+  try {
+    if (self.storageRef && self._getDownloadURL) {
+      return await self._getDownloadURL(self.storageRef(raw));
+    }
+  } catch(_) {}
+  return raw;
+}
+
+async function resolveCover(d){
+  const arr = [];
+  if (d.cover)    arr.push(d.cover);
+  if (d.coverUrl) arr.push(d.coverUrl);
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  const first = arr.find(Boolean);
+  return await resolveURL(first) || '/assets/icons/ureteneller.png';
+}
+
+async function resolveImages(d){
+  const arr = [];
+  if (Array.isArray(d.images)) arr.push(...d.images.map(x => typeof x==='string' ? x : (x.secure_url||x.url||x.src||x.path||x.public_id||'')));
+  if (Array.isArray(d.photos)) arr.push(...d.photos);
+  if (d.cover)    arr.unshift(d.cover);
+  if (d.coverUrl) arr.unshift(d.coverUrl);
+  const uniq = [...new Set(arr.filter(Boolean))];
+  const urls = [];
+  for (const u of uniq) { urls.push(await resolveURL(u)); }
+  return urls.length ? urls : ['/assets/icons/ureteneller.png'];
+}
+window.resolveImages = resolveImages;
+
+const cardHTML = (d, id, cover, isGold=false) => {
+  const name = d.sellerName || d.userName || d.ownerName || d.sellerUsername || 'Satıcı';
+  const city = d.district || d.city || d.province || '';
+  const avatar = d.sellerAvatarUrl || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png';
+  const verified = d.sellerVerified === true;
+  const stock = (d.inStock === true) || (String(d.stock || '').toLowerCase() === 'var');
+
+  return `
+<a class="card" href="#" data-id="${id}">
+  <div class="ph" style="background-image:url('${cover}');background-size:cover;background-position:center">
+    ${d.__isVip ? `<span class="vitrin-badge">★ Vitrin</span>` : ``}
+  </div>
+  <div class="body">
+    <h3 class="title">${(d.title || d.name || 'İlan')}</h3>
+    <div class="meta">
+      ${(city || '')}${(city && d.price) ? ' · ' : ''}${d.price ? fmtPrice(d.price, (d.currency || d.cur || 'TRY')) : ''}
+    </div>
+    <div class="info-row">
+      <img class="avatar"
+     src="${avatar}"
+     alt="Satıcı avatarı"
+     onerror="this.src='https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png'"/>
+      <div class="who">
+        <span class="name">
+          ${name}
+          ${verified ? '<span class="gold-badge">Onaylı Satıcı</span>' : ''}
+        </span>
+        <span class="city">${city || ''}</span>
+      </div>
+    </div>
+  </div>
+</a>`.trim();
+};
+
+function renderList(gridId, list){
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  list.forEach(x => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = cardHTML(
+      x.data,
+      x.id,
+      x.data.__cover || '/assets/icons/ureteneller.png',
+      x.data.__goldCard === true
+    );
+    frag.appendChild(wrap.firstElementChild);
+  });
+  grid.appendChild(frag);
+}
+
+async function fetchAndPaint(){
+  try{
+    const { col, q, orderBy, limit, getDocs } = ensureFirebaseReady();
+    const ref = col('listings');
+    let snap;
+    try {
+      snap = await getDocs(q(ref, orderBy('createdAt','desc'), limit(200)));
+    } catch(e) {
+      snap = await getDocs(q(ref, limit(200)));
+    }
+    const now = Date.now();
+    const vip = [], std = [];
+    snap.forEach(doc => {
+      const d = doc.data() || {};
+      (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
+    });
+        await Promise.all([...vip, ...std].map(async x => {
+      x.data.__cover = await resolveCover(x.data);
+    }));
+
+    // ★ Vitrin / özel ilan işareti
+    [...vip, ...std].forEach(x => {
+      const d = x.data; const now = Date.now();
+      d.__isVip =
+        (d.showcase || d.isShowcase || d.vitrin || d.featured) === true ||
+        toMillis(d.showcaseUntil) > now ||
+        toMillis(d.vitrinUntil) > now ||
+        toMillis(d.featuredUntil) > now;
+    });
+
+    // ★ GOLD çerçeve (vitrin veya onaylı satıcı)
+    [...vip, ...std].forEach(x => {
+      const isVip = isVipDoc(x.data, Date.now());
+      const isVerified = x.data.sellerVerified === true;
+      x.data.__goldCard = isVip || isVerified;
+    });
+
+    // Sırala ve birleştir
+    const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
+    vip.sort(sortBy); std.sort(sortBy);
+    const combined = vip.concat(std);
+
+    // --- Satıcı bilgisi join (users -> listings)
+    const uids = new Set();
+    combined.forEach(x => {
+      const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
+      const hasSellerFields = x.data.sellerName || x.data.sellerAvatarUrl || x.data.sellerCity || (x.data.sellerVerified === true);
+      if (uid && !hasSellerFields) uids.add(uid);
+    });
+
+    const userCache = {};
+    for (const uid of uids) {
+      try {
+        const snap = await self.firebase.getDoc(`users/${uid}`);
+        if (snap && snap.exists()) {
+          const u = snap.data() || {};
+          userCache[uid] = {
+            name: u.name || u.displayName || 'Satıcı',
+            avatar: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png',
+            verified: !!u.isVerified,
+            city: u.district || u.city || u.province || ''
+          };
+        }
+      } catch (_) {}
+    }
+
+    combined.forEach(x => {
+      const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
+      const u = uid && userCache[uid];
+      if (u) {
+        x.data.sellerName      = x.data.sellerName      || u.name;
+        x.data.sellerAvatarUrl = x.data.sellerAvatarUrl || u.avatar;
+        x.data.sellerVerified  = (x.data.sellerVerified === true) || u.verified;
+        x.data.sellerCity      = x.data.sellerCity      || u.city;
+      }
+    });
+
+    renderList('allGrid', combined);
+    window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
+
+  } catch (e) {
+    console.warn('İlan yüklenemedi:', e);
+  } // try/catch kapanışı
+} // fetchAndPaint() kapanışı
+
+function start(){
+  if(window.__fbReady){
+    fetchAndPaint();
+  } else {
+    document.addEventListener('fb-ready', fetchAndPaint, { once:true });
+  }
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}
+})(); // IIFE kapanışı
+ 
+  </script>
+ 
+  <!-- İlan Detay Modal -->
+<div id="listingModal" class="modal" role="dialog" aria-modal="true" aria-label="İlan Detayı">
+  <div class="modal-card">
+    <div class="m-head">
+      <strong>İlan Detayı</strong>
+      <button class="btn ghost" id="mClose">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="gallery">
+        <div class="g-main"><img id="gMain" alt="İlan görseli"/></div>
+        <div class="g-controls">
+          <button class="g-btn" id="gPrev">‹ Önceki</button>
+          <button class="g-btn" id="gNext">Sonraki ›</button>
+        </div>
+        <div class="g-thumbs" id="gThumbs"></div>
+      </div>
+      <div class="m-info">
+  <h3 class="title" id="mTitle">İlan</h3>
+
+  <div class="meta2" id="mMeta" style="display:none"></div>
+
+  <ul class="specs" role="list">
+    <li><span class="k">Fiyat</span> <span class="v"><strong id="mPrice">—</strong></span></li>
+    <li><span class="k">Şehir</span> <span class="v" id="mCity">—</span></li>
+    <li><span class="k">Stok</span>  <span class="v" id="mStockText">—</span></li>
+  </ul>
+
+  <div class="desc" id="mDesc"></div>
+
+  <div class="seller">
+    <div style="flex:1">
+      <div id="mSellerName" style="font-weight:700">Satıcı</div>
+      <div id="mSellerCity" class="meta2"></div>
+    </div>
+    <span id="mBadge" class="badge" style="display:none">✔ Onaylı Satıcı</span>
+  </div>
+
+  <div id="mStock" class="badge" style="display:none">Stok durumu</div>
+
+  <div class="cta">
+    <a id="mOrder" class="btn primary" href="#">Sipariş Ver</a>
+    <a id="mProfile" class="btn secondary" href="#">Satıcı Profili</a>
+       </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sipariş Çekmecesi -->
+<div id="orderDrawer" class="order-drawer" aria-hidden="true">
+  <div class="order-inner">
+    <div class="order-head">
+      <h4 class="order-title">Sipariş</h4>
+      <button id="odClose" class="btn cancel">Kapat</button>
+    </div>
+
+    <div id="odListing" style="font-size:13px;color:#6b7280;margin-bottom:8px"></div>
+
+    <div class="order-form">
+      <div class="field">
+        <label>Adet</label>
+        <input id="odQty" type="number" min="1" step="1" value="1" inputmode="numeric">
+      </div>
+
+      <div class="field">
+        <label>Teslimat</label>
+        <div class="order-ship">
+          <label><input type="radio" name="odShip" value="pickup" checked> Elden</label>
+          <label><input type="radio" name="odShip" value="cargo"> Kargo</label>
+        </div>
+      </div>
+
+      <div class="field" id="odAddressWrap" style="display:none">
+        <label>Adres</label>
+        <textarea id="odAddress" placeholder="Kargo için adres"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Telefon</label>
+        <input id="odPhone" type="tel" placeholder="İletişim için">
+      </div>
+
+      <div class="field" style="grid-column:1/-1">
+        <label>Not</label>
+        <textarea id="odNote" placeholder="Örn: hediye paketi lütfen"></textarea>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <span id="odCalcLabel">Toplam</span>
+      <span id="odTotal">0 TL</span>
+    </div>
+
+    <div class="order-actions">
+      <button id="odConfirm" class="btn primary" style="flex:1">Siparişi Onayla</button>
+      <button id="odMsg" class="btn secondary">Satıcıya Mesaj</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==== Detay Modal + Kart Tıklama + Sipariş Çekmecesi (temiz) ==== */
+(() => {
+  // ---- Modal elemanları
+  const modal = document.getElementById('listingModal');
+  const gMain = document.getElementById('gMain');
+  const gThumbs = document.getElementById('gThumbs');
+  const gPrev = document.getElementById('gPrev');
+  const gNext = document.getElementById('gNext');
+  const mTitle = document.getElementById('mTitle');
+  const mMeta = document.getElementById('mMeta');
+  const mDesc = document.getElementById('mDesc');
+  const mSellerName = document.getElementById('mSellerName');
+  const mSellerCity = document.getElementById('mSellerCity');
+  const mBadge = document.getElementById('mBadge');
+  const mStock = document.getElementById('mStock');
+  const mOrder = document.getElementById('mOrder');
+  const mProfile = document.getElementById('mProfile');
+  const mClose = document.getElementById('mClose');
+  const mSellerBox = document.querySelector('.m-info .seller');
+
+  // ---- Drawer elemanları
+  const drawer = document.getElementById('orderDrawer');
+  const btnClose = document.getElementById('odClose');
+  const btnConfirm = document.getElementById('odConfirm');
+  const btnMsg = document.getElementById('odMsg');
+  const qty = document.getElementById('odQty');
+  const addressWrap = document.getElementById('odAddressWrap');
+  const address = document.getElementById('odAddress');
+  const phone = document.getElementById('odPhone');
+  const note = document.getElementById('odNote');
+  const totalLabel = document.getElementById('odTotal');
+  const listingInfo = document.getElementById('odListing');
+  const radios = document.querySelectorAll('[name="odShip"]');
+
+  let currentListingId = null;
+  let currentOrderItem = null;
+  let imgs = []; let idx = 0;
+
+  const fmtCur = (v, cur='TRY') => {
+    try { return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v||0)); }
+    catch(_) { return `${v||0} ${cur}`; }
+  };
+
+  // --- Premium yönlendirme yardımcıları (KESUG yok, kendi /odeme.html)
+const PAY_HOST = 'https://xn--reteneller-8db.com'; // hostingteki alan (apex) ya da pay.alt-alan
+const PREMIUM_PRICE_TL = 1999;
+const PREMIUM_EMAIL = 'ozneglobal@gmail.com';
+
+function goPremium(amount) {
+  const orderId = ('PREM' + Date.now()).replace(/[^a-z0-9]/gi, '');
+  const amt = Number(amount ?? PREMIUM_PRICE_TL) || PREMIUM_PRICE_TL;
+  const payUrl =
+    `${PAY_HOST}/odeme.html` +
+    `?oid=${encodeURIComponent(orderId)}` +
+    `&amount=${encodeURIComponent(amt)}` +
+    `&email=${encodeURIComponent(PREMIUM_EMAIL)}` +
+    `&plan=annual`;
+  location.href = payUrl;
+}
+
+  function bindPremiumButton(selector){
+    document.querySelectorAll(selector).forEach(btn=>{
+      btn.addEventListener('click',(ev)=>{
+        ev.preventDefault();
+        ev.stopPropagation?.();
+        goPremium(PREMIUM_PRICE_TL);
+      });
+    });
+  }
+  // Sayfadaki premium butonları (varsa)
+  bindPremiumButton('#premiumBtn');
+  bindPremiumButton('#premiumBtn2');
+
+  function paint(){
+    if(!imgs.length) return;
+    idx = Math.max(0, Math.min(idx, imgs.length-1));
+    gMain.src = imgs[idx];
+    Array.from(gThumbs.children).forEach((im,i)=> im.setAttribute('aria-current', i===idx?'true':'false'));
+  }
+  function buildThumbs(){
+    gThumbs.innerHTML='';
+    imgs.forEach((u,i)=>{
+      const im = new Image();
+      im.src=u; im.alt='Önizleme';
+      im.addEventListener('click', ()=>{ idx=i; paint(); });
+      gThumbs.appendChild(im);
+    });
+  }
+
+  // Dışarıdan da çağrılabilir:
+  window.openListingDetail = async function(id, d){
+    const data = d||{};
+    currentListingId = id;
+
+    // görseller
+    try { imgs = await (window.resolveImages ? window.resolveImages(data) : [data.coverUrl || data.cover || '']); }
+    catch { imgs = [data.coverUrl || data.cover || '']; }
+    imgs = imgs.filter(Boolean);
+    idx = 0; buildThumbs(); paint();
+
+    // metinler
+    mTitle.textContent = data.title || data.name || 'İlan';
+    mMeta.textContent = `${data.city||''}${data.city?' • ':''}${data.price? fmtCur(data.price, (data.currency||data.cur||'TRY')):''}`;
+    mDesc.textContent = data.description || data.desc || '';
+    const priceNum = Number(data.price) || 0;
+    const priceCur = data.currency || data.cur || 'TRY';
+    document.getElementById('mPrice').textContent = fmtCur(priceNum, priceCur);
+    document.getElementById('mCity').textContent  = (data.sellerCity || data.city || '');
+    document.getElementById('mStockText').textContent =
+      ((data.inStock === true) || (Number(data.stock ?? data.quantity ?? 0) > 0)) ? 'Var' : 'Yok';
+
+    // satıcı bilgileri
+const sName = data.sellerName || data.ownerName || data.userName || 'Satıcı';
+const sCity = data.sellerCity || data.city || '';
+const verified = data.sellerVerified===true || data.isVerifiedSeller===true || data.verified===true;
+mSellerName.textContent = sName;
+mSellerCity.textContent = sCity;
+mBadge.style.display = verified ? 'inline-flex' : 'none';
+if (mSellerBox) mSellerBox.classList.toggle('gold', !!verified);
+
+    // stok
+    const stockNum = Number((data.stock ?? data.quantity ?? 0));
+    const inStock = (data.inStock === true) || stockNum > 0;
+    mStock.style.display = 'inline-flex';
+    mStock.textContent = inStock ? 'Stokta var' : 'Stokta yok';
+    mStock.classList.toggle('red', !inStock);
+
+    // profil link
+    const uidFromData = data.sellerId || data.ownerId || data.userId || data.userid || data.userID || '';
+    if (uidFromData) {
+      mProfile.href = `/docs/seller.html?uid=${encodeURIComponent(uidFromData)}`;
+    } else {
+      mProfile.removeAttribute('href');
+      mProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Satıcı profili için kullanıcı ID bulunamadı.');
+      }, { once: true });
+    }
+
+    // sipariş payload
+    currentOrderItem = {
+      id,
+      title: data.title || data.name || 'İlan',
+      price: Number(data.price)||0,
+      currency: data.currency || data.cur || 'TRY',
+      sellerName: sName
+    };
+
+    modal.setAttribute('open','');
+  };
+
+  // Grid kart tıkla → modal
+  document.getElementById('allGrid')?.addEventListener('click', (e)=>{
+    const a=e.target.closest('.card'); if(!a) return; e.preventDefault();
+    const id=a.getAttribute('data-id');
+    const item=window.__UE_LISTINGS?.[id];
+    if(item){ openListingDetail(id,item.data); }
+  });
+
+  // Modal içi: Sipariş Ver → çekmece
+  mOrder.addEventListener('click', (e)=>{
+    e.preventDefault();
+    if (!currentOrderItem) return;
+    openOrderDrawer(currentOrderItem);
+  });
+
+  gPrev.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; paint(); });
+  gNext.addEventListener('click', ()=>{ if(!imgs.length) return; idx = (idx+1)%imgs.length; paint(); });
+  mClose.addEventListener('click', ()=> modal.removeAttribute('open'));
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.removeAttribute('open'); });
+  document.addEventListener('keydown', (e)=>{ if(!modal.hasAttribute('open')) return; if(e.key==='Escape') modal.removeAttribute('open'); if(e.key==='ArrowLeft') gPrev.click(); if(e.key==='ArrowRight') gNext.click(); });
+
+  // ==== Sipariş çekmecesi ====
+  function updateTotal(){
+  if(!currentOrderItem) return;
+  const q = Math.max(1, parseInt(qty.value||1));
+  const unit = Number(currentOrderItem.price)||0;
+  const cur  = currentOrderItem.currency||'TRY';
+  const total = unit * q;
+  const fee   = Math.round(total * 0.03);          // %3 PayTR pos
+  const pay   = total + fee;                        // Ödenecek (PayTR)
+
+  totalLabel.innerHTML =
+    `Ürün: ${fmtCur(total, cur)}  •  Komisyon %3: ${fmtCur(fee, cur)}  ⟶  <b>${fmtCur(pay, cur)}</b>`;
+}
+
+  window.openOrderDrawer = (item) => {
+    currentOrderItem = item;
+    window.currentOrderItem = item;
+    listingInfo.innerHTML = `<b>${item.title || 'İlan'}</b> • ${fmtCur(item.price, item.currency||'TRY')}`;
+    qty.value = 1;
+    address.value = '';
+    phone.value = '';
+    note.value = '';
+    document.querySelector('[name="odShip"][value="pickup"]').checked = true;
+    addressWrap.style.display = 'none';
+    updateTotal();
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+  };
+
+  btnClose.addEventListener('click', ()=>{
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+  });
+
+  radios.forEach(r => r.addEventListener('change', e=>{
+    addressWrap.style.display = (e.target.value === 'cargo') ? 'block' : 'none';
+  }));
+
+  qty.addEventListener('input', updateTotal);
+
+<!-- ✅ ÜRÜN SİPARİŞİ (PREMIUM DEĞİL): createOrder + PayTR yönlendirme -->
+(function setupOrderConfirm(){
+  // Aynı handler ikinci kez eklenmesin
+  if (window.__OD_HANDLER_ATTACHED) return;
+  window.__OD_HANDLER_ATTACHED = true;
+
+  const btnConfirm = document.getElementById('odConfirm');
+  if (!btnConfirm) return;
+
+  const PAY_HOST = 'https://xn--reteneller-8db.com';     // ödeme sayfası hostu
+  const PREMIUM_PRICE_TL = 1999;                          // premium kısayolu için
+  const CREATE_URL = 'https://xn--reteneller-8db.com/api/order.php';
+
+  btnConfirm.addEventListener('click', async () => {
+    const btn = document.getElementById('odConfirm');
+    try {
+      if (!window.currentOrderItem) { alert('Ürün bulunamadı.'); return; }
+
+      // 🔐 Kullanıcı kontrolü
+      const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+      const auth = getAuth(self.__fb?.app);
+      const user = auth.currentUser || await new Promise(res => {
+        const off = onAuthStateChanged(auth, u => { off(); res(u || null); }, _ => { off(); res(null); });
+      });
+      if (!user || !user.uid) { alert('Sipariş vermek için lütfen giriş yapın.'); return; }
+
+      // 📝 Form verileri
+      const qtyEl = document.getElementById('odQty');
+      const note  = (document.getElementById('odNote')?.value || '').trim();
+      const phone = (document.getElementById('odPhone')?.value || '').trim();
+      const ship  = (document.querySelector('[name="odShip"]:checked')?.value || 'pickup');
+      const addr  = ship === 'cargo' ? (document.getElementById('odAddress')?.value || '').trim() : '';
+      const qtyNum = Math.max(1, parseInt(qtyEl?.value || '1', 10));
+      if (ship === 'cargo' && !addr) { alert('Kargo için adres giriniz.'); return; }
+
+      // ⭐ Premium kısayol
+      const isPremium = window.currentOrderItem.id === 'premium-annual' || /premium/i.test(window.currentOrderItem.title || '');
+      if (isPremium) {
+        const p = Number(window.currentOrderItem.price) || PREMIUM_PRICE_TL;
+        if (typeof window.goPremium === 'function') window.goPremium(p);
+        return;
+      }
+
+      // 📄 İlan/satıcı bilgileri
+      const ldata = window.__UE_LISTINGS?.[window.currentOrderItem.id]?.data || {};
+      const sellerId = ldata.sellerId || ldata.ownerId || ldata.userId || ldata.userid || ldata.userID || '';
+      const listingCover = ldata.__cover || ldata.coverUrl || ldata.cover || '';
+
+      // 💸 Tutar hesaplama (%3 PayTR)
+      const unit  = Number(window.currentOrderItem.price || ldata.price || 0);
+      const cur   = (window.currentOrderItem.currency || ldata.currency || ldata.cur || 'TRY') || 'TRY';
+      const total = unit * qtyNum;
+      const fee   = Math.round(total * 0.03);
+      const payTl = total + fee;
+
+      btn.disabled = true;
+
+      // 1) createOrder → merchant_oid
+      const createRes = await fetch(CREATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId   : window.currentOrderItem.id,
+          sellerId    : sellerId,
+          price       : unit,
+          currency    : cur,
+          buyerId     : user.uid,
+          qty         : qtyNum,
+          phone       : phone,
+          note        : note,
+          address     : addr,
+          deliveryMethod: ship === 'cargo' ? 'cargo' : 'pickup',
+          title       : window.currentOrderItem.title || ldata.title || ldata.name || 'İlan',
+          cover       : listingCover
+        })
+      });
+
+      const cData = await createRes.json().catch(() => ({}));
+      if (!createRes.ok || !cData || cData.status !== 'ok' || !cData.merchant_oid) {
+        console.warn('createOrder fail:', cData);
+        alert('Sipariş oluşturulamadı. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      // 2) Ödeme sayfasına yönlendirme
+      const merchant_oid = String(cData.merchant_oid);
+      const payUrl =
+        `${PAY_HOST}/odeme.html` +
+        `?oid=${encodeURIComponent(merchant_oid)}` +
+        `&amount=${encodeURIComponent(payTl)}` +
+        `&email=${encodeURIComponent(user.email || 'musteri@ornek.com')}` +
+        `&plan=order`;
+
+      // Çekmeceyi kapatıp yönlendir
+      const drawerEl = document.getElementById('orderDrawer');
+      if (drawerEl) { drawerEl.classList.remove('open'); drawerEl.setAttribute('aria-hidden', 'true'); }
+      location.href = payUrl;
+
+    } catch (e) {
+      console.warn('order+payment error', e);
+      alert('Sipariş alınamadı. Lütfen tekrar deneyin.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+})();
+})();
+</script>
+
+</body> 
+</html>

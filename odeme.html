@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ödeme</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#0b1220}
+    #paytr-area{max-width:600px;margin:24px auto;padding:0 12px}
+    h2{margin:0 0 12px;font-size:20px}
+    .meta{margin:6px 0 14px;font-size:14px;opacity:.8}
+    #paytr-error{color:#b91c1c;margin-top:12px;display:none}
+
+    /* ==== Responsive ==== */
+    html,body{height:100%}
+    #paytr-area{max-width:720px;margin:16px auto;padding:0 12px}
+    @media (max-width:480px){ #paytr-area{padding:0 8px} }
+
+    #paytriframe{
+      display:block;
+      width:100%;
+      height:calc(100dvh - 160px);
+      min-height:520px;
+      max-height:100dvh;
+      border:0;
+    }
+    @media (min-width:0px){
+      #paytriframe{
+        height:100vh;
+        min-height:720px;
+      }
+    }
+    @media (max-width:480px){
+      #paytriframe{
+        height:calc(100dvh - 140px);
+        min-height:460px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="paytr-area">
+  <h2 id="paymentTitle">Ödeme</h2>
+  <div class="meta" id="orderMeta"></div>
+  <iframe id="paytriframe" frameborder="0" scrolling="yes"></iframe>
+  <div id="paytr-error"></div>
+</div>
+
+<script>
+(async () => {
+  try {
+    // 1) URL parametreleri
+    const url = new URL(location.href);
+    const planRaw = (url.searchParams.get('plan') || '').toLowerCase();
+    let amountTl = Number(url.searchParams.get('amount')) || 1999; // TL
+    const email = url.searchParams.get('email') || localStorage.getItem('ue_email') || 'test@ornek.com';
+    const merchant_oid = ('PREM' + Date.now() + Math.floor(Math.random()*1e6)).replace(/[^a-z0-9]/gi,'');
+
+    // 2) Dinamik başlık (premium / vitrin / sipariş)
+    let titleText = 'Ödeme';
+    if (/order|siparis/.test(planRaw)) {
+      titleText = 'Sipariş ödemesi';
+    } else if (/show|showcase|vitrin/.test(planRaw)) {
+      titleText = 'Vitrin ödemesi';
+    } else {
+      titleText = 'Premium ödemesi';
+    }
+    document.getElementById('paymentTitle').textContent = titleText;
+    document.title = titleText;
+
+    // 2.1) TEST AMAÇLI: premium & vitrin işlemlerini 1 TL'ye sabitle (gerçek tahsilatla)
+    // premium yazımı: premium / preminium
+    // 2.1) Premium ücreti sabit 1999 TL
+if (/(^premium$|^preminium$)/.test(planRaw)) {
+  amountTl = 1999;
+}
+
+    // Premium ve vitrin ücretlerini belirle
+if (/show|showcase|vitrin/.test(planRaw)) {
+  // Kullanıcının premium olup olmadığını localStorage'dan al
+  const isPremium = (localStorage.getItem('ue_isPremium') === 'true');
+  amountTl = isPremium ? 199 : 299;
+}
+
+    // Ürün satışını tespit et (sadece ürünlerde komisyon al)
+    const isProduct = /order|siparis|urun/.test(planRaw);
+
+    // 3) Komisyon ekle (%1) — SADECE ürün satışında
+    let komisyonNotu = '';
+    if (isProduct) {
+      const komisyonOrani = 0.01;
+      const komisyonTutar = amountTl * komisyonOrani;
+      amountTl = parseFloat((amountTl + komisyonTutar).toFixed(2));
+      komisyonNotu = ' (Hizmet bedeli dahil)';
+    }
+
+    // 4) Görsel bilgi
+    const metaEl = document.getElementById('orderMeta');
+    metaEl.textContent = `Ödenecek tutar: ${amountTl.toLocaleString('tr-TR')} TL${komisyonNotu} • Sipariş: ${merchant_oid}`;
+
+    // 5) TL -> kuruş
+    const payment_amount = Math.round(amountTl * 100);
+
+    // 6) PayTR token iste (GERÇEK TAHSİLAT: test_mode=0)
+    const res = await fetch('/api/token.php', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        email,
+        payment_amount,
+        merchant_oid,
+        user_ip: undefined,                 // sunucu tespit eder
+        user_name: 'Üreten Eller Kullanıcısı',
+        user_address: '—',
+        user_phone: '—',
+        no_installment: 0,
+        max_installment: 12,
+        currency: 'TL',
+        test_mode: 0,
+ok_url: `${location.origin}/docs/profile.html?paid=1&plan=${encodeURIComponent(planRaw||'premium')}&status=success&oid=${encodeURIComponent(merchant_oid)}&lid=${encodeURIComponent(url.searchParams.get('lid')||'')}`,
+fail_url: `${location.origin}/docs/profile.html?status=fail&plan=${encodeURIComponent(planRaw||'premium')}&oid=${encodeURIComponent(merchant_oid)}&lid=${encodeURIComponent(url.searchParams.get('lid')||'')}`,
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data || data.status !== 'success' || !data.token) {
+      throw new Error('Ödeme başlatılamadı: ' + (data && (data.reason || data.message) || 'Bilinmeyen hata'));
+    }
+
+    // 7) PayTR iframe’i yükle
+    document.getElementById('paytriframe').src = 'https://www.paytr.com/odeme/guvenli/' + data.token;
+
+  } catch (err) {
+    const el = document.getElementById('paytr-error');
+    el.style.display = 'block';
+    el.textContent = err?.message || 'Ödeme başlatılamadı.';
+  }
+})();
+
+/* Ödeme başarılı olunca profili vitrine güncelleyecek şekilde yönlendir */
+(function () {
+  const qs = new URLSearchParams(location.search);
+  const oid = qs.get('oid') || '';
+  const lid = qs.get('lid') || '';
+
+  /* Profil sayfasının yolu: gerekirse /profile.html yap */
+  const profilePath = '/docs/profile.html';
+
+  function goSuccess() {
+    const url =
+      `${profilePath}?paid=1&plan=showcase&status=success` +
+      `&oid=${encodeURIComponent(oid)}` +
+      `&lid=${encodeURIComponent(lid)}`;
+    /* replace: geri dön tuşu ödeme sayfasına götürmesin */
+    location.replace(url);
+  }
+
+  /* 1) PayTR postMessage yakala (çoğu entegrasyonda geliyor) */
+  window.addEventListener('message', function (ev) {
+    try {
+      const data = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
+      const ok =
+        (data && (data.status || '').toLowerCase() === 'success') ||
+        data?.paid === '1' ||
+        (data?.pay || '').toLowerCase() === 'ok';
+      if (ok) goSuccess();
+    } catch (_) { /* yut */ }
+  });
+
+  /* 2) Eğer sayfaya farklı bir callback yazılıysa, buradan da tetikle */
+  window.onPaytrSuccess = goSuccess;
+
+  /* 3) Bazı temalarda success URL'ine zaten düşülürse (edge), yine yakala */
+  const directOk =
+    qs.get('paid') === '1' ||
+    (qs.get('pay') || '').toLowerCase() === 'ok' ||
+    (qs.get('status') || '').toLowerCase() === 'success';
+  if (directOk) goSuccess();
+})();
+// 🔹 Premium ödemesi sonrası Firestore'da kullanıcıyı güncelle
+(async () => {
+  try {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user || !user.uid) return;
+
+    const plan = (new URLSearchParams(location.search)).get('plan');
+    if (/(^premium$|^preminium$)/.test(plan)) {
+      await setDoc(
+        doc(window.__fb.db, 'users', user.uid),
+        {
+          isPremium: true,
+          premiumAt: serverTimestamp(),
+          isVerified: true,          // 🔹 Onaylı satıcı rozeti de otomatik açılsın
+          verifiedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+      localStorage.setItem('ue_isPremium', 'true');
+      console.log('✅ Premium ve Onaylı Satıcı Firestore’a yazıldı.');
+    }
+  } catch (e) {
+    console.warn('❌ Premium yazılamadı', e);
+  }
+})();
+</script>
+
+</body>
+</html>
