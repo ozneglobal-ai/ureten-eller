@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Üreten Eller • Ön Bilgilendirme Formu</title>
+  <meta name="description" content="Üreten Eller için mesafeli satışlara ilişkin ön bilgilendirme formu. PayTR ile güvenli ödeme, teslimat, cayma hakkı ve iade koşulları.">
+  <link rel="icon" href="/assets/icons/favicon.png">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card: #121318;
+      --ink: #e6e6ea;
+      --muted: #a6a7ad;
+      --accent: #00d4ff;
+      --border: #20232b;
+      --ok: #18a558;
+      --warn: #ffb020;
+      --bad: #ff5a5f;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    header { display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom: 16px; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .brand img { width:40px; height:40px; border-radius: 10px; }
+    .brand h1 { font-size: 1.2rem; margin:0; }
+    .toolbar { display:flex; gap: 8px; align-items:center; flex-wrap: wrap; }
+    select, button { background: var(--card); color: var(--ink); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    button { cursor: pointer; }
+    main { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    h2 { margin-top: 28px; font-size: 1.15rem; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .muted { color: var(--muted); }
+    .badge { display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius: 999px; font-size: .8rem; }
+    .note { background: #10131a; border-left: 3px solid var(--accent); padding: 12px 14px; border-radius: 8px; }
+    .list { margin: 0; padding-left: 18px; }
+    footer { color: var(--muted); font-size:.9rem; margin-top: 28px; }
+    .hr { height: 1px; background: var(--border); margin: 16px 0; }
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      header { align-items: flex-start; gap: 8px; }
+    }
+    /* RTL support for Arabic */
+    [dir="rtl"] body, [dir="rtl"] .wrap { direction: rtl; }
+    [dir="rtl"] .grid { direction: rtl; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <header>
+      <div class="brand">
+        <img src="/assets/icons/ureteneller.png" alt="Üreten Eller">
+        <h1 data-i18n="title">Üreten Eller • Ön Bilgilendirme Formu</h1>
+      </div>
+      <div class="toolbar">
+        <label for="lang" class="muted" data-i18n="chooseLangLabel">Dil</label>
+        <select id="lang" aria-label="Dil Seçimi">
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="ar">العربية</option>
+        </select>
+        <button id="printBtn" onclick="window.print()" data-i18n="print">Yazdır</button>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="grid">
+          <div>
+            <h2 data-i18n="seller">Satıcı</h2>
+            <p><strong>Nejla Koç (Üreten Eller)</strong></p>
+            <p><span class="muted" data-i18n="addressLabel">Adres:</span> İstanbul, Gümüşyaka Mahallesi, Rahmet Sokak No: 27/A</p>
+            <p><span class="muted" data-i18n="phoneLabel">Telefon:</span> <a href="tel:+905441983844">0544 198 38 44</a></p>
+            <p><span class="muted" data-i18n="emailLabel">E-posta:</span> <a href="mailto:ozneglobal@gmail.com">ozneglobal@gmail.com</a></p>
+          </div>
+          <div>
+            <h2 data-i18n="tax">Vergi Bilgileri</h2>
+            <p><span class="muted" data-i18n="taxOffice">Vergi Dairesi:</span> Silivri Vergi Dairesi Müdürlüğü</p>
+            <p><span class="muted" data-i18n="taxNo">Vergi No:</span> <span class="mono">9530226667</span></p>
+            <p><span class="badge" data-i18n="turkeyLaw">Türkiye Cumhuriyeti Mevzuatı</span></p>
+          </div>
+        </div>
+      </section>
+
+      <div class="hr"></div>
+
+      <section>
+        <h2 data-i18n="productInfoHeading">1) Ürün/Hizmet Bilgileri ve Fiyat</h2>
+        <p data-i18n="productInfo1">Ürün nitelikleri (varyant, ölçü/gramaj, kişiselleştirme), vergi dahil toplam bedel ve varsa kargo ücreti sipariş özetinde gösterilir.</p>
+        <p data-i18n="productInfo2">El emeği/üretim kaynaklı küçük farklılıklar olabilir; görseller temsilidir.</p>
+      </section>
+
+      <section>
+        <h2 data-i18n="paymentHeading">2) Ödeme</h2>
+        <div class="note">
+          <p data-i18n="paytr1"><strong>PayTR</strong> aracılığıyla güvenli ödeme alınır. Kart verileri PayTR altyapısında (PCI-DSS uyumlu) işlenir; Üreten Eller kart verilerine erişmez.</p>
+          <p data-i18n="paytr2">3D Secure ve diğer güvenlik önlemleri, işlem güvenliğini artırmak için kullanılabilir. Ödeme onayını takiben sipariş işleme alınır.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="deliveryHeading">3) Teslimat</h2>
+        <ul class="list">
+          <li data-i18n="delivery1">Teslimat yöntemi ve tahmini süre ödeme/sipariş sayfasında gösterilir.</li>
+          <li data-i18n="delivery2">Adres, teslim alınacak kişi ve iletişim bilgilerinin doğruluğu alıcının sorumluluğundadır.</li>
+          <li data-i18n="delivery3">Kargo kaynaklı gecikmeler kargo firmasının sorumluluğundadır.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 data-i18n="withdrawalHeading">4) Cayma Hakkı</h2>
+        <p data-i18n="withdrawalLead">Tüketici, kanunda sayılan istisnalar dışındaki ürünlerde, malın tesliminden itibaren 14 gün içinde cayma hakkını kullanabilir.</p>
+        <ul class="list">
+          <li data-i18n="withdrawal1">Gıda/çabuk bozulabilen ürünler</li>
+          <li data-i18n="withdrawal2">Hijyen nedeniyle iadesi uygun olmayan ürünler</li>
+          <li data-i18n="withdrawal3">Kişiye özel/kişiselleştirilmiş siparişler</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 data-i18n="returnsHeading">5) İade ve Şikâyet</h2>
+        <p data-i18n="returns1">İade/şikâyet için <a href="mailto:iletisim@ureteneller.com">ozneglobal@gmail.com</a> veya <a href="tel:+905441983844">0544 198 38 44</a> üzerinden iletişime geçebilirsiniz.</p>
+        <p data-i18n="returns2">Onaylanan iadelerde, ürünün satıcıya ulaşmasını takiben bedel aynı ödeme kanalıyla iade edilir.</p>
+      </section>
+
+      <section>
+        <h2 data-i18n="recordsHeading">6) Kayıtların Saklanması</h2>
+        <p data-i18n="records1">Sipariş onayı ve sözleşme kayıtları elektronik ortamda saklanır; talep halinde paylaşılabilir.</p>
+      </section>
+
+      <section>
+        <h2 data-i18n="lawHeading">7) Uygulanacak Hukuk ve Yetkili Mercii</h2>
+        <p data-i18n="law1">Uyuşmazlıklarda Türkiye Cumhuriyeti hukuku uygulanır; yerleşim yerinizdeki veya satıcının bulunduğu yerdeki Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri yetkilidir.</p>
+      </section>
+
+      <footer class="muted">
+        <div class="hr"></div>
+        <p data-i18n="footNote">Bu belge, Mesafeli Sözleşmeler Yönetmeliği kapsamındaki ön bilgilendirme yükümlülüklerini karşılamak amacıyla düzenlenmiştir.</p>
+        <p class="mono">v1.0 • © Üreten Eller</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const i18n = {
+      tr: {
+        title: "Üreten Eller • Ön Bilgilendirme Formu",
+        chooseLangLabel: "Dil",
+        print: "Yazdır",
+        seller: "Satıcı",
+        addressLabel: "Adres:",
+        phoneLabel: "Telefon:",
+        emailLabel: "E-posta:",
+        tax: "Vergi Bilgileri",
+        taxOffice: "Vergi Dairesi:",
+        taxNo: "Vergi No:",
+        turkeyLaw: "Türkiye Cumhuriyeti Mevzuatı",
+        productInfoHeading: "1) Ürün/Hizmet Bilgileri ve Fiyat",
+        productInfo1: "Ürün nitelikleri (varyant, ölçü/gramaj, kişiselleştirme), vergi dahil toplam bedel ve varsa kargo ücreti sipariş özetinde gösterilir.",
+        productInfo2: "El emeği/üretim kaynaklı küçük farklılıklar olabilir; görseller temsilidir.",
+        paymentHeading: "2) Ödeme",
+        paytr1: "PayTR aracılığıyla güvenli ödeme alınır. Kart verileri PayTR altyapısında (PCI-DSS uyumlu) işlenir; Üreten Eller kart verilerine erişmez.",
+        paytr2: "3D Secure ve diğer güvenlik önlemleri, işlem güvenliğini artırmak için kullanılabilir. Ödeme onayını takiben sipariş işleme alınır.",
+        deliveryHeading: "3) Teslimat",
+        delivery1: "Teslimat yöntemi ve tahmini süre ödeme/sipariş sayfasında gösterilir.",
+        delivery2: "Adres, teslim alınacak kişi ve iletişim bilgilerinin doğruluğu alıcının sorumluluğundadır.",
+        delivery3: "Kargo kaynaklı gecikmeler kargo firmasının sorumluluğundadır.",
+        withdrawalHeading: "4) Cayma Hakkı",
+        withdrawalLead: "Tüketici, kanunda sayılan istisnalar dışındaki ürünlerde, malın tesliminden itibaren 14 gün içinde cayma hakkını kullanabilir.",
+        withdrawal1: "Gıda/çabuk bozulabilen ürünler",
+        withdrawal2: "Hijyen nedeniyle iadesi uygun olmayan ürünler",
+        withdrawal3: "Kişiye özel/kişiselleştirilmiş siparişler",
+        returnsHeading: "5) İade ve Şikâyet",
+        returns1: "İade/şikâyet için iletisim@ureteneller.com veya 0544 198 38 44 üzerinden iletişime geçebilirsiniz.",
+        returns2: "Onaylanan iadelerde, ürünün satıcıya ulaşmasını takiben bedel aynı ödeme kanalıyla iade edilir.",
+        recordsHeading: "6) Kayıtların Saklanması",
+        records1: "Sipariş onayı ve sözleşme kayıtları elektronik ortamda saklanır; talep halinde paylaşılabilir.",
+        lawHeading: "7) Uygulanacak Hukuk ve Yetkili Mercii",
+        law1: "Uyuşmazlıklarda Türkiye Cumhuriyeti hukuku uygulanır; yerleşim yerinizdeki veya satıcının bulunduğu yerdeki Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri yetkilidir.",
+        footNote: "Bu belge, Mesafeli Sözleşmeler Yönetmeliği kapsamındaki ön bilgilendirme yükümlülüklerini karşılamak amacıyla düzenlenmiştir."
+      },
+      en: {
+        title: "Üreten Eller • Preliminary Information Form",
+        chooseLangLabel: "Language",
+        print: "Print",
+        seller: "Seller",
+        addressLabel: "Address:",
+        phoneLabel: "Phone:",
+        emailLabel: "E-mail:",
+        tax: "Tax Information",
+        taxOffice: "Tax Office:",
+        taxNo: "Tax No:",
+        turkeyLaw: "Laws of the Republic of Türkiye",
+        productInfoHeading: "1) Product/Service Information & Price",
+        productInfo1: "Product attributes (variant, size/weight, personalization), the total price incl. taxes, and any shipping fee are shown in the order summary.",
+        productInfo2: "Minor differences may occur due to handmade/production. Images are illustrative.",
+        paymentHeading: "2) Payment",
+        paytr1: "Payments are processed securely via PayTR. Card data is processed on PayTR systems (PCI-DSS compliant); Üreten Eller does not access card data.",
+        paytr2: "3D Secure and other safeguards may be used to increase transaction security. Orders are processed after payment approval.",
+        deliveryHeading: "3) Delivery",
+        delivery1: "Delivery method and estimated time are shown on the checkout/order page.",
+        delivery2: "The buyer is responsible for the accuracy of the delivery address, recipient and contact info.",
+        delivery3: "Delays attributable to the carrier are under the carrier’s responsibility.",
+        withdrawalHeading: "4) Right of Withdrawal",
+        withdrawalLead: "Except for statutory exceptions, the consumer may withdraw within 14 days from delivery.",
+        withdrawal1: "Food/perishable goods",
+        withdrawal2: "Goods not suitable for return due to hygiene",
+        withdrawal3: "Customized/made-to-order items",
+        returnsHeading: "5) Returns & Complaints",
+        returns1: "For returns/complaints, contact iletisim@ureteneller.com or +90 544 198 38 44.",
+        returns2: "For approved returns, refunds are made via the original payment method after the goods are received by the seller.",
+        recordsHeading: "6) Records Retention",
+        records1: "Order confirmations and contracts are stored electronically and can be shared upon request.",
+        lawHeading: "7) Governing Law & Venue",
+        law1: "Disputes are governed by Turkish law; Consumer Arbitration Committees and Consumer Courts at your domicile or the seller’s domicile are competent.",
+        footNote: "This document fulfills pre-contractual information obligations under the Distance Contracts Regulation."
+      },
+      de: {
+        title: "Üreten Eller • Vorab-Informationsformular",
+        chooseLangLabel: "Sprache",
+        print: "Drucken",
+        seller: "Verkäufer",
+        addressLabel: "Adresse:",
+        phoneLabel: "Telefon:",
+        emailLabel: "E-Mail:",
+        tax: "Steuerinformationen",
+        taxOffice: "Steueramt:",
+        taxNo: "Steuernr.:",
+        turkeyLaw: "Gesetze der Republik Türkei",
+        productInfoHeading: "1) Produkt-/Dienstleistungsinformationen & Preis",
+        productInfo1: "Produkteigenschaften (Variante, Größe/Gewicht, Personalisierung), Gesamtpreis inkl. Steuern sowie ggf. Versandkosten werden in der Bestellübersicht angezeigt.",
+        productInfo2: "Durch Handarbeit/Produktion können geringfügige Abweichungen auftreten; Abbildungen dienen der Veranschaulichung.",
+        paymentHeading: "2) Zahlung",
+        paytr1: "Zahlungen werden sicher über PayTR abgewickelt. Kartendaten werden auf den PayTR-Systemen (PCI-DSS konform) verarbeitet; Üreten Eller hat keinen Zugriff auf Kartendaten.",
+        paytr2: "3D Secure und weitere Sicherheitsmaßnahmen können zur Erhöhung der Transaktionssicherheit eingesetzt werden. Bestellungen werden nach Zahlungsfreigabe bearbeitet.",
+        deliveryHeading: "3) Lieferung",
+        delivery1: "Liefermethode und voraussichtliche Dauer werden auf der Checkout-/Bestellseite angezeigt.",
+        delivery2: "Der Käufer ist für die Richtigkeit von Lieferadresse, Empfänger- und Kontaktdaten verantwortlich.",
+        delivery3: "Verzögerungen, die auf den Transporteur zurückzuführen sind, liegen in dessen Verantwortungsbereich.",
+        withdrawalHeading: "4) Widerrufsrecht",
+        withdrawalLead: "Außer bei gesetzlichen Ausnahmen kann der Verbraucher innerhalb von 14 Tagen nach Lieferung widerrufen.",
+        withdrawal1: "Lebensmittel/leicht verderbliche Waren",
+        withdrawal2: "Waren, die aus Hygienegründen nicht zur Rückgabe geeignet sind",
+        withdrawal3: "Individuell angefertigte/personaliserte Artikel",
+        returnsHeading: "5) Rückgaben & Beschwerden",
+        returns1: "Für Rückgaben/Beschwerden wenden Sie sich an iletisim@ureteneller.com oder +90 544 198 38 44.",
+        returns2: "Bei genehmigten Rücksendungen erfolgt die Rückerstattung über die ursprüngliche Zahlungsmethode, nachdem die Ware beim Verkäufer eingegangen ist.",
+        recordsHeading: "6) Aufbewahrung von Unterlagen",
+        records1: "Bestellbestätigungen und Verträge werden elektronisch gespeichert und auf Anfrage bereitgestellt.",
+        lawHeading: "7) Anwendbares Recht & Gerichtsstand",
+        law1: "Streitigkeiten unterliegen dem türkischen Recht; zuständig sind die Verbraucher-Schlichtungsausschüsse und Verbrauchergerichte an Ihrem Wohnsitz oder am Sitz des Verkäufers.",
+        footNote: "Dieses Dokument erfüllt die vorvertraglichen Informationspflichten gemäß der Verordnung über Fernabsatzverträge."
+      },
+      ar: {
+        title: "أُرِتَن إلّر • نموذج المعلومات المسبقة",
+        chooseLangLabel: "اللغة",
+        print: "طباعة",
+        seller: "البائع",
+        addressLabel: "العنوان:",
+        phoneLabel: "الهاتف:",
+        emailLabel: "البريد الإلكتروني:",
+        tax: "المعلومات الضريبية",
+        taxOffice: "مكتب الضرائب:",
+        taxNo: "رقم الضريبة:",
+        turkeyLaw: "قوانين جمهورية تركيا",
+        productInfoHeading: "1) معلومات المنتج/الخدمة والسعر",
+        productInfo1: "خصائص المنتج (النوع، القياس/الوزن، التخصيص) والسعر الإجمالي شامل الضرائب وأي رسوم شحن تُعرض في ملخص الطلب.",
+        productInfo2: "قد تحدث فروق بسيطة بسبب الصناعة اليدوية؛ الصور توضيحيّة.",
+        paymentHeading: "2) الدفع",
+        paytr1: "تُعالَج المدفوعات بأمان عبر PayTR. تُعالَج بيانات البطاقة على أنظمة PayTR (متوافقة مع PCI-DSS)، ولا يصل Üreten Eller إلى بيانات البطاقة.",
+        paytr2: "قد يُستخدم التحقق ثلاثي الأبعاد 3D Secure وتدابير أخرى لتعزيز أمان العملية. تتم معالجة الطلب بعد الموافقة على الدفع.",
+        deliveryHeading: "3) التسليم",
+        delivery1: "طريقة التسليم والمدة التقديرية تُعرضان في صفحة الدفع/الطلب.",
+        delivery2: "مسؤولية دقة عنوان التسليم واسم المستلم ومعلومات الاتصال تقع على المشتري.",
+        delivery3: "التأخيرات الناتجة عن شركة الشحن تقع ضمن مسؤوليتها.",
+        withdrawalHeading: "4) حق السحب",
+        withdrawalLead: "باستثناء الحالات المنصوص عليها في القانون، يحق للمستهلك الانسحاب خلال 14 يومًا من تاريخ التسليم.",
+        withdrawal1: "الأغذية/السلع القابلة للتلف",
+        withdrawal2: "السلع غير القابلة للإرجاع لأسباب صحية",
+        withdrawal3: "الطلبات المخصصة حسب الشخص",
+        returnsHeading: "5) الإرجاع والشكاوى",
+        returns1: "للإرجاع/الشكاوى، يرجى التواصل عبر iletisim@ureteneller.com أو +90 544 198 38 44.",
+        returns2: "في حال الموافقة على الإرجاع، تُعاد المبالغ عبر وسيلة الدفع الأصلية بعد استلام البضاعة من قبل البائع.",
+        recordsHeading: "6) حفظ السجلات",
+        records1: "تُحفَظ تأكيدات الطلب والعقود إلكترونيًا ويمكن مشاركتها عند الطلب.",
+        lawHeading: "7) القانون الواجب التطبيق والجهة المختصة",
+        law1: "تُطبَّق قوانين تركيا على النزاعات؛ والجهات المختصة هي لجان تحكيم المستهلك والمحاكم الاستهلاكية في موطنكم أو موطن البائع.",
+        footNote: "تم إعداد هذه الوثيقة للوفاء بالتزامات المعلومات المسبقة في عقود البيع عن بعد."
+      }
+    };
+
+    const langSelect = document.getElementById("lang");
+
+    function applyLang(lang) {
+      const dict = i18n[lang] || i18n.tr;
+      // Set dir for Arabic
+      if (lang === "ar") {
+        document.documentElement.setAttribute("lang", "ar");
+        document.documentElement.setAttribute("dir", "rtl");
+      } else {
+        document.documentElement.setAttribute("lang", lang);
+        document.documentElement.setAttribute("dir", "ltr");
+      }
+      // Update all data-i18n elements
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (dict[key]) el.innerText = dict[key];
+      });
+      // Update document title
+      document.title = dict.title;
+    }
+
+    // Initialize
+    applyLang("tr");
+    langSelect.addEventListener("change", (e) => applyLang(e.target.value));
+  </script>
+</body>
+</html>

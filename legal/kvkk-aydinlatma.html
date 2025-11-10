@@ -1,0 +1,45 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>KVKK Aydınlatma – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">KVKK Aydınlatma</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const SELLER={owner:"Nejla Koç",brand:"Üreten Eller",email:"ozneglobal@gmail.com"};
+
+const T={
+tr:`<h1>KVKK Aydınlatma Metni</h1>
+<p>6698 sayılı KVKK m.10 kapsamında veri sorumlusu ${SELLER.owner} (${SELLER.brand}) tarafından hazırlanmıştır.</p>
+<h2>İşleme Amaçları</h2><ul><li>Sipariş, teslimat, iade süreçlerinin yürütülmesi</li><li>Müşteri ilişkileri, destek ve güvenlik</li><li>Hukuki yükümlülüklerin yerine getirilmesi (muhasebe, uyuşmazlık)</li></ul>
+<h2>Toplanan Veri Kategorileri</h2><ul><li>Kimlik ve iletişim</li><li>İşlem/finansal veri (kart verisi ödeme kuruluşunda)</li><li>Teknik veriler ve çerezler</li></ul>
+<h2>Aktarım</h2><p>Ödeme kuruluşları (PayTR), lojistik, barındırma sağlayıcıları.</p>
+<h2>Saklama Süreleri</h2><ul><li>Sözleşme ve fatura kayıtları: ilgili mevzuata göre (ör. VUK)</li><li>Destek kayıtları: makul süre</li></ul>
+<h2>Haklar (m.11)</h2><p>Erişim, düzeltme, silme, itiraz, veri taşınabilirliği. Başvuru: ${SELLER.email}</p>`,
+en:`<h1>TR Data Notice (KVKK)</h1><p>Prepared under Art.10 KVKK by ${SELLER.owner} (${SELLER.brand}).</p>
+<h2>Purposes</h2><ul><li>Order, delivery, returns</li><li>Customer support & security</li><li>Legal compliance</li></ul>
+<h2>Data</h2><ul><li>Identity & contact</li><li>Transactional/financial (card at payment processor)</li><li>Technical & cookies</li></ul>
+<h2>Transfers</h2><p>Payment processors, logistics, hosting.</p>
+<h2>Retention</h2><ul><li>Invoices/contracts per law</li><li>Support logs for a reasonable period</li></ul>
+<h2>Rights</h2><p>Access, rectify, erase, object, portability. Contact: ${SELLER.email}</p>`,
+ar:`<h1>إشعار المعالجة (KVKK)</h1><p>وفق المادة 10 من القانون أعدته ${SELLER.owner} (${SELLER.brand}).</p>
+<h2>الأغراض</h2><ul><li>الطلبات والتسليم والإرجاع</li><li>الدعم والأمان</li><li>الامتثال القانوني</li></ul>
+<h2>البيانات</h2><ul><li>الهوية والاتصال</li><li>المعاملات/المالية (البطاقة لدى مزود الدفع)</li><li>التقنية والكوكيز</li></ul>
+<h2>النقل</h2><p>مزودو الدفع، اللوجستيات، الاستضافة.</p>
+<h2>الاحتفاظ</h2><ul><li>الفواتير/العقود حسب القانون</li><li>سجلات الدعم لمدة معقولة</li></ul>
+<h2>الحقوق</h2><p>الوصول، التصحيح، الحذف، الاعتراض، قابلية النقل. تواصل: ${SELLER.email}</p>`,
+de:`<h1>Datenschutzhinweis (KVKK)</h1><p>Erstellt gem. Art.10 KVKK durch ${SELLER.owner} (${SELLER.brand}).</p>
+<h2>Zwecke</h2><ul><li>Bestellung, Lieferung, Rückgabe</li><li>Support & Sicherheit</li><li>Gesetzliche Pflichten</li></ul>
+<h2>Daten</h2><ul><li>Identität & Kontakt</li><li>Transaktions/Finanzdaten (Karte beim Zahlungsdienst)</li><li>Technik & Cookies</li></ul>
+<h2>Übermittlungen</h2><p>Zahlungsdienstleister, Logistik, Hosting.</p>
+<h2>Aufbewahrung</h2><ul><li>Rechnungen/Verträge gem. Gesetz</li><li>Supportprotokolle angemessene Zeit</li></ul>
+<h2>Rechte</h2><p>Auskunft, Berichtigung, Löschung, Widerspruch, Übertragbarkeit. Kontakt: ${SELLER.email}</p>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>

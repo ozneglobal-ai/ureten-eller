@@ -1,0 +1,53 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Gizlilik Politikası – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Gizlilik Politikası</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const SELLER={owner:"Nejla Koç",brand:"Üreten Eller",email:"ozneglobal@gmail.com"};
+
+const T={
+tr:`<h1>Gizlilik Politikası</h1>
+<h2>Veri Sorumlusu</h2><p>${SELLER.owner} (${SELLER.brand}). İletişim: ${SELLER.email}</p>
+<h2>İşlenen Kişisel Veri Kategorileri</h2><ul>
+<li>Kimlik (ad soyad), İletişim (telefon, e-posta, adres)</li>
+<li>İşlem/Sözleşme verileri (sipariş, teslimat, iade)</li>
+<li>Ödeme bilgisi meta verileri (tutar, ödeme durumu). <strong>Kart verileri PayTR/iyzico tarafından PCI-DSS kapsamında işlenir, bizde saklanmaz.</strong></li>
+<li>Teknik veriler (IP, cihaz, çerezler)</li>
+</ul>
+<h2>İşleme Amaçları</h2><ul>
+<li>Sözleşmenin kurulması/ifası (sipariş, teslim, iade)</li>
+<li>Müşteri desteği ve güvenlik</li>
+<li>Hukuki yükümlülüklerin yerine getirilmesi (mali kayıt, uyuşmazlık yönetimi)</li>
+</ul>
+<h2>Aktarımlar</h2><p>Ödeme kuruluşları (PayTR), lojistik sağlayıcılar, barındırma/altyapı hizmetleri.</p>
+<h2>Haklarınız</h2><p>Erişim, düzeltme, silme, itiraz, veri taşınabilirliği. Başvuru: ${SELLER.email}</p>
+<p class="muted">Politika; mevzuat değişikliği ve hizmet güncellemelerine göre güncellenebilir.</p>`,
+en:`<h1>Privacy Policy</h1><h2>Controller</h2><p>${SELLER.owner} (${SELLER.brand}). Contact: ${SELLER.email}</p>
+<h2>Data Categories</h2><ul><li>Identity, contact</li><li>Order/contract data</li><li>Payment metadata (amount/status). <strong>Card data processed by PayTR/iyzico (PCI-DSS), not stored by us.</strong></li><li>Technical data (IP/cookies)</li></ul>
+<h2>Purposes</h2><ul><li>Contract performance</li><li>Support & security</li><li>Legal compliance</li></ul>
+<h2>Disclosures</h2><p>Payment processors, logistics, hosting.</p>
+<h2>Rights</h2><p>Access, rectification, erasure, objection, portability. Contact: ${SELLER.email}</p>`,
+ar:`<h1>سياسة الخصوصية</h1>
+<h2>المسؤول</h2><p>${SELLER.owner} (${SELLER.brand}). التواصل: ${SELLER.email}</p>
+<h2>فئات البيانات</h2><ul><li>الهوية والاتصال</li><li>بيانات الطلب/العقد</li><li>بيانات الدفع الوصفية (المبلغ/الحالة). <strong>بيانات البطاقة لدى PayTR/iyzico (PCI-DSS).</strong></li><li>بيانات تقنية (IP/كوكيز)</li></ul>
+<h2>الأغراض</h2><ul><li>تنفيذ العقد</li><li>الدعم والأمان</li><li>الامتثال القانوني</li></ul>
+<h2>الإفصاح</h2><p>مزودو الدفع، اللوجستيات، الاستضافة.</p>
+<h2>حقوقك</h2><p>الوصول، التصحيح، الحذف، الاعتراض، قابلية النقل. تواصل: ${SELLER.email}</p>`,
+de:`<h1>Datenschutzerklärung</h1>
+<h2>Verantwortliche</h2><p>${SELLER.owner} (${SELLER.brand}). Kontakt: ${SELLER.email}</p>
+<h2>Datenkategorien</h2><ul><li>Identität, Kontakt</li><li>Bestell-/Vertragsdaten</li><li>Zahlungs-Metadaten (Betrag/Status). <strong>Kartendaten bei PayTR/iyzico (PCI-DSS), nicht beim Händler.</strong></li><li>Technische Daten (IP/Cookies)</li></ul>
+<h2>Zwecke</h2><ul><li>Vertragserfüllung</li><li>Support & Sicherheit</li><li>Gesetzliche Pflichten</li></ul>
+<h2>Weitergaben</h2><p>Zahlungsdienstleister, Logistik, Hosting.</p>
+<h2>Rechte</h2><p>Auskunft, Berichtigung, Löschung, Widerspruch, Übertragbarkeit. Kontakt: ${SELLER.email}</p>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>

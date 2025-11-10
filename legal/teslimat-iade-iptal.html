@@ -1,0 +1,53 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Teslimat – İade – İptal – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}
+</style></head><body>
+<div class="wrap">
+  <div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Teslimat – İade – İptal</span></div>
+    <select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select>
+  </div>
+  <div id="view" class="card"></div>
+</div>
+<script>
+const SELLER={email:"ozneglobal@gmail.com",phone:"0544 198 38 44"};
+
+const T={
+tr:`<h1>Teslimat – İade – İptal</h1>
+<h2>Teslimat</h2><ul>
+<li>Yöntem: kargo/kurye/elden teslim; seçenek siparişte belirtilir.</li>
+<li>Süre: ürünün niteliğine göre değişir; tahmini süre ödeme sayfasında gösterilir.</li>
+<li>Soğuk zincir/bozulabilir gıda ürünlerinde zaman penceresi daraltılabilir.</li>
+</ul>
+<h2>İptal</h2><ul>
+<li>Kişiye özel üretim başlamadan önce iptal edilebilir.</li>
+<li>Stoktan gönderimde kargoya teslimden önce iptal talep edilmelidir.</li>
+</ul>
+<h2>İade</h2><ul>
+<li>Gıda/hijyen/kullanılmış ve kişiye özel ürünlerde iade yoktur.</li>
+<li>Diğer ürünlerde 14 gün içinde iade mümkündür; başvuru: ${SELLER.email}.</li>
+<li>Kusurlu ürün: fotoğraf/fatura ile başvuru; onay sonrası ücretsiz değişim/bedel iadesi.</li>
+</ul>
+<p class="muted">Kargo kaynaklı hasarlarda tutanak tutulması önerilir.</p>`,
+en:`<h1>Delivery – Returns – Cancellation</h1>
+<h2>Delivery</h2><ul><li>Method: courier/shipping/pick-up as shown at checkout.</li><li>Timing depends on product; ETA at checkout.</li><li>Perishables may require tighter delivery windows.</li></ul>
+<h2>Cancellation</h2><ul><li>Custom items: before production starts.</li><li>Stock items: before hand-over to carrier.</li></ul>
+<h2>Returns</h2><ul><li>No returns for perishable/hygiene/personalized or used goods.</li><li>Otherwise within 14 days; contact ${SELLER.email}.</li><li>Defects: evidence + invoice → free replacement/refund.</li></ul>
+<p class="muted">For carrier damage, a report is recommended.</p>`,
+ar:`<h1>التسليم – الإلغاء – الإرجاع</h1>
+<h2>التسليم</h2><ul><li>الطريقة: شحن/ساعي/استلام.</li><li>المدة حسب المنتج؛ تُعرض عند الدفع.</li><li>للمنتجات القابلة للتلف قد نضيق نافذة التسليم.</li></ul>
+<h2>الإلغاء</h2><ul><li>المخصصة: قبل بدء الإنتاج.</li><li>الجاهزة: قبل تسليم الناقل.</li></ul>
+<h2>الإرجاع</h2><ul><li>لا إرجاع للقابلة للتلف/الصحية/المخصصة أو المستعملة.</li><li>وإلا خلال 14 يومًا؛ تواصل: ${SELLER.email}.</li><li>العيوب: دليل + فاتورة → استبدال/استرداد.</li></ul>`,
+de:`<h1>Lieferung – Widerruf – Rückgabe</h1>
+<h2>Lieferung</h2><ul><li>Methode: Versand/Kurier/Abholung (an der Kasse).</li><li>Frist produktabhängig; ETA an der Kasse.</li><li>Für verderbliche Waren engere Zeitfenster möglich.</li></ul>
+<h2>Widerruf</h2><ul><li>Personalisierte Artikel: vor Produktionsbeginn.</li><li>Lagerware: vor Übergabe an den Frachtführer.</li></ul>
+<h2>Rückgabe</h2><ul><li>Keine Rückgabe bei verderblich/Hygiene/personalisiert oder gebraucht.</li><li>Sonst innerhalb 14 Tagen; Kontakt ${SELLER.email}.</li><li>Mangel: Nachweis + Rechnung → Ersatz/Erstattung.</li></ul>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>

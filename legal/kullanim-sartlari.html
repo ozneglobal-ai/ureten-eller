@@ -1,0 +1,27 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Kullanım Şartları – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Kullanım Şartları</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const T={
+tr:`<h1>Kullanım Şartları</h1>
+<h2>Genel</h2><p>Siteyi mevzuata, dürüstlük kurallarına ve topluluk standartlarına uygun kullanmayı kabul edersiniz.</p>
+<h2>Hesap</h2><p>Bilgilerin doğruluğundan siz sorumlusunuz. İhlalde hesap uyarılabilir, askıya alınabilir veya kapatılabilir.</p>
+<h2>İçerik ve Fikri Haklar</h2><p>Paylaşılan içeriklerin haklarına sahip olmalısınız; ihlal bildirimleri üzerine içerikler kaldırılabilir.</p>
+<h2>Sorumluluk Sınırı</h2><p>Yasal olarak izin verilen azami ölçüde dolaylı zararlar için sorumluluk kabul edilmez.</p>
+<h2>Uygulanacak Hukuk</h2><p>Türkiye Cumhuriyeti hukuku uygulanır; uyuşmazlıklarda tüketici mevzuatı saklıdır.</p>`,
+en:`<h1>Terms of Use</h1><h2>General</h2><p>Lawful and good-faith use only.</p><h2>Account</h2><p>Provide accurate information; violations may lead to suspension/termination.</p><h2>Content & IP</h2><p>You must own rights; infringing content may be removed.</p><h2>Liability</h2><p>No liability for indirect damages to the extent permitted by law.</p><h2>Governing Law</h2><p>Turkish law; consumer protection remains applicable.</p>`,
+ar:`<h1>شروط الاستخدام</h1><h2>عام</h2><p>الاستخدام القانوني وبحسن نية فقط.</p><h2>الحساب</h2><p>تتحمل دقة بياناتك؛ قد يُعلّق/يُنهى الحساب عند المخالفة.</p><h2>المحتوى والملكية الفكرية</h2><p>يجب امتلاك الحقوق؛ قد نحذف المحتوى المخالف.</p><h2>المسؤولية</h2><p>لا مسؤولية عن الأضرار غير المباشرة ضمن حدود القانون.</p><h2>القانون الحاكم</h2><p>القانون التركي؛ مع مراعاة حماية المستهلك.</p>`,
+de:`<h1>Nutzungsbedingungen</h1><h2>Allgemein</h2><p>Rechtskonforme, redliche Nutzung.</p><h2>Konto</h2><p>Richtige Angaben erforderlich; Verstöße können zur Sperre/Kündigung führen.</p><h2>Inhalte & Urheberrecht</h2><p>Rechte müssen vorliegen; rechtswidrige Inhalte können entfernt werden.</p><h2>Haftung</h2><p>Keine Haftung für mittelbare Schäden im gesetzlich zulässigen Rahmen.</p><h2>Anwendbares Recht</h2><p>Türkisches Recht; Verbraucherschutz bleibt unberührt.</p>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>
