@@ -1039,7 +1039,12 @@ if (last.byAdmin && last.to === user.uid) {
 
       const fmtPrice = (v, cur='TRY')=>{ try{ return new Intl.NumberFormat('tr-TR',{style:'currency',currency:cur}).format(Number(v)); }catch(_){ return (v||'')+' '+cur; } };
       const toMillis = (x)=> x && (typeof x==='number'? x : x.seconds? x.seconds*1000 : (x.toMillis? x.toMillis(): Date.parse(x))) || 0;
-      const isVipDoc = (d, now)=> (d.featured===true || d.vitrin===true || d.isShowcase===true || toMillis(d.featuredUntil||d.vitrinUntil||d.showcaseUntil)>now);
+      // true/"true"/1/"1"/"yes" gibi değerleri de kabul et
+const asBool = v => (v===true || v===1 || v==='1' || v==='true' || v==='yes' || v==='YES' || v==='True');
+const isVipDoc = (d, now) => (
+  asBool(d.showcase) || asBool(d.isShowcase) || asBool(d.vitrin) || asBool(d.featured) ||
+  toMillis(d.showcaseUntil || d.vitrinUntil || d.featuredUntil) > now
+);
 
       // ==== Cloudinary yardımcıları + kart render ==== 
 const CLOUD = (window.CLOUDINARY_CLOUD || 'ozneglobal');
@@ -1147,75 +1152,72 @@ async function fetchAndPaint(){
     } catch(e) {
       snap = await getDocs(q(ref, limit(200)));
     }
-    const now = Date.now();
-    const vip = [], std = [];
-    snap.forEach(doc => {
-      const d = doc.data() || {};
-      (isVipDoc(d, now) ? vip : std).push({ id: doc.id, data: d });
-    });
-        await Promise.all([...vip, ...std].map(async x => {
-      x.data.__cover = await resolveCover(x.data);
-    }));
+    // ==== (YENİ) Tek listede VIP önce + createdAt DESC ====
+const now = Date.now();
+const rows = [];
+snap.forEach(docSnap => {
+  const d = docSnap.data() || {};
+  rows.push({ id: docSnap.id, data: d });
+});
 
-    // ★ Vitrin / özel ilan işareti
-    [...vip, ...std].forEach(x => {
-      const d = x.data; const now = Date.now();
-      d.__isVip =
-        (d.showcase || d.isShowcase || d.vitrin || d.featured) === true ||
-        toMillis(d.showcaseUntil) > now ||
-        toMillis(d.vitrinUntil) > now ||
-        toMillis(d.featuredUntil) > now;
-    });
+// Kapakları çöz
+await Promise.all(rows.map(async x => {
+  x.data.__cover = await resolveCover(x.data);
+}));
 
-    // ★ GOLD çerçeve (vitrin veya onaylı satıcı)
-    [...vip, ...std].forEach(x => {
-      const isVip = isVipDoc(x.data, Date.now());
-      const isVerified = x.data.sellerVerified === true;
-      x.data.__goldCard = isVip || isVerified;
-    });
+// VIP/GOLD bayrakları
+rows.forEach(x => {
+  const d = x.data;
+  d.__isVip   = isVipDoc(d, now);
+  d.__goldCard = d.__isVip || (d.sellerVerified === true);
+});
 
-    // Sırala ve birleştir
-    const sortBy = (a,b) => toMillis(b.data.createdAt) - toMillis(a.data.createdAt);
-    vip.sort(sortBy); std.sort(sortBy);
-    const combined = vip.concat(std);
-
-    // --- Satıcı bilgisi join (users -> listings)
-    const uids = new Set();
-    combined.forEach(x => {
-      const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
-      const hasSellerFields = x.data.sellerName || x.data.sellerAvatarUrl || x.data.sellerCity || (x.data.sellerVerified === true);
-      if (uid && !hasSellerFields) uids.add(uid);
-    });
-
-    const userCache = {};
-    for (const uid of uids) {
-      try {
-        const snap = await self.firebase.getDoc(`users/${uid}`);
-        if (snap && snap.exists()) {
-          const u = snap.data() || {};
-          userCache[uid] = {
-            name: u.name || u.displayName || 'Satıcı',
-            avatar: u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png',
-            verified: !!u.isVerified,
-            city: u.district || u.city || u.province || ''
-          };
-        }
-      } catch (_) {}
+// Satıcı join (eksik alanları users'tan tamamla)
+const uids = new Set();
+rows.forEach(x => {
+  const d = x.data;
+  const uid = d.sellerId || d.ownerId || d.userId || d.userid || d.userID;
+  const hasSeller = d.sellerName || d.sellerAvatarUrl || d.sellerCity || (d.sellerVerified === true);
+  if (uid && !hasSeller) uids.add(uid);
+});
+const userCache = {};
+for (const uid of uids) {
+  try {
+    const snapU = await self.firebase.getDoc(`users/${uid}`);
+    if (snapU && snapU.exists()) {
+      const u = snapU.data() || {};
+      userCache[uid] = {
+        name   : u.name || u.displayName || 'Satıcı',
+        avatar : u.avatar || u.photoURL || 'https://res.cloudinary.com/dbntnzogo/image/upload/v1760724931/avatars/%C3%BCreteneller_vjp7mu.png',
+        verified: !!u.isVerified,
+        city   : u.district || u.city || u.province || ''
+      };
     }
+  } catch(_) {}
+}
+rows.forEach(x => {
+  const d = x.data;
+  const uid = d.sellerId || d.ownerId || d.userId || d.userid || d.userID;
+  const u = uid && userCache[uid];
+  if (u) {
+    d.sellerName      = d.sellerName      || u.name;
+    d.sellerAvatarUrl = d.sellerAvatarUrl || u.avatar;
+    d.sellerVerified  = (d.sellerVerified === true) || u.verified;
+    d.sellerCity      = d.sellerCity      || u.city;
+  }
+});
 
-    combined.forEach(x => {
-      const uid = x.data.sellerId || x.data.ownerId || x.data.userId || x.data.userid || x.data.userID;
-      const u = uid && userCache[uid];
-      if (u) {
-        x.data.sellerName      = x.data.sellerName      || u.name;
-        x.data.sellerAvatarUrl = x.data.sellerAvatarUrl || u.avatar;
-        x.data.sellerVerified  = (x.data.sellerVerified === true) || u.verified;
-        x.data.sellerCity      = x.data.sellerCity      || u.city;
-      }
-    });
+// Sıralama: önce VIP (true > false), eşitse createdAt yeni→eski
+const toMs = v => toMillis(v) || 0;
+rows.sort((a, b) => {
+  const av = a.data.__isVip ? 1 : 0;
+  const bv = b.data.__isVip ? 1 : 0;
+  if (av !== bv) return bv - av;
+  return toMs(b.data.createdAt) - toMs(a.data.createdAt);
+});
 
-    renderList('allGrid', combined);
-    window.__UE_LISTINGS = Object.fromEntries(combined.map(x => [x.id, x]));
+renderList('allGrid', rows);
+window.__UE_LISTINGS = Object.fromEntries(rows.map(x => [x.id, x]));
 
   } catch (e) {
     console.warn('İlan yüklenemedi:', e);
