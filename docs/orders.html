@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title data-i18n="title">Siparişler • Üreten Eller</title>
+  <link rel="icon" href="/docs/assets/icons/favicon.png" />
+  <style>
+    :root{
+      --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --brd:#1f2937; --card:#0e172a; --card2:#0b1326;
+      --space: clamp(.75rem, 1vw + .5rem, 1rem);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html, body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff; /* beyaz zemin */
+  color: #000000;       /* siyah yazı */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+    a{color:inherit;text-decoration:none}
+
+```
+.wrap{max-width:1280px;margin:0 auto;padding:var(--space)}
+.top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
+.logo img{width:32px;height:32px}
+.spacer{flex:1}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem .85rem;
+  border: 1px solid #b8860b;   /* koyu altın kenar */
+  border-radius: 12px;
+  background: #ffd700;          /* altın arka plan */
+  color: #ffffff;               /* beyaz yazı */
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+  transition: filter .2s ease;
+}
+.btn:hover {
+  filter: brightness(0.9); /* hover’da biraz kararsın */
+}
+.btn[disabled] {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
+.btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
+.btn.danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);border-color:#7a1b1b}
+.btn.ghost{background:transparent}
+.mini{color:#444}  /* açık temada yumuşak gri */
+.badge{display:inline-flex;min-width:22px;height:22px;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-weight:900}
+
+.layout{display:grid;grid-template-columns:380px 1fr;gap:var(--space)}
+@media(max-width:1200px){ .layout{grid-template-columns:340px 1fr} }
+@media(max-width:920px){ .layout{grid-template-columns:1fr} .right{order:2} }
+.left,
+.right {
+  border: 1px solid #e0c080;      /* bej kenar */
+  border-radius: 16px;
+  background: #fff8e7;            /* açık krem */
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  min-height: 70vh;
+  box-shadow: 0 2px 8px rgba(184,134,11,0.1); /* hafif altın gölge */
+}
+
+.leftHead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem;
+  border-bottom: 1px solid #e0c080; /* bej kenar */
+  background: #fff8e7;              /* açık krem başlık alanı */
+  color: #000;
+  box-shadow: 0 2px 8px rgba(184,134,11,0.1);
+}
+
+.search {
+  flex: 1;
+  background: #ffffff;              /* beyaz arama kutusu */
+  border: 1px solid #e0c080;        /* bej kenar */
+  color: #000;                      /* siyah yazı */
+  border-radius: 10px;
+  padding: .5rem;
+  min-height: 40px;
+}
+
+.orderList{overflow:auto;-webkit-overflow-scrolling:touch}
+.row{
+  display:grid;
+  grid-template-columns:28px 64px 1fr auto;
+  gap:.6rem;
+  padding:.6rem;
+  align-items:center;
+  cursor:pointer;
+  border-bottom:1px solid #e0c080;  /* bej ayraç */
+  background:#fff8e7;               /* açık krem zemin */
+  color:#000;                       /* siyah yazı */
+}
+.row:hover{
+  background:#fffaec;               /* hover’da daha açık krem */
+}
+.row .thumb{
+  width:64px;height:64px;
+  border-radius:10px;
+  border:1px solid #e0c080;         /* bej kenar */
+  background:#ffffff;               /* beyaz thumb arka plan */
+  background-size:cover;
+  background-position:center;
+}
+.sub{
+  color:#444;                       /* okunur gri (siyah değil) */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:360px;
+}
+.ttl{font-weight:900}
+
+@media (max-width:640px){
+  .row{grid-template-columns:36px 56px 1fr 32px;padding:.5rem}
+  .row .thumb{width:56px;height:56px}
+  .sub{max-width:200px}
+  .btn{min-height:44px}
+  input[type="checkbox"]{transform:scale(1.2)}
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem;
+  border-bottom: 1px solid #e0c080; /* bej kenar */
+  background: #fff8e7;              /* krem başlık arka planı */
+  color: #000;                      /* siyah yazı */
+  box-shadow: 0 2px 8px rgba(184,134,11,0.1);
+}
+
+.quick{display:flex;gap:.4rem;flex-wrap:wrap;overflow:auto;-webkit-overflow-scrolling:touch}
+
+.detail{padding:.8rem;display:grid;grid-template-columns:120px 1fr;gap:12px}
+.detail .cover{
+  width:120px;height:120px;
+  border-radius:12px;
+  border:1px solid #e0c080;   /* bej kenar */
+  background:#ffffff;         /* beyaz zemin */
+  background-size:cover;
+  background-position:center;
+}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px;align-items:center}
+.kv .k{color:#9ca3af}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .5rem;
+  border: 1px solid #e0c080;      /* bej kenar */
+  border-radius: 999px;
+  background: #fff8e7;            /* krem zemin */
+  color: #000;                    /* siyah yazı */
+  box-shadow: 0 1px 4px rgba(184,134,11,0.1);
+}
+
+.actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  gap: .5rem;
+  padding: .6rem;
+  align-items: center;
+  border-top: 1px solid #e0c080; /* bej kenar */
+  background: #fff8e7;           /* krem arka plan */
+  color: #000;                   /* siyah yazı */
+  padding-bottom: calc(.6rem + env(safe-area-inset-bottom));
+  box-shadow: 0 -2px 8px rgba(184,134,11,0.1);
+}
+
+.notice{
+  border:1px dashed #e0c080;   /* bej kesik kenar */
+  border-radius:14px;
+  padding:.7rem .8rem;
+  background:#fff8e7;          /* krem zemin */
+  color:#000;                  /* siyah yazı */
+  margin:.8rem;
+  box-shadow:0 2px 8px rgba(184,134,11,0.1);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  background: #fff8e7;            /* krem arka plan */
+  border: 1px solid #e0c080;      /* bej kenar */
+  padding: .5rem .75rem;
+  border-radius: 10px;
+  font-weight: 800;
+  z-index: 1200;
+  display: none;
+  color: #000;                    /* siyah yazı */
+  box-shadow: 0 2px 8px rgba(184,134,11,0.1);
+}
+
+/* Buyer box */
+.buyerBox{display:flex;align-items:center;gap:.6rem;min-width:0}
+.buyerAva{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:#ffffff;         /* beyaz zemin */
+  border:1px solid #e0c080;   /* bej kenar */
+  background-size:cover;
+  background-position:center;
+  cursor:pointer;
+}
+.buyerInfo{display:flex;flex-direction:column;min-width:0}
+.buyerInfo strong{font-weight:900;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(240px,55vw)}
+.buyerInfo .mini{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(240px,55vw)}
+
+/* Tablet & down: stack details */
+@media(max-width:860px){
+  .detail{grid-template-columns:1fr;grid-auto-rows:auto}
+  .detail .cover{width:100%;height:220px}
+  .kv{grid-template-columns:120px 1fr}
+}
+
+@media(max-width:420px){
+  .logo img{width:28px;height:28px}
+  .kv{grid-template-columns:100px 1fr}
+  .detail .cover{height:180px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{scroll-behavior:auto}
+}
+
+/* Dil seçici */
+.lang {
+  background: #fff8e7;           /* krem arka plan */
+  border: 1px solid #e0c080;     /* bej kenar */
+  color: #000;                   /* siyah yazı */
+  border-radius: 10px;
+  padding: .45rem .6rem;
+}
+
+    .bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff8e7;           /* krem arka plan */
+  border-top: 1px solid #e0c080; /* bej çizgi */
+  display: flex;
+  justify-content: space-around;
+  gap: .5rem;
+  padding: .5rem calc(6px + var(--safe-area-inset)) .5rem;
+  color: #000;                   /* siyah ikon/yazı */
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(184,134,11,0.1);
+}
+
+    /* === Sekmeler (Satışlarım / Satın Aldıklarım) === */
+.tabs{display:flex;gap:.4rem;padding:.6rem;border-bottom:1px solid #e0c080;background:#fff8e7;position:sticky;top:0;z-index:6}
+.tab{border:1px solid #e0c080;background:#ffffff;border-radius:999px;padding:.35rem .7rem;font-weight:900;cursor:pointer}
+.tab.active{background:#ffd700;border-color:#b8860b;color:#fff}
+
+    /* === Sekmeler (Satışlarım / Satın Aldıklarım) === */
+.tabs{
+  display:flex; gap:.4rem; padding:.6rem .6rem 0;
+}
+.tab{
+  appearance:none; border:1px solid #e0c080; border-radius:999px;
+  background:#fff8e7; color:#000; font-weight:900;
+  padding:.35rem .8rem; cursor:pointer;
+  box-shadow:0 1px 4px rgba(184,134,11,0.08);
+}
+.tab:hover{ filter:brightness(.98); }
+.tab.active{
+  background:#ffd700;               /* altın */
+  border-color:#b8860b;             /* koyu altın kenar */
+  color:#000; box-shadow:0 2px 8px rgba(184,134,11,0.12);
+}
+
+/* Satın aldıklarım alanı (gelecek adımda listeyi ekleyeceğiz) */
+#purchaseList{ display:none; }       /* default kapalı */
+body[data-mode="purchases"] #purchaseList{ display:block; }
+body[data-mode="purchases"] #orderList{ display:none; }
+
+/* Başlık barı sekmelerin altına güzel otursun */
+.right .head{ margin-top:.2rem; }
+
+ /* Başlık barı sekmelerin altına güzel otursun */
+.right .head{ margin-top:.2rem; }
+
+/* ===== Satın Aldıklarım listesi ===== */
+#purchaseList {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#purchaseList .row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: .6rem;
+  padding: .6rem;
+  align-items: center;
+  border-bottom: 1px solid #e0c080;
+  background: #fff8e7;
+  color: #000;
+  cursor: pointer;
+}
+#purchaseList .row:hover {
+  background: #fffaec;
+}
+#purchaseList .thumb {
+  width: 64px; height: 64px;
+  border-radius: 10px;
+  border: 1px solid #e0c080;
+  background: #ffffff;
+  background-size: cover;
+  background-position: center;
+}
+#purchaseList .ttl { font-weight: 900; }
+#purchaseList .sub {
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+
+</style>
+
+  <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
+</head>
+
+<body>
+  <audio id="beep" src="/docs/notify.wav" preload="auto"></audio>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">
+        <img src="/docs/üreteneller.png" alt="logo" />
+        <span data-i18n="brand">Üreten Eller</span>
+      </div>
+      <div class="spacer"></div>
+
+```
+  <!-- Dil seçici (TR varsayılan, EN/AR/DE ekli) -->
+  <label class="mini" for="langSel" style="margin-right:.35rem">Dil</label>
+  <select id="langSel" class="lang" aria-label="Dil seçici">
+    <option value="tr">Türkçe</option>
+    <option value="en">English</option>
+    <option value="ar">العربية</option>
+    <option value="de">Deutsch</option>
+  </select>
+
+  <div class="quick">
+    <button class="btn ghost" id="btnBack" type="button">← <span data-i18n="back">Profile Dön</span></button>
+    <button class="btn" id="btnNotif" type="button">🔔 <span data-i18n="enable_notif">Bildirimleri Aç</span></button>
+    <button class="btn" id="btnSound" type="button">🔊 <span id="soundLbl" data-i18n="sound_on">Sesi Aç</span></button>
+    <button class="btn danger" id="btnBulkArchive" type="button">🗑️ <span data-i18n="bulk_archive">Seçili Gizle</span></button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="left">
+    <div class="leftHead">
+      <input id="q" class="search" placeholder="Ara…" />
+      <div id="unreadBadge" class="badge" style="display:none">0</div>
+    </div>
+
+    <div id="orderList" class="orderList" role="listbox" aria-label="Siparişler"></div>
+
+    <div id="purchaseList" class="orderList" role="listbox" aria-label="Satın Aldıklarım" style="display:none"></div>
+  </aside>
+
+  <section class="right">
+
+  <div class="tabs" id="modeTabs" role="tablist" aria-label="Görünüm">
+    <button class="tab active" role="tab" aria-selected="true" data-mode="sales">Satışlarım</button>
+    <button class="tab" role="tab" aria-selected="false" data-mode="purchases">Satın Aldıklarım</button>
+  </div>
+
+  <header class="head">
+    <div style="display:flex;align-items:center;gap:.6rem;min-width:0">
+      <div id="buyerBox" class="buyerBox">
+        <div id="buyerAva" class="buyerAva"></div>
+        <div class="buyerInfo">
+          <strong id="buyerName">—</strong>
+          <span class="mini" id="buyerSub">—</span>
+        </div>
+      </div>
+      <span class="mini" id="orderId" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</span>
+    </div>
+    <div class="actions">
+      <select id="statusSel" class="btn">
+        <option value="new">Yeni</option>
+        <option value="accepted">Onaylandı</option>
+        <option value="preparing">Hazırlanıyor</option>
+        <option value="shipped">Kargolandı</option>
+        <option value="delivered">Teslim</option>
+        <option value="cancelled">İptal</option>
+      </select>
+      <button class="btn warn" id="btnMessage" type="button">💬 <span data-i18n="message">Mesaj Yaz</span></button>
+      <button class="btn danger" id="btnArchive" type="button">🗑️ <span data-i18n="archive">Gizle</span></button>
+    </div>
+  </header>
+
+    <div id="detail" class="detail">
+      <div id="prodImg" class="cover"></div>
+      <div>
+        <div class="kv"><div class="k">Ürün</div><div id="prodTitle">—</div></div>
+        <div class="kv"><div class="k">Fiyat</div><div id="price">—</div></div>
+        <div class="kv"><div class="k">Adet</div><div id="qty">—</div></div>
+        <div class="kv"><div class="k">Toplam</div><div id="total">—</div></div>
+        <div class="kv"><div class="k">Durum</div><div><span id="statusPill" class="pill">—</span></div></div>
+        <div class="kv"><div class="k">Tarih</div><div id="createdAt">—</div></div>
+        <div class="kv"><div class="k">Not</div><div id="note">—</div></div>
+        <div class="kv"><div class="k">Alıcı</div>
+          <div id="buyerMore">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="emptyBox" class="notice mini" style="display:none">Henüz sipariş yok.</div>
+    <div class="footer mini">
+      <span id="selCount">0 seçili</span>
+      <div class="spacer"></div>
+      <span id="unseenText">—</span>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+```
+
+  </div>
+
+  <script>
+  // ==== I18N: TR / DE / EN / AR ====
+  const I18N={
+    tr:{title:'Siparişler • Üreten Eller',brand:'Üreten Eller',back:'Profile Dön',bulk_archive:'Seçili Gizle',archive:'Gizle',message:'Mesaj Yaz',none:'Henüz sipariş yok.',search:'Ara…',
+        status:{new:'Yeni',accepted:'Onaylandı',preparing:'Hazırlanıyor',shipped:'Kargolandı',delivered:'Teslim',cancelled:'İptal'},badgeSuffix:' yeni',
+        enable_notif:'Bildirimleri Aç',sound_on:'Sesi Aç',sound_off:'Sesi Kapat',
+        notif_title:'Yeni siparişiniz var', notif_body:(n)=>`${n} yeni sipariş geldi`,
+        unseen_label:(n)=>`Görünmemiş siparişlerim: ${n}`
+    },
+    de:{title:'Bestellungen • Ureten Eller',brand:'Ureten Eller',back:'Zurück zum Profil',bulk_archive:'Ausgewählte ausblenden',archive:'Ausblenden',message:'Nachricht',none:'Noch keine Bestellungen.',search:'Suchen…',
+        status:{new:'Neu',accepted:'Bestätigt',preparing:'Wird vorbereitet',shipped:'Versandt',delivered:'Zugestellt',cancelled:'Storniert'},badgeSuffix:' neu',
+        enable_notif:'Benachrichtigungen aktivieren',sound_on:'Ton einschalten',sound_off:'Ton ausschalten',
+        notif_title:'Neue Bestellung', notif_body:(n)=>`${n} neue Bestellung(en)`,
+        unseen_label:(n)=>`Ungesehene Bestellungen: ${n}`
+    },
+    en:{title:'Orders • Ureten Eller',brand:'Ureten Eller',back:'Back to Profile',bulk_archive:'Hide Selected',archive:'Hide',message:'Message',none:'No orders yet.',search:'Search…',
+        status:{new:'New',accepted:'Accepted',preparing:'Preparing',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'},badgeSuffix:' new',
+        enable_notif:'Enable Notifications',sound_on:'Turn Sound On',sound_off:'Turn Sound Off',
+        notif_title:'New order received', notif_body:(n)=>`${n} new order(s)`,
+        unseen_label:(n)=>`Unseen orders: ${n}`
+    },
+    ar:{title:'الطلبات • أيادي منتجة',brand:'أيادي منتجة',back:'العودة للملف',bulk_archive:'إخفاء المحدد',archive:'إخفاء',message:'أرسل رسالة',none:'لا توجد طلبات بعد.',search:'ابحث…',
+        status:{new:'جديد',accepted:'تم القبول',preparing:'قيد التحضير',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'أُلغي'},badgeSuffix:' جديد',
+        enable_notif:'تفعيل الإشعارات',sound_on:'تشغيل الصوت',sound_off:'إيقاف الصوت',
+        notif_title:'لديك طلب جديد', notif_body:(n)=>`${n} طلب جديد`,
+        unseen_label:(n)=>`الطلبات غير المقروءة: ${n}`
+    }
+  };
+  const LANG_KEY='ue_lang_v1';
+  function pickLang(){ try{ const saved=localStorage.getItem(LANG_KEY); if(saved&&I18N[saved]) return saved; const nav=(navigator.language||'tr').slice(0,2); return I18N[nav]?nav:'tr'; }catch{ return 'tr'; } }
+  function t(k){ const d=I18N[pickLang()]||I18N.tr; return d[k]||k; }
+  function applyI18n(){
+    document.title=t('title');
+    document.querySelectorAll('[data-i18n]').forEach(n=>{const k=n.getAttribute('data-i18n'); n.textContent=t(k);});
+    $('#q').placeholder=t('search');
+    $('#emptyBox').textContent=t('none');
+    const sel=$('#statusSel'); const S=I18N[pickLang()].status; sel.querySelectorAll('option').forEach(o=>{ o.textContent=S[o.value]||o.value; });
+    $('#soundLbl').textContent = __soundEnabled ? t('sound_off') : t('sound_on');
+  }
+
+  // ==== Utils ====
+  const $=(s)=>document.querySelector(s);
+  const qs=(s)=>new URLSearchParams(location.search).get(s)||'';
+  function toast(msg){ const el=$('#toast'); el.textContent=msg; el.style.display='block'; clearTimeout(window.__to); window.__to=setTimeout(()=>el.style.display='none',1600); }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function fmtTRY(x){ try{ return new Intl.NumberFormat(pickLang()==='tr'?'tr-TR':undefined,{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(x||0); }catch{ return (x||0)+' TL'; } }
+  function fmtDate(ts){ try{ if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleString(pickLang()==='tr'?'tr-TR':undefined); }catch{ return '—'; } }
+
+  // ==== State ====
+  let __uid=null; let __orders=[]; let __filtered=[]; let __sel=new Set();
+  let __unsub=null; let __current=null; let __knownIds=new Set(JSON.parse(localStorage.getItem('ue_known_order_ids')||'[]'));
+  let __prevIds=new Set();
+  let __soundEnabled = (localStorage.getItem('ue_sound_enabled')==='1'); // kullanıcı etkileşimi sonrası aktif
+
+  // Alıcı brief cache
+  const __buyerBriefCache = new Map();
+  async function getBuyerBrief(uid){
+    if(!uid) return {name:'Müşteri', avatar:'/assets/img/avatar-default.png', email:''};
+    if(__buyerBriefCache.has(uid)) return __buyerBriefCache.get(uid);
+    try{
+      const {doc,getDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const snap = await getDoc(doc(window.__fb.db,'users',uid));
+      const d = snap.exists() ? (snap.data()||{}) : {};
+      const name = [d.name||d.firstName||'', d.surname||d.lastName||''].filter(Boolean).join(' ') || d.displayName || 'Müşteri';
+      const avatar = d.avatar || d.photoURL || '/assets/img/avatar-default.png';
+      const email = d.email || '';
+      const brief = {name, avatar, email};
+      __buyerBriefCache.set(uid, brief);
+      return brief;
+    }catch{
+      return {name:'Müşteri', avatar:'/assets/img/avatar-default.png', email:''};
+    }
+  }
+
+  function ui(){
+    $('#btnBack').onclick=()=>{ history.length>1?history.back():location.href='/docs/profile.html'; };
+    $('#btnBulkArchive').onclick=bulkArchive;
+    $('#q').oninput=filterList;
+    $('#statusSel').onchange=updateStatus;
+    $('#btnArchive').onclick=archiveOne;
+    $('#btnMessage').onclick=goMessage;
+
+    $('#btnNotif').onclick=requestNotificationPermission;
+    $('#btnSound').onclick=toggleSound;
+    $('#buyerAva').onclick=openBuyerProfile;
+    $('#buyerName').onclick=openBuyerProfile;
+
+    // Dil seçici bağlama
+    const langSel=$('#langSel');
+    try{ langSel.value = pickLang(); }catch{}
+    langSel.addEventListener('change',()=>{
+      localStorage.setItem(LANG_KEY, langSel.value);
+      applyI18n();
+      renderList();
+    });
+  }
+// === Sekme geçişi ===
+$('#modeTabs')?.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+
+  // aktif butonu güncelle
+  document.querySelectorAll('#modeTabs .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const mode = btn.dataset.mode;
+  document.body.dataset.mode = mode;
+
+  // veri görünümünü değiştir
+  if (mode === 'sales') {
+    $('#orderList').style.display = 'block';
+    $('#purchaseList').style.display = 'none';
+    $('#emptyBox').style.display = __filtered.length===0 ? 'block' : 'none';
+  } else {
+    $('#orderList').style.display = 'none';
+    $('#purchaseList').style.display = 'block';
+    renderPurchaseList();
+  }
+}); // <— handler burada düzgün kapanıyor
+
+    function filterList(){
+    const q=($('#q').value||'').toLowerCase();
+    if(!q){ __filtered=[...__orders]; }
+    else {
+      __filtered=__orders.filter(x=>
+        (x.buyerName||'').toLowerCase().includes(q) ||
+        (x.title||'').toLowerCase().includes(q) ||
+        (x.orderId||'').toLowerCase().includes(q)
+      );
+    }
+    renderList();
+  }
+
+  function renderList(){
+    const host=$('#orderList'); host.innerHTML='';
+    $('#emptyBox').style.display = __filtered.length===0 ? 'block' : 'none';
+    $('#selCount').textContent = `${__sel.size} seçili`;
+    const S=I18N[pickLang()].status;
+
+    __filtered.forEach(o=>{
+      const row=document.createElement('div'); row.className='row'; row.setAttribute('role','option'); row.dataset.id=o.id;
+      row.innerHTML=`
+        <input type="checkbox" ${__sel.has(o.id)?'checked':''} data-act="sel" aria-label="select" />
+        <div class="thumb" style="background-image:url('${o.buyerAvatar||'/assets/img/avatar-default.png'}')"></div>
+        <div style="min-width:0">
+          <div class="ttl">${escapeHtml(o.title||'—')}</div>
+          <div class="sub">${escapeHtml(o.buyerName||'—')} • ${fmtDate(o.createdAt)} • ${fmtTRY(o.total||0)} • ${S[o.status]||o.status}</div>
+        </div>
+        <div class="meta">
+          ${o.isNew?'<span class="badge">●</span>':''}
+          <button class="btn ghost" data-act="open" title="Aç">➤</button>
+        </div>`;
+      row.querySelector('[data-act="sel"]').addEventListener('change',(e)=>{ if(e.target.checked){ __sel.add(o.id);} else { __sel.delete(o.id);} $('#selCount').textContent=`${__sel.size} seçili`; });
+      row.querySelector('[data-act="open"]').addEventListener('click',()=>openOrder(o.id));
+      row.addEventListener('click',(e)=>{ if(e.target.closest('[data-act]')||e.target.type==='checkbox') return; openOrder(o.id); });
+      host.appendChild(row);
+    });
+
+    // Badge + title update
+    const unreadCount = __orders.filter(o=>o.isNew).length;
+    updateBadges(unreadCount);
+    updateUnseenFooter(unreadCount);
+  }
+
+    // ===== Satın Aldıklarım Listesi =====
+function renderPurchaseList(){
+  const host = $('#purchaseList');
+  host.innerHTML = '';
+
+  const list = window.__pFiltered || [];
+  $('#emptyBox').style.display = list.length === 0 ? 'block' : 'none';
+
+  list.forEach(p=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="thumb" style="background-image:url('${p.coverUrl||'/assets/img/avatar-default.png'}')"></div>
+      <div style="min-width:0">
+        <div class="ttl">${escapeHtml(p.title||'—')}</div>
+        <div class="sub">${escapeHtml(p.sellerName||'Satıcı')} • ${fmtDate(p.createdAt)} • ${fmtTRY(p.total||0)}</div>
+      </div>
+      <div class="meta">
+        <button class="btn ghost" data-act="open" title="Aç">➤</button>
+      </div>
+    `;
+    row.querySelector('[data-act="open"]').addEventListener('click',()=>openPurchase(p.id));
+    host.appendChild(row);
+  });
+}
+
+// ===== Satın Alınan Ürünü Aç =====
+async function openPurchase(id){
+  const p = (window.__purchases||[]).find(x=>x.id===id);
+  if(!p) return;
+
+  $('#buyerName').textContent = p.sellerName || 'Satıcı';
+  $('#buyerAva').style.backgroundImage = `url('${p.sellerAvatar||'/assets/img/avatar-default.png'}')`;
+  $('#buyerSub').textContent = 'Satıcı';
+  $('#orderId').textContent = p.orderId || p.id;
+  $('#prodImg').style.backgroundImage = `url('${p.coverUrl||'/assets/img/avatar-default.png'}')`;
+  $('#prodTitle').textContent = p.title || '—';
+  $('#price').textContent = fmtTRY(p.price || 0);
+  $('#qty').textContent = p.qty || 1;
+  $('#total').textContent = fmtTRY(p.total || ((p.price||0)*(p.qty||1)));
+  const S=I18N[pickLang()].status; $('#statusPill').textContent = S[p.status]||p.status;
+  $('#createdAt').textContent = fmtDate(p.createdAt);
+  $('#note').textContent = p.note || '—';
+  $('#statusSel').value = p.status || 'new';
+}
+
+  function updateBadges(n){
+    const b=$('#unreadBadge'); b.textContent=String(n); b.style.display = n>0 ? 'inline-flex' : 'none';
+    document.title = (n>0?`(${n}) `:'') + t('title');
+    localStorage.setItem('ue_orders_unread_count', String(n));
+    localStorage.setItem('ue_orders_unread_text', String((I18N[pickLang()].unseen_label||((x)=>`Görünmemiş siparişlerim: ${x}`))(n)));
+  }
+  function updateUnseenFooter(n){
+    const label=(I18N[pickLang()].unseen_label||((x)=>`Görünmemiş siparişlerim: ${x}`))(n);
+    $('#unseenText').textContent=label;
+  }
+
+  async function openOrder(id){
+    const o = __orders.find(x=>x.id===id); if(!o) return; __current=o;
+    $('#buyerName').textContent = o.buyerName || '—';
+    $('#buyerAva').style.backgroundImage = `url('${o.buyerAvatar||'/assets/img/avatar-default.png'}')`;
+    $('#buyerSub').textContent = o.buyerEmail ? o.buyerEmail : '—';
+    $('#orderId').textContent = o.orderId || o.id;
+    $('#prodImg').style.backgroundImage = `url('${o.coverUrl||'/assets/img/avatar-default.png'}')`;
+    $('#prodTitle').textContent = o.title || '—';
+    $('#price').textContent = fmtTRY(o.price || 0);
+    $('#qty').textContent = o.qty || 1;
+    $('#total').textContent = fmtTRY(o.total || ((o.price||0)*(o.qty||1)));
+    const S=I18N[pickLang()].status; $('#statusPill').textContent = S[o.status]||o.status;
+    $('#createdAt').textContent = fmtDate(o.createdAt);
+    $('#note').textContent = o.note || '—';
+    $('#statusSel').value = o.status || 'new';
+
+    loadBuyerMore(o.buyerId);
+
+    if(o.isNew){ markSeen(o.id); }
+  }
+
+  async function updateStatus(){
+    if(!__current) return;
+    const val=$('#statusSel').value;
+    try{
+      const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      await updateDoc(doc(window.__fb.db,'orders',__current.id),{ status:val, updatedAt:serverTimestamp() });
+      toast('✓');
+    }catch(e){ console.warn('updateStatus',e); toast('Hata'); }
+  }
+
+  async function archiveOne(){ if(!__current) return; await archiveIds([__current.id]); }
+  async function bulkArchive(){ if(__sel.size===0) return; await archiveIds([...__sel]); __sel.clear(); renderList(); }
+
+  // GİZLE → satıcı profili rozeti/pending sayımına girmesin diye status'u da 'cancelled' yap
+  async function archiveIds(ids){
+    try{
+      const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      for(const id of ids){
+        await updateDoc(doc(window.__fb.db,'orders',id),{
+          archivedBySeller:true,
+          status:'cancelled',
+          updatedAt:serverTimestamp()
+        });
+      }
+      toast('✓');
+    }catch(e){ console.warn('archiveIds',e); toast('Hata'); }
+  }
+
+  async function goMessage(){
+    if(!__current) return;
+    const p = new URLSearchParams({ peer: __current.buyerId||'', name: __current.buyerName||'', ava: __current.buyerAvatar||'', order: __current.orderId||__current.id });
+    location.href = '/docs/mesajlar.html?'+p.toString();
+  }
+
+  async function markSeen(id){
+    try{
+      const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      await updateDoc(doc(window.__fb.db,'orders',id),{ sellerSeenAt:serverTimestamp() });
+    }catch{}
+  }
+
+  function computeIsNew(d){
+    const created = d.createdAt?.toMillis ? d.createdAt.toMillis() : (d.createdAt? new Date(d.createdAt).getTime():0);
+    const seen    = d.sellerSeenAt?.toMillis ? d.sellerSeenAt.toMillis() : (d.sellerSeenAt? new Date(d.sellerSeenAt).getTime():0);
+    return !d.archivedBySeller && d.status!=='cancelled' && created>(seen||0);
+  }
+
+  // ===== Notification & Sound =====
+  function requestNotificationPermission(){
+    try{
+      if(!('Notification' in window)){ toast('Bildirim desteği yok'); return; }
+      Notification.requestPermission().then((perm)=>{ toast(perm==='granted'?'🔔 Açıldı':'İptal'); });
+    }catch(e){ console.warn(e); }
+  }
+  function toggleSound(){
+    __soundEnabled = !__soundEnabled;
+    localStorage.setItem('ue_sound_enabled', __soundEnabled?'1':'0');
+    $('#soundLbl').textContent = __soundEnabled ? t('sound_off') : t('sound_on');
+    if(__soundEnabled){
+      const a=document.getElementById('beep'); a.currentTime=0;
+      a.play().then(()=>{}).catch(()=>{});
+    }
+  }
+  function playBeep(){
+    if(!__soundEnabled) return;
+    try{ const a=document.getElementById('beep'); a.currentTime=0; a.play().catch(()=>{}); }catch{}
+  }
+  function showNotify(payload){
+    try{
+      if(!('Notification' in window)) return;
+      if(Notification.permission!=='granted') return;
+      const {title, body, orderId} = payload;
+      const icon = '/assets/icons/icon-192.png';
+      const n = new Notification(title,{ body, icon, vibrate: [80,40,80] });
+      n.onclick = ()=>{ window.focus(); if(orderId){ const o=__orders.find(x=>x.id===orderId); if(o) openOrder(o.id); } };
+    }catch(e){ console.warn('notify fail', e); }
+  }
+
+  function unseenCount(){ return __orders.filter(o=>o.isNew).length; }
+
+  // ===== Buyer info load (detay kutusu) =====
+  async function loadBuyerMore(buyerId){
+    try{
+      if(!buyerId){ $('#buyerMore').textContent='—'; return; }
+      const brief = await getBuyerBrief(buyerId);
+      $('#buyerSub').textContent = brief.email || '—';
+      $('#buyerMore').innerHTML = `
+        <div><strong>${escapeHtml(brief.name||'—')}</strong></div>
+        <div class="mini">${escapeHtml(brief.email||'—')}</div>
+      `;
+    }catch(e){ console.warn('buyer load',e); $('#buyerMore').textContent='—'; }
+  }
+
+  function openBuyerProfile(){
+    if(!__current || !__current.buyerId) return;
+    location.href = '/docs/profile.html?uid='+encodeURIComponent(__current.buyerId);
+  }
+
+  // ===== Watch orders =====
+  async function watchOrders(uid){
+    try{
+      if(__unsub){ try{__unsub();}catch{} __unsub=null; }
+      const {collection,query,where,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const q = query(collection(window.__fb.db,'orders'), where('sellerId','==',uid));
+      __unsub = onSnapshot(q, async (snap)=>{
+        const tmp=[]; let anyNewArrived=false; const curIds=new Set();
+        snap.forEach(ds=>{
+          const d=ds.data()||{}; curIds.add(ds.id);
+          if (d.archivedBySeller === true) return;
+          const o={ id:ds.id, orderId:d.orderNo||ds.id, createdAt:d.createdAt||null, status:d.status||'new',
+                    buyerId:d.buyerId||'', buyerName:d.buyerName||'Müşteri', buyerAvatar:d.buyerAvatar||'',
+                    buyerEmail:d.buyerEmail||'',
+                    listingId:d.listingId||'', title:d.listingTitle||d.title||'', coverUrl:d.listingCover||d.coverUrl||'',
+                    price:d.price||0, qty:d.qty||1, total:d.total||((d.price||0)*(d.qty||1)), note:d.note||'',
+                    archivedBySeller: !!d.archivedBySeller };
+          o.isNew = computeIsNew(d);
+          tmp.push(o);
+
+          if(o.isNew && !__prevIds.has(ds.id)){ anyNewArrived=true; }
+        });
+
+        // siparişleri yenilik tarihine göre sırala
+        tmp.sort((a,b)=>{
+          const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt? new Date(a.createdAt).getTime():0);
+          const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt? new Date(b.createdAt).getTime():0);
+          return (tb||0)-(ta||0);
+        });
+
+        // === Alıcı avatar/isimlerini kullanıcı belgesinden tamamla ===
+        const toEnrich = tmp.filter(x=>(!x.buyerAvatar || !x.buyerName) && x.buyerId);
+        await Promise.allSettled(toEnrich.map(async (o)=>{
+          const brief = await getBuyerBrief(o.buyerId);
+          if(!o.buyerAvatar) o.buyerAvatar = brief.avatar;
+          if(!o.buyerName || o.buyerName==='Müşteri') o.buyerName = brief.name;
+          if(!o.buyerEmail) o.buyerEmail = brief.email;
+        }));
+
+        __orders = tmp; __filtered = [...__orders];
+        renderList();
+
+        // Yeni geldiyse ses + bildirim
+        if(anyNewArrived){
+          playBeep();
+          const n = unseenCount();
+          showNotify({ title: (I18N[pickLang()].notif_title||'Yeni sipariş'),
+                       body: (I18N[pickLang()].notif_body||((x)=>`${x} yeni sipariş`))(n),
+                       orderId: __orders[0]?.id });
+        }
+
+        __prevIds = curIds;
+
+        const known = new Set(__knownIds); __orders.forEach(o=>known.add(o.id));
+        __knownIds=known; localStorage.setItem('ue_known_order_ids', JSON.stringify([...known]));
+      },(err)=>{ console.warn('orders onSnapshot',err); });
+    }catch(e){ console.warn('watchOrders',e); }
+  }
+// ===== Watch purchases (Satın Aldıklarım) =====
+async function watchPurchases(uid){
+  try{
+    const { collection, query, where, onSnapshot } =
+      await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+
+    const q = query(collection(window.__fb.db,'orders'), where('buyerId','==', uid));
+    window.__unsubPurch && window.__unsubPurch(); // önceki aboneliği kapat
+    window.__unsubPurch = onSnapshot(q, async (snap)=>{
+      const list = [];
+      snap.forEach(ds=>{
+        const d = ds.data() || {};
+        list.push({
+          id: ds.id,
+          orderId: d.orderNo || ds.id,
+          createdAt: d.createdAt || null,
+          status: d.status || 'new',
+          sellerId: d.sellerId || '',
+          sellerName: d.sellerName || 'Satıcı',
+          sellerAvatar: d.sellerAvatar || '',
+          listingId: d.listingId || '',
+          title: d.listingTitle || d.title || '',
+          coverUrl: d.listingCover || d.coverUrl || '',
+          price: d.price || 0,
+          qty: d.qty || 1,
+          total: d.total || ((d.price||0)*(d.qty||1)),
+          note: d.note || ''
+        });
+      });
+
+      // yeni → eski
+      list.sort((a,b)=>{
+        const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt? new Date(a.createdAt).getTime():0);
+        const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt? new Date(b.createdAt).getTime():0);
+        return (tb||0)-(ta||0);
+      });
+
+      // global state (satın aldıklarım)
+      window.__purchases = list;
+      window.__pFiltered = [...list];
+
+      // yalnızca purchases modunda görünüme bas
+      if (document.body.dataset.mode === 'purchases') {
+        // Bunu sonraki adımda vereceğim: renderPurchaseList()
+        // burada sadece state güncelliyoruz.
+      }
+    }, (err)=>console.warn('purchases onSnapshot', err));
+  }catch(e){
+    console.warn('watchPurchases err', e);
+  }
+}
+
+  // ==== Boot ====
+  function boot(){ applyI18n(); ui(); }
+
+  (function init(){
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+
+    // nazik bildirim hatırlatıcısı (opsiyonel)
+    try{
+      if (('Notification' in window) && Notification.permission === 'default') {
+        setTimeout(()=>{/* opsiyonel uyarı */}, 800);
+      }
+    }catch{}
+
+    // Firebase hazır olana kadar bekle + auth state dinle
+    (function waitForFirebase(){
+      if (!window.__fb) { setTimeout(waitForFirebase, 50); return; }
+
+      const { auth } = window.__fb;
+      import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js')
+        .then(({ onAuthStateChanged }) => {
+          onAuthStateChanged(auth, async (u) => {
+            if (!u) { location.href = '/docs/index.html'; return; }
+
+            __uid = u.uid;
+            await watchOrders(__uid);
+            await watchPurchases(__uid);
+
+            const openId = qs('open');
+            if (openId) { setTimeout(() => openOrder(openId), 300); }
+          });
+        })
+        .catch((e) => console.warn('auth import fail:', e));
+    })();
+
+  })(); // <— init IIFE KAPANIŞI
+
+  // Sanity: bu log'u görüyorsan tüm parantezler kapalıdır
+  console.debug('orders.html script loaded OK');
+</script>
+</body>
+</html>
+

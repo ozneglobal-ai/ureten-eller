@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Bildirimler • Üreten Eller</title>
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <style>
+    :root{ --bg1:#0b1220; --bg2:#0a0f1c; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; --brd:#1f2937; --card:#0e172a; --card2:#0b1326; --safe-inset: env(safe-area-inset-bottom, 0px); }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:radial-gradient(1200px 600px at 20% -10%,#10213f22,transparent),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;max-width:100%;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1200px;margin:0 auto;padding:1rem 1rem calc(6.25rem + var(--safe-inset))}
+    .top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
+    .logo img{width:32px;height:32px}
+    .spacer{flex:1}
+
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .85rem;border:1px solid var(--brd);border-radius:12px;background:#0b1220;color:#fff;font-weight:800;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,#10b981,#128473);border-color:#0e766e}
+    .btn.warn{background:linear-gradient(180deg,#f59e0b,#7a5408);border-color:#7a5408}
+    .btn.danger{background:linear-gradient(180deg,#ef4444,#7a1b1b);border-color:#7a1b1b}
+    .btn.ghost{background:transparent}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+
+    .head{display:flex;align-items:center;justify-content:space-between;margin:1rem 0 .6rem;gap:.75rem}
+    .mini{color:var(--muted)}
+
+    .filters{display:flex;gap:.5rem;flex-wrap:wrap}
+    .chip{padding:.4rem .7rem;border:1px solid var(--brd);border-radius:999px;background:#0b1220;font-weight:800;cursor:pointer}
+    .chip[aria-selected="true"]{outline:2px solid var(--accent)}
+
+    .list{display:grid;gap:.6rem}
+    .item{display:grid;grid-template-columns:24px 1fr auto;gap:.6rem;align-items:flex-start;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(145deg,var(--card),var(--card2));padding:.7rem}
+    .item.unread{box-shadow:0 0 0 1px #22d3ee55, 0 0 16px #22d3ee22}
+    .it-title{font-weight:900}
+    .it-meta{display:flex;gap:.5rem;flex-wrap:wrap}
+    .it-actions{display:flex;gap:.4rem}
+    .notice{border:1px dashed var(--brd);border-radius:14px;padding:.7rem .8rem;background:#0c1426}
+    .toast{position:fixed;left:50%;bottom:calc(82px + var(--safe-inset));transform:translateX(-50%);background:#0b1220;border:1px solid var(--brd);padding:.5rem .75rem;border-radius:10px;font-weight:800;z-index:1200;display:none}
+
+    .bottomBar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--bg2),#000);border-top:1px solid var(--brd);display:flex;justify-content:space-around;gap:.5rem;padding:.5rem calc(6px + var(--safe-inset)) .5rem;color:#fff;z-index:100;box-shadow:0 0 0 1px #22d3ee,0 0 28px #22d3ee}
+    .bbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-weight:800;padding:.45rem;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
+    .bbtn[aria-current="page"]{border-color:#0b1326;background:#0b1220}
+    .bicon{width:22px;height:22px;display:block}
+  </style>
+
+  <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">
+        <img src="./üreteneller.png" alt="logo" />
+        <span>Üreten Eller</span>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="btnBack" type="button">← Profile Dön</button>
+    </div>
+
+    <section class="head" aria-labelledby="nTitle">
+      <div>
+        <h2 id="nTitle">Bildirimler</h2>
+        <div class="mini" id="nSub">—</div>
+      </div>
+      <div class="filters" role="tablist" aria-label="Bildirim filtreleri">
+        <button class="chip" role="tab" data-filter="all" aria-selected="true">Tümü</button>
+        <button class="chip" role="tab" data-filter="unread" aria-selected="false">Okunmamış</button>
+        <button class="chip" role="tab" data-filter="read" aria-selected="false">Okunan</button>
+      </div>
+    </section>
+
+    <div class="head">
+      <div class="mini" id="summaryLine">Toplam: 0 • Okunmamış: 0</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn" id="btnMarkAllRead" type="button">Tümünü okundu işaretle</button>
+        <button class="btn danger" id="btnDeleteSelected" type="button" disabled>Seçiliyi sil</button>
+        <button class="btn warn" id="btnDeleteAll" type="button">Tümünü sil</button>
+      </div>
+    </div>
+
+    <main class="list" id="listHost" aria-live="polite"></main>
+    <div id="emptyBox" class="notice mini" style="display:none">Kayıt yok.</div>
+  </div>
+
+  <nav class="bottomBar" aria-label="Alt gezinme">
+    <button class="bbtn" id="navHome" type="button">
+      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l9 8h-3v8h-5v-5H11v5H6v-8H3l9-8z"/></svg>
+      <span class="mini">Ana Sayfa</span>
+    </button>
+    <button class="bbtn" id="navMsg" type="button">
+      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16v12H8l-4 4V4z"/></svg>
+      <span class="mini">Mesajlar</span>
+    </button>
+    <button class="bbtn" id="navNotif" type="button" aria-current="page">
+      <svg class="bicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.91V4a1 1 0 0 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      <span class="mini">Bildirimler</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast" role="status"></div>
+  <!-- UYARI SESİ -->
+  <audio id="notifSound" src="./notify.wav" preload="auto"></audio>
+
+  <script>
+    const $ = (s)=>document.querySelector(s);
+    const toast=(m)=>{ const t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>t.style.display='none',1600); };
+    const fmtDate=(ts)=>{ try{ if(!ts) return '—'; const d=ts.toDate? ts.toDate() : new Date(ts); return d.toLocaleString('tr-TR'); }catch{ return '—'; } };
+
+    let __uid=null, __unsub=null, __filter='all', __selected=new Set();
+    const sound = $('#notifSound');
+    let __prevUnread = Number(localStorage.getItem('ue_notif_unread_count')||'0')||0;
+
+    // --------- UI ---------
+    function renderList(items){
+      const host = $('#listHost');
+      host.innerHTML='';
+      const filtered = items.filter(it=>{
+        if(__filter==='unread') return !it.read;
+        if(__filter==='read') return !!it.read;
+        return true;
+      });
+      if(filtered.length===0){ $('#emptyBox').style.display='block'; } else { $('#emptyBox').style.display='none'; }
+
+      filtered.forEach(it=>{
+        const row=document.createElement('div');
+        row.className='item'+(it.read?'':' unread');
+        row.innerHTML=`
+          <input type="checkbox" aria-label="Seç" data-id="${it.id}" ${__selected.has(it.id)?'checked':''} />
+          <div>
+            <div class="it-title">${it.title||'(Başlıksız)'}</div>
+            <div class="mini" style="margin:.2rem 0 .35rem">${it.text||''}</div>
+            <div class="it-meta mini">
+              <span>${fmtDate(it.createdAt)}</span>
+              ${it.link? `<a class="mini" href="${safeLink(it.link)}">Bağlantıyı aç</a>`:''}
+              ${it.orderId? `<a class="mini" href="./order.html?id=${encodeURIComponent(it.orderId)}">Sipariş</a>`:''}
+            </div>
+          </div>
+          <div class="it-actions">
+            <button class="btn" data-act="toggle" data-id="${it.id}" title="${it.read?'Okunmadı yap':'Okundu yap'}">${it.read?'• Oku':'✓ Okundu'}</button>
+            <button class="btn danger" data-act="del" data-id="${it.id}">Sil</button>
+          </div>
+        `;
+        // events
+        row.querySelectorAll('button,[type="checkbox"]').forEach(el=>{
+          el.addEventListener('click', (ev)=>{
+            const id=el.getAttribute('data-id');
+            const act=el.getAttribute('data-act');
+            if(el.type==='checkbox'){ if(el.checked) __selected.add(id); else __selected.delete(id); updateBulkButtons(); return; }
+            if(act==='toggle') toggleRead(id);
+            if(act==='del') removeOne(id);
+          });
+        });
+        host.appendChild(row);
+      });
+    }
+
+    function updateHeaderCounts(total, unread){
+      $('#summaryLine').textContent = `Toplam: ${total} • Okunmamış: ${unread}`;
+      // Yeni unread varsa ses
+      if(unread>__prevUnread){
+        try{ sound.currentTime=0; sound.play().catch(()=>{}); }catch{}
+      }
+      __prevUnread=unread;
+      localStorage.setItem('ue_notif_unread_count', String(unread));
+    }
+
+    function bindFilters(){
+      document.querySelectorAll('.chip').forEach(ch=>{
+        ch.addEventListener('click', ()=>{
+          document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-selected','false'));
+          ch.setAttribute('aria-selected','true');
+          __filter=ch.dataset.filter||'all';
+          // yeniden boyayacağız; veriler snapshot içinde tutuluyor
+          if(window.__lastItems) renderList(window.__lastItems);
+        });
+      });
+    }
+
+    function updateBulkButtons(){
+      $('#btnDeleteSelected').disabled = __selected.size===0;
+    }
+
+    // --------- Firebase Ops ---------
+    async function toggleRead(id){
+      try{
+        const {doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        await updateDoc(doc(window.__fb.db,'notifications',id),{ read: true, readAt: serverTimestamp() },{merge:true});
+        toast('✓');
+      }catch(e){ console.warn(e); toast('Hata'); }
+    }
+
+    async function markAllRead(uid){
+      try{
+        const {collection,query,where,getDocs,doc,updateDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const q=query(collection(window.__fb.db,'notifications'), where('userId','==',uid), where('read','==',false));
+        const snap=await getDocs(q);
+        const jobs=[];
+        snap.forEach(ds=> jobs.push(updateDoc(doc(window.__fb.db,'notifications',ds.id),{read:true,readAt:serverTimestamp()})));
+        await Promise.all(jobs);
+        toast('Hepsi okundu');
+      }catch(e){ console.warn(e); toast('Hata'); }
+    }
+
+    async function removeOne(id){
+      try{
+        const {doc,deleteDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        await deleteDoc(doc(window.__fb.db,'notifications',id));
+        __selected.delete(id);
+        toast('Silindi');
+      }catch(e){ console.warn(e); toast('Hata'); }
+    }
+
+    async function removeSelected(){
+      try{
+        const {doc,deleteDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const jobs=[...__selected].map(id=>deleteDoc(doc(window.__fb.db,'notifications',id)));
+        await Promise.all(jobs);
+        __selected.clear();
+        updateBulkButtons();
+        toast('Seçili silindi');
+      }catch(e){ console.warn(e); toast('Hata'); }
+    }
+
+    async function removeAll(uid){
+      try{
+        const {collection,query,where,getDocs,doc,deleteDoc} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const q=query(collection(window.__fb.db,'notifications'), where('userId','==',uid));
+        const snap=await getDocs(q);
+        const jobs=[];
+        snap.forEach(ds=> jobs.push(deleteDoc(doc(window.__fb.db,'notifications',ds.id))));
+        await Promise.all(jobs);
+        __selected.clear();
+        updateBulkButtons();
+        toast('Hepsi silindi');
+      }catch(e){ console.warn(e); toast('Hata'); }
+    }
+
+    async function watchNotifs(uid){
+      const {collection,query,where,orderBy,onSnapshot} = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const q=query(collection(window.__fb.db,'notifications'), where('userId','==',uid), orderBy('createdAt','desc'));
+      if(__unsub){ try{__unsub();}catch{} }
+      __unsub = onSnapshot(q,(snap)=>{
+        const items=[]; let unread=0;
+        snap.forEach(ds=>{
+          const d=ds.data()||{};
+          const it={ id:ds.id, title:d.title||'', text:d.text||'', read:!!d.read, createdAt:d.createdAt||null, link:d.link||'', orderId:d.orderId||null };
+          items.push(it); if(!it.read) unread++;
+        });
+        window.__lastItems = items;
+        renderList(items);
+        $('#nSub').textContent = items.length ? 'Yeni gelen bildirimler burada.' : '—';
+        updateHeaderCounts(items.length, unread);
+      },(err)=>{ console.warn('notif snapshot',err); });
+    }
+
+    function safeLink(u){
+      try{
+        const url=new URL(u, location.origin);
+        return url.href;
+      }catch{ return '#'; }
+    }
+
+    // --------- Boot ---------
+    function boot(){
+      $('#btnBack').onclick=()=>{ history.length>1 ? history.back() : location.href='./profile.html'; };
+      bindFilters();
+      $('#btnMarkAllRead').onclick=()=>{ if(__uid) markAllRead(__uid); };
+      $('#btnDeleteSelected').onclick=removeSelected;
+      $('#btnDeleteAll').onclick=()=>{ if(__uid && confirm('Tüm bildirimleri silmek istiyor musunuz?')) removeAll(__uid); };
+      // bottom bar
+      document.getElementById('navHome').onclick=(e)=>{ e.preventDefault(); location.href='./home.html'; };
+      document.getElementById('navMsg').onclick=(e)=>{ e.preventDefault(); location.href='./mesajlar.html'; };
+      document.getElementById('navNotif').onclick=(e)=>{ e.preventDefault(); /* zaten buradayız */ };
+    }
+
+    (function init(){
+      if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+      // Firebase hazır olunca auth
+      (function waitForFirebase(){
+        if(!window.__fb){ setTimeout(waitForFirebase,50); return; }
+        const {auth,onAuthStateChanged}=window.__fb;
+        onAuthStateChanged(auth,(u)=>{
+          if(!u){ location.href='./index.html'; return; }
+          __uid=u.uid;
+          watchNotifs(__uid);
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
