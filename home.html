@@ -1154,11 +1154,24 @@ async function fetchAndPaint(){
     }
     // ==== (YENİ) Tek listede VIP önce + createdAt DESC ====
 const now = Date.now();
-const rows = [];
+let rows = [];
+
 snap.forEach(docSnap => {
   const d = docSnap.data() || {};
   rows.push({ id: docSnap.id, data: d });
 });
+
+// ✅ Admin onayı olmayan ilanları gösterme
+const isApprovedDoc = (d) => {
+  const s = String(d.status || '').toLowerCase();
+  return d.approved === true
+      || d.isApproved === true
+      || d.adminApproved === true
+      || s === 'approved'
+      || s === 'onayli'
+      || s === 'onaylı';
+};
+rows = rows.filter(x => isApprovedDoc(x.data));
 
 // Kapakları çöz
 await Promise.all(rows.map(async x => {
