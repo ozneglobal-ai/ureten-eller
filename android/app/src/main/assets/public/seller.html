@@ -2,7 +2,8 @@
 <html lang="tr" dir="ltr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport"
+  <base href="./"> content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Satıcı • Üreten Eller</title>
   <link rel="icon" href="./assets/icons/favicon.png" />
   <style>
@@ -121,13 +122,35 @@
       .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
     }
   </style>
-  <script type="module" src="./firebase-init.js"></script>
+  <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
 </head>
+
 <body>
   <div class="wrap">
     <div class="top">
       <div class="logo">
-        <img src="./üreteneller.png" alt="logo" />
+        <img src="./assets/icons/favicon.png" alt="logo" />
         <span>Üreten Eller</span>
       </div>
       <div class="spacer"></div>
@@ -148,10 +171,11 @@
         <div class="bio mini" id="bio">—</div>
 
         <div class="about" aria-label="Satıcı detayları">
-          <div class="kv"><div class="mini">Üyelik</div><div id="joined">—</div></div>
-          <div class="kv"><div class="mini">E-posta</div><div id="email">—</div></div>
-          <div class="kv"><div class="mini">İlan sayısı</div><div id="countListings">—</div></div>
-        </div>
+  <div class="kv"><div class="mini">Üyelik</div><div id="joined">—</div></div>
+  <div class="kv"><div class="mini">E-posta</div><div id="email">—</div></div>
+  <div class="kv" id="mNoRow" style="display:none"><div class="mini">Mağaza No</div><div id="mNo">—</div></div>
+  <div class="kv"><div class="mini">İlan sayısı</div><div id="countListings">—</div></div>
+</div>
 
         <div class="row" style="gap:.6rem">
           <button id="btnMessage" class="btn warn">💬 Mesaj</button>
@@ -212,7 +236,7 @@
         <div id="dDesc" style="white-space:pre-wrap"></div>
       </div>
     </div>
-  </div>
+  </div> 
 
   <div id="toast" class="toast" role="status"></div>
 
@@ -283,6 +307,46 @@
         const joined = u.createdAt || u.joinedAt || u.metadata?.creationTime || '';
         const joinedEl = $('#joined'); if(joinedEl) joinedEl.textContent = fmtDate(joined);
         const emailEl = $('#email'); if(emailEl) emailEl.textContent = maskEmail(u.email || u.mail);
+        
+        // Mağaza No — profile.html ile aynı mantık: varsa göster + localStorage'a yaz
+const mNoRow = document.getElementById('mNoRow');
+const mNoEl  = document.getElementById('mNo');
+
+// Esnek anahtar araması (düz ve iç içe)
+const keys = [
+  'mNo','mno','m_no',
+  'magazaNo','magaza_no','magazaID','magazaId',
+  'shopNo','shop_no',
+  'storeNo','store_no','storeId','storeID',
+  'sellerNo','seller_id',
+  'magazaKod','magazaCode' // 👈 bu iki anahtar eklendi
+];
+
+let mNoVal = '';
+for (const k of keys) {
+  if (u?.[k] != null && u[k] !== '') {
+    mNoVal = String(u[k]).trim();
+    if (mNoVal) break;
+  }
+}
+if (!mNoVal) {
+  mNoVal = String(
+    (u.store?.no ?? u.store?.id ??
+     u.shop?.no  ?? u.shop?.id  ??
+     u.magaza?.no?? u.magaza?.id??
+     localStorage.getItem('ue_mno') ?? '')
+  ).trim();
+}
+
+if (mNoVal) {
+  if (mNoEl)  mNoEl.textContent = mNoVal;
+  if (mNoRow) mNoRow.style.display = '';
+  try { localStorage.setItem('ue_mno', mNoVal); } catch {}
+} else {
+  if (mNoRow) mNoRow.style.display = 'none';
+}
+// (İstersen) debug:
+// console.log('mNoVal', mNoVal, 'user fields', u);
 
         const btnMessage = $('#btnMessage');
         if(btnMessage){
