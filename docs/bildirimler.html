@@ -132,6 +132,98 @@
     let __uid=null, __unsub=null, __filter='all', __selected=new Set();
     const sound = $('#notifSound');
     let __prevUnread = Number(localStorage.getItem('ue_notif_unread_count')||'0')||0;
+    
+    // ==== ADMIN BİLDİRİ GÖNDER (yalnızca isAdmin:true kullanıcı görür) ====
+async function __checkIsAdmin(uid){
+  try{
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const snap = await getDoc(doc(window.__fb.db, 'users', uid));
+    const d = snap.exists() ? (snap.data()||{}) : {};
+    return !!d.isAdmin;
+  }catch(_){ return false; }
+}
+
+function __injectAdminBox(){
+  const top = document.querySelector('.top');
+  if(!top || document.getElementById('adminBox')) return;
+
+  const box = document.createElement('div');
+  box.id = 'adminBox';
+  box.className = 'notice';
+  box.style.marginTop = '.75rem';
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <strong>🔒 Admin: Bildiri Gönder</strong>
+      <small class="mini">notifications → userId hedefli</small>
+    </div>
+    <form id="adminForm" style="display:grid;gap:.5rem;grid-template-columns:1fr 1fr;align-items:end">
+      <label style="display:flex;flex-direction:column;gap:.35rem">
+        <span class="mini">Kime (userId)</span>
+        <input id="nf_user" placeholder="Hedef kullanıcı UID" style="padding:.55rem;border-radius:10px;border:1px solid var(--brd);background:#0b1220;color:#fff">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:.35rem">
+        <span class="mini">Başlık</span>
+        <input id="nf_title" placeholder="Başlık" style="padding:.55rem;border-radius:10px;border:1px solid var(--brd);background:#0b1220;color:#fff">
+      </label>
+      <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:.35rem">
+        <span class="mini">Mesaj</span>
+        <textarea id="nf_text" rows="2" placeholder="Mesaj içeriği" style="padding:.55rem;border-radius:10px;border:1px solid var(--brd);background:#0b1220;color:#fff"></textarea>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:.35rem">
+        <span class="mini">Bağlantı (opsiyonel)</span>
+        <input id="nf_link" placeholder="https://..." style="padding:.55rem;border-radius:10px;border:1px solid var(--brd);background:#0b1220;color:#fff">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:.35rem">
+        <span class="mini">Sipariş ID (opsiyonel)</span>
+        <input id="nf_oid" placeholder="orderId" style="padding:.55rem;border-radius:10px;border:1px solid var(--brd);background:#0b1220;color:#fff">
+      </label>
+      <div style="grid-column:1/-1;display:flex;gap:.5rem;justify-content:flex-end">
+        <button type="submit" class="btn primary">Gönder</button>
+      </div>
+    </form>
+  `;
+  top.after(box);
+
+  document.getElementById('adminForm')?.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const userId = (document.getElementById('nf_user').value||'').trim();
+    const title  = (document.getElementById('nf_title').value||'').trim();
+    const text   = (document.getElementById('nf_text').value||'').trim();
+    const link   = (document.getElementById('nf_link').value||'').trim();
+    const orderId= (document.getElementById('nf_oid').value||'').trim();
+
+    if(!userId || !title || !text){ toast('userId, başlık ve mesaj zorunlu'); return; }
+
+    try{
+      const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      await addDoc(collection(window.__fb.db, 'notifications'), {
+        userId, title, text, link: link||'', orderId: orderId||null,
+        read:false, createdAt: serverTimestamp()
+      });
+      toast('Gönderildi');
+      // formu temizle
+      document.getElementById('nf_title').value='';
+      document.getElementById('nf_text').value='';
+      document.getElementById('nf_link').value='';
+      document.getElementById('nf_oid').value='';
+    }catch(e){
+      console.warn('notif add error', e);
+      toast('Hata: gönderilemedi');
+    }
+  });
+}
+
+// Auth sonrası admin mi bak → panel göster
+(async function __maybeShowAdmin(){
+  // Firebase hazır olduğunda çalışacak
+  (function wait(){ 
+    if(!window.__fb || !window.__fb.auth){ return setTimeout(wait,50); }
+    window.__fb.onAuthStateChanged(window.__fb.auth, async (u)=>{
+      if(!u) return;
+      if(await __checkIsAdmin(u.uid)) __injectAdminBox();
+    });
+  })();
+})();
 
     // --------- UI ---------
     function renderList(items){
