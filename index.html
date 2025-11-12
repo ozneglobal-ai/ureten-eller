@@ -187,27 +187,37 @@
     .legal .row{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
     .legal .links{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
 
-   /* ===== RESPONSIVE ===== */
+  /* ===== RESPONSIVE ===== */
 @media (max-width:768px){
   .topbar-inner{ padding:12px 12px; }
   .catnav-inner{ padding:8px 12px; }
+
   .hero{
-  margin:6px 8px;
-  padding:10px 8px;
+    margin:6px 8px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .hero h2{
+    font-size:1rem;
+    line-height:1.2;
+    margin-bottom:4px;
+  }
+  .hero p{
+    font-size:0.75rem;
+    line-height:1.2;
+    margin:0 0 6px 0;
+  }
+  .cta-row{ gap:6px; }
+
+  /* Kart butonları küçük ekranda kırılıp alta geçsin */
+  .card .actions{ flex-wrap:wrap; }
+  .card .actions .btn{
+    flex:1 1 100%;
+    white-space:normal;
+    min-width:0;
+  }
 }
-.hero h2{
-  font-size:1rem;
-  line-height:1.2;
-  margin-bottom:4px;
-}
-.hero p{
-  font-size:0.75rem;
-  line-height:1.2;
-  margin:0 0 6px 0;
-}
-.cta-row{
-  gap:6px;
-}
+
 
     /* Kart butonları küçük ekranda kırılıp alta geçsin */
     .card .actions{ flex-wrap:wrap; }
@@ -614,6 +624,118 @@
 
   <script type="module">
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    import {
+  getFirestore, doc, setDoc, getDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+
+const db = (self.__fb?.db) || getFirestore();
+
+/** users/{uid} dokümanını oluşturur/günceller (idempotent) */
+async function saveUserProfile(user, form = {}) {
+  if (!user) return;
+  const uid = user.uid;
+
+  // mevcut mu?
+  let exists = false;
+  try {
+    const s = await getDoc(doc(db, 'users', uid));
+    exists = s.exists();
+  } catch {}
+
+  const payload = {
+    uid,
+    email: user.email || '',
+    displayName: (form.name || user.displayName || '').toString().trim(),
+    username: (form.username || '').toString().trim(),
+    province: form.province || '',
+    city: form.city || form.province || '',
+    district: form.district || '',
+    phoneNumber: user.phoneNumber || '',
+    photoURL: user.photoURL || '',
+    emailVerified: !!user.emailVerified,
+    providerIds: (user.providerData || []).map(p => p.providerId),
+    // ilk oluşturuluyorsa varsayılan roller
+    ...(exists ? {} : { roles: { seller: true, buyer: true }, createdAt: serverTimestamp() }),
+    updatedAt: serverTimestamp()
+  };
+
+  await setDoc(doc(db, 'users', uid), payload, { merge: true });
+}
+
+/** Girişte profil yoksa sessizce oluşturur; varsa doğrulama bayrağını senkronlar */
+async function ensureUserDoc(user) {
+  if (!user) return;
+  try {
+    const ref = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await saveUserProfile(user, {});
+    } else if (snap.data()?.emailVerified !== !!user.emailVerified) {
+      await setDoc(ref, { emailVerified: !!user.emailVerified, updatedAt: serverTimestamp() }, { merge: true });
+    }
+  } catch {}
+}
+
+/** Google girişinden sonra province/district yoksa hızlıca al */
+async function promptLocationIfMissingAndSave(user, { onDone } = {}) {
+  try {
+    const ref = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    const d = snap.exists() ? snap.data() : {};
+    const hasCity = (d?.province && String(d.province).trim()) || (d?.city && String(d.city).trim());
+    const hasDistrict = d?.district && String(d.district).trim();
+
+    if (hasCity && hasDistrict) { onDone?.(); return; }
+
+    // Basit, bağımsız mini modal
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);z-index:9999';
+    wrap.innerHTML = `
+      <div style="width:min(520px,96vw);background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 30px 60px rgba(0,0,0,.15);overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid #eee;font-weight:800">Konumunu tamamla</div>
+        <div style="padding:14px;display:grid;gap:10px">
+          <div style="font-size:14px;color:#374151">İlanlar ve öneriler için il / ilçe bilgin gerekli.</div>
+          <div style="display:grid;gap:8px">
+            <label style="font-size:12px;color:#6b7280">İl</label>
+            <input id="pl_prov" placeholder="Örn: İstanbul" style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px">
+          </div>
+          <div style="display:grid;gap:8px">
+            <label style="font-size:12px;color:#6b7280">İlçe</label>
+            <input id="pl_dist" placeholder="Örn: Kadıköy" style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px">
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
+            <button id="pl_skip" class="btn ghost" style="border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;font-weight:800;background:#fff;cursor:pointer">Sonra</button>
+            <button id="pl_save" class="btn gold" style="border:1px solid #b18a37;border-radius:12px;padding:10px 14px;font-weight:800;background:linear-gradient(180deg,#f7e7b5,#e8c972 40%,#d7b45d 55%,#caa552 80%,#b79343);cursor:pointer">Kaydet</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+
+    const prov = wrap.querySelector('#pl_prov');
+    const dist = wrap.querySelector('#pl_dist');
+    const bSave = wrap.querySelector('#pl_save');
+    const bSkip = wrap.querySelector('#pl_skip');
+
+    bSkip.addEventListener('click', () => { wrap.remove(); onDone?.(); });
+
+    bSave.addEventListener('click', async () => {
+      const p = (prov.value || '').trim();
+      const di = (dist.value || '').trim();
+      if (!p || !di) { alert('Lütfen il ve ilçe giriniz.'); return; }
+      try {
+        await saveUserProfile(user, {
+          province: p, district: di
+        });
+      } catch {}
+      wrap.remove();
+      onDone?.();
+    });
+  } catch {
+    onDone?.();
+  }
+}
+
 // 🔒 Email doğrulaması yapılmadan /home.html içeriği görüntülenemesin
 function guardHomePage(){
   const auth = getAuth();
@@ -902,7 +1024,8 @@ document.getElementById('signInBtn')
    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
   try {
     await signInWithPopup(auth, provider);
-    redirectHome();
+await saveUserProfile(auth.currentUser, {});
+redirectHome();
   } catch(err) {
     const msg = currentLang === 'en'
       ? 'Google sign-in failed. Please try again.'
@@ -928,6 +1051,7 @@ document.getElementById('signInBtn')
 
     if (!cred.user.emailVerified){
       try { await sendEmailVerification(cred.user); } catch {}
+      await saveUserProfile(cred.user, { username, name, province, district });
       alert(currentLang==='en'
          ? 'Please verify your email before continuing. We sent you a verification email.'
     : 'Devam etmeden önce e-postanızı doğrulayın. Spam kutunuzu kontrol etmeyi unutmayın. Doğrulama e-postası gönderildi.');
@@ -1013,6 +1137,7 @@ case 'auth/invalid-login-credentials':
 
     // Doğrulama e-postası gönder
     try { await sendEmailVerification(cred.user); } catch {}
+    await saveUserProfile(cred.user, { username, name, province, district });
 
     // Kullanıcıyı içeri almıyoruz; doğrulama zorunlu
     alert(currentLang==='en'
@@ -1110,9 +1235,10 @@ async function cardTpl(it){
   const mainImg  = clMain(imgList[0]);
   const showcase = !!it.showcase;
 
-  const priceTxt = (typeof it.price === 'number')
-    ? (window.formatPrice ? window.formatPrice(it.price) : (it.price + ' TL'))
-    : '';
+  // YENİ
+const priceTxt = (typeof it.price === 'number')
+  ? formatPrice(it.price)
+  : '';
 
   const title = (it.title || '—').toString();
   const id    = it.id;
@@ -1160,7 +1286,7 @@ async function cardTpl(it){
   return `
     <article class="card" data-id="${id ?? ''}">
       <div class="ph">
-        ${showcase ? `<span class="ribbon">${(window.UE?.I18N?.tr?.['ribbon.showcase']||'Vitrin')}</span>` : ''}
+        ${showcase ? `<span class="ribbon">${(I18N?.[currentLang]?.['ribbon.showcase'] || I18N?.tr?.['ribbon.showcase'] || 'Vitrin')}</span>` : ''}
         <img alt="${title}" loading="lazy" src="${mainImg}" width="800" height="550">
       </div>
       <div class="body">
