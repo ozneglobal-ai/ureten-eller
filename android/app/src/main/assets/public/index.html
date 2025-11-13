@@ -1067,7 +1067,7 @@ redirectHome();
 
     if (!cred.user.emailVerified){
       try { await sendEmailVerification(cred.user); } catch {}
-      await saveUserProfile(cred.user, { username, name, province, district });
+      await saveUserProfile(cred.user, {});
       alert(currentLang==='en'
          ? 'Please verify your email before continuing. We sent you a verification email.'
     : 'Devam etmeden önce e-postanızı doğrulayın. Spam kutunuzu kontrol etmeyi unutmayın. Doğrulama e-postası gönderildi.');
@@ -1153,7 +1153,7 @@ case 'auth/invalid-login-credentials':
 
     // Doğrulama e-postası gönder
     try { await sendEmailVerification(cred.user); } catch {}
-    await saveUserProfile(cred.user, { username, name, province, district });
+    await saveUserProfile(cred.user, {});
 
     // Kullanıcıyı içeri almıyoruz; doğrulama zorunlu
     alert(currentLang==='en'
@@ -1215,18 +1215,25 @@ document.getElementById('browseBtn')?.addEventListener('click', () => {
   </script>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+    import {
+  getFirestore,
+  collection,
+  getDocs,
+  orderBy,
+  query
+} from './firebase/firebase-firestore.js';
     
     // paylaşılan sözlük ve dil
   let listLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
 
-// dil değişince listeyi yeniden çiz
+  // dil değişince listeyi yeniden çiz
 window.addEventListener('ue:lang', (e)=>{
-  currentLang = e.detail || 'tr';
-  render?.();
+  listLang = e.detail || 'tr';
+  if (typeof render === 'function') {
+    render();
+  }
 });
-
-
+  
     const db2 = (self.__fb?.db) || getFirestore();
     const grid = document.getElementById('listGrid');
     const info = document.getElementById('listInfo');
@@ -1319,7 +1326,7 @@ const priceTxt = (typeof it.price === 'number')
 async function fetchSeller(uid){
   if (!uid) return null;
   try {
-    const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const { getDoc, doc } = await import('./firebase/firebase-firestore.js');
     // Ana koleksiyon
     let snap = await getDoc(doc(db2, 'users', uid));
     if (snap.exists()) return { _src: 'users', ...snap.data() };
@@ -1410,7 +1417,7 @@ function avatarFromSeller(s){
 
   // "Sipariş" veya "Mesaj" butonuna basıldıysa
   if (e.target.matches('[data-do="order"], [data-do="msg"]')) {
-    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const { getAuth } = await import('./firebase/firebase-auth.js');
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {

@@ -1,7 +1,7 @@
 {
   "appId": "com.ureteneller.app",
   "appName": "Ureten Eller",
-  "webDir": "docs",
+  "webDir": "merged"
   "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": { "launchShowDuration": 0 }

@@ -19,8 +19,8 @@ android {
         applicationId "com.ureteneller.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 13
-        versionName "2.5"
+        versionCode 14
+        versionName "2.6"
                 testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             // Default ignore list modern web apps için güncellendi
