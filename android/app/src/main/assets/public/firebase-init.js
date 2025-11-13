@@ -1,23 +1,28 @@
 // firebase-init.js (ESM, idempotent init + Cloudinary helpers) â€” 2025-10-23
 
-// === Firebase (CDN ESM) ===
-import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js';
+// === Firebase (LOCAL ESM) ===
+import { initializeApp, getApp, getApps } from './firebase/firebase-app.js';
+
 import {
   getAuth,
   onAuthStateChanged as _onAuthStateChanged,
   signInWithEmailAndPassword as _signInWithEmailAndPassword,
   signOut as _signOut
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+} from './firebase/firebase-auth.js';
+
 import {
   getFirestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
   setDoc, updateDoc, serverTimestamp, onSnapshot
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+} from './firebase/firebase-firestore.js';
+
 import {
   getStorage, ref as _storageRef, uploadBytes, getDownloadURL
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-storage.js';
+} from './firebase/firebase-storage.js';
+
+// Eğer messaging kullanıyorsan (push bildirimleri)
 import {
   getMessaging, getToken, onMessage, isSupported as messagingIsSupported
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js';
+} from './firebase/firebase-messaging.js';
 
 // === Firebase Config (istersen window.__FIREBASE_CONFIG ile override edebilirsin)
 const firebaseConfig = (window.__FIREBASE_CONFIG) || {

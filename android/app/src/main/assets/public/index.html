@@ -620,14 +620,29 @@
     </div>
   </dialog>
 
-  <!-- Firebase init -->
-  <script type="module" src="/firebase-init.js"></script>
+  <script type="module" src="firebase-init.js"></script>
 
   <script type="module">
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    import { 
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile,
+  sendPasswordResetEmail,
+  signOut
+} from './firebase/firebase-auth.js';
+
     import {
-  getFirestore, doc, setDoc, getDoc, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp
+} from './firebase/firebase-firestore.js';
 
 const db = (self.__fb?.db) || getFirestore();
 
@@ -1203,7 +1218,7 @@ document.getElementById('browseBtn')?.addEventListener('click', () => {
     import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
     
     // paylaşılan sözlük ve dil
-currentLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
+  let listLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
 
 // dil değişince listeyi yeniden çiz
 window.addEventListener('ue:lang', (e)=>{
@@ -1328,10 +1343,12 @@ async function fetchSeller(uid){
 }
 
     function setListInfo(start, end, total){
-      const txt = (I18N[currentLang]['list.range']||'{start}-{end} / {total}')
-        .replace('{start}', start).replace('{end}', end).replace('{total}', total);
-      info.textContent = txt;
-    }
+  const txt = (I18N[listLang]['list.range'] || '{start}-{end} / {total}')
+    .replace('{start}', start)
+    .replace('{end}', end)
+    .replace('{total}', total);
+  info.textContent = txt;
+}
 
     // ---- Cloudinary yardımcıları (firebase-init.js global fonksiyonlarını kullanır) ----
 const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
