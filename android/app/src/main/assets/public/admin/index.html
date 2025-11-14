@@ -4,13 +4,13 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin Giriş • Üreten Eller</title>
-  <link rel="stylesheet" href="/admin/css/admin.css"/>
+  <link rel="stylesheet" href="../admin/css/admin.css"/>
 </head>
 <body class="dark">
   <main class="auth-wrap">
     <section class="card">
-      <!-- LOGO: docs/assets/icons/favicon.png mevcut -->
-      <img src="/assets/icons/favicon.png" alt="Üreten Eller" class="logo"/>
+      <!-- LOGO: kökten barındırmada bu bağıl yol çalışır -->
+      <img src="../assets/icons/favicon.png" alt="Üreten Eller" class="logo"/>
       <h1>Admin Giriş</h1>
 
       <form id="loginForm" class="form" novalidate>
@@ -21,6 +21,7 @@
           <input id="password" type="password" autocomplete="current-password" required />
         </label>
         <button class="btn" type="submit">Giriş Yap</button>
+        <button id="resetBtn" type="button" class="btn ghost">Şifremi Unuttum</button>
         <p id="err" class="err"></p>
       </form>
 
@@ -28,9 +29,7 @@
     </section>
   </main>
 
-  <!-- Firebase (docs/firebase-init.js) -->
-  <script type="module" src="/firebase-init.js"></script>
-  <!-- Admin giriş mantığı -->
-  <script type="module" src="/admin/js/admin-login.js"></script>
+  <!-- NOT: Firebase init bu sayfada ayrıca çağrılmıyor; admin-login.js içinde import ediliyor. -->
+  <script type="module" src="/admin/js/admin-login.js" defer></script>
 </body>
 </html>

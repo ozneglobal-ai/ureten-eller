@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "4688234885-5q84rch1rmivr93oahaq3hoopt36k5m8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ureteneller.app",
+            "certificate_hash": "34dd6d5ae1adac45d7b5a5a7ef524e031e7f0872"
+          }
+        },
+        {
           "client_id": "4688234885-phnd2614tk8uerp32h090atvu19ccn4t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

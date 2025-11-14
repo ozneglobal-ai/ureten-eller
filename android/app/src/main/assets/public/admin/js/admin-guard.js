@@ -1,35 +1,43 @@
-// admin/js/admin-guard.js
-// Yeni projeyi kullanan firebase-init.js'den import
-import { auth, db } from "/firebase-init.js"; // kökten import (firebase-init.js kökteyse)
+<script type="module">
+// /admin/js/admin-guard.js
+import '/firebase-init.js';
+import {
+  getAuth, onAuthStateChanged, signOut
+} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+const auth = window.__fb?.auth || getAuth();
 
-const goLogin = async (msg) => {
-  if (msg) alert(msg);
-  await signOut(auth).catch(()=>{});
-  location.replace("./index.html"); // admin login sayfan
-};
+// tekrar tetiklenmeyi engelle
+if (!window.__ADMIN_GUARD_INSTALLED) {
+  window.__ADMIN_GUARD_INSTALLED = true;
 
-onAuthStateChanged(auth, async (u) => {
-  if (!u) return goLogin("Oturum bulunamadı.");
-  try {
-    const ref = doc(db, "users", u.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return goLogin(`users/${u.uid} bulunamadı.`);
-    const role = (String(snap.data().role||"")).toLowerCase();
-    if (role !== "admin") return goLogin(`Yetki yok: role="${role}"`);
+  function isAdminToken(t, email){
+  const claim = t?.claims?.admin === true;
+  const domain = (email||'').toLowerCase().endsWith('@ureteneller.com');
+  const allowlist = ['ozneglobal@gmail.com']; // manuel izinli mailler
+  return claim || domain || allowlist.includes((email||'').toLowerCase());
+}
 
-    // ✅ Admin onaylandı
-    document.body.dataset.ready = "1";
-    window.dispatchEvent(new CustomEvent("admin-ready"));
-  } catch (e) {
-    return goLogin(`Yetki kontrol hatası: ${e?.code||""} ${e?.message||e}`);
-  }
-});
-
-// Çıkış
-document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-  await signOut(auth).catch(()=>{});
-  location.replace("./index.html");
-});
+  onAuthStateChanged(auth, async (u)=>{
+    // hiç kullanıcı yoksa girişe gönder
+    if (!u) {
+      location.replace('/admin/index.html');
+      return;
+    }
+    try {
+      const token = await u.getIdTokenResult(true);
+      if (isAdminToken(token, u.email)) {
+        // adminse panelde kal
+        return;
+      }
+      // admin değil: çıkış + giriş sayfası
+      try { await signOut(auth); } catch {}
+      location.replace('/admin/index.html');
+    } catch (e) {
+      // emin olamıyorsak güvenli tarafta kalalım
+      try { await signOut(auth); } catch {}
+      location.replace('/admin/index.html');
+    }
+  });
+}
+</script>

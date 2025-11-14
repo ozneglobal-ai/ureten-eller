@@ -4,5 +4,6 @@ xmlns:amazon="http://schemas.amazon.com/apk/res/android">
 <application  >
 
 </application>
-
+<uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+<uses-permission android:name="android.permission.USE_CREDENTIALS"/>
 </manifest>
