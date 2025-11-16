@@ -58,7 +58,8 @@
 │   │   │   ├── .transforms
 │   │   │   ├── generated
 │   │   │   ├── intermediates
-│   │   │   └── outputs
+│   │   │   ├── outputs
+│   │   │   └── tmp
 │   │   ├── build.gradle
 │   │   ├── cordova.variables.gradle
 │   │   └── src
@@ -207,6 +208,8 @@
 ├── package-lock.json
 ├── package.json
 ├── profile.html
+├── public
+│   └── index.html
 ├── robots.txt
 ├── service-worker.js
 ├── site.webmanifest
@@ -347,4 +350,4 @@
 │   └── verify.html
 └── verify.html
 
-94 directories, 254 files
+96 directories, 255 files

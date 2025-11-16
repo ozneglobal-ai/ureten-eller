@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <title data-i18n="app.title">Üreten Eller • Ana Sayfa</title>
   <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Kategorilere göz atın, arayın, ilan verin." />
   <link rel="icon" href="/assets/icons/favicon.png" />
@@ -620,28 +621,35 @@
   </dialog>
 
   <!-- Firebase init -->
-  <script type="module" src="/firebase-init.js"></script>
+<script type="module" src="/firebase-init.js"></script>
 
-  <script type="module">
-    import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signInWithCredential,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile,
-  sendPasswordResetEmail,
-  signOut
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+<script type="module">
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    updateProfile,
+    sendPasswordResetEmail,
+    signOut
+  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
-    import {
-  getFirestore, doc, setDoc, getDoc, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    serverTimestamp
+  } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
 
-const db = (self.__fb?.db) || getFirestore();
+  const db = (self.__fb?.db) || getFirestore();
+  const auth = (self.__fb?.auth) || getAuth();
+  const provider = new GoogleAuthProvider();
 
 /** users/{uid} dokümanını oluşturur/günceller (idempotent) */
 async function saveUserProfile(user, form = {}) {
@@ -1029,33 +1037,66 @@ document.getElementById('signInBtn')
       if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
     }));
 
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-
-    function redirectHome(){ window.location.href = '/home.html'; }
-
-   document.getElementById('googleBtn')?.addEventListener('click', async () => {
-  window.plugins.googleplus.login(
-    {
-      scopes: 'profile email',
-      webClientId: '4688234885-gjtlrq95n6us8nkv08o7p5smefs9ja0k.apps.googleusercontent.com',
-      offline: true
-    },
-    async (obj) => {
+        // Google girişinden sonra ana sayfaya dön
+    function redirectHome(){
       try {
-        const credential = GoogleAuthProvider.credential(obj.idToken);
-        const cred = await signInWithCredential(auth, credential);
-        await saveUserProfile(cred.user, {});
-        redirectHome();
-      } catch (e) {
-        alert('Giriş sırasında hata oluştu.');
-      }
-    },
-    (err) => {
-      alert('Google giriş hatası: ' + err);
+        const authModal = document.getElementById('authModal');
+        if (authModal){
+          if (typeof authModal.close === 'function') authModal.close();
+          authModal.removeAttribute('open');
+          authModal.style.display = '';
+        }
+      } catch(e){}
+
+      try {
+        if (typeof render === 'function') {
+          render(); // ilanları yeniden çiz
+        } else {
+          window.location.href = 'home.html'; // fallback
+        }
+      } catch(e){}
     }
-  );
-});
+    window.redirectHome = redirectHome;
+
+        // Google ile giriş — her yerde popup kullan
+    document.getElementById('googleBtn')?.addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+
+        if (result && result.user) {
+          try {
+            await saveUserProfile(result.user, {});
+          } catch (e) {
+            console.warn('Profil kaydedilirken hata:', e);
+          }
+          redirectHome();
+        }
+      } catch (err) {
+        console.error('Google sign-in error:', err);
+        alert(
+          currentLang === 'en'
+            ? 'Google sign-in failed. Please try again.'
+            : 'Google ile giriş başarısız oldu. Lütfen tekrar deneyin.'
+        );
+      }
+    });
+    
+    // Redirect sonucunu yakala (özellikle Android/WebView için)
+    (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          try {
+            await saveUserProfile(result.user, {});
+          } catch (e) {
+            console.warn('Profil kaydedilirken hata:', e);
+          }
+          redirectHome();
+        }
+      } catch (err) {
+        console.warn('Redirect sonrası hata:', err);
+      }
+    })();
 
     document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
   const email = document.getElementById('li_email').value.trim();
@@ -1224,11 +1265,16 @@ document.getElementById('browseBtn')?.addEventListener('click', () => {
   <script type="module">
     import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
     
+    // paylaşılan sözlük ve dil
+const I18N = (window.UE && window.UE.I18N) || {};
+let currentLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
+
 // dil değişince listeyi yeniden çiz
 window.addEventListener('ue:lang', (e)=>{
   currentLang = e.detail || 'tr';
   render?.();
 });
+
 
     const db2 = (self.__fb?.db) || getFirestore();
     const grid = document.getElementById('listGrid');
