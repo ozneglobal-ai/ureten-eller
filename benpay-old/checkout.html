@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PayTR Ödeme Sayfası</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, Arial, sans-serif; margin: 20px; line-height: 1.45; }
+    h2 { margin: 0 0 12px 0; }
+    #meta { font-size: 14px; color: #6b7280; margin-bottom: 16px; }
+    #iframe-container { text-align: center; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; }
+    .ok  { background: #ecfdf5; color: #065f46; padding: 12px; border-radius: 10px; border: 1px solid #86efac; margin-bottom: 10px; font-weight: 700; display: inline-block; }
+    .err { background: #fee2e2; color: #7f1d1d; padding: 12px; border-radius: 10px; border: 1px solid #fecaca; white-space: pre-wrap; text-align: left; }
+    .muted { color:#6b7280; font-size:12px; margin-top:10px }
+    iframe { width: 100%; height: 700px; border: none; border-radius: 8px; }
+    .spinner { display:inline-block; width:18px; height:18px; border:2px solid #ddd; border-top-color:#111; border-radius:50%; animation: r .7s linear infinite; vertical-align: -3px; margin-right:8px }
+    @keyframes r { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <h2>PayTR Ödeme Testi</h2>
+  <div id="meta"></div>
+  <div id="iframe-container"><span class="spinner"></span>Yükleniyor…</div>
+
+  <script>
+  (async function startPayment() {
+    // ——— URL parametreleri: mode, orderId, amount(TL), currency, desc ———
+    const p = new URLSearchParams(location.search);
+    const mode     = (p.get('mode') || 'test').toLowerCase();          // "test" → test_mode = 1
+    const orderId  = p.get('orderId') || ('TEST_' + Date.now());
+    const amountTL = Number(p.get('amount')) || 1;                      // TL cinsinden
+    const currency = (p.get('currency') || 'TRY').toUpperCase();
+    const desc     = p.get('desc') || 'Test Ödemesi';
+
+    // PayTR kuruş ister → TL * 100
+    const payment_amount = Math.round(amountTL * 100);
+    const test_mode = mode === 'test' ? 1 : 0;
+
+    // Bilgi satırı
+    const metaEl = document.getElementById('meta');
+    metaEl.textContent = `Sipariş: ${orderId} • Tutar: ${amountTL} ${currency} • Açıklama: ${desc} • Mod: ${mode}`;
+
+    // Backend endpoint: aynı domain (önerilen)
+    const TOKEN_ENDPOINT = "/api/token.php";
+
+    const body = {
+      merchant_oid: orderId,
+      email: "test@ureteneller.com",
+      payment_amount,              // kuruş
+      user_name: "Test Kullanıcı",
+      user_address: "İstanbul",
+      user_phone: "05500000000",
+      test_mode,                   // 1 = test / 0 = canlı
+      currency                     // "TL" ya da "TRY" → backend TL kabul ediyorsa orada dönüştürebilirsin
+    };
+
+    const box = document.getElementById("iframe-container");
+
+    try {
+      const res = await fetch(TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      // JSON okumayı güvenli yap
+      let data;
+      const txt = await res.text();
+      try { data = JSON.parse(txt); }
+      catch {
+        throw new Error("Sunucu JSON yerine HTML/metin döndürdü.\nHTTP " + res.status + " yanıtı:\n" + txt.slice(0, 500));
+      }
+
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status + " • " + (data.reason || "Bilinmeyen hata"));
+      }
+
+      if (data.status === "success" && data.token) {
+        box.innerHTML = `<div class="ok">Token alındı, güvenli ödeme sayfası yükleniyor…</div>
+          <iframe src="https://www.paytr.com/odeme/guvenli/${data.token}" allow="payment *"></iframe>
+          <div class="muted">Ödeme tamamlandıktan sonra PayTR sizi yapılandırdığınız geri dönüş adresine yönlendirecektir.</div>`;
+      } else {
+        box.innerHTML = `<div class="err">Hata: ${data.reason || "Bilinmeyen hata"}\nDetay: ${JSON.stringify(data, null, 2)}</div>`;
+      }
+
+    } catch (err) {
+      box.innerHTML =
+        "<div class='err'>İstek başarısız:\n" + (err && err.message ? err.message : err) +
+        "\n\nKontrol edin:\n• Bu alan adında /api/token.php gerçekten var mı ve PHP çalışıyor mu?\n• Sunucu JSON döndürüyor mu?\n• (Test modunda) backend PayTR test parametreleri doğru mu?</div>";
+    }
+  })();
+  </script>
+</body>
+</html>
