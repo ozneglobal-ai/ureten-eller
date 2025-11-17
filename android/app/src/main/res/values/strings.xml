@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ureten Eller</string>
+    <string name="title_activity_main">Ureten Eller</string>
+    <string name="package_name">com.ureteneller.app</string>
+    <string name="custom_url_scheme">com.ureteneller.app</string>
+    <string name="default_web_client_id">4688234885-gjtlrq95n6us8nkv08o7p5smefs9ja0k.apps.googleusercontent.com</string>
+</resources>

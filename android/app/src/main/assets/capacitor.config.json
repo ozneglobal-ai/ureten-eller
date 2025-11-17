@@ -1,0 +1,11 @@
+{
+	"appId": "com.ureteneller.app",
+	"appName": "Ureten Eller",
+	"webDir": "public",
+	"bundledWebRuntime": false,
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0
+		}
+	}
+}
