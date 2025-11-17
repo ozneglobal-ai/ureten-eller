@@ -1,0 +1,137 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesafeli Satış Sözleşmesi – Üreten Eller</title>
+<style>
+:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733;--acc:#22c55e}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}
+ol{margin:0 0 8px 20px} p,li{color:#d6d6dc}.muted{color:var(--muted)}.notice{border-left:3px solid var(--acc);padding:12px;background:#101914;border-radius:8px}
+.footer{margin-top:22px;font-size:13px;color:var(--muted)}.footer a{color:#c8c8ff;text-decoration:none;margin-right:10px}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><strong>Üreten Eller</strong> • <span class="muted">Mesafeli Satış Sözleşmesi</span></div>
+    <select id="lang" aria-label="Language"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select>
+  </div>
+  <div id="view" class="card"></div>
+  <div class="footer">
+    <a href="/legal/on-bilgilendirme-formu.html">Ön Bilgilendirme</a> ·
+    <a href="/legal/teslimat-iade-iptal.html">Teslimat–İade–İptal</a> ·
+    <a href="/legal/gizlilik-politikasi.html">Gizlilik</a>
+  </div>
+</div>
+<script>
+const SELLER={brand:"Üreten Eller",owner:"Nejla Koç",taxOffice:"Silivri Vergi Dairesi Müdürlüğü",taxNo:"9530226667",address:"İstanbul, Gümüşyaka Mahallesi, Rahmet Sokak No: 27/A",email:"	ozneglobal@gmail.com",phone:"0544 198 38 44",website:"https://www.xn--reteneller-8db.com/"};
+
+const TR=`
+<h1>Mesafeli Satış Sözleşmesi</h1>
+<div class="notice"><strong>Satıcı:</strong> ${SELLER.owner} (${SELLER.brand}) — ${SELLER.taxOffice} / Vergi No: ${SELLER.taxNo} — Tel: ${SELLER.phone} — E-posta: ${SELLER.email} — Adres: ${SELLER.address}</div>
+<h2>1. Taraflar ve Tanımlar</h2>
+<ol>
+<li><strong>Satıcı:</strong> Yukarıda bilgileri yer alan gerçek kişi.</li>
+<li><strong>Alıcı:</strong> ${SELLER.website} üzerinden sipariş oluşturan gerçek/tüzel kişi.</li>
+<li><strong>Site:</strong> ${SELLER.website}</li>
+</ol>
+<h2>2. Konu ve Kapsam</h2>
+<p>6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca, Site üzerinden satışı yapılan el emeği ürünler ve/veya ev yapımı gıda ürünlerinin satış ve teslimine ilişkindir.</p>
+<h2>3. Sözleşmenin Kurulması</h2>
+<p>Alıcı, sipariş özetini onaylayıp ödemeyi tamamladığında sözleşme elektronik ortamda kurulmuş sayılır. Sipariş kaydı ve onayları elektronik ortamda saklanır.</p>
+<h2>4. Ürün, Fiyat ve Ödeme</h2>
+<ol>
+<li>Ürün temel nitelikleri, birim fiyatı, vergiler ve varsa teslimat bedelleri sipariş özetinde gösterilir.</li>
+<li>Ödeme, PayTR/iyzico altyapılarıyla güvenli şekilde alınabilir. Kart verileri ödeme kuruluşlarınca işlenir; Satıcı tarafından saklanmaz.</li>
+<li>3D Secure desteklenir; dolandırıcılık şüphesi hâlinde sipariş iptal edilebilir.</li>
+</ol>
+<h2>5. Teslimat ve Riskin Geçişi</h2>
+<ol>
+<li>Teslimat yöntemi ve süresi ödeme sayfasında belirtilir. Kargo firmasına teslimle birlikte hasar riski Alıcıya geçer.</li>
+<li>Alıcının adreste bulunmaması, adres yanlışlığı veya alıcı kaynaklı engeller nedeniyle gerçekleşmeyen teslimatlardan Satıcı sorumlu değildir.</li>
+</ol>
+<h2>6. Cayma Hakkı ve İstisnalar</h2>
+<ol>
+<li>Genel kural: Cayma hakkı 14 gündür.</li>
+<li><strong>İstisnalar:</strong> Mesafeli Sözleşmeler Yönetmeliği m.15 uyarınca gıda/çabuk bozulabilen, hijyen nedeniyle iadesi uygun olmayan, kişiye/özel taleplere göre üretilen ürünlerde cayma hakkı yoktur.</li>
+<li>Diğer ürünlerde cayma talebi, süresi içinde ${SELLER.email} adresine iletilir; onay sonrası iade prosedürü paylaşılır.</li>
+</ol>
+<h2>7. Ayıplı Ürün ve Garanti</h2>
+<p>Ayıplı ürün hâlinde, fatura ve görsel kanıtla başvuru yapıldığında bedel iadesi veya ayıpsız misli gönderimi sağlanır.</p>
+<h2>8. Kişisel Veriler ve Güvenlik</h2>
+<p>Kişisel veriler Gizlilik Politikası/KVKK Aydınlatma’ya uygun işlenir. Kart verileri Satıcı tarafından tutulmaz; PayTR/iyzico tarafından PCI-DSS standartlarında işlenir.</p>
+<h2>9. Mücbir Sebep</h2>
+<p>Doğal afet, salgın, seferberlik, grev, altyapı arızaları gibi öngörülemeyen hallerde tarafların yükümlülükleri askıya alınır.</p>
+<h2>10. Uyuşmazlık ve Yetki</h2>
+<p>Yetkili merci Alıcının yerleşim yerindeki Tüketici Hakem Heyeti/Tüketici Mahkemeleridir.</p>
+<p class="muted">Elektronik onay ile yürürlüğe girer. Kayıtlar ispat aracı olarak saklanır.</p>
+`;
+
+const EN=`
+<h1>Distance Sales Contract</h1>
+<div class="notice"><strong>Seller:</strong> ${SELLER.owner} (${SELLER.brand}) — Tax Office: ${SELLER.taxOffice} / Tax ID: ${SELLER.taxNo} — Tel: ${SELLER.phone} — Email: ${SELLER.email} — Address: ${SELLER.address}</div>
+<h2>1. Parties & Definitions</h2>
+<p>“Seller” is the merchant above; “Buyer” is the person placing orders via ${SELLER.website} (“Site”).</p>
+<h2>2. Scope</h2>
+<p>Sale and delivery of handmade goods and/or homemade food under consumer law and the Distance Sales Regulation.</p>
+<h2>3. Formation</h2>
+<p>Upon checkout confirmation and successful payment, the contract is concluded electronically; records are retained.</p>
+<h2>4. Product, Price & Payment</h2>
+<ol><li>Features, taxes, delivery fees appear at checkout.</li>
+<li>Payments are processed via PayTR/iyzico. Card data is handled by the provider (PCI-DSS), not stored by the Seller.</li>
+<li>3D Secure may apply; suspicious orders can be cancelled.</li></ol>
+<h2>5. Delivery & Risk</h2>
+<p>Method/timeline shown at checkout. Risk passes to the Buyer upon hand-over to the carrier. Address errors/absence are Buyer’s responsibility.</p>
+<h2>6. Right of Withdrawal & Exceptions</h2>
+<p>No withdrawal for perishable, hygiene-sensitive or custom-made items. Otherwise, 14-day withdrawal applies; contact ${SELLER.email}.</p>
+<h2>7. Defects</h2><p>Refund or replacement upon evidence of defect.</p>
+<h2>8. Data & Security</h2><p>Personal data per Privacy/KVKK Notice. Cards processed by PayTR/iyzico.</p>
+<h2>9. Force Majeure</h2><p>Obligations are suspended during force majeure.</p>
+<h2>10. Disputes</h2><p>Consumer authorities/courts at Buyer’s domicile.</p>
+`;
+
+const AR=`
+<h1>عقد البيع عن بُعد</h1>
+<div class="notice"><strong>البائع:</strong> ${SELLER.owner} (${SELLER.brand}) — دائرة الضرائب: ${SELLER.taxOffice} / رقم الضريبة: ${SELLER.taxNo} — هاتف: ${SELLER.phone} — بريد: ${SELLER.email} — العنوان: ${SELLER.address}</div>
+<h2>1) الأطراف والتعريفات</h2><p>البائع كما أعلاه، المشتري هو من يقدّم الطلب عبر ${SELLER.website}.</p>
+<h2>2) النطاق</h2><p>بيع وتسليم المنتجات اليدوية/المنزلية وفق قانون المستهلك ولائحة البيع عن بُعد.</p>
+<h2>3) الإبرام</h2><p>يُبرم العقد إلكترونيًا عند تأكيد الدفع وتخزن السجلات.</p>
+<h2>4) المنتج والسعر والدفع</h2>
+<ol><li>تظهر المواصفات والضرائب ورسوم التسليم عند الدفع.</li>
+<li>الدفع عبر PayTR/iyzico (معايير PCI-DSS). لا نخزن بيانات البطاقة.</li>
+<li>قد يُطبّق 3D Secure؛ تتمكن البائعة من إلغاء الطلبات المشبوهة.</li></ol>
+<h2>5) التسليم والمخاطر</h2><p>تُعرض الطريقة والمدة عند الدفع. تنتقل المخاطر عند تسليم الناقل. أخطاء العنوان مسؤولية المشتري.</p>
+<h2>6) حق الانسحاب والاستثناءات</h2><p>لا انسحاب للمواد القابلة للتلف أو المتعلقة بالنظافة أو المصنوعة حسب الطلب. خلاف ذلك 14 يومًا، تواصل: ${SELLER.email}.</p>
+<h2>7) العيوب</h2><p>استبدال أو رد عند إثبات العيب.</p>
+<h2>8) البيانات والأمان</h2><p>حسب سياسة الخصوصية/KVKK. معالجة البطاقة لدى PayTR/iyzico.</p>
+<h2>9) القوة القاهرة</h2><p>تعليق الالتزامات أثناء القوة القاهرة.</p>
+<h2>10) المنازعات</h2><p>هيئات ومحاكم حماية المستهلك في موطن المشتري.</p>
+`;
+
+const DE=`
+<h1>Fernabsatzvertrag</h1>
+<div class="notice"><strong>Verkäuferin:</strong> ${SELLER.owner} (${SELLER.brand}) — Finanzamt: ${SELLER.taxOffice} / Steuer-ID: ${SELLER.taxNo} — Tel.: ${SELLER.phone} — E-Mail: ${SELLER.email} — Adresse: ${SELLER.address}</div>
+<h2>1. Parteien & Begriffe</h2><p>Verträge über ${SELLER.website} zwischen Verkäuferin und Käufer/in.</p>
+<h2>2. Umfang</h2><p>Verkauf/Lieferung handgemachter Waren/hausgemachter Lebensmittel gem. Verbraucherrecht.</p>
+<h2>3. Vertragsschluss</h2><p>Mit Zahlungsbestätigung elektronisch geschlossen; Aufzeichnungen werden gespeichert.</p>
+<h2>4. Produkt, Preis & Zahlung</h2>
+<ol><li>Eigenschaften, Steuern, Lieferkosten an der Kasse.</li>
+<li>Zahlungen via PayTR/iyzico (PCI-DSS). Keine Kartenspeicherung beim Händler.</li>
+<li>3D Secure möglich; Verdachtsfälle können storniert werden.</li></ol>
+<h2>5. Lieferung & Gefahrübergang</h2><p>Angaben an der Kasse. Mit Übergabe an den Frachtführer geht die Gefahr über. Adressfehler/Abwesenheit liegen beim/bei der Käufer/in.</p>
+<h2>6. Widerruf & Ausnahmen</h2><p>Kein Widerruf bei verderblichen, hygiene-sensiblen oder personalisierten Waren. Sonst 14 Tage; Kontakt: ${SELLER.email}.</p>
+<h2>7. Mängel</h2><p>Rückerstattung/Ersatz bei Nachweis eines Mangels.</p>
+<h2>8. Datenschutz & Sicherheit</h2><p>Gemäß Datenschutzerklärung/KVKK. Kartenverarbeitung durch PayTR/iyzico.</p>
+<h2>9. Höhere Gewalt</h2><p>Pflichten ruhen während höherer Gewalt.</p>
+<h2>10. Streitbeilegung</h2><p>Verbraucherschlichtungsstellen/Gerichte am Wohnsitz der Käufer/innen.</p>
+`;
+
+const MAP={tr:TR,en:EN,ar:AR,de:DE};
+const sel=document.getElementById("lang"),view=document.getElementById("view");
+let L=localStorage.getItem("legal_lang")||"tr"; sel.value=L;
+function render(){ document.documentElement.lang=L; document.documentElement.dir=(L==="ar")?"rtl":"ltr"; view.innerHTML=MAP[L]||MAP.tr;}
+sel.addEventListener("change",()=>{ L=sel.value; localStorage.setItem("legal_lang",L); render();});
+render();
+</script></body></html>

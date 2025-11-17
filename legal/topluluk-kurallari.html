@@ -1,0 +1,26 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Topluluk Kuralları – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Topluluk Kuralları</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const T={
+tr:`<h1>Topluluk Kuralları</h1><ul>
+<li>Saygı, dürüstlük ve güvenlik esastır.</li>
+<li>Yanıltıcı, sahte, yasa dışı içerik yasaktır.</li>
+<li>Kişisel verileri izinsiz paylaşmayın; telif ve marka haklarına uyun.</li>
+<li>Satıcılar ürün açıklamalarında doğru bilgi vermekle yükümlüdür.</li>
+</ul>`,
+en:`<h1>Community Guidelines</h1><ul><li>Respect, honesty and safety.</li><li>No misleading, fake or illegal content.</li><li>No sharing others’ personal data; respect IP rights.</li><li>Sellers must provide accurate product information.</li></ul>`,
+ar:`<h1>إرشادات المجتمع</h1><ul><li>الاحترام والصدق والسلامة.</li><li>ممنوع المحتوى المضلل أو غير القانوني.</li><li>لا تشارك بيانات شخصية دون إذن؛ احترم حقوق الملكية.</li><li>على البائعين تقديم معلومات دقيقة عن المنتجات.</li></ul>`,
+de:`<h1>Community-Richtlinien</h1><ul><li>Respekt, Ehrlichkeit, Sicherheit.</li><li>Keine irreführenden oder illegalen Inhalte.</li><li>Keine Weitergabe personenbezogener Daten; Urheber-/Markenrechte beachten.</li><li>Verkäufer/innen müssen korrekte Produktangaben machen.</li></ul>`};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>

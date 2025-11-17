@@ -1,0 +1,88 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>İletişim / İmpressum – Üreten Eller</title>
+<style>
+:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733;--acc:#22c55e}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}
+.table{width:100%;border-collapse:collapse}.table td{border-top:1px solid var(--bd);padding:8px 0;vertical-align:top}
+.muted{color:var(--muted)}.notice{border-left:3px solid var(--acc);padding:12px;background:#101914;border-radius:8px}
+.footer{margin-top:22px;font-size:13px;color:var(--muted)}.footer a{color:#c8c8ff;text-decoration:none;margin-right:10px}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><strong>Üreten Eller</strong> • <span class="muted">İletişim / İmpressum</span></div>
+    <select id="lang" aria-label="Language"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select>
+  </div>
+  <div id="view" class="card"></div>
+  <div class="footer">
+    <a href="/legal/mesafeli-satis-sozlesmesi.html">Mesafeli Satış</a>
+    <a href="/legal/on-bilgilendirme-formu.html">Ön Bilgilendirme</a>
+    <a href="/legal/teslimat-iade-iptal.html">Teslimat–İade–İptal</a>
+    <a href="/legal/gizlilik-politikasi.html">Gizlilik</a>
+    <a href="/legal/kvkk-aydinlatma.html">KVKK</a>
+    <a href="/legal/cerez-politikasi.html">Çerez</a>
+    <a href="/legal/kullanim-sartlari.html">Kullanım Şartları</a>
+    <a href="/legal/yasakli-urunler.html">Yasaklı Ürünler</a>
+    <a href="/legal/topluluk-kurallari.html">Topluluk</a>
+  </div>
+</div>
+<script>
+const SELLER={brand:"Üreten Eller",owner:"Nejla Koç",taxOffice:"Silivri Vergi Dairesi Müdürlüğü",taxNo:"9530226667",address:"İstanbul, Gümüşyaka Mahallesi, Rahmet Sokak No: 27/A",email:" ozneglobal@gmail.com",phone:"0544 198 38 44",website:"https://www.xn--reteneller-8db.com/",nace:"47.91.14",startDate:"17/09/2025"};
+
+const T={
+tr: `
+<h1>İletişim / İmpressum</h1>
+<div class="notice"><strong>Özet:</strong> Bu sayfa, ödeme kuruluşu başvurularında kontrol edilen tüm satıcı kimlik alanlarını ayrıntılı olarak içerir.</div>
+<table class="table">
+<tr><td><strong>Marka</strong></td><td>${SELLER.brand}</td></tr>
+<tr><td><strong>Ad–Soyad / Ünvan</strong></td><td>${SELLER.owner}</td></tr>
+<tr><td><strong>Vergi Dairesi</strong></td><td>${SELLER.taxOffice}</td></tr>
+<tr><td><strong>Vergi Kimlik No</strong></td><td>${SELLER.taxNo}</td></tr>
+<tr><td><strong>NACE</strong></td><td>${SELLER.nace} – Radyo, TV, posta veya internet üzerinden perakende ticaret</td></tr>
+<tr><td><strong>İşe Başlama</strong></td><td>${SELLER.startDate}</td></tr>
+<tr><td><strong>Adres</strong></td><td>${SELLER.address}</td></tr>
+<tr><td><strong>Telefon</strong></td><td>${SELLER.phone}</td></tr>
+<tr><td><strong>E-posta</strong></td><td>${SELLER.email}</td></tr>
+<tr><td><strong>Web</strong></td><td>${SELLER.website}</td></tr>
+</table>
+<p class="muted">Not: İnceleme ekipleri; açık adres, vergi dairesi ve vergi no alanlarının sayfada <em>düz yazıyla</em> görünmesini ister. Bu sayfa bu formatı sağlar.</p>
+`,
+en: `
+<h1>Imprint / Contact</h1>
+<p><strong>Brand:</strong> ${SELLER.brand} • <strong>Owner:</strong> ${SELLER.owner}</p>
+<p><strong>Tax Office:</strong> ${SELLER.taxOffice} • <strong>Tax ID:</strong> ${SELLER.taxNo}</p>
+<p><strong>NACE:</strong> ${SELLER.nace} • <strong>Start Date:</strong> ${SELLER.startDate}</p>
+<p><strong>Address:</strong> ${SELLER.address}<br><strong>Phone:</strong> ${SELLER.phone} • <strong>Email:</strong> ${SELLER.email}<br><strong>Website:</strong> ${SELLER.website}</p>
+<p class="muted">This page exposes merchant identity fields as required by payment processors.</p>
+`,
+ar: `
+<h1>بيانات التواصل / المطبوعة</h1>
+<p><strong>العلامة:</strong> ${SELLER.brand} • <strong>المالك:</strong> ${SELLER.owner}</p>
+<p><strong>دائرة الضرائب:</strong> ${SELLER.taxOffice} • <strong>رقم الضريبة:</strong> ${SELLER.taxNo}</p>
+<p><strong>رمز النشاط (NACE):</strong> ${SELLER.nace} • <strong>تاريخ البدء:</strong> ${SELLER.startDate}</p>
+<p><strong>العنوان:</strong> ${SELLER.address}<br><strong>الهاتف:</strong> ${SELLER.phone} • <strong>البريد:</strong> ${SELLER.email}<br><strong>الموقع:</strong> ${SELLER.website}</p>
+<p class="muted">تتضمن هذه الصفحة جميع معلومات هوية التاجر المطلوبة.</p>
+`,
+de: `
+<h1>Impressum / Kontakt</h1>
+<p><strong>Marke:</strong> ${SELLER.brand} • <strong>Inhaberin:</strong> ${SELLER.owner}</p>
+<p><strong>Finanzamt:</strong> ${SELLER.taxOffice} • <strong>Steuer-ID:</strong> ${SELLER.taxNo}</p>
+<p><strong>NACE:</strong> ${SELLER.nace} • <strong>Beginn:</strong> ${SELLER.startDate}</p>
+<p><strong>Adresse:</strong> ${SELLER.address}<br><strong>Telefon:</strong> ${SELLER.phone} • <strong>E-Mail:</strong> ${SELLER.email}<br><strong>Web:</strong> ${SELLER.website}</p>
+<p class="muted">Seite enthält alle von Zahlungsdienstleistern geforderten Felder.</p>
+`
+};
+
+const sel=document.getElementById("lang"),view=document.getElementById("view");
+let L=localStorage.getItem("legal_lang")||"tr"; sel.value=L;
+function render(){ document.documentElement.lang=L; document.documentElement.dir=(L==="ar")?"rtl":"ltr"; view.innerHTML=T[L]||T.tr; }
+sel.addEventListener("change",()=>{ L=sel.value; localStorage.setItem("legal_lang",L); render(); });
+render();
+</script>
+</body></html>

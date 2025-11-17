@@ -1,0 +1,36 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Çerez Politikası – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}h2{font-size:17px;margin:18px 0 8px;color:#d9d9df}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Çerez Politikası</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const T={
+tr:`<h1>Çerez Politikası</h1>
+<h2>Çerez Türleri</h2><ul><li>Zorunlu çerezler</li><li>Performans/analitik</li><li>Pazarlama/yeniden hedefleme</li></ul>
+<h2>Amaç</h2><p>Oturum bütünlüğü, performans analizi, içerik kişiselleştirme.</p>
+<h2>Yönetim</h2><p>Tarayıcı ayarlarından silebilir/devre dışı bırakabilirsiniz; devre dışı bırakma bazı işlevleri etkileyebilir.</p>
+<h2>Üçüncü Taraf</h2><p>Analitik ve ödeme sağlayıcılarının çerezleri kullanılabilir.</p>
+`,
+en:`<h1>Cookie Policy</h1><h2>Types</h2><ul><li>Essential</li><li>Performance/analytics</li><li>Marketing/retargeting</li></ul>
+<h2>Purpose</h2><p>Session integrity, analytics, personalization.</p>
+<h2>Control</h2><p>Manage via browser settings; disabling may affect features.</p>
+<h2>Third Parties</h2><p>Analytics/payment providers may set cookies.</p>`,
+ar:`<h1>سياسة الكوكيز</h1><h2>الأنواع</h2><ul><li>الأساسية</li><li>الأداء/التحليلات</li><li>التسويق/إعادة الاستهداف</li></ul>
+<h2>الغرض</h2><p>سلامة الجلسة، التحليلات، التخصيص.</p>
+<h2>التحكم</h2><p>من إعدادات المتصفح؛ قد يؤثر التعطيل على الميزات.</p>
+<h2>أطراف ثالثة</h2><p>قد تستخدم خدمات التحليلات والدفع كوكيز.</p>`,
+de:`<h1>Cookie-Richtlinie</h1><h2>Arten</h2><ul><li>Essentiell</li><li>Performance/Analyse</li><li>Marketing/Retargeting</li></ul>
+<h2>Zweck</h2><p>Sitzungsintegrität, Analysen, Personalisierung.</p>
+<h2>Steuerung</h2><p>Über Browsereinstellungen verwalten; Deaktivierung kann Funktionen beeinträchtigen.</p>
+<h2>Dritte</h2><p>Analyse-/Zahlungsdienste können Cookies setzen.</p>`
+};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>

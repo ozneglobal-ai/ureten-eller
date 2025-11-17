@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Panel • Üreten Eller</title>
+  <link rel="stylesheet" href="/admin/css/admin.css"/>
+
+  <!-- GUARD: auth doğrulanana kadar UI'yi gizle -->
+  <style>
+    :root{ --sbw:260px; --ink:#e5e7eb; --brd:#111; }
+    html,body{background:#000;color:var(--ink);margin:0}
+    [data-auth!="ok"] .sidebar,
+    [data-auth!="ok"] .content { display:none !important; }
+    .section{display:none!important}
+    .section.active{display:block!important}
+    .menu a.active{font-weight:700; text-decoration:underline}
+    .muted{color:#9ca3af}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .row-right{display:flex;gap:8px;align-items:center;margin-left:auto}
+    .input{background:#000;border:1px solid var(--brd);color:var(--ink);padding:8px 10px;border-radius:10px;outline:none}
+    .btn-sm{appearance:none;border:1px solid var(--brd);border-radius:10px;padding:8px 12px;background:#111;color:#fff;font-weight:700;cursor:pointer}
+    .table-wrap{overflow:auto}
+    .tbl{width:100%;border-collapse:collapse}
+    .tbl th,.tbl td{padding:10px 8px;border-bottom:1px solid var(--brd);text-align:left}
+    .cards{display:grid;gap:12px}
+    .tile{background:#0a0a0a;border:1px solid var(--brd);border-radius:16px;padding:12px}
+    .tile .t{font-size:12px;color:#9ca3af}
+    .tile .n{font-size:22px;font-weight:800}
+
+    /* Sidebar */
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sbw);min-width:var(--sbw);padding:16px;border-right:1px solid var(--brd);background:#000;display:flex;flex-direction:column;z-index:30}
+    .content{margin-left:var(--sbw);padding:16px;min-width:0;position:relative;overflow-x:hidden}
+    .brand{display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:8px}
+    .brand span{white-space:nowrap}
+    .menu{display:grid;gap:6px;flex:1;max-height:calc(100vh - 120px);overflow:auto;overscroll-behavior:contain;padding-right:4px}
+    .menu a{color:var(--ink);text-decoration:none;padding:8px 10px;border-radius:10px;display:block;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:keep-all}
+    .menu a:hover{background:#0f0f0f}
+    .btn-outline{margin-top:auto;width:100%;background:#000;border:1px solid var(--brd);color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
+
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    @media (max-width:1200px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    @media (max-width:700px){ .grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body class="dark">
+  <!-- ADMIN GUARD: Firebase + admin kontrolü -->
+  <script type="module">
+    // Firebase init (root’taki dosya)
+    import '/firebase-init.js';
+
+    // Basit loading overlay
+    const gate = document.createElement('div');
+    gate.id = 'admin-gate';
+    gate.style.cssText = 'position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#e5e7eb;z-index:9999';
+    gate.textContent = 'Admin kontrol ediliyor…';
+    document.body.appendChild(gate);
+
+    // Auth kontrolü
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+    const auth = window.__fb?.auth || getAuth();
+
+    function deny(){
+      // Login sayfasına gönder (geri tuşunda panele dönülmesin)
+      location.replace('/admin/index.html');
+    }
+
+    onAuthStateChanged(auth, async (u) => {
+      if (!u) return deny();
+      try{
+        const token = await u.getIdTokenResult(true);
+        const email = (u.email||'').toLowerCase();
+        const ok = token?.claims?.admin === true || email.endsWith('@ureteneller.com');
+        if (!ok) return deny();
+        document.documentElement.setAttribute('data-auth','ok');
+        gate.remove();
+      }catch{
+        deny();
+      }
+    });
+  </script>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/assets/icons/ureteneller.png" class="logo-sm" alt="ÜE"/>
+      <span>Admin</span>
+    </div>
+    <nav class="menu" id="sideMenu" role="navigation">
+      <a href="#dashboard" data-target="dashboard">Özet</a>
+      <a href="#users" data-target="users">Kullanıcılar</a>
+      <a href="#listings" data-target="listings">İlanlar</a>
+      <a href="#orders" data-target="orders">Siparişler</a>
+      <a href="#messages" data-target="messages">Mesajlar</a>
+      <a href="#notifications" data-target="notifications">Bildirim</a>
+      <a href="#reports" data-target="reports">Raporlar</a>
+      <a href="#settings" data-target="settings">Ayarlar</a>
+    </nav>
+    <button id="logoutBtn" class="btn-outline">Çıkış</button>
+  </aside>
+
+  <main class="content">
+    <p id="emptyHint" class="muted" style="margin:16px 0;">Soldan bir bölüm seçin.</p>
+
+    <section id="dashboard" class="section" data-section="dashboard">
+      <h1>Günlük Özet</h1>
+      <div class="grid">
+        <div class="tile"><div class="t">Aktif Kullanıcı</div><div id="mUsers" class="n">—</div></div>
+        <div class="tile"><div class="t">Aktif İlan</div><div id="mListings" class="n">—</div></div>
+        <div class="tile"><div class="t">Bekleyen Onay</div><div id="mPending" class="n">—</div></div>
+        <div class="tile"><div class="t">Açık Sipariş</div><div id="mOrders" class="n">—</div></div>
+      </div>
+    </section>
+
+    <section id="users" class="section" data-section="users">
+      <div class="row">
+        <h2>Kullanıcı Yönetimi</h2>
+        <div class="row-right">
+          <input id="qUser" class="input" placeholder="Ad / e-posta / şehir"/>
+          <button id="btnReloadUsers" class="btn-sm">Yenile</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Ad Soyad</th><th>E-posta</th><th>Rol</th><th>Şehir</th><th>PRO</th><th>İşlem</th></tr>
+          </thead>
+        <tbody id="usersBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="listings" class="section" data-section="listings">
+      <div class="row">
+        <h2>İlan Yönetimi</h2>
+        <div class="row-right">
+          <select id="listingFilter" class="input">
+            <option value="pending">Bekleyen</option>
+            <option value="approved">Onaylı</option>
+            <option value="rejected">Red</option>
+            <option value="expired">Süresi Dolan</option>
+            <option value="deleted">Silinen</option>
+            <option value="all">Tümü</option>
+          </select>
+          <input id="qListing" class="input" placeholder="Başlık / satıcı / ID"/>
+          <button id="btnReloadListings" class="btn-sm">Yenile</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr><th>Başlık</th><th>Satıcı</th><th>Fiyat</th><th>Durum</th><th>Vitrin</th><th>İşlem</th></tr>
+          </thead>
+          <tbody id="listingsBody"><tr><td colspan="6" class="muted">Bölümü açın…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="orders" class="section" data-section="orders">
+      <h2>Siparişler</h2>
+      <div class="row">
+        <select id="orderFilter" class="input">
+          <option value="open">Açık</option>
+          <option value="shipping">Kargoda</option>
+          <option value="delivered">Teslim</option>
+          <option value="refund">İade</option>
+        </select>
+        <button id="btnReloadOrders" class="btn-sm">Yenile</button>
+      </div>
+      <div id="ordersList" class="cards"></div>
+    </section>
+
+    <section id="messages" class="section" data-section="messages">
+      <h2>Mesajlar & Canlı Destek</h2>
+      <div id="conversations" class="cards"></div>
+    </section>
+
+    <section id="notifications" class="section" data-section="notifications">
+      <h2>Bildirim Gönder</h2>
+      <div class="row">
+        <input id="nTitle" class="input" placeholder="Başlık"/>
+        <input id="nBody" class="input" placeholder="Mesaj"/>
+        <select id="nSegment" class="input">
+          <option value="all">Tümü</option>
+          <option value="pro">PRO</option>
+          <option value="seller">Satıcı</option>
+          <option value="customer">Müşteri</option>
+        </select>
+        <button id="btnSendNotif" class="btn-sm">Gönder</button>
+      </div>
+      <p id="nInfo" class="muted"></p>
+    </section>
+
+    <section id="reports" class="section" data-section="reports">
+      <h2>Raporlar</h2>
+      <div class="grid">
+        <div class="tile"><div class="t">En Çok Görüntülenen İlan</div><div id="rTopListing" class="n">—</div></div>
+        <div class="tile"><div class="t">En Aktif Satıcı</div><div id="rTopSeller" class="n">—</div></div>
+        <div class="tile"><div class="t">Şikayetli İlanlar</div><div id="rComplaints" class="n">—</div></div>
+      </div>
+    </section>
+
+    <section id="settings" class="section" data-section="settings">
+      <h2>Ayarlar</h2>
+      <div class="row">
+        <button id="btnReindex" class="btn-sm">Arama İndeksi Yenile</button>
+        <button id="btnPurge" class="btn-sm">Önbellek Temizle</button>
+        <button id="btnBackup" class="btn-sm">JSON Dışa Aktar</button>
+      </div>
+      <p id="sInfo" class="muted"></p>
+    </section>
+  </main>
+
+  <!-- Firebase (vardıysa) sessizce import -->
+  <script type="module">
+    (async()=>{ try{ await import('/firebase-init.js'); }catch(_){} })();
+  </script>
+
+  <!-- Admin Kabuk: Navigasyon + Lazy Load + Çıkış -->
+  <script type="module">
+    (function(){
+      const ready = (fn)=> document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', fn) : fn();
+
+      const Fallback = {
+        async users(){
+          const tbody = document.getElementById('usersBody');
+          if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="muted">Önizleme: örnek satır. Modül bulunamadı veya Firebase bağlı değil.</td></tr>`;
+        },
+        async listings(){
+          const tbody = document.getElementById('listingsBody');
+          if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="muted">Önizleme: örnek satır. Modül bulunamadı veya Firebase bağlı değil.</td></tr>`;
+        },
+        async messages(){
+          const host = document.getElementById('conversations');
+          if (host) host.innerHTML = `<div class="tile">Önizleme: konuşma listesi için modül bulunamadı veya Firebase bağlı değil.</div>`;
+        }
+      };
+
+      ready(()=>{
+        const sections = Array.from(document.querySelectorAll('.section'));
+        const links    = Array.from(document.querySelectorAll('#sideMenu a'));
+        const empty    = document.getElementById('emptyHint');
+
+        function hideAll(){
+          sections.forEach(s=>s.classList.remove('active'));
+          links.forEach(a=>a.classList.remove('active'));
+          if (empty) empty.style.display='';
+        }
+
+        async function show(id){
+          hideAll();
+          const sec = document.getElementById(id);
+          if (!sec) return;
+          sec.classList.add('active');
+          const link = links.find(a=> (a.dataset.target===id) || a.getAttribute('href')==="#"+id);
+          if (link) link.classList.add('active');
+          if (empty) empty.style.display='none';
+          history.replaceState(null,'',`#${id}`);
+
+          try{
+            if (id==='users' && !window.__usersMounted){
+              window.__usersMounted = true;
+              const m = await import('/admin/js/users.js?v='+Date.now());
+              if (m?.mountAdminUsers) await m.mountAdminUsers({ container: document.getElementById('users') });
+              else await Fallback.users();
+            }
+            if (id==='listings' && !window.__listingsMounted){
+              window.__listingsMounted = true;
+              const m = await import('/admin/js/listings.js?v='+Date.now());
+              if (m?.mountAdminListings) await m.mountAdminListings({ container: document.getElementById('listings') });
+              else await Fallback.listings();
+            }
+            if (id==='messages' && !window.__messagesMounted){
+              window.__messagesMounted = true;
+              const m = await import('/admin/js/messages.js?v='+Date.now());
+              if (m?.mountAdminMessages) await m.mountAdminMessages({ container: document.getElementById('messages') });
+              else await Fallback.messages();
+            }
+          }catch(err){
+            console.warn('Modül yüklenemedi:', err);
+            if (id==='users') await Fallback.users();
+            if (id==='listings') await Fallback.listings();
+            if (id==='messages') await Fallback.messages();
+          }
+        }
+
+        document.getElementById('sideMenu')?.addEventListener('click', (e)=>{
+          const a = e.target.closest('a[data-target]');
+          if(!a) return;
+          e.preventDefault();
+          show(a.dataset.target || (a.getAttribute('href')||'').replace('#',''));
+        });
+
+        const first = (location.hash || '#dashboard').replace('#','');
+        show(first);
+
+        // Çıkış – admin/index.html'e yönlendir (history temiz)
+        document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
+          try{
+            const { getAuth, signOut } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+            const auth = window.__fb?.auth || getAuth();
+            await signOut(auth);
+          }catch(_){}
+          location.replace('/admin/index.html');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

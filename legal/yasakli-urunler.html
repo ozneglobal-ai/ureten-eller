@@ -1,0 +1,22 @@
+<!doctype html><html lang="tr" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Yasaklı Ürünler – Üreten Eller</title>
+<style>:root{--bg:#0b0b0c;--fg:#ececf1;--muted:#b5b5bd;--card:#141418;--bd:#272733}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.75 system-ui}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+select{background:var(--card);border:1px solid var(--bd);color:var(--fg);padding:8px 10px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+h1{font-size:22px;margin:0 0 8px}ul{margin:0 0 8px 20px}p,li{color:#d6d6dc}.muted{color:var(--muted)}</style></head><body>
+<div class="wrap"><div class="top"><div><strong>Üreten Eller</strong> • <span class="muted">Yasaklı Ürünler</span></div>
+<select id="lang"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option><option value="de">Deutsch</option></select></div>
+<div id="view" class="card"></div></div>
+<script>
+const T={
+tr:`<h1>Yasaklı Ürünler</h1><ul>
+<li>Uyuşturucu, uyarıcı maddeler; silah ve mühimmat</li><li>Tütün/nikotin, alkol</li><li>Canlı hayvan, nesli tehlike altındaki türler</li><li>Reçeteli/ruhatsız ilaç ve tıbbi cihaz</li><li>Fikri-sınai hak ihlali ürünler, taklit</li><li>Mevzuata aykırı gıda ve hijyen ürünleri</li></ul>`,
+en:`<h1>Prohibited Items</h1><ul><li>Drugs/stimulants; weapons/ammunition</li><li>Tobacco/nicotine, alcohol</li><li>Live animals, endangered species</li><li>Prescription/unauthorized medicines & devices</li><li>IP-infringing/counterfeit goods</li><li>Non-compliant food/hygiene goods</li></ul>`,
+ar:`<h1>المنتجات المحظورة</h1><ul><li>المخدرات/المنشطات؛ الأسلحة/الذخيرة</li><li>التبغ/النيكوتين، الكحول</li><li>الحيوانات الحية والأنواع المهددة</li><li>الأدوية/الأجهزة غير المرخصة</li><li>السلع المقلدة والمنتهكة للملكية</li><li>الأغذية/المنتجات الصحية غير المطابقة</li></ul>`,
+de:`<h1>Verbotene Produkte</h1><ul><li>Drogen/Stimulanzien; Waffen/Munition</li><li>Tabak/Nikotin, Alkohol</li><li>Lebende Tiere, gefährdete Arten</li><li>Verschreibungspflichtige/nicht zugelassene Arznei/Medizinprodukte</li><li>Urheberrechts-/Markenverletzungen, Fälschungen</li><li>Nicht konforme Lebensmittel/Hygieneartikel</li></ul>`};
+const sel=document.getElementById("lang"),view=document.getElementById("view");let L=localStorage.getItem("legal_lang")||"tr";sel.value=L;
+function render(){document.documentElement.lang=L;document.documentElement.dir=(L==="ar")?"rtl":"ltr";view.innerHTML=T[L]}
+sel.addEventListener("change",()=>{L=sel.value;localStorage.setItem("legal_lang",L);render()});render();
+</script></body></html>
