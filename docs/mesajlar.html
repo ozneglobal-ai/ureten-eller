@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mesajlar • Üreten Eller</title>
+  <link rel="icon" href="./assets/icons/favicon.png" />
+  <style>
+    :root{
+  /* Aydınlık tema değişkenleri */
+  --bg1:#ffffff;
+  --bg2:#ffffff;
+
+  /* Metin renkleri – JS, input rengi için --ink'i kullanıyor */
+  --ink:#111111;        /* ÖNEMLİ: input yazısı artık siyah görünecek */
+  --muted:#555555;
+
+  /* Kenarlık ve kartlar */
+  --brd:#e5e7eb;
+  --card:#ffffff;
+  --card2:#ffffff;
+
+  /* Aksiyon rengi (FAB dâhil) altın */
+  --accent:#ffd700;
+
+  /* Durum renkleri (gerekirse) */
+  --ok:#10b981;
+  --warn:#f59e0b;
+  --err:#ef4444;
+}
+
+    *{box-sizing:border-box}
+   html,body{
+  margin:0;padding:0;
+  background:#ffffff;
+  color:#000;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+      max-width:100%;
+    }
+
+    .page{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:10px;
+}
+
+@media(min-width:901px){
+  .page{
+    display:grid;
+    grid-template-columns:320px 1fr;
+  }
+}
+
+    .panel{
+  border:1px solid #ddd;
+  border-radius:14px;
+  background:#ffffff;
+  overflow:hidden;
+  position:relative;
+  color:#333;
+}
+    .left{display:flex;flex-direction:column}
+    .topbar{
+  position:sticky;
+  top:0;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  background:#fff;
+  color:#222;
+}
+
+    .logo{display:flex;align-items:center;gap:.5rem;font-weight:900}
+    .logo img{width:24px;height:24px}
+    .spacer{flex:1}
+    .btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.5rem .8rem;
+  border:1px solid #b8860b;
+  border-radius:10px;
+  background:linear-gradient(180deg,#ffd700,#b8860b);
+  color:#ffffff;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(184,134,11,0.4);
+}
+
+    .actions{display:flex;gap:6px;flex-wrap:wrap}
+    .search{padding:8px 10px;border-bottom:1px solid var(--brd)}
+    .search input{
+  width:100%;
+  border:1px solid #ccc;
+  border-radius:10px;
+  background:#f9f9f9;
+  color:#000;
+  padding:10px;
+}
+
+    #threads{overflow:auto;flex:1}
+    .empty{padding:12px;color:var(--muted);text-align:center}
+    .th{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:10px;border-bottom:1px solid var(--brd);cursor:pointer}
+    .th:hover{background:rgba(255,255,255,.03)}
+    .ava{width:44px;height:44px;border-radius:10px;border:1px solid var(--brd);background:#111827 center/cover no-repeat}
+    .thTitle{font-weight:800}
+    .thSub{color:var(--muted);font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+    .thTime{color:var(--muted);font-size:.8rem;min-width:80px;text-align:right}
+
+    /* Sağ: chat */
+    .right{display:grid;grid-template-rows:auto 1fr auto; min-height:0;}
+    .chatTop{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  background:#fff;
+  color:#222;
+}
+   .chatTop .name{font-weight:900;cursor:pointer}
+    .chatTop .mini{color:var(--muted);font-size:.9rem}
+
+    .chatBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  overflow-y: auto;
+  padding: 12px 12px 90px; /* 90px = alt bar yüksekliği kadar boşluk */
+  scroll-behavior: smooth;
+  min-height: 0;
+  overflow-x: hidden;
+}
+
+/* Mesaj balonları */
+.msg{
+  max-width:80%;
+  padding:10px 14px;
+  border:1px solid #ddd;
+  border-radius:12px;
+  background:#f9f9f9;
+  color:#000;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  line-height:1.4;
+    box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.me{
+  align-self:flex-end;
+  background:#fff8dc; /* açık altın tonlu */
+  border-color:#ffd700;
+}
+
+.other{
+  align-self:flex-start;
+  background:#ffffff;
+  border-color:#ddd;
+}
+
+    /* Alt bar her zaman görünsün */
+    .chatInput{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  border-top:1px solid #ddd;
+  position:sticky;
+  bottom:0;
+  z-index:5;
+  background:#fff;
+  flex-wrap:wrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+    
+.chatInput input{
+  flex:1;
+  border:1px solid #ccc;
+  border-radius:999px;
+  background:#f8f8f8;
+  color:#333;
+  padding:12px 14px;
+  font-size:16px;
+}
+.chatInput button{
+  border-radius:999px;
+  background:linear-gradient(180deg,#ffd700,#b8860b);
+  color:#fff;
+  font-weight:900;
+  padding:12px 16px;
+  cursor:pointer;
+  min-width:88px;
+  border:none;
+}
+
+    .pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;border:1px solid var(--brd);border-radius:999px}
+    .pill.badge{
+  background:#ffd700;        /* Altın renkli arka plan */
+  color:#000;                /* Siyah yazı */
+  font-weight:800;
+  border:1px solid #b8860b;  /* Altın kenar */
+}
+
+    /* Sağ altta yedek FAB gönder (mobilde asla kaybolmasın) */
+    .fab-send{
+  position:fixed;
+  right:14px;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid #b8860b;
+  background:linear-gradient(180deg,#ffd700,#b8860b);
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 6px 18px rgba(184,134,11,0.5);
+  cursor:pointer;
+  z-index:20;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.fab-send:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(184,134,11,0.7);
+}
+
+    @media(min-width:901px){ .fab-send{ display:none; } } /* sadece mobil/tablet */
+   /* --- Son dokunuş: genel hizalama ve scrollbar görünümü --- */
+body {
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+  #chat {
+  overflow-y: auto;
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b8860b;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a47c0a;
+}
+    
+    /* Mobilde gerçek ekran yüksekliğini kullan */
+@media (max-width: 900px){
+  .page{ height: 100dvh; }
+}
+
+/* Seçim modu görselliği */
+.msg {
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.msg.selectable {
+  cursor: pointer;
+}
+.msg.selected {
+  border-color: #ef4444 !important;
+  background: #fff0f0 !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.25) inset;
+}
+    /* Sol liste çoklu seçim görselliği */
+.th.selectable { cursor: pointer; }
+.th.selected {
+  border-color: #ef4444 !important;
+  background: #fff0f0 !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.25) inset;
+}
+
+  </style>
+
+ <!-- Firestore için global yardımcıları sağlayan dosya (TEK KEZ) -->
+<script type="module" src="/firebase-init.js"></script>
+
+<!-- GİRİŞ KORUMASI -->
+<script type="module">
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+  (function protectPage(){
+    try{
+      const auth = getAuth(self.__fb?.app);
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) { location.replace('/index.html'); return; }
+        const usesPassword = user.providerData?.some(p => p.providerId === 'password');
+        try { await user.reload(); } catch(_) {}
+        if (usesPassword && !user.emailVerified) { location.replace('/index.html'); return; }
+      });
+    }catch(e){
+      console.warn('protectPage hata', e);
+      try{ location.replace('/index.html'); }catch(_){}
+    }
+  })();
+</script>
+</head>
+
+<body>
+  <div class="page">
+    <!-- LEFT -->
+    <div class="panel left">
+      <div class="topbar">
+        <div class="logo">
+          <img src="./üreteneller.png" alt="logo" />
+          <span>Üreten Eller</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="actions">
+          <button class="btn ghost"   id="btnHome"  type="button">🏠 Ana sayfa</button>
+          <button class="btn accent"  id="btnNotif" type="button">🔔 <span id="notifLbl">Bildirimleri Aç</span></button>
+          <button class="btn primary" id="btnSound" type="button">🔊 <span id="soundLbl">Sesi Aç</span></button>
+        </div>
+      </div>
+
+      <div class="search">
+        <input id="search" placeholder="Kişi veya mesaj ara" />
+      </div>
+
+      <div id="threads">
+        <div class="empty">Konuşma yok.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel right">
+      <div class="chatTop">
+        <div id="peerAva" class="ava"></div>
+        <div style="flex:1">
+          <div class="name" id="peerName" title="Profili aç">Kişi seçin</div>
+          <div class="mini" id="peerInfo">—</div>
+        </div>
+        <div class="pill badge" id="unreadBadge" title="Okunmamış mesaj">0</div>
+        <button class="btn" id="btnHideThread" title="Bu konuşmayı panelimden kaldır">👁‍🗨 Panelimden kaldır</button>
+      </div>
+
+      <div id="chat" class="chatBody" aria-live="polite">
+        <div class="empty">Soldan bir konuşma seçin.</div>
+      </div>
+
+      <div class="chatInput">
+        <input id="msgInput" placeholder="Mesaj yazın…" />
+        <button id="btnSend">Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- mobil güvenlik: yedek gönder -->
+  <button class="fab-send" id="fabSend" aria-label="Gönder">➤</button>
+
+  <audio id="ding" preload="auto" src="./notify.wav"></audio>
+
+  <script>
+  const log = (...a)=>console.log('[msg]',...a);
+  const $ = s=>document.querySelector(s);
+  const qs = k=> new URLSearchParams(location.search).get(k)||'';
+
+  let __me=null, __threadsUnsub=null, __msgsUnsub=null;
+  let __curThreadId=null, __curPeerUid=null;
+  let __ding=null, __soundEnabled = (localStorage.getItem('ue_sound_enabled')==='1');
+  let __soundUnlocked=false;
+  let __hiddenThreads=new Set();
+  let __lastSeenMap={};
+  let __selectedMsgIds = new Set();
+  let __delBtn = null;
+
+
+  // === FCM CONFIG ===
+  const FCM_VAPID_KEY = 'WEB_PUSH_CERTIFICATE_PUBLIC_VAPID_KEY'; // Firebase Console > Cloud Messaging > Web Push
+  const FCM_SW_PATH = '/firebase-messaging-sw.js'; // Bu dosyayı site köküne (ve docs/ köküne) koymalısın
+
+  const LS_KEY_THREADS = uid => `ue.hiddenThreads.${uid}`;
+  const getHiddenThreads = uid => { try{return new Set(JSON.parse(localStorage.getItem(LS_KEY_THREADS(uid))||'[]'));}catch{return new Set()} };
+  const setHiddenThreads = (uid,set)=>{ try{localStorage.setItem(LS_KEY_THREADS(uid), JSON.stringify([...set]));}catch{} };
+
+  async function api(){ return await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js'); }
+
+  const _briefCache=new Map();
+  async function getUserBrief(uid){
+    if(!uid) return {name:'Kullanıcı',avatar:'/assets/img/avatar-default.png'};
+    if(_briefCache.has(uid)) return _briefCache.get(uid);
+    try{
+      const {doc,getDoc}=await api();
+      const snap=await getDoc(doc(self.db,'users',uid));
+      const d=snap.exists()?(snap.data()||{}):{};
+      const name=[d.name||d.firstName||'',d.surname||d.lastName||''].filter(Boolean).join(' ')||d.displayName||'Kullanıcı';
+      const brief={name,avatar:d.avatar||d.photoURL||'/assets/img/avatar-default.png'};
+      _briefCache.set(uid,brief); return brief;
+    }catch{ return {name:'Kullanıcı',avatar:'/assets/img/avatar-default.png'} }
+  }
+
+  function updateNotifLabel(){
+    if(!('Notification' in window)){ $('#notifLbl').textContent='Tarayıcı desteklemiyor'; return; }
+    $('#notifLbl').textContent = Notification.permission==='granted' ? 'Bildirimler aktif'
+      : (Notification.permission==='denied' ? 'Bildirim engelli' : 'Bildirimleri Aç');
+  }
+  function updateSoundLabel(){ $('#soundLbl').textContent = __soundEnabled ? 'Sesi Kapat' : 'Sesi Aç'; }
+
+  function bindButtons(){
+    $('#btnHome').addEventListener('click', e=>{ e.preventDefault(); location.href='/home.html'; });
+    $('#btnNotif').addEventListener('click', onNotifClick);
+    $('#btnSound').addEventListener('click', onSoundClick);
+    $('#btnHideThread').addEventListener('click', hideCurrentThreadForMe);
+    $('#peerName').addEventListener('click', ()=>{ if(__curPeerUid) location.href=`/docs/profile.html?uid=${encodeURIComponent(__curPeerUid)}`; });
+    $('#msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+    $('#btnSend').addEventListener('click', sendMessage);
+    $('#fabSend').addEventListener('click', sendMessage);
+    $('#search').addEventListener('input', ()=> listenThreads());
+
+    // ses kilidi
+    ['click','pointerdown','touchstart','keydown'].forEach(ev=>{
+      window.addEventListener(ev, ()=>{ if(__soundEnabled) tryUnlockSound(false); }, {capture:true});
+    });
+
+    // mobil klavye / viewport yükseklik
+    if (window.visualViewport){
+      const chat = $('#chat');
+      const handler = ()=>{
+        const vv = window.visualViewport;
+        const bottomInset = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop));
+        chat.style.paddingBottom = (bottomInset + 90) + 'px'; // alt bar + klavye
+      };
+      window.visualViewport.addEventListener('resize', handler);
+      window.visualViewport.addEventListener('scroll', handler);
+    }
+  }
+
+  // ==== WEB PUSH / FCM entegrasyonu ====
+  async function setupFCMForThisDevice(currentUid){
+    try{
+      if(!('Notification' in window)) return null;
+      if(location.protocol!=='https:' && location.hostname!=='localhost'){
+        alert('Bildirimler için HTTPS gerekir (localhost hariç).');
+        return null;
+      }
+      // messaging modüllerini yükle
+      const { getMessaging, getToken, onMessage, isSupported } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging.js');
+      if(!(await isSupported())){ updateNotifLabel(); return null; }
+
+      // SW kaydı
+      const reg = await navigator.serviceWorker.register(FCM_SW_PATH, { scope: '/' });
+
+      // izin iste
+      const perm = await Notification.requestPermission();
+      updateNotifLabel();
+      if(perm!=='granted') return null;
+
+      // token al
+      const messaging = getMessaging(self.app);
+      const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+      if(!token) return null;
+
+      // Token'ı Firestore'a yaz
+      const { getFirestore, doc, setDoc, serverTimestamp, updateDoc, arrayUnion } = await api();
+      const db = getFirestore(self.app);
+      try{
+        await setDoc(doc(db,'fcmTokens', token), {
+          token, uid: currentUid||null, platform:'web', active:true, createdAt: serverTimestamp()
+        }, { merge: true });
+      }catch(e){ console.warn('fcmTokens write err', e); }
+      if(currentUid){
+        try{ await updateDoc(doc(db,'users', currentUid), { fcmTokens: arrayUnion(token) }); }catch{}
+      }
+
+      // Uygulama açıkken gelen push -> bildirim + ding
+      onMessage(messaging, (payload)=>{
+        try{ new Notification(payload?.notification?.title||'Yeni mesaj', {
+          body: payload?.notification?.body||'', icon:'./assets/icons/favicon.png'
+        }); }catch{}
+        playDing();
+      });
+
+      return token;
+    }catch(e){ console.warn('[msg] setupFCM error', e); return null; }
+  }
+
+  function onNotifClick(){
+    if(!('Notification' in window)){ alert('Tarayıcınız bildirimleri desteklemiyor.'); return; }
+    // izin + FCM kaydı
+    setupFCMForThisDevice(__me?.uid||null).then(tok=>{
+      if(tok){
+        try{ new Notification('Bildirim açık', { body:'Bu cihaz için bildirimler etkin.', icon:'./üreteneller.png' }); }catch{}
+      }
+    });
+  }
+
+  function onSoundClick(){
+    __soundEnabled = !__soundEnabled;
+    localStorage.setItem('ue_sound_enabled', __soundEnabled?'1':'0');
+    updateSoundLabel();
+    if(__soundEnabled) tryUnlockSound(true);
+  }
+  function tryUnlockSound(playTest){
+    if(!__ding) return;
+    if(__soundUnlocked){ if(playTest && __soundEnabled) playDing(); return; }
+    __ding.muted=false; __ding.currentTime=0;
+    __ding.play().then(()=>{ __soundUnlocked=true; if(playTest && __soundEnabled) playDing(); }).catch(()=>{});
+  }
+  function playDing(){
+    if(!__soundEnabled || !__ding) return;
+    __ding.currentTime=0; __ding.play().catch(()=>{});
+    if('vibrate' in navigator){ try{ navigator.vibrate([60,30,60]); }catch{} }
+  }
+
+  function fmtDate(ts){ try{ const d=ts?.toDate?ts.toDate():(ts?new Date(ts):null); return d? d.toLocaleString('tr-TR'):'';}catch{ return '' } }
+  function escapeHtml(x){ return (x||'').replace(/[<>&]/g,s=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[s])); }
+
+  function renderThreadsSnapshotLike(snap){
+    const listEl=$('#threads'); const rows=[];
+    snap.forEach(ds=>{
+      const d=ds.data()||{}; if(__hiddenThreads.has(ds.id)) return;
+      const arr=d.participants||[]; const otherUid=arr.find(x=>x!==__me.uid)||'';
+      rows.push({id:ds.id,d,otherUid});
+    });
+    rows.sort((a,b)=>{
+      const ta=a.d.lastAt?.toMillis? a.d.lastAt.toMillis() : (a.d.lastAt? new Date(a.d.lastAt).getTime():0);
+      const tb=b.d.lastAt?.toMillis? b.d.lastAt.toMillis() : (b.d.lastAt? new Date(b.d.lastAt).getTime():0);
+      return (tb||0)-(ta||0);
+    });
+    const qtxt = ($('#search')?.value||'').trim().toLowerCase();
+    listEl.innerHTML = rows.length ? '' : '<div class="empty">Konuşma yok.</div>';
+    let unread=0;
+
+    (async()=>{
+      for(const r of rows){
+        const other = await getUserBrief(r.otherUid);
+        if(qtxt && !(other.name||'').toLowerCase().includes(qtxt) && !(r.d.lastText||'').toLowerCase().includes(qtxt)) continue;
+
+        const lastMillis = r.d.lastAt?.toMillis ? r.d.lastAt.toMillis() : (r.d.lastAt? new Date(r.d.lastAt).getTime():0);
+        const seenMy = r.d.seen && r.d.seen[__me.uid] ? (r.d.seen[__me.uid].toMillis ? r.d.seen[__me.uid].toMillis() : new Date(r.d.seen[__me.uid]).getTime() ) : 0;
+        const isUnread = (r.d.lastFrom && r.d.lastFrom !== __me.uid && lastMillis > (seenMy||0));
+        if(isUnread) unread++;
+
+        const t=document.createElement('div');
+        t.className='th'; t.dataset.id=r.id;
+        t.innerHTML=`
+          <div class="ava" style="background-image:url('${other.avatar||'/assets/img/avatar-default.png'}')"></div>
+          <div>
+            <div class="thTitle">${escapeHtml(other.name||'Kullanıcı')}</div>
+            <div class="thSub">${escapeHtml(r.d.lastText||'')}</div>
+          </div>
+          <div class="thTime">${r.d.lastAt? fmtDate(r.d.lastAt):''}</div>`;
+        // Kutuyu seçilebilir yap
+t.classList.add('selectable');
+
+// Masaüstü: Ctrl/Cmd ile tıklayınca seç/deselect; normal tık -> aç
+t.addEventListener('click', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    toggleThreadSelection(r.id, t);
+  } else {
+    openThread(r.id, r.otherUid, other);
+  }
+});
+
+// Mobil: uzun basınca seç/deselect (600ms)
+let pressTimer;
+t.addEventListener('touchstart', () => {
+  pressTimer = setTimeout(() => toggleThreadSelection(r.id, t), 600);
+}, {passive: true});
+t.addEventListener('touchend',   () => clearTimeout(pressTimer));
+t.addEventListener('touchmove',  () => clearTimeout(pressTimer));
+        listEl.appendChild(t);
+
+        const prev = __lastSeenMap[r.id] || 0;
+        if(lastMillis && lastMillis>prev && r.d.lastText && r.d.lastFrom && r.d.lastFrom!==__me.uid){
+          playDing();
+          if(document.hidden && 'Notification' in window && Notification.permission==='granted'){
+            try{ new Notification(other.name||'Yeni mesaj',{ body:r.d.lastText, icon:'./üreteneller.png' }); }catch{}
+          }
+        }
+        __lastSeenMap[r.id]=lastMillis||prev;
+      }
+      $('#unreadBadge').textContent=String(unread);
+      // Görünmeyen satırları seçim setinden temizle
+for (const tid of Array.from(__selectedThreads)) {
+  if (!document.querySelector(`.th[data-id="${tid}"]`)) {
+    __selectedThreads.delete(tid);
+  }
+}
+   updateThreadDeleteBtn();
+    })();
+  }
+    
+
+  async function listenThreads(){
+    if(__threadsUnsub){ try{__threadsUnsub();}catch{} __threadsUnsub=null; }
+    const {collection,query,where,onSnapshot,getDocs}=await api();
+    const baseQ=query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
+    $('#threads').innerHTML='<div class="empty">Yükleniyor…</div>';
+    try{
+      __threadsUnsub = onSnapshot(baseQ, snap=>renderThreadsSnapshotLike(snap), async err=>{
+        console.warn('[msg] threads snapshot err:',err);
+        const snap2=await getDocs(baseQ); renderThreadsSnapshotLike(snap2);
+      });
+    }catch(err){
+      const snap2=await getDocs(baseQ); renderThreadsSnapshotLike(snap2);
+    }
+  }
+
+  async function listenMessages(threadId){
+    if(__msgsUnsub){ try{__msgsUnsub();}catch{} __msgsUnsub=null; }
+    const {collection,query,orderBy,onSnapshot}=await api();
+    const q=query(collection(self.db,'messages',threadId,'items'), orderBy('createdAt','asc'));
+    __msgsUnsub = onSnapshot(q, snap=>{
+      const chat = $('#chat'); // kaydırma hesapları için lazım
+      
+  // Kullanıcı alttaysa otomatik kaydır, değilse dokunma
+const atBottom = (chat.scrollTop + chat.clientHeight + 40) >= chat.scrollHeight;
+
+// Değişiklik bazlı işleme: eklenen/silinen mesajları doğru yönet
+snap.docChanges().forEach(change => {
+  const ds = change.doc;
+  const m = ds.data() || {};
+  const msgId = ds.id;
+
+  if (change.type === 'added') {
+    // Varsa tekrar eklemeyi engelle
+    if (document.getElementById(`msg-${msgId}`)) return;
+
+    const div = document.createElement('div');
+    div.id = `msg-${msgId}`;
+    div.className = 'msg ' + (m.from === __me.uid ? 'me' : 'other');
+    div.textContent = m.text || '';
+    div.dataset.id = msgId;
+    div.classList.add('selectable');
+    div.addEventListener('click', () => toggleMsgSelection(msgId, div));
+    chat.appendChild(div);
+  }
+
+  if (change.type === 'removed') {
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) el.remove();              // Ekrandan da kaldır
+    __selectedMsgIds.delete(msgId);   // Seçili listeden çıkar
+  }
+});
+
+// Alttaysa veya ilk yükleme ise dibe kaydır
+if (atBottom || (snap.size > 0 && chat.scrollTop === 0)) {
+  chat.scrollTop = chat.scrollHeight;
+}
+
+}, err=>console.warn('[msg] listenMessages err',err));
+  }
+// --- Mesaj seçme ve silme fonksiyonları ---
+function toggleMsgSelection(id, el){
+  if(__selectedMsgIds.has(id)){
+    __selectedMsgIds.delete(id);
+    el.classList.remove('selected');
+  } else {
+    __selectedMsgIds.add(id);
+    el.classList.add('selected');
+  }
+  if(__selectedMsgIds.size > 0){
+    __delBtn.style.display = 'inline-flex';
+    __delBtn.textContent = `🗑️ Seçiliyi Sil (${__selectedMsgIds.size})`;
+  } else {
+    __delBtn.style.display = 'none';
+  }
+}
+
+async function deleteSelectedMessages(){
+  if(!__curThreadId || __selectedMsgIds.size === 0) return;
+  if(!confirm('Seçili mesajları silmek istediğine emin misin?')) return;
+  try{
+    const { doc, deleteDoc } = await api();
+    for(const mid of __selectedMsgIds){
+      await deleteDoc(doc(self.db, 'messages', __curThreadId, 'items', mid));
+    }
+    __selectedMsgIds.clear();
+    __delBtn.style.display = 'none';
+  }catch(e){
+    console.warn('Mesaj silme hatası', e);
+    alert('Silme sırasında bir hata oluştu.');
+  }
+}
+
+  async function openThread(threadId, peerUid, brief=null){
+  __curThreadId = threadId;
+  __curPeerUid = peerUid;
+
+  const info = brief || await getUserBrief(peerUid);
+  $('#peerAva').style.backgroundImage = `url('${info.avatar||'/assets/img/avatar-default.png'}')`;
+  $('#peerName').textContent = info.name || 'Kullanıcı';
+  $('#peerInfo').textContent = peerUid;
+  $('#peerInfo').style.display = 'none';
+  $('#peerName').onclick = ()=>{ location.href = `/docs/profile.html?uid=${encodeURIComponent(peerUid)}`; };
+
+  try{
+    const {doc,updateDoc,serverTimestamp} = await api();
+    await updateDoc(doc(self.db,'messages',threadId), { [`seen.${__me.uid}`]: serverTimestamp() });
+  }catch{}
+
+  await listenMessages(threadId);
+    setTimeout(() => {
+  const chat = $('#chat');
+  chat.scrollTop = chat.scrollHeight;
+}, 0);
+
+
+  // Konuşma değişince seçim temizle
+  __selectedMsgIds.clear();
+  if(__delBtn){
+    __delBtn.style.display = 'none';
+    __delBtn.textContent = '🗑️ Seçiliyi Sil (0)';
+  }
+
+  // odakla
+  $('#msgInput').focus({preventScroll:true});
+}
+
+  async function createOrGetThread(peerUid, otherName='', otherAvatar=''){
+    const {collection,query,where,getDocs,doc,setDoc,serverTimestamp}=await api();
+    const q=query(collection(self.db,'messages'), where('participants','array-contains', __me.uid));
+    const snap=await getDocs(q); let found='';
+    snap.forEach(ds=>{ const arr=(ds.data()?.participants)||[]; if(arr.includes(peerUid)) found=ds.id; });
+    if(found) return found;
+    const participants=[__me.uid,peerUid];
+    const ref=doc(self.db,'messages', crypto.randomUUID? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
+    await setDoc(ref,{ participants, lastText:'', lastAt:serverTimestamp(), otherName:otherName||'', otherAvatar:otherAvatar||'' });
+    return ref.id;
+  }
+
+  async function sendMessage(){
+    const text=($('#msgInput').value||'').trim();
+    if(!text || !__curThreadId) return;
+    $('#msgInput').value='';
+    try{
+      const {collection,addDoc,serverTimestamp,doc,updateDoc}=await api();
+      await addDoc(collection(self.db,'messages',__curThreadId,'items'),{ text, from:__me.uid, createdAt:serverTimestamp() });
+      await updateDoc(doc(self.db,'messages',__curThreadId),{ lastText:text, lastAt:serverTimestamp(), lastFrom:__me.uid });
+    }catch(e){ console.warn('[msg] sendMessage err',e); }
+    // mobilde yazdıktan sonra Gönder görünür kalsın
+    setTimeout(()=>{ $('#msgInput').blur(); }, 10);
+  }
+    // --- Sol panelde konuşma seçme ve silme sistemi ---
+const __selectedThreads = new Set();
+let __delThreadBtn = null;
+
+// Sol panelde konuşma kutusuna tıklayınca seç/deselect yap
+function toggleThreadSelection(id, el){
+  if(__selectedThreads.has(id)){
+    __selectedThreads.delete(id);
+    el.classList.remove('selected');
+  } else {
+    __selectedThreads.add(id);
+    el.classList.add('selected');
+  }
+  updateThreadDeleteBtn();
+}
+
+// Seçili konuşmaları sol panelden kaldır
+async function deleteSelectedThreads(){
+  if(__selectedThreads.size === 0) return;
+  if(!confirm('Seçili konuşmaları kendi panelinden kalıcı olarak kaldırmak istiyor musun?')) return;
+
+  try {
+    const { doc, updateDoc, arrayUnion, arrayRemove } = await api();
+    for(const tid of __selectedThreads){
+      // Kullanıcı için gizlenen listeye ekle
+      __hiddenThreads.add(tid);
+      setHiddenThreads(__me.uid, __hiddenThreads);
+
+    }
+    __selectedThreads.clear();
+    updateThreadDeleteBtn();
+    listenThreads(); // Listeyi güncelle
+  } catch(e){
+    console.warn('Konuşma silme hatası', e);
+    alert('Silme sırasında bir hata oluştu.');
+  }
+}
+
+// Silme butonunu oluştur veya güncelle
+function updateThreadDeleteBtn(){
+  if(!__delThreadBtn){
+    __delThreadBtn = document.createElement('button');
+    __delThreadBtn.id = 'btnDelThread';
+    __delThreadBtn.className = 'btn';
+    __delThreadBtn.textContent = '🗑️ Seçili Konuşmaları Sil (0)';
+    __delThreadBtn.style.display = 'none';
+    __delThreadBtn.style.background = 'linear-gradient(180deg,#ef4444,#7a1b1b)';
+    __delThreadBtn.style.borderColor = '#7a1b1b';
+    __delThreadBtn.style.color = '#fff';
+    document.querySelector('.topbar')?.appendChild(__delThreadBtn); // sol panelin üst barı
+    __delThreadBtn.addEventListener('click', deleteSelectedThreads);
+  }
+
+  if(__selectedThreads.size > 0){
+    __delThreadBtn.style.display = 'inline-flex';
+    __delThreadBtn.textContent = `🗑️ Seçili Konuşmaları Sil (${__selectedThreads.size})`;
+  } else {
+    __delThreadBtn.style.display = 'none';
+  }
+}
+
+  function hideCurrentThreadForMe(){
+    if(!__curThreadId || !__me) return;
+    __hiddenThreads.add(__curThreadId);
+    setHiddenThreads(__me.uid,__hiddenThreads);
+    __curThreadId=null; __curPeerUid=null;
+    $('#peerAva').style.backgroundImage=''; $('#peerName').textContent='Kişi seçin'; $('#peerInfo').textContent='—';
+    $('#chat').innerHTML='<div class="empty">Soldan bir konuşma seçin.</div>';
+    listenThreads();
+  }
+
+  function boot(){
+    __ding=$('#ding'); bindButtons(); updateNotifLabel(); updateSoundLabel();
+    // Seçili mesajları sil butonu (chatTop içine ekle)
+__delBtn = document.createElement('button');
+__delBtn.id = 'btnDelSel';
+__delBtn.className = 'btn';
+__delBtn.textContent = '🗑️ Seçiliyi Sil (0)';
+__delBtn.style.display = 'none';
+__delBtn.style.background = 'linear-gradient(180deg,#ef4444,#7a1b1b)';
+__delBtn.style.borderColor = '#7a1b1b';
+__delBtn.style.color = '#fff';
+__delBtn.addEventListener('click', deleteSelectedMessages);
+document.querySelector('.chatTop')?.appendChild(__delBtn);
+    // iOS renk kontrast hatası yaşayan tarayıcılar için fix
+    try{ document.querySelector('.chatInput input').style.color = getComputedStyle(document.body).getPropertyValue('--ink'); }catch{}
+
+    self.onAuthStateChanged(self.auth, async (u)=>{
+      __me=u||null; if(!__me){ location.href='/login.html'; return; }
+      __hiddenThreads=getHiddenThreads(__me.uid);
+      const urlPeer=qs('peer');
+      if(urlPeer){
+        const name=qs('name')?decodeURIComponent(qs('name')):''; const ava=qs('ava')||'';
+        try{ const tid=await createOrGetThread(urlPeer,name,ava); openThread(tid,urlPeer); }catch{}
+        history.replaceState({},document.title,location.pathname);
+      }
+      // oturum açınca bu cihazı FCM'e kaydet
+      setupFCMForThisDevice(__me.uid);
+      listenThreads();
+    });
+  }
+  (document.readyState==='loading'? document.addEventListener('DOMContentLoaded',boot) : boot());
+  </script>
+</body>
+</html>
