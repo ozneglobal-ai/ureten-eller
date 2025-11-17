@@ -1,0 +1,372 @@
+[2025-11-08T12:41:08+00:00] IP=212.252.97.250
+RAW=hash=fz58TgvOx994Qh8Js9sAF5agjM5324U2V%2BxzwKq91AE%3D&merchant_oid=PREM1762598884244&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => fz58TgvOx994Qh8Js9sAF5agjM5324U2V+xzwKq91AE=
+    [merchant_oid] => PREM1762598884244
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:08+00:00] OID=PREM1762598884244 STATUS=failed TOTAL=0
+[2025-11-08T12:41:08+00:00] IP=212.252.97.250
+RAW=hash=a2TdlFLsSQlPHSsCBCtqA5hfCL8QfWtt2zI5dhZ3bdw%3D&merchant_oid=UE20251108886303&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => a2TdlFLsSQlPHSsCBCtqA5hfCL8QfWtt2zI5dhZ3bdw=
+    [merchant_oid] => UE20251108886303
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:08+00:00] OID=UE20251108886303 STATUS=failed TOTAL=0
+[2025-11-08T12:41:09+00:00] IP=212.252.97.250
+RAW=hash=mQFf3FmYftRaeu8s8kfBFW4%2BXVrDYZx0fwkuFqnJM7w%3D&merchant_oid=UE20251108027597&status=success&total_amount=100&payment_type=card&payment_amount=100&currency=TL&installment_count=1&merchant_id=631284
+POST=Array
+(
+    [hash] => mQFf3FmYftRaeu8s8kfBFW4+XVrDYZx0fwkuFqnJM7w=
+    [merchant_oid] => UE20251108027597
+    [status] => success
+    [total_amount] => 100
+    [payment_type] => card
+    [payment_amount] => 100
+    [currency] => TL
+    [installment_count] => 1
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:09+00:00] OID=UE20251108027597 STATUS=success TOTAL=100
+[2025-11-08T12:41:09+00:00] IP=212.252.97.250
+RAW=hash=%2FCeBHLWvPeLw2FEzQu%2F%2BjizYn2N1XOWFccsmjk9SBy8%3D&merchant_oid=PREM1762602684749&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => /CeBHLWvPeLw2FEzQu/+jizYn2N1XOWFccsmjk9SBy8=
+    [merchant_oid] => PREM1762602684749
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:09+00:00] OID=PREM1762602684749 STATUS=failed TOTAL=0
+[2025-11-08T12:41:10+00:00] IP=212.252.97.250
+RAW=hash=%2FCeBHLWvPeLw2FEzQu%2F%2BjizYn2N1XOWFccsmjk9SBy8%3D&merchant_oid=PREM1762602684749&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => /CeBHLWvPeLw2FEzQu/+jizYn2N1XOWFccsmjk9SBy8=
+    [merchant_oid] => PREM1762602684749
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:10+00:00] OID=PREM1762602684749 STATUS=failed TOTAL=0
+[2025-11-08T12:41:10+00:00] IP=212.252.97.250
+RAW=hash=Ny6hdVqQ1uxSIq62JaP8PZQ6vtDuH%2B2ennZwOefZNq4%3D&merchant_oid=PREM1762602993299&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => Ny6hdVqQ1uxSIq62JaP8PZQ6vtDuH+2ennZwOefZNq4=
+    [merchant_oid] => PREM1762602993299
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:41:10+00:00] OID=PREM1762602993299 STATUS=failed TOTAL=0
+[2025-11-08T12:42:08+00:00] IP=212.252.97.250
+RAW=hash=xlkzz540AcWglCWXjT5OqeKdDvkYV8p0M4GBAkmcp3k%3D&merchant_oid=PREM1762598639612&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => xlkzz540AcWglCWXjT5OqeKdDvkYV8p0M4GBAkmcp3k=
+    [merchant_oid] => PREM1762598639612
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T12:42:08+00:00] OID=PREM1762598639612 STATUS=failed TOTAL=0
+[2025-11-08T13:34:12+00:00] IP=212.252.97.250
+RAW=hash=Vd8wS5nDdO0uzl5ac5JAUUgqZMGPof0NpPf1F%2BHzLMU%3D&merchant_oid=UE20251108884051&status=failed&total_amount=0&failed_reason_code=0&failed_reason_msg=M%C3%BC%C5%9Fteri+3D+Secure+a%C5%9Famas%C4%B1n%C4%B1+tamamlamad%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => Vd8wS5nDdO0uzl5ac5JAUUgqZMGPof0NpPf1F+HzLMU=
+    [merchant_oid] => UE20251108884051
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 0
+    [failed_reason_msg] => Müşteri 3D Secure aşamasını tamamlamadı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-08T13:34:12+00:00] OID=UE20251108884051 STATUS=failed TOTAL=0
+[2025-11-09T10:42:52+00:00] IP=212.252.97.250
+RAW=hash=3amVI4wxDxQ42c%2Bmg5UxcKSwhErdYVNiGgnZ88rBLSA%3D&merchant_oid=SHOW1762684802857&status=success&total_amount=100&payment_type=card&payment_amount=100&currency=TL&installment_count=1&merchant_id=631284
+POST=Array
+(
+    [hash] => 3amVI4wxDxQ42c+mg5UxcKSwhErdYVNiGgnZ88rBLSA=
+    [merchant_oid] => SHOW1762684802857
+    [status] => success
+    [total_amount] => 100
+    [payment_type] => card
+    [payment_amount] => 100
+    [currency] => TL
+    [installment_count] => 1
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T10:42:52+00:00] OID=SHOW1762684802857 STATUS=success TOTAL=100
+[2025-11-09T11:07:36+00:00] IP=212.252.97.250
+RAW=hash=JiqFNtRCFeyPuBzL1c5INViAd7NvxPQGnAGLGy%2F%2BYB8%3D&merchant_oid=SHOW1762686390986&status=success&total_amount=100&payment_type=card&payment_amount=100&currency=TL&installment_count=1&merchant_id=631284
+POST=Array
+(
+    [hash] => JiqFNtRCFeyPuBzL1c5INViAd7NvxPQGnAGLGy/+YB8=
+    [merchant_oid] => SHOW1762686390986
+    [status] => success
+    [total_amount] => 100
+    [payment_type] => card
+    [payment_amount] => 100
+    [currency] => TL
+    [installment_count] => 1
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T11:07:36+00:00] OID=SHOW1762686390986 STATUS=success TOTAL=100
+[2025-11-09T11:46:39+00:00] IP=212.252.97.250
+RAW=hash=PxDHKwJQ0uu456JsKblB3qkj0D%2BcgUsIwoWetMaIw8o%3D&merchant_oid=PREM1762688670148822142&status=success&total_amount=100&payment_type=card&payment_amount=100&currency=TL&installment_count=1&merchant_id=631284
+POST=Array
+(
+    [hash] => PxDHKwJQ0uu456JsKblB3qkj0D+cgUsIwoWetMaIw8o=
+    [merchant_oid] => PREM1762688670148822142
+    [status] => success
+    [total_amount] => 100
+    [payment_type] => card
+    [payment_amount] => 100
+    [currency] => TL
+    [installment_count] => 1
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T11:46:39+00:00] OID=PREM1762688670148822142 STATUS=success TOTAL=100
+[2025-11-09T12:04:08+00:00] IP=212.252.97.250
+RAW=hash=8qleil0NqQpd%2BlqLDb%2BoarhqvHxbdCquPUSf9QsTWik%3D&merchant_oid=PREM1762687871403&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => 8qleil0NqQpd+lqLDb+oarhqvHxbdCquPUSf9QsTWik=
+    [merchant_oid] => PREM1762687871403
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:04:08+00:00] OID=PREM1762687871403 STATUS=failed TOTAL=0
+[2025-11-09T12:04:08+00:00] IP=212.252.97.250
+RAW=hash=4HGkfTgZi8KlCWiHhyUO7licPpsm7AlZhfrGHmkUuIg%3D&merchant_oid=SHOW1762687924075&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => 4HGkfTgZi8KlCWiHhyUO7licPpsm7AlZhfrGHmkUuIg=
+    [merchant_oid] => SHOW1762687924075
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:04:08+00:00] OID=SHOW1762687924075 STATUS=failed TOTAL=0
+[2025-11-09T12:07:07+00:00] IP=212.252.97.250
+RAW=hash=4HGkfTgZi8KlCWiHhyUO7licPpsm7AlZhfrGHmkUuIg%3D&merchant_oid=SHOW1762687924075&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => 4HGkfTgZi8KlCWiHhyUO7licPpsm7AlZhfrGHmkUuIg=
+    [merchant_oid] => SHOW1762687924075
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:07:07+00:00] OID=SHOW1762687924075 STATUS=failed TOTAL=0
+[2025-11-09T12:07:08+00:00] IP=212.252.97.250
+RAW=hash=oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk%3D&merchant_oid=PREM1762688095561&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk=
+    [merchant_oid] => PREM1762688095561
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:07:08+00:00] OID=PREM1762688095561 STATUS=failed TOTAL=0
+[2025-11-09T12:11:07+00:00] IP=212.252.97.250
+RAW=hash=oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk%3D&merchant_oid=PREM1762688095561&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk=
+    [merchant_oid] => PREM1762688095561
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:11:07+00:00] OID=PREM1762688095561 STATUS=failed TOTAL=0
+[2025-11-09T12:11:07+00:00] IP=212.252.97.250
+RAW=hash=oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk%3D&merchant_oid=PREM1762688095561&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => oXAVZ7N6iPdcvH5kG5YLRo3DOkLOE6Jy9bhkyU8dTKk=
+    [merchant_oid] => PREM1762688095561
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:11:07+00:00] OID=PREM1762688095561 STATUS=failed TOTAL=0
+[2025-11-09T12:13:07+00:00] IP=212.252.97.250
+RAW=hash=WYrH%2B%2BUqITgOdqVDCmfgHGjGtf0%2F2zrQXj0Qjxs9giI%3D&merchant_oid=PREM1762688438996237173&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => WYrH++UqITgOdqVDCmfgHGjGtf0/2zrQXj0Qjxs9giI=
+    [merchant_oid] => PREM1762688438996237173
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:13:07+00:00] OID=PREM1762688438996237173 STATUS=failed TOTAL=0
+[2025-11-09T12:13:07+00:00] IP=212.252.97.250
+RAW=hash=yFyAVwwNKFsh5RSO9HqWlr3O0r7xva5AT1NUKaFthfs%3D&merchant_oid=PREM1762688441207467895&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => yFyAVwwNKFsh5RSO9HqWlr3O0r7xva5AT1NUKaFthfs=
+    [merchant_oid] => PREM1762688441207467895
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:13:07+00:00] OID=PREM1762688441207467895 STATUS=failed TOTAL=0
+[2025-11-09T12:13:07+00:00] IP=212.252.97.250
+RAW=hash=lBic1KTQxdszxRwkP1n2skexGrpLJEria94lPo7c54A%3D&merchant_oid=PREM1762688442877211384&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => lBic1KTQxdszxRwkP1n2skexGrpLJEria94lPo7c54A=
+    [merchant_oid] => PREM1762688442877211384
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:13:07+00:00] OID=PREM1762688442877211384 STATUS=failed TOTAL=0
+[2025-11-09T12:13:07+00:00] IP=212.252.97.250
+RAW=hash=IECsvnWGfIIaaDcAXTsSYAakhEL0megsnGGnoJ4MHXI%3D&merchant_oid=PREM1762688477205472425&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => IECsvnWGfIIaaDcAXTsSYAakhEL0megsnGGnoJ4MHXI=
+    [merchant_oid] => PREM1762688477205472425
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T12:13:07+00:00] OID=PREM1762688477205472425 STATUS=failed TOTAL=0
+[2025-11-09T14:03:10+00:00] IP=212.252.97.250
+RAW=hash=C%2B4%2BrziPvqPKwf2FAHqG9TGvWuVTe0Ai8%2FrWPVQBFts%3D&merchant_oid=PREM1762695036257510358&status=failed&total_amount=0&failed_reason_code=6&failed_reason_msg=M%C3%BC%C5%9Fteri+%C3%B6deme+yapmaktan+vazge%C3%A7ti+ve+%C3%B6deme+sayfas%C4%B1ndan+ayr%C4%B1ld%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => C+4+rziPvqPKwf2FAHqG9TGvWuVTe0Ai8/rWPVQBFts=
+    [merchant_oid] => PREM1762695036257510358
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 6
+    [failed_reason_msg] => Müşteri ödeme yapmaktan vazgeçti ve ödeme sayfasından ayrıldı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T14:03:10+00:00] OID=PREM1762695036257510358 STATUS=failed TOTAL=0
+[2025-11-09T14:09:08+00:00] IP=212.252.97.250
+RAW=hash=SXCjKz%2FV6xABqhR3KaYmWraLJCnOlAjdW2V82aU5c0s%3D&merchant_oid=PREM1762695389367869404&status=failed&total_amount=0&failed_reason_code=0&failed_reason_msg=M%C3%BC%C5%9Fteri+3D+Secure+a%C5%9Famas%C4%B1n%C4%B1+tamamlamad%C4%B1.&payment_type=card&merchant_id=631284
+POST=Array
+(
+    [hash] => SXCjKz/V6xABqhR3KaYmWraLJCnOlAjdW2V82aU5c0s=
+    [merchant_oid] => PREM1762695389367869404
+    [status] => failed
+    [total_amount] => 0
+    [failed_reason_code] => 0
+    [failed_reason_msg] => Müşteri 3D Secure aşamasını tamamlamadı.
+    [payment_type] => card
+    [merchant_id] => 631284
+)
+
+----
+[2025-11-09T14:09:08+00:00] OID=PREM1762695389367869404 STATUS=failed TOTAL=0
