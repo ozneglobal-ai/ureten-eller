@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ödeme • Üreten Eller</title>
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --ink:#0b1220;
+      --primary:#111;
+      --accent-start:#f7e7b5;
+      --accent-mid:#e8c972;
+      --accent-end:#b79343;
+      --ring:#111;
+      --err-bg:#fee2e2; --err-ink:#7f1d1d; --err-br:#fecaca;
+      --ok:#10b981;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:#0f172a;
+        --muted:#9aa3b2;
+        --ink:#e5e7eb;
+        --primary:#e5e7eb;
+        --ring:#334155;
+        --err-bg:#3b0d0d; --err-ink:#fecaca; --err-br:#7f1d1d;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(247,231,181,.35), transparent 60%),
+        radial-gradient(1000px 500px at -10% 100%, rgba(183,147,67,.15), transparent 60%),
+        #fafafa;
+      color:var(--ink);
+    }
+
+    .shell{min-height:100%; display:grid; place-items:center; padding:24px}
+    .card{
+      width:min(980px,96vw); background:var(--card); border:1px solid #e5e7eb;
+      border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.12);
+      overflow:hidden; display:grid; grid-template-columns:1.1fr 1fr;
+    }
+    @media (max-width:900px){ .card{grid-template-columns:1fr} }
+
+    .left{
+      padding:20px 18px; display:grid; gap:14px; border-right:1px solid #eef0f3;
+    }
+    @media (max-width:900px){ .left{border-right:0; border-bottom:1px solid #eef0f3} }
+
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.2px;
+    }
+    .brand-badge{
+      display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px;
+      font-size:12.5px; font-weight:800; color:#111; border:1px solid #b18a37;
+      background:linear-gradient(135deg,var(--accent-start),var(--accent-mid) 40%,#d7b45d 55%,#caa552 80%,var(--accent-end));
+      box-shadow:0 6px 18px rgba(202,165,82,.35);
+    }
+
+    .title{
+      margin:2px 0 0; font-size:20px; font-weight:900; letter-spacing:.2px;
+    }
+    .meta{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; color:var(--muted); font-weight:700;
+      background:#fafafa; border:1px dashed #e5e7eb; border-radius:12px; padding:10px 12px;
+    }
+    .meta .dot{width:6px; height:6px; border-radius:50%; background:var(--ok)}
+
+    .methods{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      appearance:none; border:1px solid #e5e7eb; background:#fff; color:#111; cursor:pointer;
+      padding:10px 12px; border-radius:12px; font-weight:800; display:inline-flex; gap:8px; align-items:center;
+      transition:transform .06s ease, box-shadow .2s ease;
+    }
+    .chip:hover{ box-shadow:0 6px 18px rgba(0,0,0,.08) }
+    .chip:active{ transform:translateY(1px) }
+    .chip[aria-pressed="true"]{
+      background:#111; color:#fff; border-color:#111;
+    }
+    .icons{display:flex; gap:6px; align-items:center; opacity:.9}
+    .icons svg{width:22px; height:22px}
+
+    .secure{
+      display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px;
+    }
+    .secure svg{opacity:.8}
+
+    .right{ padding:0; min-height:560px; display:grid; grid-template-rows:auto 1fr auto; }
+    .iframe-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 14px 8px }
+    .iframe-wrap{
+      border-top:1px solid #eef0f3; border-bottom:1px solid #eef0f3;
+      background:linear-gradient(180deg,#f8fafc,#fff); min-height:520px; display:grid; place-items:center;
+      padding:8px;
+    }
+    .loader{
+      width:54px; height:54px; border-radius:50%; border:5px solid #e5e7eb; border-top-color:#111; animation:spin 1s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
+
+    iframe{ width:100%; height:720px; border:none; border-radius:0 }
+
+    .err{
+      background:var(--err-bg); color:var(--err-ink); padding:12px; border-radius:10px; border:1px solid var(--err-br);
+      margin:10px 14px;
+    }
+
+    .foot{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px;
+    }
+    .help{color:var(--muted); font-size:13px}
+    .btn-ghost{
+      appearance:none; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; font-weight:800; cursor:pointer;
+    }
+    .btn-ghost:active{ transform:translateY(1px) }
+
+    /* small screens */
+    @media (max-width:640px){
+      .title{ font-size:18px }
+      iframe{ height:640px }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="card" aria-label="Ödeme Paneli">
+      <!-- SOL: sipariş özeti + yöntem seçimi -->
+      <div class="left">
+        <div class="brand" aria-label="Marka">
+          <span class="brand-badge">Üreten Eller</span>
+          <span style="font-size:12.5px; color:var(--muted); font-weight:800;">Güvenli Ödeme</span>
+        </div>
+
+        <h1 class="title">Ödeme</h1>
+
+        <div id="orderMeta" class="meta">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="metaText">Hazırlanıyor…</span>
+        </div>
+
+        <div>
+          <div style="font-weight:800; margin-bottom:8px">Ödeme Yöntemi</div>
+          <div class="methods" role="group" aria-label="Ödeme yöntemi">
+            <button class="chip" id="mCard" aria-pressed="true">
+              <!-- Kredi kartı simgesi -->
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm5 4h6v2H6v-2z"/></svg>
+              Kredi Kartı
+              <span class="icons" aria-hidden="true">
+                <!-- minimal kart logoları -->
+                <svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="6"/></svg>
+                <svg viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="3"/></svg>
+              </span>
+            </button>
+            <button class="chip" id="mDebit" aria-pressed="false">
+              <!-- Banka kartı simgesi -->
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 7a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v2H2V7zm0 5h20v5a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-5zm4 3h6v2H6v-2z"/></svg>
+              Banka Kartı
+            </button>
+          </div>
+        </div>
+
+        <div class="secure" aria-live="polite">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4zm0 6a4 4 0 00-4 4 4 4 0 004 4 4 4 0 004-4 4 4 0 00-4-4z"/></svg>
+          256-bit TLS şifreleme • 3D Secure destekli
+        </div>
+      </div>
+
+      <!-- SAĞ: PayTR Iframe + durumlar -->
+      <div class="right">
+        <div class="iframe-head">
+          <div style="font-weight:800">Kart Bilgileri</div>
+          <button class="btn-ghost" onclick="location.href='/'">Ana Sayfa</button>
+        </div>
+
+        <div id="iframeWrap" class="iframe-wrap">
+          <div class="loader" role="status" aria-label="Yükleniyor"></div>
+        </div>
+
+        <div class="foot">
+          <div class="help">Sorun mu var? <a href="mailto: destek@ureteneller.com">destek@ureteneller.com</a></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-ghost" onclick="history.back()">Geri</button>
+          </div>
+        </div>
+
+        <div id="errBox" class="err" style="display:none"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ------ Query helpers ------
+    function qp(name){ const u=new URLSearchParams(location.search); return u.get(name); }
+
+    const oid   = qp('oid')   || ('TEST_'+Date.now());
+    const amount= parseInt(qp('amount')||'0',10);
+    const email = qp('email') || '';
+
+    // Order meta yaz
+    const metaEl = document.getElementById('metaText');
+    metaEl.textContent = `Sipariş: ${oid} • Tutar: ${amount} TL${email ? ' • '+email : ''}`;
+
+    // Yöntem toggle (kozmetik)
+    const cardBtn  = document.getElementById('mCard');
+    const debitBtn = document.getElementById('mDebit');
+    function setMethod(btn){
+      [cardBtn,debitBtn].forEach(b=> b.setAttribute('aria-pressed', String(b===btn)));
+      // Not: PayTR tek iframe ile kartları kapsıyor; bu sadece görsel seçim.
+    }
+    cardBtn.addEventListener('click', ()=>setMethod(cardBtn));
+    debitBtn.addEventListener('click', ()=>setMethod(debitBtn));
+
+    // ------ PayTR başlat ------
+    async function startPayment(){
+      const body = {
+        merchant_oid: oid,
+        email: email || 'test@ureteneller.com',
+        payment_amount: (amount ? amount * 100 : 100), // TL -> kuruş
+        user_name: 'Müşteri',
+        user_address: '',
+        user_phone: '',
+        test_mode: 1
+      };
+
+      const wrap = document.getElementById('iframeWrap');
+      const errBox = document.getElementById('errBox');
+
+      try {
+        const res = await fetch('/api/token.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'omit'
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error('Sunucu hatası: ' + (txt || res.status));
+        }
+
+        const data = await res.json();
+
+        if (data.status === 'success' && data.token) {
+          wrap.innerHTML = `
+            <iframe
+              src="https://www.paytr.com/odeme/guvenli/${data.token}"
+              title="Güvenli Ödeme"
+              allow="payment *; clipboard-write"
+              referrerpolicy="no-referrer"
+              loading="eager"
+            ></iframe>`;
+          errBox.style.display='none';
+        } else {
+          errBox.style.display='block';
+          errBox.textContent = 'Hata: ' + (data.reason || 'Token alınamadı');
+          wrap.innerHTML = '';
+        }
+      } catch (err) {
+        errBox.style.display='block';
+        errBox.textContent = 'İstek başarısız: ' + err.message;
+        wrap.innerHTML = '';
+      }
+    }
+
+    startPayment();
+  </script>
+</body>
+</html>
