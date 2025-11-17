@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="tr" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title data-i18n="app.title">Üreten Eller • Ana Sayfa</title>
+  <meta name="description" content="Üreten Eller: El emeği ürünler, yöresel lezzetler ve daha fazlası. Kategorilere göz atın, arayın, ilan verin." />
+  <link rel="icon" href="/assets/icons/favicon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    :root{ scrollbar-gutter: stable; }
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:#fff;color:#0b1220;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+      overflow-y:scroll;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+
+    .page{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+    .topbar{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(8px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
+    .topbar-inner{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;min-width:0}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:#000 url('/assets/icons/favicon.png') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    .brand h1{font-size:18px;letter-spacing:.2px;margin:0;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+    .actions{display:flex;align-items:center;gap:8px;flex:0 1 auto;flex-wrap:wrap;min-width:0}
+    .btn{white-space:nowrap}
+    .lang{display:flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
+    .lang select{border:0;background:transparent;font-weight:700;max-width:28ch}
+
+    /* Üst kategori çipleri – yatay kaydırma */
+    #catNav{border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
+    .catnav-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable both-edges}
+    .catnav .chip{display:inline-flex;align-items:center;gap:8px;margin-right:8px;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;background:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+    .catnav .chip:hover{background:#fafafa}
+    .catnav .chip.active{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 4px 14px rgba(202,165,82,.3)}
+
+    .catdrops{background:#fff}
+    .catdrops-inner{max-width:1200px;margin:0 auto;padding:0 16px 8px}
+    .catdrops .panel{display:none;border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin:8px 0;background:#fff}
+    .catdrops .panel.open{display:block}
+
+    /* Hero */
+    .hero{position:relative;border:1px solid #e5e7eb;border-radius:20px;padding:22px 18px;display:block;gap:20px;overflow:hidden;margin:16px auto;max-width:1200px}
+    .hero::after{content:"";position:absolute;inset:-60% -40% auto auto;aspect-ratio:1/1;background:radial-gradient(closest-side,rgba(255,215,0,.15),transparent 70%);pointer-events:none}
+    .cta-row{display:flex;flex-wrap:wrap;gap:8px}
+
+    /* Buttons */
+    .btn{--gold:#caa552;--shine:rgba(255,255,255,.7);--ink:#0b1220;appearance:none;border:0;cursor:pointer;font-weight:800;border-radius:12px;padding:10px 14px;position:relative;isolation:isolate;transition:transform .06s ease, box-shadow .2s ease;user-select:none}
+    .btn:active{transform:translateY(1px)}
+    .btn.gold{color:#111;background:radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.75), transparent 35%),linear-gradient(180deg, #f7e7b5, #e8c972 40%, #d7b45d 55%, #caa552 80%, #b79343);border:1px solid #b18a37;box-shadow:inset 0 1px 0 var(--shine), 0 4px 18px rgba(202,165,82,.35)}
+    .btn.ghost{background:#fff;border:1px solid #e5e7eb}
+
+    /* Auth badge */
+    .auth-badge{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:999px}
+    .avatar{width:28px;height:28px;border-radius:50%;background:#f3f4f6;overflow:hidden}
+
+    /* ===== MODAL ===== */
+    dialog.modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background:rgba(0,0,0,.32);
+      z-index:60;
+      padding:0;
+      overflow:hidden;
+    }
+    dialog[open].modal{ display:grid; }
+
+    .sheet{
+      width:min(560px, 96vw);
+      max-width:100vw;
+      margin:0;
+      background:#fff;
+      border-radius:18px;
+      border:1px solid #e5e7eb;
+      box-shadow:0 30px 60px rgba(0,0,0,.15);
+      overflow:hidden;
+    }
+    .sheet header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      padding:12px 14px;
+      border-bottom:1px solid #eee;
+      flex-wrap:wrap; /* küçük ekranda taşma olursa sar */
+    }
+    .sheet header h3{ margin:0; font-size:18px; }
+    .sheet .inner{
+      padding:16px;
+      max-height:80vh; /* ezilmeyi önle */
+      overflow:auto;   /* taşanı kaydır */
+    }
+
+    .form{ display:grid; gap:10px; }
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:560px){ .row2{ grid-template-columns:1fr; } }
+
+    .input{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .input label{ font-size:12px; color:#6b7280; }
+    .input input, .input select{
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:14px;
+      width:100%;
+      min-width:0;
+    }
+
+    .pw{ position:relative; }
+    .pw input{ padding-right:38px; }
+    .pw .toggle{
+      position:absolute; right:8px; top:50%;
+      transform:translateY(-50%);
+      border:0; background:transparent; cursor:pointer;
+    }
+
+    /* ===== FOOTER ===== */
+    .legal{ background:#000; color:#fff; }
+    .legal .inner{ max-width:1200px; margin:0 auto; padding:16px; }
+    .legal .row{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .legal .links{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width:768px){
+      .topbar-inner{ padding:12px 12px; }
+      .catnav-inner{ padding:8px 12px; }
+      .hero{ margin:12px 12px; padding:18px 14px; }
+      .actions{ gap:6px; }
+      .topbar-inner, .brand, .actions{ min-width:0; }
+    }
+
+    /* Kart butonları küçük ekranda kırılıp alta geçsin */
+    .card .actions{ flex-wrap:wrap; }
+    .card .actions .btn{
+      flex:1 1 100%;
+      white-space:normal;
+      min-width:0;
+    }
+    @media (min-width:481px){
+      .card .actions .btn{ flex:1; }
+    }
+
+    .actions{ min-width:0; }
+    .lang select{ max-width:100%; }
+
+    @media (max-width:520px){
+      .topbar-inner{ flex-wrap:wrap; }
+      .actions{ flex-basis:100%; justify-content:flex-end; }
+      .lang{ padding:6px 8px; }
+    }
+
+    /* ===== İLAN KARTLARI ===== */
+    .listings-section{ max-width:1200px; margin:0 auto; padding:16px 12px; }
+
+    .listings-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+    .listings-head h3{ margin:0; font-size:18px; }
+
+    .listings-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); /* genişle, mobilde 1 sütun */
+      gap:12px;
+      min-width:0;
+    }
+
+    .card{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      overflow:hidden;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      box-shadow:0 10px 30px rgba(0,0,0,.04);
+    }
+
+    .card .ph img{ width:100%; height:auto; }
+    .card .ph{
+      position:relative;
+      aspect-ratio:16/11;
+      background:linear-gradient(180deg,#f3f4f6,#fff);
+    }
+
+    .card .body{ padding:12px; display:grid; gap:6px; }
+    .card .title{ font-weight:700; line-height:1.3; margin:0 0 4px; }
+    .price{ font-weight:900; }
+
+    .seller{ display:flex; gap:8px; align-items:center; }
+    .seller .av{ width:22px; height:22px; border-radius:50%; background:#eee; overflow:hidden; }
+    .seller .av img{ width:100%; height:100%; object-fit:cover; }
+    .seller .name{ font-size:12px; }
+
+    .badge{
+      border:1px solid #10b981;
+      color:#065f46;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#ecfdf5;
+      margin-left:auto;
+      white-space: nowrap;  
+      line-height: 1;       
+      display: inline-flex;  
+      align-items: center;  
+    }
+
+    .card .actions{ display:flex; gap:8px; margin-top:8px; }
+    .card .actions .btn{ flex:1; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      border:1px solid #e5e7eb; border-radius:999px;
+      padding:6px 10px; background:#fff;
+    }
+
+    .paging{ display:flex; gap:8px; justify-content:center; margin-top:12px; }
+
+    /* Showcase simgesi */
+    .ribbon{
+      position:absolute; top:8px; left:8px;
+      background:#caa552; color:#111; font-weight:900; font-size:11px;
+      padding:4px 8px; border-radius:999px;
+      border:1px solid #b18a37; box-shadow:0 4px 14px rgba(202,165,82,.25);
+    }
+
+    /* ===== BOYUT & DÜZEN OVERRIDE ===== */
+    .hero h2{
+      font-size:1.9rem;
+      line-height:1.22;
+      font-weight:800;
+    }
+    .hero p{
+      font-size:1.0625rem;
+      line-height:1.5;
+    }
+    @media (min-width:768px){
+      .hero h2{ font-size:2rem; }
+      .hero p{  font-size:1.125rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <h1 data-i18n="app.name">Üreten Eller</h1>
+        </div>
+        <div class="actions">
+          <div class="lang">
+            <span>🌐</span>
+            <select id="langSel" aria-label="Dil">
+              <option value="tr" selected>Türkçe</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+              <option value="ar">العربية</option>
+            </select>
+          </div>
+          <button class="btn gold" id="postBtn" data-i18n="buttons.post">İlan Ver</button>
+          <div id="authArea" class="auth-badge" style="display:none">
+            <div class="avatar"><img id="uAvatar" alt="" /></div>
+            <div id="uName" class="hint">Kullanıcı</div>
+            <button class="btn ghost" id="signOutBtn" data-i18n="buttons.signout">Çıkış</button>
+          </div>
+          <button class="btn ghost" id="signInBtn" data-i18n="buttons.signin">Giriş / Kayıt</button>
+        </div>
+      </div>
+
+      <nav id="catNav" class="catnav" aria-label="Kategoriler">
+        <div class="catnav-inner"></div>
+      </nav>
+      <div id="catDrops" class="catdrops">
+        <div class="catdrops-inner"></div>
+      </div>
+    </div>
+
+    <main>
+      <section class="content">
+        <div class="hero">
+          <h2 id="heroTitle" data-i18n="hero.title">El emeği & yerel lezzetler tek çatı altında</h2>
+          <p id="heroDesc" data-i18n="hero.desc">Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.</p>
+          <div class="cta-row">
+            <button class="btn gold" id="browseBtn" data-i18n="buttons.browse">Kategorileri Keşfet</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="listings-section">
+        <div class="listings-head">
+          <h3 data-i18n="list.title">Yeni İlanlar</h3>
+          <div class="pill" id="listInfo" data-i18n="list.loading">Yükleniyor…</div>
+        </div>
+        <div class="listings-grid" id="listGrid" aria-live="polite"></div>
+        <div class="paging">
+          <button class="btn ghost" id="prevPage" disabled data-i18n="buttons.prev">‹ Önceki</button>
+          <button class="btn ghost" id="nextPage" disabled data-i18n="buttons.next">Sonraki ›</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="legal">
+      <div class="inner">
+        <div class="row">
+          <div class="links">
+            <a href="/legal/kullanim-sartlari.html" data-i18n="legal.tos">Kullanım Şartları</a>
+            <a href="/legal/gizlilik-politikasi.html" data-i18n="legal.privacy">Gizlilik Politikası</a>
+            <a href="/legal/kvkk-aydinlatma.html" data-i18n="legal.kvkk">KVKK Aydınlatma</a>
+            <a href="/legal/topluluk-kurallari.html" data-i18n="legal.community">Topluluk Kuralları</a>
+            <a href="/legal/yasakli-urunler.html" data-i18n="legal.prohibited">Yasaklı Ürünler</a>
+            <a href="/legal/mesafeli-satis-sozlesmesi.html" data-i18n="legal.distance">Mesafeli Satış</a>
+            <a href="/legal/on-bilgilendirme-formu.html" data-i18n="legal.preinfo">Ön Bilgilendirme</a>
+            <a href="/legal/teslimat-iade-iptal.html" data-i18n="legal.delivery">Teslimat/İade</a>
+            <a href="/legal/iletisim-impressum.html" data-i18n="legal.contact">İletişim</a>
+          </div>
+          <div class="hint">© <span id="y"></span> <span data-i18n="app.name">Üreten Eller</span></div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ===== Auth Modal ===== -->
+  <dialog class="modal" id="authModal" aria-labelledby="authTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="authTitle" data-i18n="auth.title">Giriş Yap / Kayıt Ol</h3>
+        <button class="btn ghost" data-close aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner">
+        <div class="form" style="margin-bottom:16px">
+          <div class="input"><label for="li_email" data-i18n="fields.email">E-posta</label><input id="li_email" type="email" placeholder="ornek@mail.com" autocomplete="username"/></div>
+          <div class="input pw"><label for="li_pass" data-i18n="fields.password">Şifre</label><input id="li_pass" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="toggle" data-toggle="li_pass" aria-label="Şifreyi göster">👁️</button></div>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn gold" id="loginBtn" data-i18n="buttons.login">Giriş Yap</button>
+              <button class="btn ghost" id="forgotBtn" type="button" data-i18n="buttons.forgot">Şifremi Unuttum</button>
+            </div>
+            <button class="btn gold" id="googleBtn" type="button" aria-label="Google" data-i18n="buttons.google">Google ile Giriş</button>
+          </div>
+        </div>
+        <hr style="border:0;border-top:1px solid #eee;margin:8px 0 14px">
+        <details>
+          <summary style="cursor:pointer;font-weight:700" data-i18n="register.summary">Hesabın yok mu? Kayıt ol</summary>
+          <div class="form" style="margin-top:10px">
+            <div class="row2">
+              <div class="input"><label for="su_username" data-i18n="fields.username">Kullanıcı Adı</label><input id="su_username" maxlength="24" placeholder="@kullanici"/></div>
+              <div class="input"><label for="su_name" data-i18n="fields.fullname">Ad Soyad</label><input id="su_name" placeholder="Adınız Soyadınız"/></div>
+            </div>
+            <div class="row2">
+              <div class="input"><label for="su_province" data-i18n="fields.province">İl</label>
+                <select id="su_province"></select>
+              </div>
+              <div class="input"><label for="su_district" data-i18n="fields.district">İlçe</label><input id="su_district" placeholder="İlçeniz"/></div>
+            </div>
+            <div class="row2">
+              <div class="input"><label for="su_email" data-i18n="fields.email">E-posta</label><input id="su_email" type="email" placeholder="ornek@mail.com" autocomplete="email"/></div>
+              <div class="input pw"><label for="su_pass" data-i18n="fields.password">Şifre</label><input id="su_pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass" aria-label="Şifreyi göster">👁️</button></div>
+            </div>
+            <div class="input pw"><label for="su_pass2" data-i18n="fields.password2">Şifre (Tekrar)</label><input id="su_pass2" type="password" placeholder="Şifreyi tekrar yazın" autocomplete="new-password"/><button class="toggle" data-toggle="su_pass2" aria-label="Şifreyi göster">👁️</button></div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+              <button class="btn gold" id="registerBtn" data-i18n="buttons.register">Kayıt Ol</button>
+              <div class="hint" data-i18n="hints.verify">Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.</div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Listing Detail Modal ===== -->
+  <dialog class="modal" id="listingModal" aria-labelledby="listingTitle">
+    <div class="sheet">
+      <header>
+        <h3 id="listingTitle" data-i18n="listing.title">İlan Detayı</h3>
+        <button class="btn ghost" data-close-listing aria-label="Kapat">✕</button>
+      </header>
+      <div class="inner" id="listingBody"></div>
+    </div>
+  </dialog>
+
+  <!-- Firebase init -->
+  <script type="module" src="/firebase-init.js"></script>
+
+  <script type="module">
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
+
+    /* ===== i18n – Metinler (KATEGORİLERE DOKUNMADAN) ===== */
+    const I18N = {
+      tr:{'app.title':'Üreten Eller • Ana Sayfa','app.name':'Üreten Eller',
+          'hero.title':'El emeği & yerel lezzetler tek çatı altında',
+          'hero.desc':'Üreten kadınlardan, ev yapımı lezzetlerden, el işi tasarımlardan alışveriş yapın. Konumunuza göre arayın, kategorilerden keşfedin.',
+          'buttons.post':'İlan Ver','buttons.signin':'Giriş / Kayıt','buttons.signout':'Çıkış','buttons.browse':'Kategorileri Keşfet',
+          'buttons.login':'Giriş Yap','buttons.forgot':'Şifremi Unuttum','buttons.google':'Google ile Giriş','buttons.register':'Kayıt Ol',
+          'buttons.prev':'‹ Önceki','buttons.next':'Sonraki ›','buttons.order':'Sipariş Ver','buttons.message':'Satıcıya Yaz',
+          'fields.email':'E-posta','fields.password':'Şifre','fields.password2':'Şifre (Tekrar)','fields.username':'Kullanıcı Adı','fields.fullname':'Ad Soyad','fields.province':'İl','fields.district':'İlçe',
+          'auth.title':'Giriş Yap / Kayıt Ol','register.summary':'Hesabın yok mu? Kayıt ol',
+          'hints.verify':'Kayıtla birlikte <strong>mail doğrulama</strong> gönderilir. Gelen kutusu ve <strong>SPAM</strong> klasörünü kontrol edin.',
+          'list.title':'Yeni İlanlar','list.loading':'Yükleniyor…','list.range':'{start}-{end} / {total}',
+          'legal.tos':'Kullanım Şartları','legal.privacy':'Gizlilik Politikası','legal.kvkk':'KVKK Aydınlatma','legal.community':'Topluluk Kuralları','legal.prohibited':'Yasaklı Ürünler','legal.distance':'Mesafeli Satış','legal.preinfo':'Ön Bilgilendirme','legal.delivery':'Teslimat/İade','legal.contact':'İletişim',
+          'listing.title':'İlan Detayı','seller.verified':'Onaylı','seller.default':'Satıcı','ribbon.showcase':'Vitrin'},
+      en:{'app.title':'Ureten Eller • Home','app.name':'Ureten Eller',
+          'hero.title':'Handmade & local delights in one place',
+          'hero.desc':'Shop from women producers, homemade delicacies, and crafts. Search by location or browse categories.',
+          'buttons.post':'Post Listing','buttons.signin':'Sign In / Register','buttons.signout':'Sign Out','buttons.browse':'Browse Categories',
+          'buttons.login':'Sign In','buttons.forgot':'Forgot Password','buttons.google':'Continue with Google','buttons.register':'Register',
+          'buttons.prev':'‹ Previous','buttons.next':'Next ›','buttons.order':'Order','buttons.message':'Message Seller',
+          'fields.email':'Email','fields.password':'Password','fields.password2':'Password (Repeat)','fields.username':'Username','fields.fullname':'Full Name','fields.province':'Province','fields.district':'District',
+          'auth.title':'Sign In / Register','register.summary':'No account? Create one',
+          'hints.verify':'A <strong>verification email</strong> will be sent. Please check your inbox and <strong>SPAM</strong>.',
+          'list.title':'New Listings','list.loading':'Loading…','list.range':'{start}-{end} of {total}',
+          'legal.tos':'Terms of Use','legal.privacy':'Privacy Policy','legal.kvkk':'KVKK Notice','legal.community':'Community Guidelines','legal.prohibited':'Prohibited Items','legal.distance':'Distance Sales','legal.preinfo':'Pre-Information','legal.delivery':'Delivery/Returns','legal.contact':'Contact',
+          'listing.title':'Listing Detail','seller.verified':'Verified','seller.default':'Seller','ribbon.showcase':'Showcase'},
+      de:{'app.title':'Ureten Eller • Startseite','app.name':'Ureten Eller',
+          'hero.title':'Handgemachtes & lokale Köstlichkeiten an einem Ort',
+          'hero.desc':'Kaufen Sie bei Produzentinnen, Hausmannskost und Handarbeiten. Nach Standort suchen oder Kategorien entdecken.',
+          'buttons.post':'Anzeige aufgeben','buttons.signin':'Anmelden / Registrieren','buttons.signout':'Abmelden','buttons.browse':'Kategorien Entdecken',
+          'buttons.login':'Anmelden','buttons.forgot':'Passwort Vergessen','buttons.google':'Mit Google Fortfahren','buttons.register':'Registrieren',
+          'buttons.prev':'‹ Zurück','buttons.next':'Weiter ›','buttons.order':'Bestellen','buttons.message':'Nachricht an Verkäufer',
+          'fields.email':'E-Mail','fields.password':'Passwort','fields.password2':'Passwort (Wiederholen)','fields.username':'Benutzername','fields.fullname':'Vollständiger Name','fields.province':'Provinz','fields.district':'Bezirk',
+          'auth.title':'Anmelden / Registrieren','register.summary':'Kein Konto? Registrieren',
+          'hints.verify':'Eine <strong>Bestätigungs-E-Mail</strong> wird gesendet. Prüfen Sie Posteingang und <strong>SPAM</strong>.',
+          'list.title':'Neue Anzeigen','list.loading':'Lädt…','list.range':'{start}-{end} von {total}',
+          'legal.tos':'Nutzungsbedingungen','legal.privacy':'Datenschutz','legal.kvkk':'KVKK Hinweis','legal.community':'Community-Regeln','legal.prohibited':'Verbotene Artikel','legal.distance':'Fernabsatz','legal.preinfo':'Vorabinfo','legal.delivery':'Lieferung/Rückgabe','legal.contact':'Kontakt',
+          'listing.title':'Anzeigedetails','seller.verified':'Verifiziert','seller.default':'Verkäufer','ribbon.showcase':'Schaufenster'},
+      ar:{'app.title':'أُنتجت الأيادي • الرئيسية','app.name':'أُنتجت الأيادي',
+          'hero.title':'منتجات يدوية ومأكولات محلية في مكان واحد',
+          'hero.desc':'تسوّق من المنتجين والمنتِجات والمأكولات المنزلية والأعمال اليدوية. ابحث حسب الموقع أو تصفح الفئات.',
+          'buttons.post':'أنشئ إعلانًا','buttons.signin':'تسجيل الدخول / حساب جديد','buttons.signout':'تسجيل الخروج','buttons.browse':'استكشف الفئات',
+          'buttons.login':'تسجيل الدخول','buttons.forgot':'نسيت كلمة المرور','buttons.google':'تابع باستخدام Google','buttons.register':'إنشاء حساب',
+          'buttons.prev':'‹ السابق','buttons.next':'التالي ›','buttons.order':'اطلب الآن','buttons.message':'راسل البائع',
+          'fields.email':'البريد الإلكتروني','fields.password':'كلمة المرور','fields.password2':'تأكيد كلمة المرور','fields.username':'اسم المستخدم','fields.fullname':'الاسم الكامل','fields.province':'الولاية','fields.district':'المنطقة',
+          'auth.title':'تسجيل الدخول / إنشاء حساب','register.summary':'ليس لديك حساب؟ أنشئ واحدًا',
+          'hints.verify':'سيتم إرسال <strong>بريد تحقق</strong>. افحص البريد الوارد و<strong>الرسائل المزعجة</strong>.',
+          'list.title':'إعلانات جديدة','list.loading':'جارٍ التحميل…','list.range':'{start}-{end} من {total}',
+          'legal.tos':'شروط الاستخدام','legal.privacy':'سياسة الخصوصية','legal.kvkk':'إشعار KVKK','legal.community':'قواعد المجتمع','legal.prohibited':'مواد محظورة','legal.distance':'البيع عن بُعد','legal.preinfo':'معلومات أولية','legal.delivery':'التسليم/الإرجاع','legal.contact':'اتصال',
+          'listing.title':'تفاصيل الإعلان','seller.verified':'موثّق','seller.default':'البائع','ribbon.showcase':'مميّز'}
+    };
+
+    let currentLang = localStorage.getItem('ue_lang') || 'tr';
+    // --- paylaşılan durum / API ---
+window.UE = window.UE || {};
+window.UE.I18N = I18N;
+window.UE.getLang = () => currentLang;
+window.UE.setLang = (lang) => {
+  currentLang = lang;
+  localStorage.setItem('ue_lang', lang);
+  window.dispatchEvent(new CustomEvent('ue:lang', { detail: lang }));
+};
+    function t(key, vars){
+      const dict = I18N[currentLang] || I18N.tr;
+      let val = dict[key] ?? I18N.tr[key] ?? key;
+      if (vars && typeof val === 'string'){
+        Object.entries(vars).forEach(([k,v])=>{ val = val.replace(`{${k}}`, v); });
+      }
+      return val;
+    }
+
+    // ===== i18n – Kategori/Sözlükleri (SENDE NE VARSA AYNEN KALSIN) =====
+const CAT_I18N = { /* ... (değişmedi) ... */ };
+
+function applyI18n(lang) {
+  currentLang = lang;
+  window.UE?.setLang?.(lang);
+  const dict = I18N[lang] || I18N.tr;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] != null) el.innerHTML = dict[key];
+  });
+
+  document.title = dict['app.title'] || document.title;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+  // Placeholder metinleri
+  document.getElementById('li_email')?.setAttribute('placeholder',
+    lang === 'en' ? 'name@example.com' :
+    lang === 'de' ? 'name@beispiel.de' :
+    lang === 'ar' ? 'name@example.com' :
+    'ornek@mail.com');
+
+  document.getElementById('su_email')?.setAttribute('placeholder',
+    lang === 'en' ? 'name@example.com' :
+    lang === 'de' ? 'name@beispiel.de' :
+    lang === 'ar' ? 'name@example.com' :
+    'ornek@mail.com');
+
+  document.getElementById('su_username')?.setAttribute('placeholder',
+    lang === 'en' ? '@username' :
+    lang === 'de' ? '@benutzer' :
+    lang === 'ar' ? '@username' :
+    '@kullanici');
+
+  document.getElementById('su_name')?.setAttribute('placeholder',
+    lang === 'en' ? 'Your full name' :
+    lang === 'de' ? 'Vollständiger Name' :
+    lang === 'ar' ? 'الاسم الكامل' :
+    'Adınız Soyadınız');
+
+  document.getElementById('su_district')?.setAttribute('placeholder',
+    lang === 'en' ? 'Your district' :
+    lang === 'de' ? 'Bezirk' :
+    lang === 'ar' ? 'المنطقة' :
+    'İlçeniz');
+
+  buildTopCats(lang);
+}
+
+// Yıl ve il listesi
+document.getElementById('y').textContent = new Date().getFullYear();
+
+const PROVINCES = [
+  "Adana","Adıyaman","Afyonkarahisar","Ağrı","Aksaray","Amasya","Ankara","Antalya","Ardahan",
+  "Artvin","Aydın","Balıkesir","Bartın","Batman","Bayburt","Bilecik","Bingöl","Bitlis","Bolu",
+  "Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli","Diyarbakır","Düzce","Edirne","Elazığ",
+  "Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari","Hatay","Iğdır",
+  "Isparta","İstanbul","İzmir","Kahramanmaraş","Karabük","Karaman","Kars","Kastamonu","Kayseri",
+  "Kırıkkale","Kırklareli","Kırşehir","Kilis","Kocaeli","Konya","Kütahya","Malatya","Manisa",
+  "Mardin","Mersin","Muğla","Muş","Nevşehir","Niğde","Ordu","Osmaniye","Rize","Sakarya","Samsun",
+  "Siirt","Sinop","Sivas","Şanlıurfa","Şırnak","Tekirdağ","Tokat","Trabzon","Tunceli","Uşak",
+  "Van","Yalova","Yozgat","Zonguldak"
+].sort((a, b) => a.localeCompare(b, 'tr'));
+
+const suProv = document.getElementById('su_province');
+if (suProv) {
+  suProv.innerHTML =
+    '<option value="" disabled selected>İl seçiniz</option>' +
+    PROVINCES.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+    /* ===== KATEGORİLER – SENİN DOSYANDAN AYNEN ===== */
+    const CATS = [ /* ... (değişmedi) ... */ ];
+
+    const catBar = document.querySelector('#catNav .catnav-inner');
+    const drops = document.querySelector('#catDrops .catdrops-inner');
+
+    function localizeCat(cat, lang){
+      const L = CAT_I18N[lang] || CAT_I18N.tr || {titles:{},subs:{}};
+      const title = (L.titles && L.titles[cat.id]) || cat.title || cat.id;
+      const subs = (cat.subs||[]).map(([sid, sLabel])=>[sid, (L.subs && L.subs[sid]) || sLabel || sid]);
+      return { id: cat.id, title, subs };
+    }
+
+    function buildTopCats(lang){
+      const current = lang || (localStorage.getItem('ue_lang') || 'tr');
+      catBar.innerHTML = '';
+      drops.innerHTML = '';
+      (CATS||[]).forEach((cat)=>{
+        const LCat = localizeCat(cat, current);
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.type = 'button';
+        chip.textContent = LCat.title;
+        chip.dataset.target = `p_${LCat.id}`;
+
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.id = `p_${LCat.id}`;
+        panel.innerHTML = LCat.subs.map(([id,label])=>`<a href="#" data-open-auth style="display:inline-block;margin:4px 6px;padding:8px 10px;border-radius:8px;border:1px solid #eee">${label}</a>`).join('');
+        panel.addEventListener('click',(e)=>{ if(e.target.matches('a[data-open-auth]')){ e.preventDefault(); openAuth(); }});
+
+        chip.addEventListener('click',()=>{
+          const wasOpen = panel.classList.contains('open');
+          document.querySelectorAll('.catdrops .panel.open').forEach(p=>p.classList.remove('open'));
+          document.querySelectorAll('#catNav .chip.active').forEach(c=>c.classList.remove('active'));
+          if (!wasOpen){
+            panel.classList.add('open');
+            chip.classList.add('active');
+          }
+        });
+
+        catBar.appendChild(chip);
+        drops.appendChild(panel);
+      });
+    }
+
+    buildTopCats(localStorage.getItem('ue_lang')||'tr');
+
+    const authModal = document.getElementById('authModal');
+
+function openAuth(){
+  if (authModal && typeof authModal.showModal === 'function'){
+    authModal.showModal();
+  } else if (authModal) {
+    authModal.setAttribute('open','');
+    authModal.style.display = 'grid';
+  }
+}
+
+window.openAuth = openAuth; // diğer scriptler için global erişim
+
+   function closeAuth(){
+  if (typeof authModal.close === 'function') authModal.close();
+}
+
+document.querySelectorAll('#authModal [data-close]')
+  .forEach(b => b.addEventListener('click', closeAuth));
+
+document.getElementById('signInBtn')
+  ?.addEventListener('click', openAuth);
+
+
+    const langSel = document.getElementById('langSel');
+    langSel?.addEventListener('change', (e)=>{
+      const v = e.target.value;
+      localStorage.setItem('ue_lang', v);
+      applyI18n(v);
+      // liste/içerik metinlerini güncelle
+      if (typeof render === 'function') render();
+    });
+    applyI18n(localStorage.getItem('ue_lang')||'tr');
+
+    document.querySelectorAll('.toggle').forEach(b=>b.addEventListener('click',()=>{
+      const id = b.getAttribute('data-toggle'); const inp = document.getElementById(id);
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    }));
+
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+
+    function redirectHome(){ window.location.href = '/home.html'; }
+
+    document.getElementById('googleBtn')?.addEventListener('click', async ()=>{
+      try{ await signInWithPopup(auth, provider); redirectHome(); }
+      catch(err){ alert('Google: '+(err?.message||err)); }
+    });
+
+    document.getElementById('loginBtn')?.addEventListener('click', async ()=>{
+      const email = document.getElementById('li_email').value.trim();
+      const pass = document.getElementById('li_pass').value;
+      if(!email || pass.length<6){ alert(currentLang==='en'?'Check email & password.':'E-posta ve şifreyi kontrol edin.'); return; }
+      try{ await signInWithEmailAndPassword(auth, email, pass); redirectHome(); }
+      catch(err){ alert(''+(err?.message||err)); }
+    });
+
+    document.getElementById('forgotBtn')?.addEventListener('click', async ()=>{
+      const email = document.getElementById('li_email').value.trim();
+      if(!email){ alert(currentLang==='en'?'Enter your email to reset password.':'Şifre sıfırlamak için e-posta girin.'); return; }
+      try{ await sendPasswordResetEmail(auth, email); alert(currentLang==='en'?'Password reset email sent. Check inbox/SPAM.':'Şifre sıfırlama e-postası gönderildi. Gelen kutusu ve SPAM klasörünü kontrol edin.'); }
+      catch(err){ alert(''+(err?.message||err)); }
+    });
+
+    document.getElementById('registerBtn')?.addEventListener('click', async ()=>{
+      const username = document.getElementById('su_username').value.trim();
+      const name = document.getElementById('su_name').value.trim();
+      const province = document.getElementById('su_province').value;
+      const district = document.getElementById('su_district').value.trim();
+      const email = document.getElementById('su_email').value.trim();
+      const pass = document.getElementById('su_pass').value;
+      const pass2 = document.getElementById('su_pass2').value;
+      if(!username || !name || !province || !district || !email || pass.length<6 || pass!==pass2){ alert(currentLang==='en'?'Please fill all fields correctly.':'Lütfen tüm alanları doğru doldurun.'); return; }
+      try{
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(cred.user, { displayName: name });
+        try{ await sendEmailVerification(cred.user); }catch{}
+        alert(currentLang==='en'?'Registration completed. Verification email sent.':'Kayıt tamamlandı. Doğrulama e-postası gönderildi.');
+        redirectHome();
+      }catch(err){ alert(''+(err?.message||err)); }
+    });
+
+    onAuthStateChanged(auth, (u)=>{
+      const authArea = document.getElementById('authArea');
+      const signBtn = document.getElementById('signInBtn');
+      if (u){
+        authArea.style.display='flex'; signBtn.style.display='none';
+        document.getElementById('uName').textContent = u.displayName || u.email || (I18N[currentLang]['seller.default']||'Satıcı');
+        document.getElementById('uAvatar').src = u.photoURL || '/assets/img/avatar-default.png';
+      } else {
+        authArea.style.display='none'; signBtn.style.display='inline-flex';
+      }
+    });
+
+    document.getElementById('signOutBtn')?.addEventListener('click', async ()=>{ try{ await signOut(auth); }catch{} });
+
+    document.getElementById('browseBtn')?.addEventListener('click', openAuth);
+    document.getElementById('postBtn')?.addEventListener('click', openAuth);
+  </script>
+
+  <script type="module">
+    import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
+    
+    // paylaşılan sözlük ve dil
+const I18N = (window.UE && window.UE.I18N) || {};
+let currentLang = (window.UE && window.UE.getLang && window.UE.getLang()) || localStorage.getItem('ue_lang') || 'tr';
+
+// dil değişince listeyi yeniden çiz
+window.addEventListener('ue:lang', (e)=>{
+  currentLang = e.detail || 'tr';
+  render?.();
+});
+
+
+    const db2 = (self.__fb?.db) || getFirestore();
+    const grid = document.getElementById('listGrid');
+    const info = document.getElementById('listInfo');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+
+    const PAGE_SIZE = 4;
+    let allListings = [];
+    let page = 0;
+
+    function formatPrice(tryAmount){
+      try{
+        const locale = currentLang==='de'?'de-DE':(currentLang==='en'?'en-US':(currentLang==='ar'?'ar-EG':'tr-TR'));
+        return new Intl.NumberFormat(locale,{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(tryAmount);
+      }catch{ return tryAmount + ' TL'; }
+    }
+
+    async function fetchSeller(uid){
+      if(!uid) return null;
+      try{
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const snap = await getDoc(doc(db2,'users',uid));
+        return snap.exists()? snap.data(): null;
+      }catch{ return null; }
+    }
+
+    async function cardTpl(it){
+  const imgList = Array.isArray(it.photos) ? it.photos : [];
+  const mainImg = clMain(imgList[0])
+  const extraImgs = imgList.slice(1);
+  const showcase = !!it.showcase;
+  const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
+  const title = it.title || '—';
+  const desc = it.description || '';
+  const id = it.id;
+  const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+
+  // satıcı bilgilerini getir
+  let seller = null;
+  try { seller = await fetchSeller(sellerId); } catch {}
+  const sName = seller?.displayName || seller?.name || (I18N[currentLang]['seller.default'] || 'Satıcı');
+  const sAv = avatarFromSeller(seller || it);
+  const verified = !!(seller?.verifiedSeller || seller?.verified);
+
+  // ek resimleri ufak önizleme olarak göster
+  const thumbRow = extraImgs.length ? `
+    <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+      ${extraImgs.slice(0,3).map(url => `
+        <img src="${clThumb(url)}" alt=""
+             style="width:60px;height:60px;object-fit:cover;
+             border-radius:6px;border:1px solid #eee;">
+      `).join('')}
+    </div>` : '';
+
+  return `
+    <article class="card" data-id="${id}">
+      <div class="ph">
+        ${showcase ? `<span class="ribbon">${I18N[currentLang]['ribbon.showcase']||'Vitrin'}</span>` : ''}
+        <img alt="${title}" loading="lazy" src="${mainImg}" width="800" height="550">
+      </div>
+      <div class="body">
+        <div class="title">${title}</div>
+        <div class="desc">${desc}</div>
+        <div class="seller">
+          <div class="av"><img alt="" src="${sAv}" width="22" height="22"></div>
+          <div class="name">${sName}</div>
+          ${verified ? `<span class="badge">${I18N[currentLang]['seller.verified']||'Onaylı'}</span>` : ''}
+        </div>
+        ${thumbRow}
+        <div class="price">${price}</div>
+        <div class="actions">
+          <button class="btn gold" data-do="order">${I18N[currentLang]['buttons.order']||'Sipariş Ver'}</button>
+          <button class="btn ghost" data-do="msg">${I18N[currentLang]['buttons.message']||'Satıcıya Yaz'}</button>
+        </div>
+      </div>
+    </article>`;
+}
+
+    function setListInfo(start, end, total){
+      const txt = (I18N[currentLang]['list.range']||'{start}-{end} / {total}')
+        .replace('{start}', start).replace('{end}', end).replace('{total}', total);
+      info.textContent = txt;
+    }
+
+    // ---- Cloudinary yardımcıları (firebase-init.js global fonksiyonlarını kullanır) ----
+const EMPTY_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+
+function clMain(src){
+  if (!src) return EMPTY_IMG;
+  // Tam Cloudinary URL geldiyse (hangi cloud name olursa olsun) olduğu gibi kullan:
+  if (/^https?:\/\/res\.cloudinary\.com\//.test(src)) return src;
+  // Başka bir tam URL ise de fetch yapma, direkt göster:
+  if (/^https?:\/\//.test(src)) return src;
+  // Public ID ise kendi cloud'unda üret:
+  return (window.clUrl?.(src, { c:'fill', w:800, h:550, q:'auto', f:'auto' }) || src);
+}
+
+function clThumb(src){
+  if (!src) return EMPTY_IMG;
+  // Tam Cloudinary URL geldiyse direkt kullan:
+  if (/^https?:\/\/res\.cloudinary\.com\//.test(src)) return src;
+  // Başka bir tam URL ise de fetch yapma:
+  if (/^https?:\/\//.test(src)) return src;
+  // Public ID ise kendi cloud'unda küçük görsel üret:
+  return (window.clUrl?.(src, { c:'fill', w:120, h:120, q:'auto', f:'auto' }) || src);
+}
+
+function avatarFromSeller(s){
+  const publicId = s?.avatarPublicId || s?.photoPublicId || s?.avatarId || s?.avatarPid;
+  const url      = s?.sellerAvatarUrl || s?.photoURL || s?.avatarUrl;
+
+  if (publicId && window.avatarUrl) return window.avatarUrl(publicId);
+
+  if (url){
+    // Cloudinary tam URL ise direkt kullan
+    if (/^https?:\/\/res\.cloudinary\.com\//.test(url)) return url;
+    // Diğer tam URL'ler için istersen kırp/fetch
+    return window.clFetch?.(url, { c:'fill', w:60, h:60, q:'auto', f:'auto', radius:'max' }) || url;
+  }
+
+  return EMPTY_IMG;
+}
+
+    async function render(){
+  const start = page * PAGE_SIZE;
+  const slice = allListings.slice(start, start + PAGE_SIZE);
+  const htmlArr = await Promise.all(slice.map(cardTpl)); // ← Promiseleri bekle
+  grid.innerHTML = htmlArr.join('');
+  setListInfo(allListings.length ? (start + 1) : 0, Math.min(start + PAGE_SIZE, allListings.length), allListings.length);
+  prevBtn.disabled = page === 0;
+  nextBtn.disabled = (start + PAGE_SIZE) >= allListings.length;
+  prevBtn.textContent = I18N[currentLang]['buttons.prev'] || '‹ Önceki';
+  nextBtn.textContent = I18N[currentLang]['buttons.next'] || 'Sonraki ›';
+}
+
+    grid.addEventListener('click', async (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const id = card.getAttribute('data-id');
+  const listing = allListings.find(x => x.id === id);
+  if (!listing) return;
+
+  // "Sipariş" veya "Mesaj" butonuna basıldıysa
+  if (e.target.matches('[data-do="order"], [data-do="msg"]')) {
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      alert('Giriş yapmalısınız.');
+      window.openAuth?.(); // giriş panelini aç
+      return;
+    }
+    // Giriş yapılmışsa satıcı bilgilerini göster (veya ileride işlem yapılabilir)
+  }
+
+  // Kartın başka yerine tıklanırsa detay modalını aç
+openListingDetail(listing, card.querySelector('.ph img')?.src);
+}); 
+
+async function openListingDetail(it, imgSrc) {
+  const modal = document.getElementById('listingModal');
+  const body  = document.getElementById('listingBody');
+
+  // Satıcıyı Firestore’dan çek
+  let seller = null;
+  const sellerId = it.sellerId || it.ownerId || it.userId || it.uid;
+  try { if (sellerId) seller = await fetchSeller(sellerId); } catch {}
+
+  // Avatar, ad-soyad, konum, onay
+  const av   = avatarFromSeller(seller || it);
+  const name =
+    seller?.displayName || seller?.name || seller?.fullName ||
+    [seller?.firstName, seller?.lastName].filter(Boolean).join(' ') ||
+    it.sellerName || it.ownerName || it.name ||
+    (I18N?.[currentLang]?.['seller.default'] || I18N?.tr?.['seller.default'] || 'Satıcı');
+
+  const city = seller?.province || seller?.city || seller?.sehir || it.province || it.city || it.sehir || '';
+  const dist = seller?.district || seller?.ilce  || it.district  || it.ilce  || '';
+  const loc  = city ? (dist ? `${city} / ${dist}` : city) : '';
+
+  const verified = !!(seller?.verifiedSeller || seller?.verified || seller?.isVerified || seller?.sellerVerified || it.sellerVerified);
+  const price = (typeof it.price === 'number') ? formatPrice(it.price) : '';
+
+  // İçerik
+  body.innerHTML = `
+    <div style="display:grid;gap:12px">
+      <div style="border-radius:14px;overflow:hidden;border:1px solid #eee">
+        <img src="${imgSrc}" alt="${it.title || ''}" style="width:100%;height:auto;display:block" width="1200" height="825">
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="av" style="width:34px;height:34px">
+          <img src="${av}" alt="${name}" width="34" height="34" style="border-radius:50%">
+        </div>
+        <div style="font-weight:700">
+          ${name}${loc ? ` · <span style="color:#6b7280">${loc}</span>` : ''}
+        </div>
+        ${verified ? `<span class="badge">${I18N[currentLang]['seller.verified'] || 'Onaylı'}</span>` : ''}
+      </div>
+
+      <div>
+        <div style="font-size:20px;font-weight:900">${it.title || ''}</div>
+        <div style="color:#6b7280;margin-top:6px">${it.description || ''}</div>
+      </div>
+
+      <div style="font-size:18px;font-weight:900">${price}</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn gold"  id="detailOrder">${I18N[currentLang]['buttons.order']   || 'Sipariş Ver'}</button>
+        <button class="btn ghost" id="detailMsg">${I18N[currentLang]['buttons.message'] || 'Satıcıya Yaz'}</button>
+      </div>
+    </div>`;
+
+  // Giriş zorunluluğu
+  document.getElementById('detailOrder')?.addEventListener('click', () => window.openAuth?.());
+  document.getElementById('detailMsg')  ?.addEventListener('click', () => window.openAuth?.());
+
+  if (typeof modal.showModal === 'function') modal.showModal();
+  else { modal.setAttribute('open',''); modal.style.display='grid'; }
+}
+
+    document.querySelector('[data-close-listing]')?.addEventListener('click',()=>{
+  const modal = document.getElementById('listingModal');
+  if (typeof modal.close === 'function') modal.close();
+});
+
+    prevBtn.addEventListener('click',()=>{ if(page>0){ page--; render(); }});
+    nextBtn.addEventListener('click',()=>{ if((page+1)*PAGE_SIZE < allListings.length){ page++; render(); }});
+
+    async function loadListings() {
+  try {
+    // Güvenli I18N kontrolü
+    const dict = I18N?.[currentLang] || I18N?.tr || {};
+    info.textContent = dict['list.loading'] || 'Yükleniyor…';
+
+    const colRef = collection(db2, 'listings');
+    const q = query(colRef, orderBy('updatedAt', 'desc'));
+    const snap = await getDocs(q);
+
+    const now = Date.now();
+    const rows = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data?.status === 'approved') {
+        const exp = data?.expiresAt?.toDate
+          ? data.expiresAt.toDate().getTime()
+          : (data?.expiresAt ? new Date(data.expiresAt).getTime() : now + 1);
+        if (exp >= now) {
+          rows.push({ id: docSnap.id, ...data });
+        }
+      }
+    });
+
+    const showcase = rows.filter(r => !!r.showcase);
+    const standard = rows.filter(r => !r.showcase);
+    allListings = [...showcase, ...standard];
+    page = 0;
+    render();
+  } catch (err) {
+    info.textContent = currentLang === 'en'
+      ? 'Failed to load listings'
+      : 'İlanlar yüklenemedi';
+    console.error(err);
+  }
+}
+
+// Firebase hazır olduğunda çalıştır
+if (self.__fbReady) {
+  loadListings();
+} else {
+  document.addEventListener('fb-ready', loadListings, { once: true });
+}
+
+    // dil değişirse liste metinlerini yenile
+    window.addEventListener('storage', (e)=>{ if(e.key==='ue_lang'){ currentLang = localStorage.getItem('ue_lang')||'tr'; render(); } });
+  </script>
+</body>
+</html>
